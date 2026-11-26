@@ -2,51 +2,57 @@ library: plotly
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:15:06Z'
-updated: '2026-05-27T23:10:17Z'
+updated: '2026-11-26T16:41:03Z'
 generated_by: claude-sonnet
-workflow_run: 26542972347
+workflow_run: 45859842976
 issue: 3749
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect theme-adaptive chrome with all text, grid, legend, and backgrounds correctly
-    switching between light and dark renders
-  - Redundant shape+color encoding for event types makes the chart fully CVD-safe
-    without relying on hue alone
-  - Alternating flag height offsets demonstrate thoughtful placement to avoid price
-    occlusion
-  - go.Candlestick with semantic bull/bear colors + hovermode=x unified is exemplary
-    Plotly financial charting
-  - Complete spec compliance with all event types, connector lines, and hover interactions
-    implemented
+  - Native go.Candlestick with Imprint green/red bull and bear styling and the range
+    slider disabled
+  - Flags placed above the highest high of an 11-day rolling window with cycled heights,
+    so every flag and label clears the candles
+  - Event types told apart by both shape and Imprint color, with a legend that lists
+    only the event types
+  - Theme tokens threaded through title, axes, grid and legend; both renders read
+    cleanly
+  - Per-flag hovertemplate with type, label and date plus x-unified hover in the HTML
+    view
   weaknesses:
-  - 'Top and right axis frame borders are retained (plotly default full frame) — explicit
-    spine removal would give the cleaner L-frame look aligned with the style guide;
-    mirror: False is set but a fully theme-consistent frame requires verifying the
-    rendered output shows the axis borders gone'
-  - Event connector lines use 7 separate go.Scatter traces; Plotly native layout.shapes
-    API would achieve the same with zero trace overhead and cleaner figure structure
+  - 'VQ-03, SC-02 (both): the Q2 Beat star sits about $1 above its own wick, so its
+    dashed connector is completely hidden, and the 4:1 Split connector shows as one
+    dot and one short dash under the square, so the date of those two events cannot
+    be read off a line (C3) → a connector of at least about 5 % of the price range
+    visible between the candle top and the marker. Likely cause: FLAG_HEIGHTS entries
+    0.06 and 0.10 combined with the 18 px marker covering the upper part of the line
+    and the long dash pattern.'
+  - 'Suggestion: the flag labels use family "Arial Black", which the renderer lacks,
+    so they fall back to a serif face; a sans family matching the chrome would unify
+    the typography.'
+  - 'Suggestion: the connectors could be layout shapes (add_shape with line dash)
+    instead of seven extra scatter traces.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "stock-event-flags · python · plotly · anyplot.ai" at fontsize=16 centered and readable; Y-axis label "Price ($)" and X-axis label "Date" at fontsize=12, clearly visible in dark ink; tick labels at fontsize=10 in INK_SOFT (#4A4A44) readable; legend top-right with elevated background (#FFFDF6) and border
-      Data: Bullish candles in #009E73 (brand green), bearish in #AE3030 (matte red) — semantic exception for finance; event flags: Earnings (star, #009E73), Dividend (diamond, #C475FD), News (triangle, #4467A3), Split (square, #BD8233) — canonical Imprint palette order; dashed connector lines in matching colors; flag labels in Arial Black 11px
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1 across paper and plot area.
+      Chrome: centered title "stock-event-flags · python · plotly · anyplot.ai" in dark ink; axis titles "Date" and "Price ($)"; $110-$170 and Feb-Sep 2024 ticks in INK_SOFT; subtle grid; left and bottom axis lines; legend top-right on #FFFDF6 with thin border listing Earnings (star), Dividend (diamond), News (triangle), Split (square). All readable.
+      Data: 180 daily candlesticks, bullish #009E73 and bearish #AE3030; seven flags in Imprint order (Earnings #009E73, Dividend #C475FD, News #4467A3, Split #BD8233) with colored dashed connectors and labels (Q4 Beat, Div $0.50, Product Launch, Q1 Miss, 4:1 Split, Div $0.55, Q2 Beat) in a serif fallback font. Every flag now sits above the surrounding candles; Q4 Beat at about $165 with a long connector down to $148. The Q2 Beat star sits just above its wick with no visible connector; the 4:1 Split connector is a dash fragment.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title and axis labels render in light ink (#F0EFE8); tick labels in secondary light (#B8B7B0); legend background uses dark elevated surface (#242420); all chrome correctly theme-adapted
-      Data: Colors identical to light render — bullish #009E73, bearish #AE3030, event markers green/lavender/blue/ochre unchanged; only chrome flips between themes
-      Legibility verdict: PASS — no dark-on-dark failures, all text clearly readable against dark background
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in #F0EFE8, ticks in #B8B7B0, subtle grid, legend on #242420 with light border; no dark-on-dark text.
+      Data: candle and flag colors identical to the light render; the #4467A3 Product Launch label is the dimmest text but readable; same flag placement.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,77 +60,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, flags=11,
-          legend=10); well-proportioned in both themes
+        comment: Sizes explicit per the library prompt (title 16, axis 12, ticks 10,
+          flag labels 11, legend 10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating flag height offsets prevent label collisions; no overlapping
-          text detected
+        comment: Every flag and label sits clear of the candles and of its neighbors;
+          Product Launch and Q1 Miss labels close but not touching
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Candlestick bars well-sized for 180-day density; event markers at
-          size=18 are prominent
+        passed: false
+        comment: Candles and 18 px flags clear; the Q2 Beat connector is hidden and
+          the 4:1 Split connector is a dash fragment (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape+color encoding for event types; green/red semantic
-          exception for bull/bear is standard
+        comment: Event types carry shape and color; bull/bear Imprint green and red
+          differ in lightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape correct; margins balanced; range slider disabled;
-          canvas gate passed
+        comment: 3200x1800, plot fills the canvas, nothing cut off, legend in the
+          empty top-right corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Price ($) with units; X-axis Date descriptive; title correct
-          format
+        comment: Date and Price ($) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint palette order for event types; semantic exception
-          for bull/bear; correct backgrounds and theme-adaptive chrome
+        comment: 'Event types in canonical Imprint order from #009E73; finance bull/bear
+          semantic green/red; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above defaults: themed legend, Arial Black labels, redundant encoding,
-          alternating heights; not publication-ready due to retained full plotly frame'
+        passed: false
+        comment: Style-guide baseline; flag labels fall back to a serif face, nothing
+          raises it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: mirror=False, range slider off, subtle 15% grid; missing explicit
-          top/right spine removal
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Beat/miss/split/dividend mix creates readable narrative; price dip
-          at Q1 Miss naturally visible; color+shape redundancy guides reader
+        passed: false
+        comment: Events displayed as the Notes ask; no hierarchy chosen beyond them
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,27 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Candlestick with flag-style event markers and connector lines
+        comment: Candlestick price chart with flag markers and dashed connectors
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Flags above price, dashed connectors, distinct icons/colors per type,
-          alternating heights, hover interactions
+        passed: false
+        comment: 'C1, C2, C4 met, hover details present; C3 partly missed: Q2 Beat
+          and 4:1 Split connectors cannot be read (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 180 trading days, 7 events, 4 event types; all correctly mapped
+        comment: Candles at their values; flags at their event dates; axes fitted
+          to the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend shows all 4 event types with matching
-          symbols
+        comment: Mandated title; legend lists the four event types with matching symbols
     data_quality:
       score: 15
       max: 15
@@ -162,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish/bearish candles; all 4 event types; earnings beat and miss;
-          two dividends; stock split
+        comment: Up and down days, four event types including a beat and a miss, two
+          dividends, a split; background regions optional
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology company with quarterly earnings, dividends, product launch,
-          and split; neutral scenario
+        comment: Neutral fictional tech equity with quarterly earnings, dividends,
+          launch and split
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting $150, range $110-$170; ~2% daily vol; $0.50/$0.55 dividends;
-          4:1 split all plausible for tech equity
+        comment: 'Checked: 180 trading days (in 60-250), 7 events (in 3-15), prices
+          $112-$168 at about 2 % daily volatility, $0.50/$0.55 dividends; no Check
+          values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -187,8 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; Imports > tokens > data > traces > layout >
-          save
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,50 +203,55 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, plotly.graph_objects — all used
+        comment: os, numpy, pandas, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; theme tokens cleanly structured
+        comment: No fake UI, nothing a named call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: plot-{THEME}.png and plot-{THEME}.html via write_image/write_html
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: go.Candlestick, go.Scatter with mode=markers+text, hovertemplate,
-          write_image+write_html — all idiomatic
+        passed: false
+        comment: go.Candlestick with increasing/decreasing styling and rangeslider
+          off; connectors as extra scatter traces, nothing beyond the baseline
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: go.Candlestick with custom bull/bear colors, hovermode=x unified,
-          HTML export; connector lines via scatter traces rather than layout.shapes
-          costs one point
+        passed: false
+        comment: x-unified hover plus a per-flag hovertemplate with type, label and
+          date in the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
+  rendered_at: '2026-11-26T16:37:34Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - rolling-window
   - time-series
-  - cumulative-sum
   styling:
-  - edge-highlighting
+  - minimal-chrome
+  - grid-styling
