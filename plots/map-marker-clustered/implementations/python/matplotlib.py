@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-23
@@ -192,7 +192,7 @@ lc_lat = float(cluster_centers[largest_idx][0])
 ax.annotate(
     f"London hub · {cluster_sizes[largest_idx]} stores",
     xy=(lc_lon, lc_lat),
-    xytext=(lc_lon + 6, lc_lat + 0.5),
+    xytext=(lc_lon - 10.8, lc_lat - 3.6),
     fontsize=6,
     color=INK,
     ha="left",
@@ -237,7 +237,7 @@ if leg:
 # Geographic reference labels
 ax.annotate("Atlantic\nOcean", (-9, 46), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4)
 ax.annotate(
-    "Mediterranean Sea", (5, 37.5), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4
+    "Mediterranean Sea", (15.5, 37.5), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4
 )
 
 # Style
@@ -255,7 +255,8 @@ ax.set_ylim(36, 56)
 
 # Inset axes: expanded view of London — demonstrates the spec's "zoom" dual-state concept
 london_mask = (lats > 49.8) & (lats < 53.5) & (lons > -2.5) & (lons < 2.2)
-ax_inset = ax.inset_axes([0.70, 0.58, 0.28, 0.35])
+ax_inset = ax.inset_axes([0.41, 0.09, 0.23, 0.36])
+ax_inset.set_zorder(10)  # draw above the main map's cluster markers
 ax_inset.set_facecolor(OCEAN_BG)
 ax_inset.fill(gb_lon, gb_lat, color=LAND_BG, alpha=0.9, zorder=1)
 for cat in cat_names:
@@ -266,8 +267,8 @@ for cat in cat_names:
         )
 ax_inset.set_xlim(-2.5, 2.2)
 ax_inset.set_ylim(49.8, 53.5)
-ax_inset.set_title("London → expanded", fontsize=5.5, color=INK, pad=2)
-ax_inset.tick_params(axis="both", labelsize=4.5, colors=INK_MUTED)
+ax_inset.set_title("London → expanded", fontsize=6.5, color=INK, pad=2)
+ax_inset.tick_params(axis="both", labelsize=5.5, colors=INK_MUTED)
 for s in ("top", "right"):
     ax_inset.spines[s].set_visible(False)
 for s in ("left", "bottom"):
