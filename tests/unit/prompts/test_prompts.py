@@ -1746,18 +1746,21 @@ class TestGeneratorSelfChecks:
     LETSPLOT = LIBRARY_PROMPTS_DIR / "letsplot.md"
 
     def test_letsplot_lets_a_fixed_aspect_panel_fill_the_canvas(self) -> None:
-        """The wrap paints the strips; the legend below, the canvas and a map's span make the panel fill them."""
+        """The wrap paints the strips; the legend's side, the canvas and a map's span make the panel fill them."""
         canvas = self.LETSPLOT.read_text()
         canvas = canvas[canvas.index("## Canvas") : canvas.index("## Figure Size")]
         assert (
             "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color." in canvas
         )
         fill = canvas[canvas.index("**Then let a fixed-aspect panel fill the canvas.**") :]
-        assert "**The legend goes below the panel** (`theme(legend_position='bottom')`)" in fill
+        # The legend's side follows the bands: below for bands above and below, beside for bands at the sides.
+        legend = next(line for line in fill.splitlines() if "**The legend goes where the blank bands are.**" in line)
+        assert "put the legend below (`theme(legend_position='bottom')`)" in legend
+        assert "Bands at the left and right mean that its height limits it: keep the legend beside it" in legend
         assert "**The canvas suits the figure with its title and legend below it**, not only its equal axes." in fill
         assert "**A map fills the panel through its span.**" in fill
         assert "never a typed number" in fill
-        assert "plot = plot + theme(legend_position='bottom')\nplot = gggrid([plot])" in fill
+        assert "theme(legend_position='bottom')  # only when the bands are above and below the panel" in fill
         # The old sentence kept whatever canvas Step 0 picked, whatever the figure's shape.
         assert "Keep the canvas Step 0 picks for the plot" not in canvas
 

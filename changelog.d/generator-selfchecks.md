@@ -29,7 +29,8 @@
 
 - **lets-plot figures with a fixed aspect fill the canvas instead of
   leaving blank bands.** The canvas wrap painted the strips but left them
-  empty. The library prompt now puts the legend below a fixed-aspect panel,
-  picks the canvas by the figure with its title and legend, and widens a
-  map's shorter span from the data. On scratch renders this took the blank
-  share of two square maps from about a quarter of the height to a twentieth.
+  empty. The library prompt now places the legend on the side where the
+  blank bands are (below a panel with bands above and below it), picks the
+  canvas by the figure with its title and legend, and widens a map's shorter
+  span from the data. On scratch renders this took the blank share of two
+  square maps from about a quarter of the height to a twentieth.
