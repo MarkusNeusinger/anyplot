@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -78,7 +78,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=2.5,
+    stroke_width=10,
 )
 
 chart = pygal.XY(
@@ -138,7 +138,7 @@ for ring in range(num_rings):
             x2, y2 = r_out * np.cos(angle), r_out * np.sin(angle)
             chart.add("", [(x1, y1), (x2, y2)], stroke_style=wall_stroke)
 
-# Entry arrow (Okabe-Ito green #009E73) pointing inward — named for pygal interactive HTML tooltips
+# Entry arrow (Imprint palette green #009E73) pointing inward — named for pygal interactive HTML tooltips
 mid_angle = (entry_a1 + entry_a2) / 2
 tip_x = (outer_r + 0.03) * np.cos(mid_angle)
 tip_y = (outer_r + 0.03) * np.sin(mid_angle)
@@ -152,7 +152,7 @@ wing2_x = tip_x + 0.13 * np.cos(mid_angle + np.pi + 0.45)
 wing2_y = tip_y + 0.13 * np.sin(mid_angle + np.pi + 0.45)
 chart.add("", [(wing1_x, wing1_y), (tip_x, tip_y), (wing2_x, wing2_y)], stroke_style=entry_stroke)
 
-# Goal star (Okabe-Ito vermillion #C475FD) at center — named for pygal interactive HTML tooltips
+# Goal star (Imprint palette purple #C475FD) at center — named for pygal interactive HTML tooltips
 star_pts = []
 for i in range(10):
     a_s = i * np.pi / 5 - np.pi / 2
@@ -160,6 +160,10 @@ for i in range(10):
     star_pts.append((r_s * np.cos(a_s), r_s * np.sin(a_s)))
 star_pts.append(star_pts[0])
 chart.add("Goal ★", star_pts, stroke_style={"width": 10, "linecap": "round", "linejoin": "round", "color": "#C475FD"})
+
+# pygal colors series by index, not by stroke_style: walls first, then arrow (2 series) and star
+n_walls = len(chart.raw_series) - 3
+custom_style.colors = (WALL_COLOR,) * n_walls + ("#009E73", "#009E73", "#C475FD")
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
