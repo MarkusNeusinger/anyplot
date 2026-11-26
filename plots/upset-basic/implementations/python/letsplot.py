@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 upset-basic: UpSet Plot for Multi-Set Intersection Analysis
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 77/100 | Updated: 2026-11-21
@@ -67,8 +67,6 @@ df = pd.DataFrame(
 df = df[df[SETS].str.len() > 0].reset_index(drop=True)
 
 # Plot
-df = df.dropna(subset=[SETS])
-set_names = sorted({s for combo in df[SETS] for s in combo})
 
 # Intersections sorted by size
 inter = df.groupby(df[SETS].apply(frozenset)).size().rename("count").reset_index()
@@ -78,8 +76,7 @@ inter["degree"] = inter[SETS].apply(len)
 inter["degree_str"] = inter["degree"].astype(str)
 
 # Set ordering: smallest size at bottom (y=0), largest at top
-set_sizes = pd.Series({s: int(df[SETS].apply(lambda combo, s=s: s in combo).sum()) for s in set_names})
-set_sizes = set_sizes.sort_values(ascending=True)
+set_sizes = df[SETS].explode().value_counts().sort_values(ascending=True)
 ordered_sets = list(set_sizes.index)
 set_y = {s: i for i, s in enumerate(ordered_sets)}
 
@@ -111,14 +108,17 @@ x_breaks = list(range(len(inter)))
 # Shared base theme
 base_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_grid_major=element_line(color=INK_SOFT, size=0.15),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line_x=element_line(color=INK_SOFT),
+    axis_line_y=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=16, face="bold"),
-    legend_background=element_rect(fill=ELEVATED_BG),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_position=[0.97, 0.95],
+    legend_justification=[1, 1],
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_text(color=INK, size=10),
 )
@@ -128,7 +128,7 @@ degree_palette = {str(d): IMPRINT_PALETTE[(d - 1) % len(IMPRINT_PALETTE)] for d 
 
 p_top = (
     ggplot(inter, aes(x="idx", y="count", fill="degree_str"))
-    + geom_bar(stat="identity", width=0.65)
+    + geom_bar(stat="identity", width=0.65, color=PAGE_BG)
     + scale_fill_manual(values=degree_palette, name="Degree")
     + scale_x_continuous(limits=x_lim, breaks=x_breaks)
     + scale_y_continuous(expand=[0.02, 0])
@@ -150,16 +150,21 @@ p_matrix = (
     + geom_segment(data=line_df, mapping=aes(x="x", xend="x", y="ymin", yend="ymax"), color=BRAND, size=1.8)
     + geom_point(data=dot_df[dot_df["active"]].reset_index(drop=True), mapping=aes(x="x", y="y"), color=BRAND, size=4)
     + scale_x_continuous(limits=x_lim, breaks=x_breaks)
-    + scale_y_continuous(limits=y_lim, breaks=y_breaks, labels=ordered_sets)
+    + scale_y_continuous(limits=y_lim, breaks=y_breaks)
     + labs(x="Intersection", y="")
     + base_theme
-    + theme(axis_ticks=element_blank(), panel_grid_major=element_blank())
+    + theme(
+        axis_ticks=element_blank(),
+        axis_text=element_blank(),
+        axis_line_y=element_blank(),
+        panel_grid_major=element_blank(),
+    )
 )
 
 # Set size bars (bottom-left panel)
 p_sets = (
     ggplot(set_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"))
-    + geom_rect(fill=BRAND, color=None)
+    + geom_rect(fill=BRAND, color=BRAND)
     + scale_x_continuous(limits=[0, set_df["xmax"].max() * 1.12], expand=[0, 0])
     + scale_y_continuous(limits=y_lim, breaks=y_breaks, labels=ordered_sets)
     + labs(x="Set Size", y="")
@@ -170,10 +175,19 @@ p_sets = (
 # Combine with ggbunch (800x450 base; scale=4 -> 3200x1800 px)
 top_h = 0.58
 left_w = 0.24
-fig = ggbunch(
-    [p_top, p_sets, p_matrix],
-    [(0, 0, 1.0, top_h), (0, top_h, left_w, 1 - top_h), (left_w, top_h, 1 - left_w, 1 - top_h)],
-) + ggsize(800, 450)
+top_pad = 0.026  # room the top panel's y-axis title and ticks take left of its plot area
+fig = (
+    ggbunch(
+        [p_top, p_sets, p_matrix],
+        [
+            (left_w - top_pad, 0, 1 - left_w + top_pad, top_h),
+            (0, top_h, left_w, 1 - top_h),
+            (left_w, top_h, 1 - left_w, 1 - top_h),
+        ],
+    )
+    + ggsize(800, 450)
+    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+)
 
 # Save
 ggsave(fig, f"plot-{THEME}.png", path=".", scale=4)
