@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -14,14 +14,12 @@ import plotly.graph_objects as go
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Barcode cell colors — inverted per theme for contrast
 CELL_ON = "#1A1A17" if THEME == "light" else "#F0EFE8"
 CELL_OFF = PAGE_BG
 
-# Data - encode a sample serial number into a 16×16 Data Matrix pattern
+# Data: encode a sample serial number into a 16×16 Data Matrix pattern
 content = "SERIAL:12345678"
 matrix_size = 16
 
@@ -70,22 +68,7 @@ fig.add_trace(
         hovertemplate="<b>%{customdata}</b><extra></extra>",
         colorscale=[[0, CELL_OFF], [1, CELL_ON]],
         showscale=False,
-        xgap=1.5,
-        ygap=1.5,
     )
-)
-
-# Quiet zone border — ISO/IEC 16022 requires at least 1 module of clear space
-fig.add_shape(
-    type="rect",
-    x0=-0.5,
-    y0=-0.5,
-    x1=matrix_size - 0.5,
-    y1=matrix_size - 0.5,
-    xref="x",
-    yref="y",
-    line={"color": INK_MUTED, "width": 1, "dash": "dot"},
-    fillcolor="rgba(0,0,0,0)",
 )
 
 fig.update_layout(
@@ -106,61 +89,10 @@ fig.update_layout(
     yaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "constrain": "domain"},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
-    margin={"l": 80, "r": 80, "t": 100, "b": 100},
-    annotations=[
-        {
-            "text": f"Encoded: {content}",
-            "xref": "paper",
-            "yref": "paper",
-            "x": 0.5,
-            "y": -0.08,
-            "showarrow": False,
-            "font": {"size": 12, "color": INK_SOFT},
-            "xanchor": "center",
-        },
-        {
-            "text": "ECC 200 | 16×16 Matrix",
-            "xref": "paper",
-            "yref": "paper",
-            "x": 0.5,
-            "y": -0.13,
-            "showarrow": False,
-            "font": {"size": 10, "color": INK_MUTED},
-            "xanchor": "center",
-        },
-        # L-Finder callout — arrow from margin into finder corner
-        {
-            "text": "L-Finder",
-            "x": 0.5,
-            "y": 0.5,
-            "xref": "x",
-            "yref": "y",
-            "showarrow": True,
-            "arrowhead": 2,
-            "arrowwidth": 1.2,
-            "arrowcolor": INK_SOFT,
-            "ax": -50,
-            "ay": 40,
-            "font": {"size": 8, "color": INK_SOFT},
-            "xanchor": "center",
-        },
-        # Timing callout — arrow from margin into timing corner
-        {
-            "text": "Timing",
-            "x": 14.5,
-            "y": 14.5,
-            "xref": "x",
-            "yref": "y",
-            "showarrow": True,
-            "arrowhead": 2,
-            "arrowwidth": 1.2,
-            "arrowcolor": INK_SOFT,
-            "ax": 50,
-            "ay": -40,
-            "font": {"size": 8, "color": INK_SOFT},
-            "xanchor": "center",
-        },
-    ],
+    autosize=False,
+    width=600,
+    height=600,
+    margin={"l": 80, "r": 80, "t": 100, "b": 80},
 )
 
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
