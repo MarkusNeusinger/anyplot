@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: stock-event-flags
 created: '2026-01-21T13:14:35Z'
-updated: '2026-11-26T16:34:37Z'
+updated: '2026-11-26T16:41:58Z'
 generated_by: claude-sonnet
-workflow_run: 45858918788
+workflow_run: 45860236462
 issue: 3749
 language_version: 3.14.10
 library_version: 0.13.2
@@ -12,94 +12,78 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 82
 review:
   strengths:
-  - Event types encoded redundantly by Imprint color and marker shape (square, diamond,
-    triangle, circle), CVD-safe in both themes
-  - Flags alternate above and below the price with dashed connectors from the price
-    marker, so each event's date reads exactly
-  - Theme tokens threaded through every chrome element, including the elevated flag
-    and legend boxes; data colors identical across themes
-  - Realistic data story with a 2:1 split that really halves the price
-  - Legend placed in the empty space above the post-split price, clear of the line
-    and all flags
+  - Event types encoded redundantly by Imprint color (positions 2-5) and marker shape
+    (square, diamond, triangle, circle), CVD-safe in both themes
+  - Flags alternate above and below the price with dashed connectors in the type color
+    from the price marker, so each event's date reads exactly
+  - Flag label text in INK on the elevated box with the type color on the border keeps
+    every label legible in both themes
+  - Theme tokens threaded through all chrome via sns.set_theme rc; data colors identical
+    across themes
+  - Realistic tech-equity story with a 2:1 split that really halves the price
+  - Price drawn with sns.lineplot(data=df, x=DATE, y=CLOSE) from the tidy frame and
+    the column constants
   weaknesses:
-  - 'VQ-02 (both): the Q4 Earnings flag box sits on the price line around mid-January
-    (about $150-160), hiding a short stretch of the price → place that flag clear
-    of the line, e.g. a larger offset above. Likely cause: flag_pct = price*0.06*(1+(idx%3)*0.3)
-    gives the first flag the smallest offset.'
-  - 'SC-01 (both): two dotted regression trend lines with 95% CI bands (Trend (95%
-    CI)) are drawn though the spec neither requires nor offers a trend layer → remove
-    them and their legend entry. Likely cause: the sns.regplot loop over the pre/post-split
-    segments.'
-  - 'SC-03 (both): the green area fill under the price runs to an arbitrary baseline
-    at 0.9 x the minimum close, so the filled height encodes no value → drop the fill
-    (or fill to zero). Likely cause: ax.fill_between(df[DATE], y_base, df[CLOSE])
-    with y_base = min*0.9.'
-  - 'SC-04 (both): the legend is titled ''Events'' but its first two entries are Stock
-    Price and the trend, which are not events → no title, or a title covering all
-    entries. Likely cause: ax.legend(title="Events").'
-  - 'VQ-01 (dark): the Div $0.50 / Div $0.55 labels (#4467A3) and Product Launch /
-    Partnership labels (#AE3030) read weakly on the #242420 flag box, about 3:1 contrast
-    → label text in INK with the type color kept on the box border and marker. Likely
-    cause: annotate(color=color) for the label text.'
+  - 'VQ-02 (both): the 2:1 Split flag box sits on the price line''s vertical split
+    drop at about $75-87, so the drop runs behind the label → place the split flag
+    clear of the drop, e.g. below the post-split price or with a larger offset above
+    the pre-split level. Likely cause: flag_y = price_at_event + flag_pct * 1.7 computed
+    from the post-split close puts the box inside the drop''s span.'
   - 'Suggestion: highlighted background spans for earnings blackout periods, which
     the Notes allow, would add context.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white
-      Chrome: title 'stock-event-flags · python · seaborn · anyplot.ai' dark and centered; 'Date' and 'Stock Price ($)' axis titles and rotated monthly ticks 2025-01..2025-09 readable; y ticks 60-160; y-only subtle grid; top/right spines removed; legend 'Events' in the upper right on an elevated box
-      Data: price line in #009E73 with a pale green area fill, falling from ~$160 to ~$132 then halving to ~$66 at the May 2:1 split; two dotted gray trend lines with gray CI bands; 8 flags with dashed connectors - Earnings lavender squares, Dividend blue diamonds, Split ochre triangle, News red circles - with rounded label boxes alternating above and below; the Q4 Earnings box overlaps the price line in mid-January
+      Chrome: title 'stock-event-flags · python · seaborn · anyplot.ai' dark and centered; 'Date' and 'Stock Price ($)' axis titles; rotated monthly ticks 2025-01..2025-09 and y ticks 60-160 in soft ink; y-only subtle grid; top/right spines removed; untitled legend (Stock Price, Earnings, Dividend, Split, News) on an elevated box in the upper right
+      Data: price line in #009E73 from ~$150 to ~$132, halving to ~$66 at the May 2:1 split, ending ~$74; 8 flags with dashed connectors in type color - Earnings lavender squares, Dividend blue diamonds, Split ochre triangle, News red circles - label boxes alternating above and below with dark bold text and type-colored borders; the 2:1 Split box sits on the vertical split drop of the price line
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
-      Chrome: title, axis titles and ticks in light ink, all readable; legend and flag boxes on elevated #242420; no dark-on-dark chrome
-      Data: same categorical colors as the light render; area fill dark green; blue dividend and red news label text reads weakly on the dark box (~3:1)
-      Legibility verdict: PASS (with weak contrast on blue/red flag labels)
+      Chrome: title, axis titles and ticks in light ink, all readable; legend and flag boxes on elevated #242420; no dark-on-dark text
+      Data: same categorical colors as the light render; flag label text in light ink on the dark boxes, all readable; same split-box overlap with the drop
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: 'Explicit sizes (title 12, axis titles 10, ticks/legend/flags 8)
-          at the library prompt''s reference; light render fully readable; in the
-          dark render the blue dividend and red news flag labels read weakly on the
-          #242420 box (defect line)'
+        passed: true
+        comment: Explicit sizes (title 12, axis titles 10, ticks/legend/flags 8) at
+          the library prompt's reference; flag text in INK readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: false
-        comment: The Q4 Earnings flag box sits on the price line around mid-January
-          (defect line); other flags clear of text
+        comment: The 2:1 Split box sits on the vertical split drop of the price line
+          (defect line); all other flags clear of the line and of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line 2.0 pt suits 180 days; event markers s=70 clearly visible;
-          legend glyphs match the marks in both themes
+        comment: 2 pt price line suits 180 days; event markers s=70 with page-colored
+          edge; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Event types carry both distinct colors and distinct marker shapes;
-          CVD-safe redundant encoding
+        comment: Event types carry color and marker shape; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas; plot fills the canvas with balanced margins; nothing
-          clipped
+        comment: 3200x1800; tight_layout fills the canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,8 +95,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Price in #009E73; event types on Imprint positions 2-5; backgrounds
-          #FAF8F1 / #1A1A17; chrome theme-adaptive; data colors identical across themes'
+        comment: 'Price #009E73; event types on Imprint positions 2-5; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 9
       max: 20
@@ -121,58 +105,53 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: theme tokens, Imprint, explicit sizes; nothing
           beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Legend placed in the empty area above the post-split price; rounded
-          elevated flag boxes with type-colored borders
+        passed: false
+        comment: Rounded elevated flag boxes with type-colored borders and matching
+          connector colors; legend placed in the empty area above the post-split price
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: The regression trend is an unrequested addition and earns no credit;
-          no hierarchy chosen beyond the Notes
+        passed: false
+        comment: Events displayed as the Notes ask; no hierarchy chosen beyond them
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct line chart with event flags, but two sns.regplot trend lines
-          with 95% CI bands are an addition the spec neither requires nor offers (defect
-          line)
+        passed: true
+        comment: Price line with event flags; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes features: alternating flag heights, distinct icons and
-          colors, dashed connectors to the price level, short labels; C1-C4 shown,
-          C5 optional and not drawn'
+        comment: Alternating flag heights, distinct icons and colors, dashed connectors
+          to the price level, short labels; C1-C4 shown, C5 optional and not drawn
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Price at its data values; events on the nearest trading day; the
-          green area fill runs to an arbitrary baseline at 0.9 x min price, so its
-          height encodes nothing (defect line)
+        passed: true
+        comment: Price at its data values; events on the nearest trading day; y axis
+          fitted to the data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct; legend titled 'Events' also heads the Stock Price
-          and Trend entries, which are not events (defect line)
+        passed: true
+        comment: Title in the mandated format; untitled legend with readable entries
+          for the price and each event type
     data_quality:
       score: 15
       max: 15
@@ -182,21 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four event types, 8 events over 180 trading days, a split with a
-          real price adjustment, up and down movements
+        comment: Four event types, 8 events over 180 trading days, a split with real
+          price adjustment, rises and falls
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Plausible tech-equity scenario: quarterly earnings, dividends, product
-          launch, partnership, 2:1 split; neutral'
+        comment: 'Plausible tech equity: quarterly earnings, dividends, product launch,
+          partnership, 2:1 split; neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Prices $60-165 plausible; checked the split: post-split prices are
+        comment: 'Prices $60-165 plausible; checked the split: post-split level is
           half the pre-split level (~$132 -> ~$66); dividends $0.50/$0.55 plausible'
     code_quality:
       score: 10
@@ -219,7 +198,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (mdates, plt, np, pd, sns, Line2D, os)
+        comment: All imports used (os, plt, np, pd, sns, Line2D)
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -240,20 +219,18 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: sns.set_theme with rc, sns.lineplot with data=; axes-level API; baseline
-          idiom
+        passed: false
+        comment: sns.set_theme with rc, sns.lineplot(data=df, ...); baseline idiom
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: true
-        comment: sns.regplot is used only for the unrequested trend layer, which earns
-          no credit; nothing else beyond the mandated API
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
-  rendered_at: '2026-11-26T16:31:02Z'
+  rendered_at: '2026-11-26T16:38:38Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -262,7 +239,9 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
-  - regression
+  - time-series
   styling:
-  - alpha-blending
+  - edge-highlighting
+  - publication-ready

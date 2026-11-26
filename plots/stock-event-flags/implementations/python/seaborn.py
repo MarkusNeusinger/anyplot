@@ -1,7 +1,7 @@
 """ anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 77/100 | Updated: 2026-11-26
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 # When run directly (python seaborn.py), this directory is prepended to
@@ -20,7 +20,6 @@ del _sys, _pathlib
 
 import os
 
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -34,7 +33,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]
@@ -65,7 +63,6 @@ EVENT_STYLE = {
     "news": (IMPRINT_PALETTE[4], "o"),
 }
 FALLBACK_MARKERS = ["P", "X", "v", "h"]
-SPLIT_TYPE = "split"  # an event of this type starts a new price regime, so the trend is fitted per regime
 
 # Columns: set these to your table's column names
 DATE = "Date"  # role: date
@@ -122,30 +119,6 @@ ax.set_facecolor(PAGE_BG)
 
 # Stock price line (seaborn lineplot)
 sns.lineplot(data=df, x=DATE, y=CLOSE, ax=ax, color=BRAND, linewidth=2.0, label="Stock Price")
-y_base = df[CLOSE].min() * 0.9
-ax.fill_between(df[DATE], y_base, df[CLOSE], alpha=0.12, color=BRAND)
-
-# Seaborn-distinctive: per-regime linear regression trend with 95% CI.
-# Separate regplots before and after a split avoid a spurious slope from the discontinuity;
-# the CI bands give statistical context for each period.
-split_dates = events.loc[events[EVENT_TYPE] == SPLIT_TYPE, DATE]
-if len(split_dates):
-    split_date = split_dates.iloc[0]
-    segments = [df[df[DATE] < split_date], df[df[DATE] >= split_date]]
-else:
-    segments = [df]
-for df_seg in segments:
-    if len(df_seg) > 2:
-        # Dates as matplotlib floats match the internal scale of the date axis, so the fit overlays correctly
-        sns.regplot(
-            x=mdates.date2num(df_seg[DATE].to_numpy()),
-            y=df_seg[CLOSE].to_numpy(),
-            ax=ax,
-            scatter=False,
-            color=INK_MUTED,
-            ci=95,
-            line_kws={"linewidth": 1.0, "linestyle": ":", "alpha": 0.9},
-        )
 
 # Flags: percentage-based offset keeps proportions consistent across the split
 for idx, (_, event) in enumerate(events.iterrows()):
@@ -153,9 +126,9 @@ for idx, (_, event) in enumerate(events.iterrows()):
     price_at_event = event[CLOSE]
     event_type = event[EVENT_TYPE]
 
-    flag_pct = price_at_event * 0.06 * (1 + (idx % 3) * 0.3)
+    flag_pct = price_at_event * 0.10 * (1 + (idx % 3) * 0.3)
     if idx % 2 == 0:
-        flag_y = price_at_event + flag_pct
+        flag_y = price_at_event + flag_pct * 1.7
         va = "bottom"
     else:
         flag_y = price_at_event - flag_pct
@@ -173,7 +146,7 @@ for idx, (_, event) in enumerate(events.iterrows()):
         xy=(actual_date, flag_y),
         fontsize=8,
         fontweight="bold",
-        color=color,
+        color=INK,
         ha="center",
         va=va,
         bbox={
@@ -186,10 +159,7 @@ for idx, (_, event) in enumerate(events.iterrows()):
     )
 
 # Legend — upper right sits in the empty space above the post-split price, clear of line and flags
-legend_elements = [
-    Line2D([0], [0], color=BRAND, linewidth=2.0, label="Stock Price"),
-    Line2D([0], [0], color=INK_MUTED, linewidth=1.0, linestyle=":", alpha=0.9, label="Trend (95% CI)"),
-]
+legend_elements = [Line2D([0], [0], color=BRAND, linewidth=2.0, label="Stock Price")]
 for etype, color in event_colors.items():
     legend_elements.append(
         plt.scatter(
@@ -205,14 +175,7 @@ for etype, color in event_colors.items():
     )
 
 ax.legend(
-    handles=legend_elements,
-    loc="upper right",
-    fontsize=8,
-    title="Events",
-    title_fontsize=8,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-    framealpha=0.95,
+    handles=legend_elements, loc="upper right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, framealpha=0.95
 )
 
 # Style
