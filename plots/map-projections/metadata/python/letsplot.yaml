@@ -13,42 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
   - 'Tissot indicatrices are computed as true 8° spherical circles at regular 30°/60°
     graticule crossings, so Mercator''s conformal growth is measured, not drawn: the
-    60° circles are about twice the equatorial diameter (1/cos 60° = 2) and the 30°
-    ones about 1.15×, both checked in the render'
-  - Uses lets-plot's native coord_map() so land, borders, graticule and circles all
-    go through the same Mercator transform, with hemisphere-labelled ticks (60°N,
-    120°W) placed on the graticule
-  - Country borders in the page color on translucent neutral land separate land from
-    sea in both themes, and a border that overshoots the simplified coast vanishes
-    at sea
-  - The caption states the reading ('Equal circles on the globe stay round in Mercator
-    but grow toward the poles') and credits Natural Earth, and the title prefix names
+    60° circles are about twice the equatorial diameter, the 30° ones about 1.15x'
+  - lets-plot's native coord_map() puts land, borders, graticule and circles through
+    the same Mercator transform, with hemisphere-labelled ticks (60°N, 120°W) on the
+    graticule
+  - Page-colored country borders on translucent neutral land set land apart from sea
+    in both themes, and a border that overshoots the simplified coast vanishes at
+    sea
+  - The caption states the reading and credits Natural Earth; the title prefix names
     the projection as the spec asks
-  - 'The chrome flips cleanly between themes, with an identical #009E73 hue for the
-    circles; the legend keys use override_aes so they match the translucent marks'
+  - 'The chrome flips cleanly between themes with an identical #009E73 hue for the
+    circles, and the legend keys use override_aes so they match the translucent marks'
   weaknesses:
   - 'Suggestion: the 1.4° Ramer-Douglas-Peucker simplification makes coastlines visibly
     angular (British Isles, Japan, Scandinavia); a finer tolerance would read more
-    like a real coastline at this 2400 px size.'
+    like a real coastline at 2400 px.'
   - 'Suggestion: over the dark sea the translucent circles fall to a deep green that
     reads weaker than over land; a slightly higher fill alpha in the dark theme would
     even them out.'
+  - 'Suggestion: the five-line PIL pass that flattens the transparent margins could
+    be the one-panel gggrid wrapper the library prompt prescribes for a fixed aspect,
+    which paints the canvas inside lets-plot.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, including the margins flattened by PIL.
-      Chrome: the bold title "Mercator Projection · map-projections · python · letsplot · anyplot.ai" is dark ink, centred, at about 84% of the width; "Longitude (°)" and "Latitude (°)" axis titles; hemisphere tick labels (180°, 120°W … 180°; 60°S … 60°N) in soft ink; a thin panel frame; the legend at the bottom (Land, Tissot indicatrix (8° radius)); a two-line caption. All readable.
-      Data: neutral grey translucent land with page-colored country borders; a subtle graticule every 30° that shows through the land; Mercator to ±85° with Antarctica and Greenland strongly inflated; 30 #009E73 translucent Tissot circles at lat -60..60 by 30 and lon -150..150 by 60, which stay round and double in diameter at ±60°.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, margins included (flattened to the page color with PIL).
+      Chrome: bold dark title "Mercator Projection · map-projections · python · letsplot · anyplot.ai", centred at about 84% of the width; "Longitude (°)" and "Latitude (°)" axis titles; hemisphere tick labels (180°, 120°W … 180°; 60°S … 60°N) in soft ink; a thin panel frame; legend at the bottom (Land, Tissot indicatrix (8° radius)); a two-line caption. All readable.
+      Data: neutral grey translucent land with page-colored country borders; a subtle 30° graticule showing through the land; Mercator to ±85° with Antarctica and Greenland strongly inflated; 30 #009E73 translucent Tissot circles at lat -60..60 by 30 and lon -150..150 by 60, round everywhere and about twice the equatorial diameter at ±60°.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, tick labels, legend and caption in light ink, all clearly readable; no dark-on-dark text. The frame and graticule are lighter grey and subtle.
-      Data: identical geometry; the Tissot circles are the same #009E73 hue with a bright green outline (deeper green over sea, lighter over land, from alpha blending); land is mid-grey with dark page-colored borders.
+      Background: warm near-black #1A1A17 across the whole canvas.
+      Chrome: title, axis titles, tick labels, legend and caption in light ink, all clearly readable; no dark-on-dark text. Frame and graticule in a subtle lighter grey.
+      Data: identical geometry; the circles keep the same #009E73 hue and outline (deeper over sea, lighter over land from alpha blending); land is mid-grey with dark page-colored borders.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,72 +62,75 @@ review:
         max: 8
         passed: true
         comment: Font sizes set explicitly (title 13, axis titles 12, ticks 10, legend
-          11 at scale 4); readable in both themes
+          11, caption 10 at scale 4); every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; circles over land are translucent so the land
-          stays visible
+        comment: No text collisions; the translucent circles over land keep the land
+          and borders visible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 circles with 0.5 outlines are clearly visible; the legend keys
-          match the marks in both themes
+        comment: 30 circles with 0.5 outlines clearly visible; legend keys match the
+          translucent marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green against neutral grey, with no red-green signal; good contrast
+        comment: Green circles against neutral grey land, no red-green signal, good
+          contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas suits the near-square Mercator frame; nothing
-          overflows or is clipped
+        comment: Square 2400x2400 canvas suits the near-square Mercator frame; the
+          map fills it, nothing overflows or is clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) with hemisphere ticks
+        comment: Longitude (°) / Latitude (°) with hemisphere-labelled ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Single data series in #009E73; land in neutral INK_MUTED; backgrounds
-          #FAF8F1 / #1A1A17'
+          #FAF8F1 / #1A1A17, margins flattened to the page color'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above the baseline: hemisphere-labelled graticule ticks, a caption
-          hierarchy below the legend, translucent land that lets the graticule through'
+        passed: false
+        comment: 'Above the baseline: hemisphere-labelled ticks placed on the graticule,
+          a caption tier below the legend, translucent land that lets the graticule
+          through'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Page-colored borders that vanish at sea and a 30° graticule kept
-          faint under the land
+        passed: false
+        comment: Page-colored country borders that vanish where they overshoot the
+          simplified coast; the 30° graticule kept faint under the land
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: The caption names the takeaway (circles round but growing toward
-          the poles), which guides the reading
+        passed: false
+        comment: The caption states the takeaway (equal circles stay round but grow
+          toward the poles), and circles at graticule crossings let the eye compare
+          rows
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: World map in a named projection with a graticule and Tissot indicatrices
+        comment: World map in a named projection with graticule and Tissot indicatrices
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Coastlines and borders, a 30° graticule, land in a neutral color,
-          a title naming the projection, Tissot circles at regular positions that
-          stay circular and change size on a conformal projection
+        comment: C1 coastlines and borders, neutral land set apart from sea; C2 30°
+          graticule lighter than the coast; C3 title names the projection; C4 Tissot
+          circles at regular positions stay circular and grow on the conformal Mercator;
+          C5 not used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon/lat through coord_map; full -180..180 and ±85° extent
+        comment: lon/lat through coord_map; full -180..180 and ±85° extent; ticks
+          on the graticule
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: '''Mercator Projection · map-projections · python · letsplot · anyplot.ai'';
-          legend entries readable'
+          legend entries Land and Tissot indicatrix (8° radius)'
     data_quality:
       score: 15
       max: 15
@@ -168,7 +174,7 @@ review:
         max: 6
         passed: true
         comment: Shows the projection's distortion through Tissot growth, polar inflation
-          and the graticule; a single projection is allowed by the spec
+          and the graticule; a single projection is allowed
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -180,8 +186,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked in the render: 60° circles ≈2.07× the equatorial diameter
-          (expected 2.0), 30° ≈1.17× (expected 1.155); the Mercator tick spacing is
+        comment: 'Checked in the render: the 60° circles are about 2x the equatorial
+          diameter (1/cos 60° = 2), the 30° ones about 1.15x; Mercator latitude spacing
           nonlinear as expected'
     code_quality:
       score: 10
@@ -198,7 +204,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic embedded data
+        comment: Deterministic embedded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -210,14 +216,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Spherical circle formula is short and no installed package computes
-          it; the embedded data avoids the network
+        comment: The spherical circle formula is short and no available package computes
+          it; the five-line PIL flatten of the transparent margins is a handful of
+          lines, a suggestion at most
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html with the current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
       score: 6
       max: 10
@@ -226,19 +233,19 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Grammar layering with manual scales, guides(override_aes), tooltips='none',
-          theme_minimal + theme
+        passed: false
+        comment: Grammar layering with named manual scales and breaks, guides(guide_legend(override_aes)),
+          tooltips='none' on the geometry layers
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Native coord_map() projection of geographic data and an interactive
+        comment: Native coord_map() Mercator transform of every layer, plus the interactive
           HTML export
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
   rendered_at: '2026-11-08T22:53:00Z'
 impl_tags:
   dependencies:
