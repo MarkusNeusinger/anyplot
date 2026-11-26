@@ -2,141 +2,122 @@ library: ggplot2
 language: r
 specification_id: histogram-basic
 created: '2026-05-28T07:42:00Z'
-updated: '2026-05-28T08:02:07Z'
+updated: '2026-11-26T18:42:49Z'
 generated_by: claude-sonnet
-workflow_run: 26561424281
+workflow_run: 45877410115
 issue: 654
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - Sophisticated density overlay scaled to histogram count space using manual density()
-    computation — idiomatic ggplot2 multi-layer grammar technique that avoids geom_density()'s
-    density-scale limitation
-  - Median reference line + annotation creates a clear visual focal point; ochre (#BD8233)
-    as a semantic 'reference' color is a well-reasoned Imprint palette choice
-  - 'Both themes render correctly: warm off-white (#FAF8F1) in light, near-black (#1A1A17)
-    in dark, with all chrome (title, axis labels, ticks, grid, density line) adapting
-    properly via INK/INK_SOFT tokens'
-  - Informative subtitle directly states the distributional insight — viewer immediately
-    understands the salary story without analysis
-  - 'Clean visual refinement: y-axis-only subtle grid, no tick marks, spines removed
-    via theme_minimal, generous margins, axis lines as structural elements'
+  - Bin edges in translucent ink (alpha(INK, 0.55)) stay visible between bars in both
+    themes without opening gaps
+  - 35 bins for 400 observations show the right skew, the secondary clusters near
+    $105k and $175k and the sparse tail
+  - Y axis anchored at zero with expansion(mult = c(0, 0.08)); x ticks every $50k
+    via scales::label_dollar(scale = 1e-3, suffix = 'k')
+  - Theme tokens thread through every chrome element; both renders are theme-correct
   weaknesses:
-  - Bar edge color uses PAGE_BG (color = PAGE_BG), which creates invisible bin separation
-    in dark mode — the dark edge (#1A1A17) blends with the dark background. Use a
-    semi-transparent ink edge or a fixed contrast colour so separators are visible
-    in both themes.
-  - Density overlay (dashed line) has no label or legend entry — a viewer unfamiliar
-    with overlaid density curves cannot immediately identify it. Consider a small
-    inline annotation (e.g. 'density') near the curve tail or a minimal legend.
-  - 'DE-01 could be elevated further: the design is clean and functional but the colour
-    palette is limited to a single categorical hue (green bars + ochre reference).
-    A more sophisticated implementation might add subtle visual polish beyond the
-    required palette.'
+  - 'CQ-05 (code): geom_histogram(bins = 35) sets no boundary, so the bin edges depend
+    on the ggplot2 version and land on non-round salaries → add boundary (for example
+    binwidth = 5000, boundary = 0, or bins = 35 with boundary = 0). Likely cause:
+    the geom_histogram call without boundary, against the library prompt''s ggplot2
+    4.0 note.'
+  - 'Suggestion: a binwidth on round salary steps (for example $5k) would let readers
+    read bin ranges off the $50k ticks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Bold title "histogram-basic · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at 12pt — fully readable. Subtitle in INK_SOFT at 9pt — readable. Y-axis label "Number of Employees" and X-axis label "Annual Salary" in dark ink at 10pt — clearly readable. Tick labels ($100k, $200k, 0/20/40/60) in INK_SOFT at 8pt — readable.
-      Data: 35-bin histogram in brand green (#009E73) with thin white (PAGE_BG) bin separators — individual bins clearly distinguishable. Dashed density overlay in INK_SOFT (dark grey) follows the histogram shape. Vertical ochre (#BD8233) median reference line with annotation "Median: $72k" positioned at top. Distribution is visibly right-skewed with peak around $65-75k and a long tail extending to ~$250k.
-      Legibility verdict: PASS — all text readable, appropriate contrast, no dark-on-light failures.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold title 'histogram-basic · r · ggplot2 · anyplot.ai' in dark ink, axis titles 'Annual Salary' and 'Number of Employees' in dark ink, ticks ($50k–$250k, 0–50) in INK_SOFT; subtle horizontal grid only; left and bottom axis lines. All readable.
+      Data: 35 contiguous #009E73 bars with thin dark translucent edges, right-skewed with the peak (52) near $60k, secondary bumps near $105k and $165k, an empty bin near $140k and a sparse tail to $250k. Y from zero.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title "histogram-basic · r · ggplot2 · anyplot.ai" in light (#F0EFE8) — clearly readable against dark background. Subtitle in light INK_SOFT (#B8B7B0) — readable. Y-axis and X-axis labels in light ink — readable. Tick labels in light INK_SOFT — all readable. No dark-on-dark failures observed.
-      Data: Histogram bars remain identical brand green (#009E73) — data color unchanged from light render as required. Density dashed line is now light grey (#B8B7B0) adapting from INK_SOFT. Ochre median line (#BD8233) identical. Bar edge separators use PAGE_BG (#1A1A17) which blends with the dark background — bins slightly less visually separated than in light mode, though still distinguishable by height differences.
-      Legibility verdict: PASS — all chrome elements readable on dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks in #B8B7B0, grid subtle grey; no dark-on-dark text.
+      Data: identical #009E73 bars and the same data; bar edges now light translucent ink, clearly separating the bins.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, subtitle=9).
-          Readable in both themes. Annotation text size=3mm (~8.5pt) is readable at
-          full res but marginally small on mobile scale.
+        comment: Title 12 pt bold, axis titles 10 pt, ticks 8 pt, all set explicitly;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Median annotation uses Inf+vjust to position
-          at top without colliding with bars.
+        comment: No text collisions; bars only meet at shared edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars, density line, and median reference line all clearly
-          visible in both themes.
+        comment: 35 contiguous bars clearly visible; edges in translucent ink show
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast. Brand green on warm background is CVD-safe. Ochre
-          median distinctive.
+        comment: Single green series with strong contrast on both surfaces; no color-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800 (8in x 4.5in at 400dpi). Good margins. Plot
-          well-proportioned.
+        comment: 3200x1800 canvas well filled; title ~47% of width; balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Annual Salary and Number of Employees are descriptive; units conveyed
-          via $k tick formatting.
+        comment: Annual Salary (dollar k ticks) and Number of Employees are descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Brand green bars (#009E73) correct. Backgrounds correct (#FAF8F1
-          light, #1A1A17 dark). Chrome adapts correctly. Minor: bar edge color = PAGE_BG
-          makes separators invisible in dark mode — not a palette violation but a
-          chrome refinement miss.'
+        comment: 'Bars #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips via INK/INK_SOFT
+          tokens'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Clearly above defaults: density overlay, median reference line,
-          semantic ochre colour choice, informative subtitle. Not quite ''publication-ready''
-          FiveThirtyEight level (limited to single categorical hue + overlay), but
-          strong.'
+        comment: Style-guide baseline (theme tokens, explicit sizes, bold title);
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Good refinement: y-axis-only subtle grid, no tick marks, spines
-          removed, generous margins, axis lines as structural elements. Minor polish
-          miss: bar edge blends with dark background.'
+        comment: Spine and grid rules met (y-only grid at 35% alpha, axis lines, no
+          ticks); nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Near-excellent: subtitle directly states the insight, median focal
-          point with ochre line and annotation, density envelope shows distributional
-          shape. Density line lacks its own label which slightly reduces clarity.'
+        comment: Distribution displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -146,27 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram using geom_histogram.
+        comment: Correct basic histogram via geom_histogram; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bin edges present (thin separators via color=PAGE_BG), readable axis
-          labels, appropriate bin count (35 for 400 obs), y-axis starts at 0.
+        comment: Contiguous equal-width bins with thin visible edges (C1, C2), 35
+          bins for 400 obs show skew, secondary clusters and tail (C3), one distribution
+          in one color (C4), y from zero
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Salary on X, count on Y, all data visible.
+        comment: Salary on x, count on y; y starts at zero with no lower expansion;
+          x ticks every $50k readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'histogram-basic · r · ggplot2 · anyplot.ai' correct.
-          No legend needed for single series.
+        comment: Title 'histogram-basic · r · ggplot2 · anyplot.ai' correct; single
+          series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -176,24 +159,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates right-skewed distribution, multi-modal mixture, appropriate
-          bin count, distributional shape via density overlay.
+        comment: Right skew, main mode, secondary clusters near $105k and $175k, sparse
+          tail and an empty bin all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee annual salary distribution — realistic, neutral business
-          scenario. Three-component mixture (workers/senior/executive) is plausible.
+        comment: Employee annual salaries — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary range $28k–$250k, median $72k — realistic for mixed workforce.
-          Three-component mixture proportions (70/20/10%) are plausible.
+        comment: Salaries floored at $28k, peak $60–75k, tail to ~$250k — sensible
+          for a mixed workforce; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -201,65 +183,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → density prep → plot
-          → save. No functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, scales, ragg — all used.
+        comment: ggplot2, scales (label_dollar, alpha, expansion), ragg all used;
+          tibble namespaced
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic R/ggplot2. Appropriate complexity. No over-engineering.
+        comment: Concise (76 lines), no hand-rolled computation
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves to plot-{THEME}.png. Modern linewidth= not deprecated size=
-          for lines.
+        passed: false
+        comment: Saves plot-{THEME}.png via ragg, but geom_histogram(bins = 35) has
+          no boundary, which the library prompt's ggplot2 4.0 note requires (defect
+          line)
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Expert ggplot2 grammar: geom layers stacked, scales::label_dollar,
-          expansion(), annotate with Inf position, theme_minimal + theme() chain,
-          ggsave with ragg device.'
+        comment: 'Default: grammar layers, .data[[...]] with a column constant, label_dollar,
+          expansion; the template the library prompt mandates'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
         passed: true
-        comment: Manual density() computation scaled to count space overlaid as geom_line()
-          with separate data= source — a distinctive ggplot2 multi-layer grammar pattern.
-          Inf-positioned annotation is ggplot2-specific. expansion() for axis control.
-          Solid ggplot2 expertise demonstrated.
+        comment: 'Default: nothing beyond what the library prompt mandates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
+  rendered_at: '2026-11-26T18:39:44Z'
 impl_tags:
-  dependencies:
-  - scales
-  techniques:
-  - annotations
-  - layer-composition
+  dependencies: []
+  techniques: []
   patterns:
   - data-generation
   dataprep:
-  - kde
+  - binning
   styling:
-  - edge-highlighting
-  - grid-styling
+  - minimal-chrome
