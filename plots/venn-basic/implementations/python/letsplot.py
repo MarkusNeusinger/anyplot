@@ -1,10 +1,11 @@
 """ anyplot.ai
 venn-basic: Venn Diagram
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-21
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -52,37 +53,22 @@ set_sizes = np.array([np.nansum(counts[members[:, i]]) for i in range(n_sets)])
 radii = np.sqrt(set_sizes / np.pi)
 
 
-def lens_area(d, r1, r2):
-    """Overlap area of two circles whose centers are d apart."""
-    if d >= r1 + r2:
-        return 0.0
-    if d <= abs(r1 - r2):
-        return np.pi * min(r1, r2) ** 2
+# Place circles so each pairwise overlap area matches its inclusive intersection size:
+# bisect the center distance of all pairs at once on the lens-area formula
+pairs = list(combinations(range(n_sets), 2))
+r1 = np.array([radii[i] for i, j in pairs])
+r2 = np.array([radii[j] for i, j in pairs])
+target = np.array([np.nansum(counts[members[:, i] & members[:, j]]) for i, j in pairs])
+lo, hi = np.abs(r1 - r2), r1 + r2
+for _ in range(60):
+    d = (lo + hi) / 2
     a1 = np.arccos((d**2 + r1**2 - r2**2) / (2 * d * r1))
     a2 = np.arccos((d**2 + r2**2 - r1**2) / (2 * d * r2))
-    return r1**2 * a1 + r2**2 * a2 - 0.5 * np.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
-
-
-def distance_for_overlap(target, r1, r2):
-    """Center distance at which two circles overlap by the target area (bisection)."""
-    lo, hi = abs(r1 - r2), r1 + r2
-    for _ in range(60):
-        mid = (lo + hi) / 2
-        if lens_area(mid, r1, r2) > target:
-            lo = mid
-        else:
-            hi = mid
-    return (lo + hi) / 2
-
-
-def pair_size(i, j):
-    return np.nansum(counts[members[:, i] & members[:, j]])
-
-
-# Place circles so each pairwise overlap area matches its inclusive intersection size
-d01 = distance_for_overlap(pair_size(0, 1), radii[0], radii[1])
-d02 = distance_for_overlap(pair_size(0, 2), radii[0], radii[2])
-d12 = distance_for_overlap(pair_size(1, 2), radii[1], radii[2])
+    root = np.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+    lens = r1**2 * a1 + r2**2 * a2 - 0.5 * root
+    lo = np.where(lens > target, d, lo)
+    hi = np.where(lens > target, hi, d)
+d01, d02, d12 = (lo + hi) / 2
 cx_c = (d01**2 + d02**2 - d12**2) / (2 * d01)
 cy_c = -np.sqrt(max(d02**2 - cx_c**2, 0.0))
 centers = np.array([[0.0, 0.0], [d01, 0.0], [cx_c, cy_c]])
@@ -146,6 +132,9 @@ plot = (
     + anyplot_theme
     + ggsize(600, 600)
 )
+
+# The fixed aspect leaves the canvas edges transparent: a one-panel grid paints the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save as PNG and HTML with theme suffix
 ggsave(plot, f"plot-{THEME}.png", scale=4)
