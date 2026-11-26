@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-20
+Quality: 88/100 | Updated: 2026-11-26
 """
 
 import os
@@ -18,11 +18,19 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-BRAND = "#009E73"  # Okabe-Ito position 1 — START marker
-ACCENT = "#C475FD"  # Okabe-Ito position 2 — GOAL marker
+BRAND = "#009E73"  # Imprint palette position 1 — START marker
+ACCENT = "#C475FD"  # Imprint palette position 2 — GOAL marker
 
-# Maze parameters
-np.random.seed(42)
+# Columns of the wall table
+X = "x"  # role: extra
+Y = "y"  # role: extra
+XEND = "xend"  # role: extra
+YEND = "yend"  # role: extra
+LW = "lw"  # role: extra
+
+# Data: the maze is generated from the parameters below; replace the block to change the puzzle
+SEED = 42
+np.random.seed(SEED)
 num_rings = 7
 sectors_per_ring = [1]  # Center has 1 sector, each ring has more sectors
 for ring in range(1, num_rings + 1):
@@ -84,7 +92,7 @@ while stack:
 
 # Geometry parameters
 ring_width = 1.0
-center_radius = 0.5
+center_radius = 1.1
 entrance_sector = 0
 n_arc_points = 100  # Increased for smoother arcs
 
@@ -123,7 +131,7 @@ for ring in range(1, num_rings + 1):
         for i in range(len(theta_vals) - 1):
             x1, y1 = outer_r * np.cos(theta_vals[i]), outer_r * np.sin(theta_vals[i])
             x2, y2 = outer_r * np.cos(theta_vals[i + 1]), outer_r * np.sin(theta_vals[i + 1])
-            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": lw})
+            wall_segments.append({X: x1, Y: y1, XEND: x2, YEND: y2, LW: lw})
 
 # Draw radial walls (between sectors in same ring)
 for ring in range(1, num_rings + 1):
@@ -140,7 +148,7 @@ for ring in range(1, num_rings + 1):
         theta = 2 * np.pi * (sector + 1) / n_sectors - np.pi / 2
         x1, y1 = inner_r * np.cos(theta), inner_r * np.sin(theta)
         x2, y2 = outer_r * np.cos(theta), outer_r * np.sin(theta)
-        wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": lw})
+        wall_segments.append({X: x1, Y: y1, XEND: x2, YEND: y2, LW: lw})
 
 # Draw inner walls for ring 1 connecting to center
 inner_r = center_radius
@@ -153,10 +161,11 @@ for sector in range(sectors_per_ring[1]):
         for i in range(len(theta_vals) - 1):
             x1, y1 = inner_r * np.cos(theta_vals[i]), inner_r * np.sin(theta_vals[i])
             x2, y2 = inner_r * np.cos(theta_vals[i + 1]), inner_r * np.sin(theta_vals[i + 1])
-            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": 1.5})
+            wall_segments.append({X: x1, Y: y1, XEND: x2, YEND: y2, LW: 1.5})
 
-df_walls = pd.DataFrame(wall_segments)
+df = pd.DataFrame(wall_segments)
 
+# Plot
 # Markers for start and goal
 outer_r = center_radius + num_rings * ring_width
 entrance_n_sectors = sectors_per_ring[num_rings]
@@ -168,22 +177,22 @@ start_y = (outer_r + 0.8) * np.sin(entrance_theta)
 
 df_markers = pd.DataFrame(
     {
-        "x": [start_x, 0],
-        "y": [start_y, 0.15],  # GOAL shifted up to clear innermost ring walls
+        X: [start_x, 0],
+        Y: [start_y, 0],
         "label": ["START", "GOAL"],
         "color": [BRAND, ACCENT],
-        "info": [f"Entry — outer ring, sector {entrance_sector}", f"Navigate {num_rings} rings, seed 42"],
+        "info": [f"Entry — outer ring, sector {entrance_sector}", f"Navigate {num_rings} rings, seed {SEED}"],
     }
 )
 
-# Plot — wall size aesthetic drives visual hierarchy; tooltips + ggtb() use lets_plot interactivity
+# wall size aesthetic drives visual hierarchy; tooltips + ggtb() use lets_plot interactivity
 plot_radius = outer_r + 1.5
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", size="lw"), data=df_walls, color=INK, show_legend=False)
+    + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND, size=LW), data=df, color=INK, show_legend=False)
     + scale_size_identity()
     + geom_text(
-        aes(x="x", y="y", label="label", color="color"),
+        aes(x=X, y=Y, label="label", color="color"),
         data=df_markers,
         size=8,
         fontface="bold",
@@ -199,9 +208,11 @@ plot = (
         plot_margin=[40, 40, 40, 40],
     )
     + labs(title="maze-circular · python · letsplot · anyplot.ai")
-    + ggsize(600, 600)
     + ggtb()
 )
+
+# Paint the whole square canvas: coord_fixed leaves the sides transparent
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
