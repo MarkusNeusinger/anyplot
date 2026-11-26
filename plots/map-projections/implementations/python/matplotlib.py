@@ -61,12 +61,14 @@ for i, (name, proj) in enumerate(projections):
     # Disable bottom labels for top-row subplots to prevent overlap with second-row titles
     is_top_row = i < 2
     try:
-        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
+        labels = True if name in ("Mercator", "Robinson") else {"left": "y"}
+        gl = ax.gridlines(draw_labels=labels, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
         gl.top_labels = False
         gl.right_labels = False
-        gl.bottom_labels = not is_top_row
-        gl.xlabel_style = {"size": 7, "color": INK_MUTED}
-        gl.ylabel_style = {"size": 7, "color": INK_MUTED}
+        gl.bottom_labels = False
+        gl.x_inline = False
+        gl.xlabel_style = {"size": 8, "color": INK_MUTED}
+        gl.ylabel_style = {"size": 8, "color": INK_MUTED}
     except Exception:
         gl = ax.gridlines(draw_labels=False, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
     gl.xlocator = plt.FixedLocator(np.arange(-180, 181, 30))
@@ -92,5 +94,5 @@ for i, (name, proj) in enumerate(projections):
 
     ax.set_title(name, fontsize=10, fontweight="bold", color=INK, pad=6)
 
-fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.03, hspace=0.30, wspace=0.04)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.07, hspace=0.30, wspace=0.04)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
