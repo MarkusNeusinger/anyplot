@@ -1,7 +1,10 @@
 """automation/scripts/contract_check.py: the static contract of an implementation file, record-only.
 
-The sources here are synthetic on purpose. The catalogue changes every night,
-so a test that reads `plots/` would pin counts that a regeneration moves.
+The sources here never come from `plots/` at test time. The catalogue changes
+every night, so a test that reads it would pin counts that a regeneration
+moves. The base rules use synthetic sources; the library mandates use
+excerpts of real files pasted in, each with the commit and pull request it
+comes from, so a pattern is tested against the spellings the generator writes.
 """
 
 from __future__ import annotations
@@ -17,10 +20,16 @@ import pytest
 
 from automation.scripts import contract_check
 from automation.scripts.contract_check import (
+    ADVISORY,
+    BASE_REASONS,
+    MANDATES,
     PALETTE_HEXES,
+    RULES,
     build_record,
     check,
     notice_line,
+    reason,
+    selfcheck_lines,
     strip_comments,
     strip_header,
     summary_line,
@@ -422,7 +431,7 @@ def test_check_records_and_never_fails(tmp_path):
         "**Contract check (record-only):** title, colormap (new in this version: title, colormap)\n"
     )
     record = json.loads((tmp_path / "record.json").read_text(encoding="utf-8"))
-    assert record["version"] == 1 and record["new_only"] == ["title", "colormap"]
+    assert record["version"] == 2 and record["new_only"] == ["title", "colormap"]
 
 
 @pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
@@ -432,3 +441,414 @@ def test_an_unreadable_source_is_recorded_not_raised(tmp_path, content):
     result = _run(tmp_path, SCRIPT, "--source", "new.py", "--prev", "prev.py")
     assert result.returncode == 0, result.stderr
     assert "status=unreadable" in result.stdout
+
+
+# --- the library mandates ------------------------------------------------------------------------
+# Excerpts of real files, pasted at the commit named beside each. A constant's comment says whether
+# the file breaks the rule (true positive) or keeps it in one of its spellings (true negative).
+
+# bokeh sn-curve-basic, 564fcdf54 (#14313): the screenshot without a page colour. Its dark render
+# shows the light line rgb(197, 197, 196) along the top and left edge.
+BOKEH_SAVE_UNPAINTED = """
+driver = webdriver.Chrome(options=opts)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+"""
+# bokeh contour-map-geographic, 7513611e6 (#14356): the prompt's own spelling.
+BOKEH_SAVE_PAINTED = """
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+"""
+# bokeh dashboard-metrics-tiles, 55fcfa1e3 (#14470): the body alone, as backgroundColor. Its render is clean.
+BOKEH_SAVE_BODY = """
+driver = webdriver.Chrome(options=opts)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.execute_script(
+    f"document.body.style.margin='0'; document.body.style.padding='0';document.body.style.backgroundColor='{PAGE_BG}';"
+)
+driver.save_screenshot(f"plot-{THEME}.png")
+"""
+# bokeh barcode-ean13, 23ba3b6c0 (#14454): CSS written into the saved HTML. Its render is clean.
+BOKEH_SAVE_CSS = """
+html_content = file_html(p, INLINE)
+html_content = html_content.replace("<body>", f'<body style="background-color:{PAGE_BG};margin:0;padding:0;">', 1)
+html_content = html_content.replace(
+    "</head>",
+    (
+        f"<style>"
+        f"html{{background-color:{PAGE_BG}!important;margin:0!important;padding:0!important;}}"
+        f"</style></head>"
+    ),
+    1,
+)
+driver = webdriver.Chrome(options=opts)
+"""
+# bokeh contour-map-geographic, 7513611e6 (#14356): the toolbar off as a keyword.
+BOKEH_FIGURE = """
+p = figure(
+    width=W,
+    height=H,
+    title="contour-map-geographic · python · bokeh · anyplot.ai",
+    toolbar_location=None,
+    tools="pan,wheel_zoom,reset",
+)
+"""
+# bokeh line-markers, b0ea31e41 (#13453): the figure keeps its toolbar.
+BOKEH_FIGURE_TOOLBAR = """
+p = figure(
+    width=4800,
+    height=2700,
+    title="line-markers · bokeh · anyplot.ai",
+    x_axis_label="Month",
+    y_axis_label="Temperature (°C)",
+)
+"""
+# bokeh timeseries-decomposition, b4924a6a5 (#13729): the toolbar off as a key of a keyword dict.
+BOKEH_FIGURE_DICT = """
+kwargs = {
+    "width": width,
+    "height": height,
+    "x_axis_type": "datetime",
+    "title": title_text,
+    "toolbar_location": None,
+}
+p = figure(**kwargs)
+"""
+
+# pygal maze-circular, e0a7f5e3b (#14278): two tick sizes, and no guide lines drawn.
+PYGAL_56_44_NO_GUIDES = """
+custom_style = Style(
+    background=PAGE_BG,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+)
+chart = pygal.XY(
+    style=custom_style,
+    show_x_guides=False,
+    show_y_guides=False,
+)
+"""
+# pygal barcode-ean13, 161dfc0dd (#14456): equal sizes at a value of its own, both guide colours.
+PYGAL_84_84 = """
+custom_style = Style(
+    title_font_size=66,
+    label_font_size=84,
+    major_label_font_size=84,
+    legend_font_size=44,
+    guide_stroke_color=PAGE_BG,
+    major_guide_stroke_color=PAGE_BG,
+)
+chart = pygal.StackedBar(style=custom_style)
+"""
+# pygal audiogram-clinical, be1db4a91 (#12838): value_label_font_size through a name is not a tick size.
+PYGAL_VALUE_LABEL = """
+LABEL_FS = 40
+custom_style = Style(
+    label_font_size=44,
+    major_label_font_size=44,
+    value_label_font_size=LABEL_FS,
+)
+chart = pygal.XY(style=custom_style, show_x_guides=False, show_y_guides=False)
+"""
+# pygal line-stock-comparison, 75b6947db (#14522): y guides drawn in pygal's black.
+PYGAL_BLACK_GUIDES = """
+custom_style = Style(
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+)
+chart = pygal.Line(
+    style=custom_style,
+    show_x_guides=False,
+    show_y_guides=True,
+)
+"""
+# pygal map-connection-lines, ed97feb86 (#14646): one guide colour of the two.
+PYGAL_ONE_GUIDE = """
+custom_style = Style(
+    label_font_size=44,
+    major_label_font_size=44,
+    guide_stroke_color=GRID_COLOR,
+    guide_stroke_dasharray="2,6",
+)
+chart = pygal.XY(style=custom_style, show_x_guides=True, show_y_guides=True)
+"""
+# pygal donut-basic, a06623ee4 (#9457), and choropleth-basic, 89a1c5c1d: chart types without guide lines.
+PYGAL_PIE = """
+custom_style = Style(label_font_size=44, major_label_font_size=44)
+chart = pygal.Pie(style=custom_style, inner_radius=0.45)
+"""
+PYGAL_WORLD = """
+from pygal_maps_world.maps import World
+custom_style = Style(label_font_size=44, major_label_font_size=44)
+worldmap = World(style=custom_style)
+"""
+
+# altair arc-basic, 54f96fd46 (#8042): a single chart sized as its view only.
+ALTAIR_NO_FIT = """
+chart = (
+    alt.layer(arcs, nodes)
+    .properties(
+        width=620,
+        height=320,
+        padding={"left": 10, "right": 10, "top": 10, "bottom": 30},
+    )
+)
+"""
+# altair area-basic, bd2b3573d (#14682): the prompt's spelling.
+ALTAIR_FIT = """
+chart = (
+    alt.Chart(df)
+    .mark_area()
+    .properties(
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
+    )
+)
+"""
+# altair dashboard-metrics-tiles, 0134d8070 (#14471): a compound chart, which cannot fit.
+ALTAIR_COMPOUND = """
+tile = alt.vconcat(sparkline, change_row, spacing=4).properties(title=name)
+rows = [alt.hconcat(*tiles[i : i + GRID_COLUMNS], spacing=18) for i in range(0, len(tiles), GRID_COLUMNS)]
+chart = alt.vconcat(*rows, spacing=18).properties(padding=10)
+"""
+
+# plotly area-basic, 54ba9e761 (#14678): autosize off, as the prompt asks. No file in the catalogue turns
+# it on; the true positive is this excerpt with the one value flipped.
+PLOTLY_LAYOUT = """
+fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+)
+"""
+
+# lets-plot contour-map-geographic, bb137dc09 (#14367): a fixed aspect without the wrap. Its dark render
+# is 26.7 % transparent, in bands at the left and right.
+LETSPLOT_UNWRAPPED = """
+plot = (
+    ggplot(df)
+    + ggsize(800, 450)
+    + coord_fixed(ratio=geo_ratio)
+)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+"""
+# lets-plot heatmap-geographic, 60da8d465 (#14301): the fixed aspect wrapped in a one-panel grid.
+LETSPLOT_WRAPPED = """
+plot = ggplot(df) + coord_fixed(ratio=1.0, xlim=[lon_min, lon_max], ylim=[lat_min, lat_max])
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+"""
+
+# matplotlib circlepacking-basic, 92a990eb8 (#13409): the trimming save.
+MATPLOTLIB_TIGHT = """
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+"""
+
+# highcharts alluvial-basic, 2bad103f9 (#11105): the chart's switch only, no plotOptions.
+HIGHCHARTS_CHART_ONLY = """
+Highcharts.chart("container", {
+  chart: {
+    backgroundColor: "transparent",
+    animation: false,
+  },
+  series: [{ type: "sankey", data: links }],
+});
+"""
+# highcharts area-basic, 307fa8c72 (#10508): both switches.
+HIGHCHARTS_BOTH = """
+Highcharts.chart("container", {
+  chart: {
+    type: "area",
+    backgroundColor: "transparent",
+    animation: false,
+  },
+  legend: { enabled: false },
+  plotOptions: {
+    series: { animation: false },
+  },
+});
+"""
+# chartjs area-basic, 85708dfc5 (#8275); echarts area-basic, 538d0adc3 (#8277); muix area-basic,
+# c75c393a7 (#12285). No file in the catalogue leaves the animation on; the true positives remove the line.
+CHARTJS_OPTIONS = """
+  options: {
+    maintainAspectRatio: false,
+    animation: false,
+  },
+"""
+ECHARTS_OPTION = """
+chart.setOption({
+  animation: false,
+  series: [{ type: "line", areaStyle: {} }],
+});
+"""
+MUIX_CHART = """
+      <LineChart
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+      />
+"""
+
+
+def _mandates(source: str, library: str, language: str = "python") -> list[str]:
+    """The library mandates ``source`` breaks: the base rules are left out, the excerpts carry no title."""
+    keys = {mandate.key for mandate in MANDATES}
+    return [key for key in violations(source, spec_id=SPEC, language=language, library=library) if key in keys]
+
+
+@pytest.mark.parametrize(
+    ("library", "source", "expected"),
+    [
+        ("bokeh", BOKEH_FIGURE + BOKEH_SAVE_UNPAINTED, ["bokeh-page-paint"]),
+        ("bokeh", BOKEH_FIGURE + BOKEH_SAVE_PAINTED, []),
+        ("bokeh", BOKEH_FIGURE + BOKEH_SAVE_BODY, []),
+        ("bokeh", BOKEH_FIGURE + BOKEH_SAVE_CSS, []),
+        ("bokeh", BOKEH_FIGURE_TOOLBAR + BOKEH_SAVE_PAINTED, ["bokeh-toolbar"]),
+        ("bokeh", BOKEH_FIGURE_DICT + BOKEH_SAVE_PAINTED, []),
+        ("bokeh", BOKEH_FIGURE_TOOLBAR + BOKEH_SAVE_UNPAINTED, ["bokeh-page-paint", "bokeh-toolbar"]),
+        ("pygal", PYGAL_56_44_NO_GUIDES, ["pygal-tick-sizes"]),
+        ("pygal", PYGAL_84_84, []),
+        ("pygal", PYGAL_VALUE_LABEL, []),
+        ("pygal", PYGAL_BLACK_GUIDES, ["pygal-grid-colour"]),
+        ("pygal", PYGAL_ONE_GUIDE, ["pygal-grid-colour"]),
+        ("pygal", PYGAL_PIE, []),
+        ("pygal", PYGAL_WORLD, []),
+        ("altair", ALTAIR_NO_FIT, ["altair-autosize"]),
+        ("altair", ALTAIR_FIT, []),
+        ("altair", ALTAIR_COMPOUND, []),
+        ("plotly", PLOTLY_LAYOUT, []),
+        ("plotly", PLOTLY_LAYOUT.replace("autosize=False", "autosize=True"), ["plotly-autosize"]),
+        ("letsplot", LETSPLOT_UNWRAPPED, ["letsplot-wrap"]),
+        ("letsplot", LETSPLOT_WRAPPED, []),
+        ("matplotlib", MATPLOTLIB_TIGHT, ["bbox-tight"]),
+        ("seaborn", MATPLOTLIB_TIGHT, ["bbox-tight"]),
+        ("matplotlib", MATPLOTLIB_TIGHT.replace(', bbox_inches="tight"', ""), []),
+        # The same text in another library's file is not that library's rule.
+        ("plotnine", MATPLOTLIB_TIGHT, []),
+        ("matplotlib", BOKEH_FIGURE_TOOLBAR + BOKEH_SAVE_UNPAINTED, []),
+    ],
+)
+def test_python_mandates(library, source, expected):
+    assert _mandates(source, library) == expected
+
+
+@pytest.mark.parametrize(
+    ("library", "source", "expected"),
+    [
+        ("highcharts", HIGHCHARTS_CHART_ONLY, ["animation"]),
+        ("highcharts", HIGHCHARTS_BOTH, []),
+        ("chartjs", CHARTJS_OPTIONS, []),
+        ("chartjs", CHARTJS_OPTIONS.replace("    animation: false,\n", ""), ["animation"]),
+        ("echarts", ECHARTS_OPTION, []),
+        ("echarts", ECHARTS_OPTION.replace("  animation: false,\n", ""), ["animation"]),
+        ("muix", MUIX_CHART, []),
+        ("muix", MUIX_CHART.replace("        skipAnimation\n", ""), ["animation"]),
+        ("muix", MUIX_CHART.replace("skipAnimation", "skipAnimation={false}"), ["animation"]),
+        # A switch in a comment does not count.
+        ("echarts", ECHARTS_OPTION.replace("  animation: false,", "  // animation: false,"), ["animation"]),
+    ],
+)
+def test_javascript_mandates(library, source, expected):
+    assert _mandates(source, library, language="javascript") == expected
+
+
+def test_a_size_set_through_a_name_is_compared_by_its_value():
+    """No catalogue file sets the tick sizes through names yet; a generator may, so the rule reads the names."""
+    same = "TICK = 44\nTICK_MAJOR = 44\nstyle = Style(label_font_size=TICK, major_label_font_size=TICK_MAJOR)\n"
+    assert _mandates(same, "pygal") == ["pygal-grid-colour"]  # no guide colours: the Style sets none
+    apart = same.replace("TICK_MAJOR = 44", "TICK_MAJOR = 40")
+    assert _mandates(apart, "pygal") == ["pygal-tick-sizes", "pygal-grid-colour"]
+    # Two names the code never assigns a number: not judged, never flagged.
+    unknown = "style = Style(label_font_size=sizes.tick, major_label_font_size=sizes.major)\n"
+    assert "pygal-tick-sizes" not in _mandates(unknown, "pygal")
+
+
+def test_every_rule_has_its_reason_and_the_prompt_still_says_it():
+    """Each rule names what it found and quotes its prompt; the quote must still stand in that file."""
+    keys = [mandate.key for mandate in MANDATES]
+    assert set(BASE_REASONS) | set(keys) == set(RULES)
+    # The mandates come after the base rules and keep RULES order, so a record lists them in that order.
+    assert sorted(set(keys), key=RULES.index) == list(dict.fromkeys(keys))
+    assert ADVISORY == {"palette"}
+    for mandate in MANDATES:
+        what, path, quote = reason(mandate.key, mandate.library)
+        assert path == f"prompts/library/{mandate.library}.md"
+        assert quote in (ROOT / path).read_text(encoding="utf-8"), (mandate.key, mandate.library)
+    for key, (_found, path, quote) in BASE_REASONS.items():
+        assert quote in (ROOT / path).read_text(encoding="utf-8"), key
+
+
+def test_a_regeneration_records_the_mandates_its_predecessor_also_broke():
+    """A legacy file without the page paint keeps it out of `new_only`; a fresh omission is in it."""
+    painted = PYTHON.replace("fig.savefig(f", "driver = webdriver.Chrome()\n" + BOKEH_SAVE_PAINTED + "fig.savefig(f")
+    painted = painted.replace("· matplotlib ·", "· bokeh ·").replace(
+        "fig, ax", "p = figure(toolbar_location=None)\nfig, ax"
+    )
+    unpainted = painted.replace(BOKEH_SAVE_PAINTED, BOKEH_SAVE_UNPAINTED)
+    kwargs = {"spec_id": SPEC, "language": "python", "library": "bokeh"}
+    assert build_record(unpainted, unpainted, **kwargs)["new_only"] == []
+    record = build_record(unpainted, painted, **kwargs)
+    assert record["violations"] == record["new_only"] == ["bokeh-page-paint"]
+
+
+# --- the generator's self-check ------------------------------------------------------------------
+
+
+def test_the_selfcheck_names_what_to_fix_and_keeps_the_palette_advisory():
+    source = PYTHON.replace("· matplotlib ·", "· seaborn ·").replace("dpi=200)", 'dpi=200, bbox_inches="tight")')
+    source = source.replace('color="#009E73"', 'color="#FFFFFF"')
+    lines, code = selfcheck_lines(source, spec_id=SPEC, language="python", library="seaborn")
+    assert code == 1
+    assert lines[-1] == "contract: fix (bbox-tight)"
+    assert lines[0].startswith("palette (advisory): #FFFFFF: these colours are outside the style guide's palette")
+    assert lines[1] == (
+        'bbox-tight: the figure is saved with `bbox_inches="tight"`, which trims the canvas → '
+        'prompts/library/seaborn.md: “**Do not use `bbox_inches="tight"` on `savefig`.**”'
+    )
+    only_palette, code = selfcheck_lines(
+        source.replace(', bbox_inches="tight"', ""), spec_id=SPEC, language="python", library="seaborn"
+    )
+    assert (code, only_palette[-1]) == (0, "contract: pass (advisory: palette)")
+    clean, code = selfcheck_lines(PYTHON, spec_id=SPEC, language="python", library="matplotlib")
+    assert (code, clean) == (0, ["contract: pass"])
+    missing, code = selfcheck_lines(None, spec_id=SPEC, language="python", library="matplotlib")
+    assert code == 2 and missing[-1].startswith("contract: not run")
+
+
+def test_the_selfcheck_command_prints_plain_lines_and_writes_no_summary(tmp_path):
+    """The generator runs it inside its session: no workflow command, no job summary, exit 0/1/2."""
+    (tmp_path / "good.py").write_text(PYTHON, encoding="utf-8")
+    (tmp_path / "bad.py").write_text(PYTHON.replace('f"plot-{THEME}.png"', '"plot.png"'), encoding="utf-8")
+    env = {"PATH": "/usr/bin:/bin", "GITHUB_STEP_SUMMARY": str(tmp_path / "summary")}
+    common = ["--spec-id", SPEC, "--language", "python", "--library", "matplotlib"]
+    runs = {
+        name: subprocess.run(
+            [sys.executable, "-I", str(SCRIPT), "selfcheck", name, *common],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+            env=env,
+        )
+        for name in ("good.py", "bad.py", "missing.py")
+    }
+    assert (runs["good.py"].returncode, runs["good.py"].stdout) == (0, "contract: pass\n")
+    assert runs["bad.py"].returncode == 1
+    assert runs["bad.py"].stdout.splitlines()[-1] == "contract: fix (save)"
+    assert runs["missing.py"].returncode == 2
+    assert not any("::" in run.stdout for run in runs.values())
+    assert not (tmp_path / "summary").exists()

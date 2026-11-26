@@ -33,21 +33,53 @@ rule says what the code contains, not what the render shows:
   reason, so this rule records a deviation; whether the reason is good is
   for a reader to judge, never for this script.
 
+Then one rule per setting a library prompt states as mandatory, a hard rule
+or forbidden, where the source shows it (``MANDATES``; each carries the
+prompt's own words). A regeneration carries a line that a gate checks into
+nearly every file, and a line that is only read into about half of them, so
+these rules make the read lines checkable:
+
+- ``bokeh-page-paint``: the screenshot never paints the browser page in the
+  page colour, so a light line runs along the top and left edge of the PNG.
+- ``bokeh-toolbar``: the figure keeps its toolbar.
+- ``pygal-tick-sizes``: the style sets one of ``label_font_size`` and
+  ``major_label_font_size``, or the two to different numbers.
+- ``pygal-grid-colour``: a chart that draws guide lines leaves one of their
+  two colours at pygal's black.
+- ``altair-autosize``: a single or layered chart does not fit its size
+  (compound charts cannot fit and are exempt).
+- ``plotly-autosize``: the layout turns autosize on.
+- ``letsplot-wrap``: a fixed-aspect plot is not wrapped in a grid that
+  paints the canvas.
+- ``bbox-tight``: matplotlib or seaborn saves with ``bbox_inches="tight"``.
+- ``animation``: Chart.js, ECharts, Highcharts or MUI X leave the entrance
+  animation on.
+
 Comments and the generated header never count. The patterns are deliberately
 narrow: a rule that flags a compliant file is worse than no rule, so a
 colormap name counts only where a colormap goes, never as a data label such
-as ``"Oranges"``.
+as ``"Oranges"``, and a setting counts as present in any spelling the
+catalogue uses for it.
 
 Stdlib only: ``impl-review.yml`` runs a copy taken at the workflow's own ref
 with the job's pinned ``python3``, so a PR head cannot choose its own rules.
 
-Subcommand::
+Subcommands::
 
     contract_check.py check --source NEW --spec-id S --language L --library B \
         [--prev PREV] [--out RECORD.json]
+    contract_check.py selfcheck FILE --spec-id S --language L --library B
 
-``--source`` and ``--prev`` may name files that do not exist: a missing new
-file reads as ``unreadable``, a missing predecessor as a first generation.
+``check`` records, for ``impl-review.yml``. ``--source`` and ``--prev`` may
+name files that do not exist: a missing new file reads as ``unreadable``, a
+missing predecessor as a first generation.
+
+``selfcheck`` is the generator's own run on the file it wrote
+(``prompts/workflow-prompts/impl-generate-claude.md``, Step 2b). It prints
+plain lines, writes no record and no job summary: one line per broken rule
+with what it found and the prompt's words, ``palette`` marked advisory, and a
+verdict line. It exits 0 when nothing must be fixed, 1 when something must,
+and 2 when the file cannot be read.
 """
 
 from __future__ import annotations
@@ -59,11 +91,31 @@ import os
 import re
 import sys
 import tokenize
+from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 
-RECORD_VERSION = 1
-RULES = ("title", "theme", "save", "legacy-colour", "colormap", "palette")
+RECORD_VERSION = 2
+RULES = (
+    "title",
+    "theme",
+    "save",
+    "legacy-colour",
+    "colormap",
+    "palette",
+    "bokeh-page-paint",
+    "bokeh-toolbar",
+    "pygal-tick-sizes",
+    "pygal-grid-colour",
+    "altair-autosize",
+    "plotly-autosize",
+    "letsplot-wrap",
+    "bbox-tight",
+    "animation",
+)
+# A deviation the owner allows with a good reason: the self-check names it, the generator decides.
+ADVISORY = frozenset({"palette"})
 LANGUAGES = ("python", "r", "julia", "javascript")
 
 # Python blue and yellow, then the variant-D palette. An alpha suffix (#RRGGBBAA) counts too.
@@ -147,6 +199,214 @@ THEME_RES = {
 # end of the string and a `+`, `*` or `,` (concatenation, paste0, string).
 SAVE_RE = re.compile(r"plot-(?:\{|%s|\$|[\"']\s*[+*,])")
 BARE_SAVE_RE = re.compile(r"[\"'](?:\./)?plot\.(?:png|html|svg)[\"']")
+
+# What each base rule finds, then the rule's own words and where they stand. The self-check prints them.
+_GENERATE = "prompts/workflow-prompts/impl-generate-claude.md"
+BASE_REASONS: dict[str, tuple[str, str, str]] = {
+    "title": (
+        "the title lacks the mandated tail with this language and library, or the code never names the spec id",
+        "prompts/plot-generator.md",
+        "{spec-id} · {language} · {library} · anyplot.ai",
+    ),
+    "theme": (
+        "the code never reads the theme",
+        _GENERATE,
+        'Read `ANYPLOT_THEME` (`"light"` or `"dark"`, default `"light"`) and render accordingly.',
+    ),
+    "save": (
+        "no file name is built from `plot-` and the theme, or a bare `plot.png`, `plot.html` or `plot.svg` is named",
+        _GENERATE,
+        "Save output as `plot-{THEME}.png` (theme-suffixed).",
+    ),
+    "legacy-colour": (
+        "a brand colour of an earlier palette is in the code",
+        "prompts/quality-criteria.md",
+        "legacy `#306998` (Python Blue)",
+    ),
+    "colormap": (
+        "a named library colormap stands where a colormap goes",
+        _GENERATE,
+        "No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.",
+    ),
+    "palette": (
+        "these colours are outside the style guide's palette; keep one only for a reason that holds, such as a "
+        "semantic exception of the style guide or a colour the spec names, and name it in the commit line",
+        "prompts/default-style-guide.md",
+        "Use Imprint palette positions 1→N in order for categorical data (see Color Philosophy). No custom hexes.",
+    ),
+}
+
+# The page colour, in each way the catalogue sets it: a style property from a script, or CSS in the saved HTML.
+_PAGE_PAINT_RE = re.compile(
+    r"(?:documentElement|body)\.style\.(?:background|setProperty\(\s*[\"']background)"
+    r"|(?:html|body)\s*\{[^}]*background"
+    r"|<body[^>]*style=[\"'][^\"']*background"
+)
+_TOOLBAR_OFF_RE = re.compile(r"toolbar_location[\"']?\s*[=:]\s*None")
+# `label_font_size` alone, never the tail of `major_label_font_size` or `value_label_font_size`.
+_PYGAL_MINOR_RE = re.compile(r"(?<![\w])label_font_size\s*=\s*([^,\n)]+)")
+_PYGAL_MAJOR_RE = re.compile(r"\bmajor_label_font_size\s*=\s*([^,\n)]+)")
+_PYGAL_GUIDE_RE = re.compile(r"(?<![\w])guide_stroke_color\s*=")
+_PYGAL_MAJOR_GUIDE_RE = re.compile(r"\bmajor_guide_stroke_color\s*=")
+# Chart types that draw no guide lines, and the world maps.
+_PYGAL_GUIDELESS = frozenset({"Pie", "Treemap", "Gauge", "SolidGauge", "Funnel"})
+_PYGAL_CHART_RE = re.compile(r"\bpygal\.([A-Z]\w*)\s*\(")
+_ALTAIR_FIT_RE = re.compile(
+    r"autosize\s*=\s*(?:alt\.AutoSizeParams\([^)]*type\s*=\s*[\"']fit"
+    r"|\{[^}]*[\"']type[\"']\s*:\s*[\"']fit|[\"']fit)"
+)
+# Compound charts cannot fit. An `|` or `&` between spaces also exempts a pandas mask: a rule that
+# misses a file is better than one that flags a compliant file.
+_ALTAIR_COMPOUND_RE = re.compile(r"\balt\.(?:h|v)?concat\(|\.(?:facet|repeat)\(|\b(?:row|column|facet)\s*=|\s[|&]=?\s")
+_PLOTLY_AUTOSIZE_RE = re.compile(r"\bautosize[\"']?\s*[=:]\s*True\b")
+_LETSPLOT_FIXED_RE = re.compile(r"\bcoord_(?:fixed|polar|map)\(")
+_LETSPLOT_WRAP_RE = re.compile(r"\bgg(?:grid|bunch)\(")
+_BBOX_TIGHT_RE = re.compile(r"bbox_inches\s*=\s*[\"']tight[\"']")
+_ANIMATION_OFF_RE = re.compile(r"\banimation\s*[:=]\s*false\b")
+_SKIP_ANIMATION_RE = re.compile(r"\bskipAnimation\b(?!\s*=\s*\{\s*false\s*\})")
+
+
+def _number(code: str, expr: str) -> float | str:
+    """A size as a number: a literal, or a name the code assigns a literal on a line of its own; else its text."""
+    expr = expr.strip()
+    if re.fullmatch(r"\d+(?:\.\d+)?", expr):
+        return float(expr)
+    if re.fullmatch(r"[A-Za-z_]\w*", expr):
+        assigned = re.search(rf"^\s*{expr}\s*=\s*(\d+(?:\.\d+)?)\s*$", code, re.MULTILINE)
+        if assigned:
+            return float(assigned.group(1))
+    return expr
+
+
+def _pygal_two_tick_sizes(code: str) -> bool:
+    minor, major = _PYGAL_MINOR_RE.search(code), _PYGAL_MAJOR_RE.search(code)
+    if not minor and not major:
+        return False
+    if not (minor and major):
+        return True
+    small, large = _number(code, minor.group(1)), _number(code, major.group(1))
+    if isinstance(small, float) and isinstance(large, float):
+        return small != large
+    return False  # two names the code does not resolve: not judged
+
+
+def _pygal_black_guides(code: str) -> bool:
+    charts = set(_PYGAL_CHART_RE.findall(code)) - {"Style"}
+    if "pygal_maps_" in code or (charts and charts <= _PYGAL_GUIDELESS):
+        return False
+    if re.search(r"\bshow_y_guides\s*=\s*False", code) and not re.search(r"\bshow_x_guides\s*=\s*True", code):
+        return False
+    return not (_PYGAL_GUIDE_RE.search(code) and _PYGAL_MAJOR_GUIDE_RE.search(code))
+
+
+class Mandate(NamedTuple):
+    """One setting a library prompt mandates, as a test over the code, with the prompt's own words."""
+
+    key: str
+    library: str
+    breaks: Callable[[str], bool]
+    found: str
+    quote: str
+
+
+MANDATES: tuple[Mandate, ...] = (
+    Mandate(
+        "bokeh-page-paint",
+        "bokeh",
+        lambda code: "webdriver" in code and not _PAGE_PAINT_RE.search(code),
+        "the screenshot never paints the browser page in the page colour, so a light line runs along the top "
+        "and left edge of the PNG",
+        "IMPORTANT: paint the page in the theme's page color.",
+    ),
+    Mandate(
+        "bokeh-toolbar",
+        "bokeh",
+        lambda code: not _TOOLBAR_OFF_RE.search(code),
+        "the figure keeps bokeh's toolbar, which takes room from the plot",
+        "**Do not omit `toolbar_location=None`**",
+    ),
+    Mandate(
+        "pygal-tick-sizes",
+        "pygal",
+        _pygal_two_tick_sizes,
+        "the style sets `label_font_size` and `major_label_font_size` to different sizes, or only one of them, "
+        "so one axis shows tick labels in two sizes",
+        "major tick labels: the same size, or one axis shows two sizes",
+    ),
+    Mandate(
+        "pygal-grid-colour",
+        "pygal",
+        _pygal_black_guides,
+        "the chart draws guide lines but the style leaves `guide_stroke_color` or `major_guide_stroke_color` at "
+        "pygal's black, which almost vanishes on the dark page",
+        "Set both from `INK_MUTED` in the `Style`, as above, so the grid stays a muted tone in both themes.",
+    ),
+    Mandate(
+        "altair-autosize",
+        "altair",
+        lambda code: not _ALTAIR_COMPOUND_RE.search(code) and not _ALTAIR_FIT_RE.search(code),
+        "the chart does not fit its width and height, so title, axes and legend land outside them",
+        'Both with `autosize=alt.AutoSizeParams(type="fit", contains="padding")`',
+    ),
+    Mandate(
+        "plotly-autosize",
+        "plotly",
+        lambda code: bool(_PLOTLY_AUTOSIZE_RE.search(code)),
+        "the layout turns autosize on, which overrides the width and height",
+        "`fig.update_layout(autosize=True)` is **forbidden**",
+    ),
+    Mandate(
+        "letsplot-wrap",
+        "letsplot",
+        lambda code: bool(_LETSPLOT_FIXED_RE.search(code)) and not _LETSPLOT_WRAP_RE.search(code),
+        "a fixed-aspect plot is not wrapped in a one-panel grid, so the canvas outside its plot box stays transparent",
+        "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color.",
+    ),
+    Mandate(
+        "bbox-tight",
+        "matplotlib",
+        lambda code: bool(_BBOX_TIGHT_RE.search(code)),
+        'the figure is saved with `bbox_inches="tight"`, which trims the canvas',
+        '**Do not use `bbox_inches="tight"` on `savefig`.**',
+    ),
+    Mandate(
+        "bbox-tight",
+        "seaborn",
+        lambda code: bool(_BBOX_TIGHT_RE.search(code)),
+        'the figure is saved with `bbox_inches="tight"`, which trims the canvas',
+        '**Do not use `bbox_inches="tight"` on `savefig`.**',
+    ),
+    Mandate(
+        "animation",
+        "chartjs",
+        lambda code: not _ANIMATION_OFF_RE.search(code),
+        "the chart keeps its entrance animation, so the screenshot can catch a frame before the last",
+        "`animation: false` is mandatory",
+    ),
+    Mandate(
+        "animation",
+        "echarts",
+        lambda code: not _ANIMATION_OFF_RE.search(code),
+        "the chart keeps its entrance animation, so the screenshot can catch a frame before the last",
+        "**`animation: false` is mandatory**",
+    ),
+    Mandate(
+        "animation",
+        "highcharts",
+        # Both switches, the chart's and the series': with only one the series still grow in.
+        lambda code: len(_ANIMATION_OFF_RE.findall(code)) < 2,
+        "the chart and its series do not both turn animation off, so the series can still grow in when the "
+        "screenshot is taken",
+        "**`animation: false` is mandatory** (both `chart.animation` and",
+    ),
+    Mandate(
+        "animation",
+        "muix",
+        lambda code: not _SKIP_ANIMATION_RE.search(code),
+        "no chart component passes `skipAnimation`, so the screenshot can catch a frame before the last",
+        "**`skipAnimation` is mandatory**",
+    ),
+)
 
 
 def strip_header(language: str, source: str) -> str:
@@ -284,6 +544,7 @@ def check(source: str, *, spec_id: str, language: str, library: str) -> tuple[li
     if hexes:
         found.append("palette")
         details["palette"] = hexes[:PALETTE_DETAIL_CAP]
+    found += [mandate.key for mandate in MANDATES if mandate.library == library and mandate.breaks(code)]
     return found, details
 
 
@@ -353,6 +614,45 @@ def notice_line(record: dict) -> str:
     return line
 
 
+def reason(key: str, library: str) -> tuple[str, str, str]:
+    """What rule ``key`` found in a ``library`` file, and the words of the prompt that sets it, with their path."""
+    if key in BASE_REASONS:
+        return BASE_REASONS[key]
+    mandate = next(mandate for mandate in MANDATES if mandate.key == key and mandate.library == library)
+    return mandate.found, f"prompts/library/{library}.md", mandate.quote
+
+
+def selfcheck_lines(source: str | None, *, spec_id: str, language: str, library: str) -> tuple[list[str], int]:
+    """The generator's own run: one line per broken rule, then the verdict line, and the exit code.
+
+    0 when nothing must be fixed (an advisory line may remain), 1 when something must, 2 when there is no file.
+    """
+    if source is None:
+        return ["contract: not run (the file is missing or not UTF-8 text)"], 2
+    found, details = check(source, spec_id=spec_id, language=language, library=library)
+    lines = []
+    for key in found:
+        what, path, quote = reason(key, library)
+        if key in ADVISORY:
+            listed = ", ".join(details.get(key, []))
+            lines.append(f"{key} (advisory): {listed}: {what} → {path}: “{quote}”")
+        else:
+            lines.append(f"{key}: {what} → {path}: “{quote}”")
+    must = [key for key in found if key not in ADVISORY]
+    advisory = [key for key in found if key in ADVISORY]
+    if must:
+        lines.append(f"contract: fix ({', '.join(must)})")
+    else:
+        lines.append("contract: pass" + (f" (advisory: {', '.join(advisory)})" if advisory else ""))
+    return lines, 1 if must else 0
+
+
+def cmd_selfcheck(args: argparse.Namespace) -> int:
+    lines, code = selfcheck_lines(_read(args.file), spec_id=args.spec_id, language=args.language, library=args.library)
+    print("\n".join(lines))
+    return code
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     record = build_record(
         _read(args.source), _read(args.prev), spec_id=args.spec_id, language=args.language, library=args.library
@@ -380,8 +680,14 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--library", required=True)
     check_parser.add_argument("--out", help="write the record as one JSON line")
     check_parser.set_defaults(func=cmd_check)
+    self_parser = sub.add_parser("selfcheck", help="the generator's own run on its file: plain lines, exit 0/1/2")
+    self_parser.add_argument("file", help="the implementation file the session wrote")
+    self_parser.add_argument("--spec-id", required=True)
+    self_parser.add_argument("--language", required=True, choices=LANGUAGES)
+    self_parser.add_argument("--library", required=True)
+    self_parser.set_defaults(func=cmd_selfcheck)
     args = parser.parse_args(argv)
-    return args.func(args)
+    return int(args.func(args))
 
 
 if __name__ == "__main__":
