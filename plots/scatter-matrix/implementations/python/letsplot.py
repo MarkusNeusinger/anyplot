@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -96,6 +96,9 @@ for i, var_y in enumerate(VARIABLES):
                 + scale_y_continuous(limits=limits[var_y])
             )
         p = p + theme_minimal() + cell_theme
+        if i == j:
+            # Count ticks would read as values of the row variable, so the diagonal has none
+            p = p + theme(axis_text_y=element_blank())
 
         # Variable names along the bottom edge (last row) and the left edge (first column)
         if i == n_vars - 1:
