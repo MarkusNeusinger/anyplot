@@ -72,7 +72,7 @@ recovery_label = max_dd_end_idx !== nothing ? "$(max_dd_end_idx - max_dd_idx) da
 
 # Figure
 fig = Figure(
-    resolution = (1600, 900),
+    size = (1600, 900),
     fontsize = 14,
     backgroundcolor = PAGE_BG,
 )
