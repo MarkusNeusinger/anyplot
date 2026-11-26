@@ -1,7 +1,7 @@
 """ anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-20
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-26
 """
 
 import os
@@ -32,59 +32,49 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Create a 16x16 Data Matrix barcode encoding "SERIAL:12345678"
-np.random.seed(42)
+# Constants
+QUIET_ZONE = 2  # blank modules around the symbol (the spec asks for at least 1)
+DARK, LIGHT = "#000000", "#FFFFFF"  # barcode modules stay black on white in both themes
+X, Y, MODULE = "column", "row", "module"  # columns of the tile table
 
-size = 16
+# Data: a generated symbol; change CONTENT and SIZE to encode your own text
+CONTENT = "PT-0482-7316"
+SIZE = 12  # modules per side, including the finder and clock edges
+rng = np.random.default_rng(2024)
 
-# Initialize matrix (0 = white, 1 = black)
-dm_matrix = np.zeros((size, size), dtype=int)
+# Matrix (1 = black): finder and clock edges first, then the data region
+matrix = np.zeros((SIZE, SIZE), dtype=int)
+matrix[0, :] = np.arange(SIZE) % 2  # clock pattern along the top edge
+matrix[:, -1] = 1 - (SIZE - 1 - np.arange(SIZE)) % 2  # clock pattern along the right edge
+matrix[:, 0] = 1  # L-shaped finder: solid left edge
+matrix[-1, :] = 1  # L-shaped finder: solid bottom edge
 
-# L-shaped finder pattern: solid black left edge and bottom edge
-dm_matrix[:, 0] = 1
-dm_matrix[size - 1, :] = 1
-
-# Alternating clock pattern on top and right edges
-for i in range(size):
-    dm_matrix[0, i] = i % 2
-for i in range(size):
-    dm_matrix[i, size - 1] = (size - 1 - i) % 2
-
-# Data encoding area simulating "SERIAL:12345678"
-content = "SERIAL:12345678"
-data_values = [ord(c) for c in content]
-data_idx = 0
-for row in range(1, size - 1):
-    for col in range(1, size - 1):
-        val = data_values[data_idx % len(data_values)]
-        bit_pos = (row + col) % 8
-        dm_matrix[row, col] = (val >> bit_pos) & 1
-        data_idx += 1
-
-# Quiet zone (2-module white border for scanning reliability)
-quiet_zone = 2
-padded_size = size + 2 * quiet_zone
-dm_with_border = np.zeros((padded_size, padded_size), dtype=int)
-dm_with_border[quiet_zone : quiet_zone + size, quiet_zone : quiet_zone + size] = dm_matrix
-
-# Convert matrix to DataFrame (flip y so origin is bottom-left)
-rows = []
-for row in range(padded_size):
-    for col in range(padded_size):
-        rows.append({"x": col, "y": padded_size - 1 - row, "value": str(dm_with_border[row, col])})
-
-df = pd.DataFrame(rows)
+# Data region: the payload's bits, then random pad bits for the remaining modules
+bits = np.unpackbits(np.frombuffer(CONTENT.encode("ascii"), dtype=np.uint8))
+inner = (SIZE - 2) ** 2
+stream = np.concatenate([bits, rng.integers(0, 2, size=max(inner - len(bits), 0))])[:inner]
+matrix[1:-1, 1:-1] = stream.reshape(SIZE - 2, SIZE - 2)
 
 # Plot
+padded = np.pad(matrix, QUIET_ZONE, constant_values=0)
+rows, cols = np.indices(padded.shape)
+df = pd.DataFrame(
+    {
+        X: cols.ravel(),
+        Y: (padded.shape[0] - 1 - rows).ravel(),  # flip y so row 0 is on top
+        MODULE: np.where(padded.ravel() == 1, "dark", "light"),
+    }
+)
+
 plot = (
-    ggplot(df, aes(x="x", y="y", fill="value"))
+    ggplot(df, aes(x=X, y=Y, fill=MODULE))
     + geom_tile(color=None, size=0)
-    + scale_fill_manual(values={"0": "#FFFFFF", "1": "#000000"})
+    + scale_fill_manual(values={"dark": DARK, "light": LIGHT}, limits=["light", "dark"])
     + coord_fixed()
     + labs(
         title="datamatrix-basic · python · plotnine · anyplot.ai",
-        subtitle="16×16 ECC 200 symbol · 25% error correction",
-        caption="Encoded: SERIAL:12345678",
+        subtitle=f"{SIZE}×{SIZE} ECC 200 symbol · {QUIET_ZONE}-module quiet zone",
+        caption=f"Encoded: {CONTENT}",
     )
     + theme_void()
     + theme(
