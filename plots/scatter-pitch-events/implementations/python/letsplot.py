@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 89/100 | Updated: 2026-11-26
 """
 
 import os
@@ -144,15 +144,13 @@ arc_rx = (L - SPOT) + CIRCLE_R * np.cos(theta_r)
 arc_ry = MID_Y + CIRCLE_R * np.sin(theta_r)
 df_right_arc = pd.DataFrame({PX: arc_rx[arc_rx <= L - PENALTY_DEPTH], PY: arc_ry[arc_rx <= L - PENALTY_DEPTH]})
 
-corner_arcs = []
-for cx, cy, t0, t1 in [
-    (0, 0, 0, np.pi / 2),
-    (0, W, -np.pi / 2, 0),
-    (L, 0, np.pi / 2, np.pi),
-    (L, W, np.pi, 3 * np.pi / 2),
-]:
+corner_parts = []
+for i, (cx, cy, t0, t1) in enumerate(
+    [(0, 0, 0, np.pi / 2), (0, W, -np.pi / 2, 0), (L, 0, np.pi / 2, np.pi), (L, W, np.pi, 3 * np.pi / 2)]
+):
     t = np.linspace(t0, t1, 20)
-    corner_arcs.append(pd.DataFrame({PX: cx + np.cos(t), PY: cy + np.sin(t)}))
+    corner_parts.append(pd.DataFrame({PX: cx + np.cos(t), PY: cy + np.sin(t), "corner": i}))
+df_corner_arcs = pd.concat(corner_parts, ignore_index=True)
 
 df_rects = pd.DataFrame(
     {
@@ -174,22 +172,23 @@ df_zone_labels = pd.DataFrame(
     {PX: [L * 5 / 6, L / 6], PY: [W - 2.5] * 2, "label": ["Attacking Third", "Defensive Third"], "alpha": [0.7, 0.65]}
 )
 
-# Custom legend below the pitch, one entry per event type present
-legend_x = np.linspace(L * 0.115, L * 0.83, len(present))
+# Custom legend right of the pitch, one entry per event type present, so the panel can use the canvas width
+LEGEND_X = L + 7.0
+legend_y = MID_Y + 12 - 6.0 * np.arange(len(present))
 df_legend_markers = pd.DataFrame(
     {
-        PX: legend_x,
-        PY: -8.0,
+        PX: LEGEND_X,
+        PY: legend_y,
         "color": [color_map[t] for t in present],
         "shape": [shape_map[t] for t in present],
         "fill": [color_map[t] for t in present],
     }
 )
-df_legend_labels = pd.DataFrame({PX: legend_x, PY: -12.5, "label": present})
+df_legend_labels = pd.DataFrame({PX: LEGEND_X + 3.0, PY: legend_y, "label": present})
 df_outcome_text = pd.DataFrame(
     {
-        PX: [L * 0.27, L * 0.74],
-        PY: [-17.0, -17.0],
+        PX: LEGEND_X - 1.5,
+        PY: [MID_Y - 16.0, MID_Y - 21.0],
         "label": ["● Colored fill = Successful", "○ White fill = Unsuccessful"],
     }
 )
@@ -228,10 +227,7 @@ plot = (
     + geom_path(data=df_center_circle, mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
     + geom_path(data=df_left_arc, mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
     + geom_path(data=df_right_arc, mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
-    + geom_path(data=corner_arcs[0], mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
-    + geom_path(data=corner_arcs[1], mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
-    + geom_path(data=corner_arcs[2], mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
-    + geom_path(data=corner_arcs[3], mapping=aes(x=PX, y=PY), color=PITCH_LINE, size=0.8)
+    + geom_path(data=df_corner_arcs, mapping=aes(x=PX, y=PY, group="corner"), color=PITCH_LINE, size=0.8)
     + geom_point(aes(x=PX, y=PY), data=df_spots, color=PITCH_LINE, size=1.5)
     # Directional arrows for passes and shots
     + geom_segment(
@@ -262,16 +258,18 @@ plot = (
     + geom_point(
         data=df_legend_markers, mapping=aes(x=PX, y=PY, color="color", fill="fill", shape="shape"), size=3.5, stroke=1.0
     )
-    + geom_text(data=df_legend_labels, mapping=aes(x=PX, y=PY, label="label"), size=5, color=INK_SOFT, fontface="bold")
-    + geom_text(data=df_outcome_text, mapping=aes(x=PX, y=PY, label="label"), size=5, color=INK_MUTED)
+    + geom_text(
+        data=df_legend_labels, mapping=aes(x=PX, y=PY, label="label"), size=5, color=INK_SOFT, fontface="bold", hjust=0
+    )
+    + geom_text(data=df_outcome_text, mapping=aes(x=PX, y=PY, label="label"), size=5, color=INK_MUTED, hjust=0)
     + scale_color_identity()
     + scale_fill_identity()
     + scale_shape_identity()
     + scale_alpha_identity()
     + scale_size_identity()
     + coord_fixed(ratio=1)
-    + xlim(-5, L + 7)
-    + ylim(-20, W + 8)
+    + xlim(-4, L + 38)
+    + ylim(-4, W + 6)
     + labs(
         title="scatter-pitch-events · python · letsplot · anyplot.ai",
         subtitle=f"{len(df)} match events — passes, shots, tackles & interceptions with outcome encoding",
