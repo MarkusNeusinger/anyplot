@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 92/100 | Created: 2026-05-28
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 88/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
@@ -15,6 +15,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
+GRID        <- alpha(INK, 0.15)  # INK at 15 %, the style guide's grid tone
 
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
@@ -30,9 +31,12 @@ optimal_idx <- which.min(total_error)
 optimal_x   <- complexity[optimal_idx]
 optimal_y   <- total_error[optimal_idx]
 
-bias_ann_y <- bias_squared[which.min(abs(complexity - 1.4))] + 0.04
-var_ann_y  <- variance[which.min(abs(complexity - 8.5))] + 0.04
-tot_ann_y  <- total_error[which.min(abs(complexity - 3.0))] + 0.05
+bias_ann_x <- 2.9
+var_ann_x  <- 9.2
+tot_ann_x  <- 4.2
+bias_ann_y <- bias_squared[which.min(abs(complexity - bias_ann_x))] + 0.07
+var_ann_y  <- variance[which.min(abs(complexity - var_ann_x))] - 0.15
+tot_ann_y  <- total_error[which.min(abs(complexity - tot_ann_x))] + 0.12
 
 # --- Long format ---
 components <- c("Bias²", "Variance", "Total Error", "Irreducible Error")
@@ -71,16 +75,16 @@ p <- ggplot(df_long,
              label = "Overfitting", color = INK_MUTED, size = 3.0) +
     annotate("text", x = optimal_x + 0.2, y = optimal_y - 0.04,
              label = "Optimal", color = INK_SOFT, size = 2.8, hjust = 0) +
-    annotate("text", x = 1.4, y = bias_ann_y,
+    annotate("text", x = bias_ann_x, y = bias_ann_y,
              label = "Bias²", color = IMPRINT_PALETTE[1],
              size = 3.2, hjust = 0, fontface = "bold") +
-    annotate("text", x = 8.5, y = var_ann_y,
+    annotate("text", x = var_ann_x, y = var_ann_y,
              label = "Variance", color = IMPRINT_PALETTE[2],
              size = 3.2, hjust = 0.5, fontface = "bold") +
-    annotate("text", x = 3.0, y = tot_ann_y,
+    annotate("text", x = tot_ann_x, y = tot_ann_y,
              label = "Total Error", color = IMPRINT_PALETTE[3],
              size = 3.0, hjust = 0.5, fontface = "bold") +
-    annotate("text", x = 7.0, y = 0.10,
+    annotate("text", x = 8.2, y = 0.10,
              label = "Irreducible Error", color = IMPRINT_PALETTE[4],
              size = 2.8, hjust = 0.5) +
     scale_x_continuous(
@@ -99,7 +103,7 @@ p <- ggplot(df_long,
     theme(
         plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG, color = NA),
-        panel.grid.major.y = element_line(color = INK, linewidth = 0.15),
+        panel.grid.major.y = element_line(color = GRID, linewidth = 0.3),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         panel.border       = element_blank(),
