@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:58Z'
-updated: '2026-11-26T11:20:09Z'
+updated: '2026-11-26T11:26:09Z'
 generated_by: claude-sonnet
-workflow_run: 45808877188
+workflow_run: 45809816084
 issue: 3809
 language_version: 3.14.10
 library_version: 3.1.3
@@ -15,20 +15,20 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 quality_score: 81
 review:
   strengths:
-  - 'Full manual Code 128 encoding: Start B, Code B characters, Code C switch with
-    digit pairs, modulo-103 check (15) and the 7-element stop pattern'
+  - 'Full manual Code 128 encoding: Start B, Code B characters, a Code C switch with
+    digit pairs, the modulo-103 check (15) and the 7-element stop pattern'
   - Bar and space widths follow the pattern table in whole modules, with 10-module
     quiet zones on both sides
-  - Barcode kept on a light tile in the dark theme while the page and text chrome
-    follow the theme
+  - 'Bars are opaque #000000 (opacity=1, stroke_width=0) on a light tile that stays
+    light in the dark theme while page and text chrome follow the theme'
   - Interactive HTML output alongside the PNG
   weaknesses:
-  - 'SC-02 (both): the bars render #4C4B49 grey (black at pygal''s default ~0.7 fill
-    opacity) with darker #31302F seams between the adjacent one-module bars inside
-    each wide bar, not the solid sharp-edged black bars the spec''s C5 asks for →
-    opaque #000000 bars with no seams. Likely cause: Style without opacity=1/opacity_hover=1
-    and per-module bars each drawn with their own stroke (build one bar per run, or
-    set stroke_width=0).'
+  - 'SC-02 (both): every multi-module bar is drawn as adjacent one-module pygal bars
+    with a ~2 px light seam between them (pixel row y=1200: ''########..########''),
+    so a 2-, 3- or 4-module bar reads as several thin bars instead of one solid bar
+    (C5, and the widths C2 asks for) → one solid bar per bar run with no seam. Likely
+    cause: one pygal.Bar column per module; pygal.Histogram with one (100, start,
+    end) tuple per bar run draws each run as a single rect.'
   - 'Suggestion: keep the human-readable line to the encoded content (SHIP-20240101)
     and move the subset/char-count/check metadata into a smaller second line so it
     does not wrap mid-phrase.'
@@ -36,15 +36,15 @@ review:
     check, stop) would use pygal''s interactivity.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page around an elevated #FFFDF6 tile that holds the barcode (2400x2400 square canvas).
+      Background: warm off-white #FAF8F1 page around an elevated #FFFDF6 tile holding the barcode (2400x2400 square canvas).
       Chrome: title "barcode-code128 · python · pygal · anyplot.ai" in dark ink at the top; below the tile the human-readable line "SHIP-20240101 | Subset: Code B→C | 13 chars | Check: 15" in dark ink, wrapped over two lines; no axes, ticks, grid or legend. All text readable.
-      Data: one row of equal-height vertical bars with irregular thick/thin widths, quiet zones left and right. The bars are not black: they render #4C4B49 (black at pygal default fill opacity ~0.7) with darker #31302F seams between adjacent modules inside the wide bars.
+      Data: one row of equal-height opaque #000000 bars with irregular thick/thin widths, blank quiet zones left and right. Every multi-module bar shows a ~2 px light seam between its modules, so wide bars read as pairs of thin bars.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page; the barcode stays on the same light #FFFDF6 tile (permitted white tile in the dark theme).
-      Chrome: title and the human-readable line in light #F0EFE8 ink, fully readable; no dark-on-dark text.
-      Data: bars identical to the light render (same grey #4C4B49 with module seams) on the light tile.
+      Chrome: title and human-readable line in light #F0EFE8 ink, fully readable; no dark-on-dark text.
+      Data: bars identical to the light render (black, same module seams) on the light tile.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,19 +56,21 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 66 and x_title text explicitly sized; readable in both themes
+        comment: Title 66 and human-readable line 56 explicitly sized; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; human-readable line clear of the tile
+        comment: No text collisions; human-readable line clear of the tile and the
+          bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible against the light tile in both themes
+        comment: Bars clearly visible on the light tile in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -93,8 +95,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Page backgrounds #FAF8F1/#1A1A17 correct; monochrome bars are domain-required
-          (spec), not a palette series'
+        comment: 'Page backgrounds #FAF8F1/#1A1A17 correct; black bars are domain-required
+          by the spec, not a palette series'
     design_excellence:
       score: 8
       max: 20
@@ -133,9 +135,9 @@ review:
         score: 3
         max: 4
         passed: false
-        comment: 'Start, data, check, stop, quiet zones and human-readable text present;
-          C5 missed: bars are translucent grey with module seams, not solid black
-          (defect line)'
+        comment: Start, data, check, stop, quiet zones and human-readable text present;
+          bars are opaque black, but every multi-module bar is split by a light seam
+          between its modules (C5, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -148,7 +150,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title correct; legend N/A
+        comment: Title correct; legend N/A (single monochrome encoding)
     data_quality:
       score: 15
       max: 15
@@ -158,7 +160,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows start B, Code C switch, mod-103 check and stop
+        comment: Shows Start B, a Code C switch with digit pairs, the mod-103 check
+          and the stop pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -225,7 +228,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
-  rendered_at: '2026-11-26T11:17:03Z'
+  rendered_at: '2026-11-26T11:22:58Z'
 impl_tags:
   dependencies: []
   techniques:
