@@ -2,55 +2,55 @@ library: plotnine
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:53:08Z'
-updated: '2026-05-20T06:04:01Z'
+updated: '2026-11-26T02:42:14Z'
 generated_by: claude-sonnet
-workflow_run: 26143802780
+workflow_run: 45743483122
 issue: 3811
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 80
 review:
   strengths:
-  - Correct Data Matrix structure with L-shaped finder pattern and alternating clock
-    pattern
-  - Proper quiet zone (2-module white border) as required by spec
-  - theme_void is the perfect choice for barcode visualization - removes all axis
-    clutter
-  - Square 6x6 canvas format is appropriate for a symmetric barcode
-  - All chrome elements (title, subtitle, caption) correctly adapt to light/dark theme
-    via INK/INK_SOFT tokens
-  - Informative subtitle (16x16 ECC 200 symbol, 25% error correction) and caption
-    (encoded content) add context
-  - All font sizes explicitly set (12pt title, 9pt subtitle/caption)
-  - Clean KISS code structure with reproducible seed and correct plot-{THEME}.png
-    output
+  - 'The L-shaped finder is unbroken: the left column is solid from the top-left to
+    the bottom-left module and the bottom row is solid to the bottom-right corner'
+  - The right clock edge alternates in step with the rows and ends in the black finder
+    corner
+  - Square modules via geom_tile + coord_fixed, black on white in both themes, with
+    a 2-module quiet zone
+  - Chrome threads the INK / INK_SOFT theme tokens, so title, subtitle and caption
+    read in both themes
+  - Compact vectorised matrix construction (slice assignment, np.unpackbits, np.pad,
+    np.indices) and column constants in aes()
   weaknesses:
-  - Top-left corner cell [0,0] is set to white by the clock pattern (i=0 gives 0%2=0),
-    overriding the L-shaped finder which should keep it black - minor deviation from
-    Data Matrix standard
-  - Data encoding is a simplified bit-extraction simulation rather than actual ECC
-    200 Reed-Solomon encoding, slightly reducing factual correctness
-  - DE-01 and DE-02 are constrained by the binary domain but the layout could include
-    a subtle border or shadow around the barcode panel to visually separate it from
-    the dark background in dark mode
-  - 'LM-02: No distinctively plotnine-specific features used beyond geom_tile + coord_fixed
-    - faceting or annotation layers could showcase more library capability'
+  - 'SC-02 (both): the top clock edge is out of phase: columns 0 and 1 are both black
+    at the top-left and columns 10 and 11 both white at the top-right, so the alternation
+    breaks at both ends (C2) → column 1 white, then strict alternation ending white
+    in column 11. Likely cause: line 47 `matrix[0, :] = np.arange(SIZE) % 2` starts
+    the clock at 0 instead of `1 - np.arange(SIZE) % 2`.'
+  - 'DQ-03 (both): the subtitle calls the symbol "12×12 ECC 200 symbol", but the data
+    region is the payload''s raw ASCII bits followed by random pad bits, with no ECC
+    200 codewords, Reed-Solomon blocks or module placement, so the drawn symbol does
+    not decode to PT-0482-7316 → encode real ECC 200 codewords into the data region,
+    or drop the ECC 200 claim from the subtitle. Likely cause: lines 53-56 fill the
+    data region with `np.unpackbits` + `rng.integers`.'
+  - 'Suggestion: placing the caption inside the canvas margin a little higher would
+    give it the same breathing room as the subtitle.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) across the full canvas - correct.
-      Chrome: Bold title "datamatrix-basic · python · plotnine · anyplot.ai" in dark (#1A1A17) at the top, clearly readable. Subtitle "16×16 ECC 200 symbol · 25% error correction" in muted dark (#4A4A44), readable. Caption "Encoded: SERIAL:12345678" at bottom-right in muted dark, readable.
-      Data: High-contrast black (#000000) and white (#FFFFFF) cells forming a 16x16 Data Matrix with 2-module quiet zone. L-shaped finder pattern (solid black left column and bottom row) is visible. Alternating clock pattern on top and right edges is visible. Internal data area shows binary pattern simulating SERIAL:12345678 encoding.
-      Legibility verdict: PASS - all text is clearly readable against the warm off-white background.
+      Background: warm off-white #FAF8F1 page; a pure-white square tile (the 2-module quiet zone) centred under the titles.
+      Chrome: bold near-black title "datamatrix-basic · python · plotnine · anyplot.ai" at the top (about 75 % of the width), grey subtitle "12×12 ECC 200 symbol · 2-module quiet zone", grey caption "Encoded: PT-0482-7316" at the lower right. All readable, nothing clipped.
+      Data: a 12x12 matrix of square black and white modules: solid black left column and bottom row meeting in the lower-left corner; right column alternating, ending black at the bottom-right; top row alternating but with two black modules at the top-left and two white at the top-right; noise-like data region. No categorical series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) across the full canvas - correct.
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Subtitle in muted light (#B8B7B0), readable. Caption in muted light, readable. No dark-on-dark text failures observed.
-      Data: Same black/white binary cells as light render - colors are identical (correct: data colors must not flip). The quiet zone appears as a distinct white rectangular panel against the dark background, which is required for barcode functionality (spec mandates white quiet zone for reliable scanning).
-      Legibility verdict: PASS - all text is readable. White barcode panel on dark background is intentional and spec-required.
+      Background: warm near-black #1A1A17 page; the same pure-white quiet-zone tile, permitted by the spec.
+      Chrome: title in light cream, subtitle and caption in light grey; all readable, no dark-on-dark text.
+      Data: modules identical to the light render, black on white.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,53 +61,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (12pt title, 9pt subtitle/caption).
-          Readable in both themes. Well-proportioned for square 2400x2400 canvas.
+        comment: Title 12 pt bold, subtitle and caption 9 pt, all at or above the
+          style-guide reference; INK / INK_SOFT tokens keep every line readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Title, subtitle, barcode, and caption are
-          well-separated.
+        comment: Title, subtitle, symbol tile and caption are well separated; nothing
+          collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Maximum contrast black/white barcode cells are perfectly visible
-          in both themes.
+        comment: 12x12 modules, each about 120 px square, pure black on white; maximally
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black/white is maximally accessible for all visual conditions including
-          CVD.
+        comment: Black on white is maximal contrast and CVD-neutral
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format is ideal for barcode. Matrix fills approximately 70%
-          of canvas with balanced whitespace.
+        comment: Square 2400x2400 canvas; the white symbol tile fills about 82 % of
+          the width with balanced margins; caption intact at the lower right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct. No axis labels needed (theme_void appropriate). Subtitle
-          provides technical context.
+        comment: 'N/A: no data axes for a barcode (theme_void); mandated title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Plot backgrounds correctly themed (#FAF8F1 light / #1A1A17 dark).
-          Black/white barcode cells are domain-required data, not palette choice.
-          Chrome correctly adapts to theme.'
+        comment: 'Page #FAF8F1 / #1A1A17 correct; modules black on white in both themes
+          as the spec requires; no categorical series'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -115,26 +113,24 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-executed within domain constraints. theme_void, square format,
-          and subtitle/caption choices are intentional. Domain limits color/design
-          choices to binary.
+        comment: 'Style-guide baseline: bold title over a muted subtitle and caption,
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: theme_void removes all unnecessary elements. Good whitespace. Square
-          format correct. Could add subtle panel border in dark mode to better frame
-          barcode.
+        comment: theme_void and balanced margins meet the baseline; nothing beyond
+          it
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Subtitle provides ECC 200 technical context; caption shows encoded
-          content. Above default since domain context is communicated clearly.
+        comment: The symbol is displayed; subtitle and caption describe it, no hierarchy
+          chosen beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,56 +138,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Data Matrix 2D barcode rendered as geom_tile matrix. L-shaped
-          finder and clock pattern both present.'
+        comment: A single Data Matrix symbol drawn as square geom_tile modules; no
+          unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: L-shaped finder pattern, alternating timing pattern, quiet zone (2
-          modules), high-contrast black/white, data encoding, ECC 200 labeling - all
-          present.
+        passed: false
+        comment: Finder L is solid on the left and bottom and meets in the lower-left
+          corner (C1), quiet zone present (C4), square modules (C3), single symbol
+          (C5); the top clock edge is out of phase at its two ends (defect line, C2)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y coordinates correctly map to column/row positions. coord_fixed
-          ensures square cells.
+        comment: Module positions follow the matrix; coord_fixed keeps modules square;
+          all modules shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''datamatrix-basic · python · plotnine · anyplot.ai'' - correct
-          format. No legend needed (binary fill, correctly hidden).'
+        comment: Title matches the mandated format; N/A for a legend (binary fill,
+          legend hidden as permitted)
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all main Data Matrix features. Simplified encoding simulation
-          rather than actual Reed-Solomon ECC 200.
+        comment: Finder, clock, data region and quiet zone are all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SERIAL:12345678 is a realistic industrial serial number. Neutral
-          and real-world applicable.
+        comment: A part number PT-0482-7316 on a 12x12 symbol is a plausible industrial
+          marking scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
-        passed: true
-        comment: 16x16 is a valid Data Matrix size. Quiet zone meets minimum spec
-          (>=1 module, uses 2). ECC 200 labeling correct. Simplified encoding slightly
-          reduces factual accuracy.
+        passed: false
+        comment: 12x12 is a valid ECC 200 size and the 2-module quiet zone meets the
+          >=1 module rule; but the subtitle calls it an ECC 200 symbol while the data
+          region is raw ASCII bits plus random padding with no Reed-Solomon codewords
+          (defect line)
     code_quality:
       score: 10
       max: 10
@@ -201,61 +197,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Standard linear flow: imports -> data -> plot -> save. No functions
-          or classes.'
+        comment: Linear imports -> data -> plot -> save, no functions; column constants
+          X, Y, MODULE used in aes()
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(2024)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path.pop(0) is a necessary workaround for filename
-          shadowing.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. No over-engineering or fake UI elements. Matrix
-          construction logic is clear.
+        comment: Vectorised slice assignment, np.unpackbits, np.pad and np.indices;
+          no loops or dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. Current plotnine API.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, 6x6 in); current plotnine
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Correct grammar-of-graphics: ggplot + geom_tile + scale_fill_manual
-          + coord_fixed + labs + theme_void + theme. coord_fixed for square cells
-          is the right plotnine pattern.'
+        comment: 'Library-prompt grammar: ggplot + geom_tile + scale_fill_manual with
+          limits + coord_fixed + theme_void; nothing beyond it'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: coord_fixed and theme_void are somewhat distinctive. But implementation
-          is mostly generic geom_tile heatmap approach without plotnine-specific features
-          like faceting or statistical layers.
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-e1c896f739.lib-4bf8b8efdf
+  rendered_at: '2026-11-26T02:38:11Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - minimal-chrome
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
