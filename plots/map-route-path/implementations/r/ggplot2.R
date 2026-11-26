@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-route-path: Route Path Map
 #' Library: ggplot2 | R
-#' Quality: 85/100 | Updated: 2026-11-26
+#' Quality: pending | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
