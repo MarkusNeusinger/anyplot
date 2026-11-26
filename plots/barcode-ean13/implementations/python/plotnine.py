@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -107,36 +107,42 @@ for digit in right_digits:
 binary += "101"
 
 # Plot
-# Build bar rectangles (guards extend to ymin=0, data bars start at ymin=5)
+# Build bar rectangles (guards reach down to the digit baseline, data bars stop above the digit row)
 quiet_zone = 9
+DIGIT_Y = 0
+DIGIT_BASE = -5
 bars = []
 x_pos = quiet_zone
 for i, bit in enumerate(binary):
     if bit == "1":
         is_guard = i < 3 or i >= len(binary) - 3 or (45 <= i < 50)
-        bars.append({XMIN: x_pos, XMAX: x_pos + 1, YMIN: 0 if is_guard else 5, YMAX: 70})
+        ymin = DIGIT_BASE if is_guard else 5
+        if bars and bars[-1][XMAX] == x_pos and bars[-1][YMIN] == ymin:
+            bars[-1][XMAX] = x_pos + 1  # merge a run of modules into one bar: no seams
+        else:
+            bars.append({XMIN: x_pos, XMAX: x_pos + 1, YMIN: ymin, YMAX: 70})
     x_pos += 1
 
 df_bars = pd.DataFrame(bars)
 total_width = quiet_zone * 2 + len(binary)
 
 # Digit label positions
-digit_labels = [{X: quiet_zone - 4, Y: -8, LABEL: first_digit}]
+digit_labels = [{X: quiet_zone - 4, Y: DIGIT_Y, LABEL: first_digit}]
 left_start = quiet_zone + 3
 for i, digit in enumerate(left_digits):
-    digit_labels.append({X: left_start + i * 7 + 3.5, Y: -8, LABEL: digit})
+    digit_labels.append({X: left_start + i * 7 + 3.5, Y: DIGIT_Y, LABEL: digit})
 right_start = quiet_zone + 3 + 42 + 5
 for i, digit in enumerate(right_digits):
-    digit_labels.append({X: right_start + i * 7 + 3.5, Y: -8, LABEL: digit})
+    digit_labels.append({X: right_start + i * 7 + 3.5, Y: DIGIT_Y, LABEL: digit})
 
 df_labels = pd.DataFrame(digit_labels)
 
 plot = (
     ggplot()
-    + geom_rect(df_bars, aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX), fill=INK, color=INK)
+    + geom_rect(df_bars, aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX), fill=INK, color="none")
     + geom_text(df_labels, aes(x=X, y=Y, label=LABEL), size=14, color=INK, family="monospace", fontweight="bold")
     + labs(title="barcode-ean13 · python · plotnine · anyplot.ai")
-    + coord_cartesian(xlim=(-2, total_width + 2), ylim=(-14, 74))
+    + coord_cartesian(xlim=(-2, total_width + 2), ylim=(-10, 74))
     + theme_void()
     + theme(
         figure_size=(8, 4.5),
