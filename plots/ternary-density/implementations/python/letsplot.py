@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-22
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -21,6 +22,7 @@ from lets_plot import (
     geom_raster,
     geom_segment,
     geom_text,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -28,9 +30,10 @@ from lets_plot import (
     guides,
     labs,
     layer_tooltips,
-    scale_fill_gradient,
+    scale_fill_gradientn,
     theme,
 )
+from scipy.stats import gaussian_kde
 
 
 LetsPlot.setup_html()
@@ -42,9 +45,23 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette: the sequential density ramp runs from position 1 to position 3
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-DENSITY_LOW, DENSITY_HIGH = IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]
+# Imprint sequential ramp for fields (the colored cells fill the plot), as (position, hex) stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
 
 # Constants
 CONTOUR_STEP = 0.25  # contour every quarter of the peak density (25 %, 50 %, 75 %)
@@ -76,20 +93,17 @@ points = pd.DataFrame(
     }
 )
 
-# Gaussian KDE on a grid; the kernel is separable, so the grid is one matrix product
-kde = points.dropna(subset=["x", "y"])  # a missing component leaves the sample out of the density
-n = len(kde)
-bw = n ** (-1.0 / 6)  # Scott's rule for two dimensions
-bw_x, bw_y = kde["x"].std() * bw, kde["y"].std() * bw
+# Gaussian KDE on a grid (Scott bandwidth); a missing component leaves the sample out of the density
+kde = points.dropna(subset=["x", "y"])
 gx = np.linspace(0, 1, GRID_RESOLUTION)
 gy = np.linspace(0, SQRT3_2, round(GRID_RESOLUTION * SQRT3_2))
-kernel_x = np.exp(-0.5 * ((gx[:, None] - kde["x"].to_numpy()) / bw_x) ** 2)
-kernel_y = np.exp(-0.5 * ((gy[:, None] - kde["y"].to_numpy()) / bw_y) ** 2)
-density = kernel_y @ kernel_x.T / (n * 2 * np.pi * bw_x * bw_y)
-
-# Keep only cells whose centre lies inside the triangle
 X, Y = np.meshgrid(gx, gy)
-inside = (Y <= 2 * SQRT3_2 * X) & (Y <= 2 * SQRT3_2 * (1 - X))
+density = gaussian_kde(kde[["x", "y"]].to_numpy().T)(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
+
+# Keep the cells that overlap the triangle: a margin of one cell leaves no gap along the slanted edges,
+# and the outline covers the sliver that pokes out
+margin = 2 * SQRT3_2 / GRID_RESOLUTION
+inside = (Y <= 2 * SQRT3_2 * X + margin) & (Y <= 2 * SQRT3_2 * (1 - X) + margin)
 density = np.where(inside, density, 0.0)
 peak = density.max()
 cells = pd.DataFrame({"x": X[inside], "y": Y[inside], "density": density[inside] / peak})
@@ -115,10 +129,12 @@ vertices = pd.DataFrame({"x": [-0.05, 1.05, 0.5], "y": [-0.05, -0.05, SQRT3_2 + 
 plot = (
     ggplot()
     + geom_raster(aes(x="x", y="y", fill="density"), data=cells)
-    + scale_fill_gradient(low=DENSITY_LOW, high=DENSITY_HIGH, name="Relative density (peak = 1)")
+    + scale_fill_gradientn(
+        colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Relative density (peak = 1)"
+    )
     + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=grid, color="white", size=0.5, alpha=0.4)
     + geom_contour(aes(x="x", y="y", z="density"), data=surface, binwidth=CONTOUR_STEP, color="white", size=1.2)
-    + geom_path(aes(x="x", y="y"), data=triangle, color=INK, size=1.2)
+    + geom_path(aes(x="x", y="y"), data=triangle, color=INK, size=1.6)
     + geom_point(
         aes(x="x", y="y"),
         data=points,
@@ -131,7 +147,7 @@ plot = (
     + guides(fill=guide_colorbar(barwidth=260, barheight=14))
     + coord_fixed(ratio=1)
     + theme(
-        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_blank(),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid=element_blank(),
         panel_border=element_blank(),
@@ -145,8 +161,10 @@ plot = (
         legend_title=element_text(size=12, color=INK),
         legend_text=element_text(size=11, color=INK_SOFT),
     )
-    + ggsize(600, 600)
 )
+
+# The one-panel grid paints the page color over the whole square canvas
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
