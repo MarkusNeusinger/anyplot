@@ -284,6 +284,123 @@ class TestFollowUps:
         assert row["follow_up_marked"] is False
 
 
+SWAP_PATCH = """@@ -1,6 +1,4 @@
+ import matplotlib.pyplot as plt
+-import numpy as np
+-np.random.seed(42)
+-tips = np.random.gamma(2.0, 3.0, 200)
++import seaborn as sns
++tips = sns.load_dataset("tips")
+ fig, ax = plt.subplots(figsize=(16, 9))"""
+
+
+class TestDataSource:
+    """A regeneration that adds an example-dataset loader has changed its data source."""
+
+    @pytest.mark.parametrize(
+        ("line", "loader"),
+        [
+            ('tips = sns.load_dataset("tips")', "seaborn load_dataset"),
+            ("X, y = load_iris(return_X_y=True)", "scikit-learn dataset"),
+            ("housing = fetch_california_housing()", "scikit-learn dataset"),
+            ("df = px.data.gapminder()", "plotly data"),
+            ("from vega_datasets import data", "vega_datasets"),
+            ("from bokeh.sampledata.iris import flowers", "bokeh sampledata"),
+            ("df = sm.datasets.get_rdataset('Duncan').data", "statsmodels datasets"),
+            ("data(mtcars)", "R data()"),
+            ('data("iris", package = "datasets")', "R data()"),
+            ("df <- datasets::airquality", "R dataset package"),
+            ("library(palmerpenguins)", "R dataset package"),
+            ("df <- gapminder::gapminder", "R dataset package"),
+            ('iris = RDatasets.dataset("datasets", "iris")', "RDatasets"),
+            ('d3.csv("https://example.org/flights.csv")', "remote data file"),
+            ("const url = `https://example.org/us-states.geojson`;", "remote data file"),
+            ('topo = "https://cdn.example.org/world-110m.topojson?v=2"', "remote data file"),
+            ("using VegaDatasets", "vega_datasets"),
+            ("covtype = fetch_covtype()", "scikit-learn dataset"),
+        ],
+    )
+    def test_each_loader_is_recognised_when_added(self, cw, line, loader):
+        language = "r" if loader in cw.R_ONLY_LOADERS else "python"
+        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", language) == [loader]
+
+    @pytest.mark.parametrize("language", ["python", "javascript", "julia", None])
+    def test_r_syntax_counts_in_r_only(self, cw, language):
+        """A ``data(rows)`` helper or a ``library(gapminder)`` line outside R loads no R dataset."""
+        patch = "@@ -1 +1,2 @@\n-x = 1\n+values = data(rows)\n+library(gapminder)"
+        assert cw.added_loaders(patch, language) == []
+        assert cw.added_loaders(patch, "r") == ["R data()", "R dataset package"]
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "X, y = make_blobs(n_samples=300, random_state=42)",  # drawn in memory, like invented data
+            "df = pd.DataFrame(data={'x': x})",
+            "svg.selectAll('rect').data(rows)",
+            "chart.data(values)",
+            'title = "scatter-basic · matplotlib · anyplot.ai"',
+            # pdp-basic bokeh and pygal (#13838, #13841): a legend label, not R's data().
+            '    legend_label="Training data (rug)",',
+            "prices = fetch_prices(ticker)",  # a helper of the plot's own, not scikit-learn
+            '  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",',
+            '# df = sns.load_dataset("tips") would download; the data below is invented',
+            "// see https://example.org/flights.csv for the real series",
+            " * from vega_datasets import data",
+        ],
+    )
+    def test_invented_data_and_lookalikes_are_no_loader(self, cw, line):
+        assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", "python") == []
+        # A legend label is no R data() in R either.
+        if "Training data" in line:
+            assert cw.added_loaders(f"@@ -1 +1 @@\n-x = 1\n+{line}", "r") == []
+
+    def test_a_loader_the_predecessor_had_is_no_change(self, cw):
+        reworded = '@@ -1 +1 @@\n-tips = sns.load_dataset("tips")\n+data = sns.load_dataset("tips")'
+        assert cw.added_loaders(reworded, "python") == []
+        in_context = '@@ -1,2 +1,3 @@\n tips = sns.load_dataset("tips")\n+penguins = sns.load_dataset("penguins")'
+        assert cw.added_loaders(in_context, "python") == []
+
+    def test_a_removed_line_starting_with_two_dashes_is_read(self, cw):
+        # GitHub's patch has no file headers: `---` is a removed R or SQL comment line's diff.
+        assert cw.added_loaders("@@ -1,2 +1,1 @@\n--- data(mtcars) --\n+data(mtcars)", "r") == []
+
+    def test_the_patch_is_the_new_implementation_file(self, cw, monkeypatch, capsys):
+        files = [
+            {"filename": "plots/bar-basic/implementations/matplotlib.py", "status": "removed", "patch": "-x = 1"},
+            {"filename": "plots/bar-basic/metadata/python/matplotlib.yaml", "status": "modified", "patch": "+a: 1"},
+            {"filename": "plots/bar-basic/implementations/python/matplotlib.py", "status": "added", "patch": "+y = 2"},
+        ]
+        monkeypatch.setattr(cw, "_gh", lambda args: "\n".join(json.dumps(f) for f in files))
+        assert cw.implementation_patch(100, "bar-basic", "matplotlib") == "+y = 2"
+        files[2].pop("patch")  # GitHub omits the diff of a very large file
+        assert cw.implementation_patch(100, "bar-basic", "matplotlib") is None
+        assert "GitHub shows no diff" in capsys.readouterr().err
+
+    def test_a_failed_files_call_leaves_the_source_unknown(self, cw, monkeypatch, capsys):
+        def fail(args):
+            raise cw.subprocess.CalledProcessError(1, ["gh", *args])
+
+        monkeypatch.setattr(cw, "_gh", fail)
+        assert cw.implementation_patch(100, "bar-basic", "matplotlib") is None
+        assert "#100: the changed files could not be read" in capsys.readouterr().err
+
+    def test_no_patch_is_unknown_not_zero(self, cw):
+        assert cw.added_loaders(None, "python") is None
+        row = cw.build_row(_pull(), _comments(_record(), _review_body(87)), None, PAIR)
+        assert row["data_source_added"] is None and "data_source_added" not in row["flags"]
+
+    def test_the_row_flags_it_and_the_metric_counts_it(self, cw):
+        swapped = cw.build_row(_pull(), _comments(_record(), _review_body(87)), None, PAIR, patch=SWAP_PATCH)
+        assert swapped["data_source_added"] == ["seaborn load_dataset"]
+        assert "data_source_added" in swapped["flags"]
+        kept = cw.build_row(_pull(101), _comments(_record(pr=101), _review_body(87)), None, PAIR, patch="")
+        assert kept["data_source_added"] == [] and kept["flags"] == []
+        summary = cw.summarize([swapped, kept], {}, None)
+        assert summary["flags"]["data_source_added"] == 1
+        text = cw.render_markdown(summary, [swapped, kept], [], None)
+        assert "| Data source changed (example-dataset loader added) | 0 | 1 |" in text
+
+
 class TestAggregate:
     def _rows(self, cw):
         rows = []

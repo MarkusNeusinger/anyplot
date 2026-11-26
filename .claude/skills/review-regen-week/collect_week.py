@@ -98,6 +98,53 @@ SUSPICION_TIERS: tuple[frozenset[str], ...] = (
     frozenset({"merge_without_carrier", "unverified", "regen_json_invalid"}),
     frozenset({"high_score"}),
 )
+# Example-dataset loaders, matched on the implementation file's diff lines in
+# any of the four languages. A regeneration that adds one has swapped the data
+# its predecessor drew for a dataset it loads, or downloads during the CI
+# render, while the generator prompts tell it to keep its data source. No gate
+# keeps such a regeneration any more, so the weekly review counts it.
+# scikit-learn's ``make_*`` generators draw in memory, like invented data, and
+# are no loader here.
+DATASET_LOADERS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("seaborn load_dataset", re.compile(r"\bload_dataset\s*\(")),
+    (
+        "scikit-learn dataset",
+        re.compile(
+            r"\b(?:load_(?:iris|wine|digits|breast_cancer|diabetes|linnerud)"
+            r"|fetch_(?:california_housing|openml|covtype|kddcup99|rcv1|20newsgroups\w*|lfw_\w+|olivetti_faces"
+            r"|species_distributions|file))\s*\("
+        ),
+    ),
+    ("plotly data", re.compile(r"\bpx\.data\.|\bplotly\.(?:express\.)?data\b")),
+    ("vega_datasets", re.compile(r"\b(?:vega_datasets|VegaDatasets)\b")),
+    ("bokeh sampledata", re.compile(r"\bbokeh\.sampledata\b")),
+    ("statsmodels datasets", re.compile(r"\b(?:statsmodels|sm)\.datasets\b")),
+    ("pydataset", re.compile(r"\bpydataset\b")),
+    # No space before the parenthesis: "Training data (rug)" in a legend label is prose.
+    ("R data()", re.compile(r"(?<![\w.$])data\(\s*[\"']?[A-Za-z][\w.]*[\"']?\s*[,)]")),
+    (
+        "R dataset package",
+        re.compile(
+            r"\bdatasets::|\b(?:palmerpenguins|gapminder|nycflights13)::"
+            r"|\b(?:library|require)\s*\(\s*[\"']?(?:palmerpenguins|gapminder|nycflights13)\b"
+        ),
+    ),
+    ("RDatasets", re.compile(r"\bRDatasets\b")),
+    # A data file by URL, in any quote a language has, with an optional query;
+    # a Vega or Vega-Lite spec's own $schema URL is no data.
+    (
+        "remote data file",
+        re.compile(
+            r"[`\"']https?://(?!vega\.github\.io/schema/)[^`\"'\s]+"
+            r"\.(?:csv|tsv|json|geojson|topojson|parquet|xlsx?)(?:\?[^`\"'\s]*)?[`\"']"
+        ),
+    ),
+)
+# Loaders whose pattern is R's own syntax: a ``data(rows)`` helper in Python,
+# JavaScript or Julia is no dataset, so these count in R implementations only.
+R_ONLY_LOADERS = frozenset({"R data()", "R dataset package"})
+# A diff line whose code starts like this is a comment: a loader named there loads nothing.
+COMMENT_STARTS = ("#", "//", "/*", "*")
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +193,32 @@ def last_review(comments: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
     return reviews[-1] if reviews else None
 
 
+def added_loaders(patch: str | None, language: str | None) -> list[str] | None:
+    """The example-dataset loaders an implementation diff adds (``DATASET_LOADERS`` order).
+
+    A loader counts when an added line uses it and neither a removed line nor
+    a context line did: those show the predecessor already had it. The R-only
+    loaders count only when ``language`` is ``r``. None when there is no diff
+    to read (GitHub omits it for a very large file).
+    """
+    if patch is None:
+        return None
+    loaders = [(name, pattern) for name, pattern in DATASET_LOADERS if language == "r" or name not in R_ONLY_LOADERS]
+    added: set[str] = set()
+    before: set[str] = set()
+    # GitHub's ``patch`` field starts at the first hunk and has no file headers,
+    # so a line that starts with ``---`` is a removed line that began with ``--``.
+    for line in patch.splitlines():
+        if line.startswith("@@") or not line:
+            continue
+        side = added if line[0] == "+" else before if line[0] in "- " else None
+        code = line[1:].lstrip()
+        if side is None or code.startswith(COMMENT_STARTS):
+            continue
+        side.update(name for name, pattern in loaders if pattern.search(code))
+    return [name for name, _ in loaders if name in added and name not in before]
+
+
 def category_vector(checklist: dict[str, dict[str, int]]) -> str:
     """``VQ 28 · DE 12 · …``: the category sums, in rubric order."""
     sums: dict[str, int] = {}
@@ -162,8 +235,9 @@ def build_row(
     writeback: dict[str, Any] | None,
     artifacts: Sequence[dict[str, Any]],
     now: datetime | None = None,
+    patch: str | None = None,
 ) -> dict[str, Any]:
-    """One regeneration with its flags. ``pull`` is a ``gh pr list`` entry."""
+    """One regeneration with its flags. ``pull`` is a ``gh pr list`` entry, ``patch`` its implementation diff."""
     spec, lib = parse_branch(str(pull.get("headRefName") or "")) or ("?", "?")
     labels = sorted(str((label or {}).get("name") or "") for label in pull.get("labels") or [])
     record, review_run = gate_record(comments)
@@ -208,6 +282,7 @@ def build_row(
         "checklist": (review or {}).get("checklist"),
         "categories": category_vector(review["checklist"]) if review else None,
         "silent": metrics.silent_deductions(review["checklist"], review["weaknesses"])[0] if review else [],
+        "data_source_added": added_loaders(patch, LIBRARY_LANGUAGES.get(lib)),
     }
     row["flags"] = row_flags(row, now or datetime.now(timezone.utc))
     return row
@@ -272,6 +347,8 @@ def row_flags(row: dict[str, Any], now: datetime) -> list[str]:
             flags.append("big_drop")
     if isinstance(row["new"], int) and row["new"] >= HIGH_SCORE:
         flags.append("high_score")
+    if row.get("data_source_added"):
+        flags.append("data_source_added")
     # A render-hash stop keeps before any review ran: there is no pair to
     # stage, so its missing artifact is the design and no pipeline miss.
     if row["verdict"] and not row["pair_artifacts"] and row["code"] not in RENDER_STOP_CODES:
@@ -403,6 +480,7 @@ METRIC_ROWS: tuple[tuple[str, str, Callable[[dict[str, Any]], Any]], ...] = (
     ("Scores ≥ 90", "rare", lambda s: s["at_or_above_90"]),
     ("Re-score − stored, mean", "≈ −9 (Opus offset)", lambda s: _cell(s["rescore_drift_mean"])),
     ("Identical review vectors in a spec", "0", lambda s: len(s["identical_vectors"])),
+    ("Data source changed (example-dataset loader added)", "0", lambda s: s["flags"].get("data_source_added", 0)),
     ("Repair rounds: triggered / marked / decided / merged", "", lambda s: _follow_ups(s, "repair")),
     ("Retries: triggered / marked / decided / merged", "", lambda s: _follow_ups(s, "retry")),
     ("Stuck or failed review PRs", "0", lambda s: s["flags"].get("stuck", 0) + s["flags"].get("review_failed", 0)),
@@ -576,6 +654,41 @@ def pull_comments(number: int) -> list[dict[str, Any]]:
     return [json.loads(line) for line in out.splitlines() if line.strip()]
 
 
+def implementation_patch(number: int, spec: str, lib: str) -> str | None:
+    """The diff of the pull request's implementation file, or None when it has none GitHub shows.
+
+    A failed call leaves the row's data source unknown rather than ending the
+    week's collection, and says so on stderr.
+    """
+    prefix = f"plots/{spec}/implementations/"
+    try:
+        out = _gh(
+            [
+                "api",
+                "--paginate",
+                f"repos/{{owner}}/{{repo}}/pulls/{number}/files",
+                "--jq",
+                ".[] | {filename, status, patch} | @json",
+            ]
+        )
+    except subprocess.CalledProcessError as error:
+        print(f"::warning::#{number}: the changed files could not be read ({error.returncode})", file=sys.stderr)
+        return None
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        changed = json.loads(line)
+        name = str(changed.get("filename") or "")
+        # A file the PR deletes (a move GitHub did not pair) holds no new code.
+        if changed.get("status") == "removed" or not (name.startswith(prefix) and Path(name).stem == lib):
+            continue
+        patch = changed.get("patch")
+        if isinstance(patch, str):
+            return patch
+        print(f"::warning::#{number}: GitHub shows no diff for {name}; its data source stays unknown", file=sys.stderr)
+    return None
+
+
 def run_artifacts(run_id: int | None) -> list[dict[str, Any]]:
     if not run_id:
         return []
@@ -660,7 +773,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         comments = pull_comments(int(pull["number"]))
         _, review_run = gate_record(comments)
-        rows.append(build_row(pull, comments, writebacks.get(int(pull["number"])), run_artifacts(review_run)))
+        branch = parse_branch(str(pull.get("headRefName") or ""))
+        patch = implementation_patch(int(pull["number"]), *branch) if branch else None
+        rows.append(
+            build_row(pull, comments, writebacks.get(int(pull["number"])), run_artifacts(review_run), patch=patch)
+        )
     runs = {
         wf: [r for r in listed if str(r.get("createdAt") or "") > cutoff]
         for wf, listed in pipeline_runs(args.since).items()

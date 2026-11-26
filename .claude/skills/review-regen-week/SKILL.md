@@ -62,7 +62,9 @@ uv run python -m automation.scripts.review_retest first-reviews \
   parsed review (24-item checklist, category sums, silent deductions),
   the write-back PR, the review run and its
   `regen-pair-<pr>-<attempt>` artifact, the production render URLs,
-  and flags. A forced regen takes the first-generation path and has
+  the example-dataset loaders the implementation's diff adds
+  (`data_source_added`, read from the PR's changed files; `null` when
+  GitHub shows no diff or the call failed), and flags. A forced regen takes the first-generation path and has
   no gate record; it is listed so you can check why it was forced. The
   collector also counts the window's pipeline runs by conclusion,
   prints the failed ones under the metric table, and with `--costs`
@@ -100,6 +102,7 @@ miss is a prompt to look, not a verdict: open the rows behind it.
 | Scores ≥ 90 | rare | Each one must show design beyond the spec and style guide. Open its render. |
 | Re-score − stored | ≈ −9 now, moving toward 0 | Shrinks as write-backs and merges replace Sonnet-era reviews. Use gate-report's *comparable* line for the clean number. |
 | Identical review vectors in a spec | 0 | Anchoring: two libraries scored item for item the same. Read both reviews. |
+| Data source changed (example-dataset loader added) | 0 | A regeneration keeps its data source (owner, 2026-11-20), and since the readiness gate stopped keeping a newly added loader (#14245) nothing else catches a swap. `data_source_added` names what the diff added: seaborn's `load_dataset`, a scikit-learn toy loader or `fetch_*`, plotly's or vega's sample data, bokeh `sampledata`, statsmodels datasets, R `data()` or a dataset package, `RDatasets`, or a remote data file by URL. Read the diff: a swap from invented data to a downloaded one is a finding for the generator prompt; a loader the predecessor already had on an untouched line can show up when the diff's context does not reach it. scikit-learn's `make_*` generators draw in memory and are not counted. |
 | Repair rounds, retries: triggered / marked / decided / merged | – | Follow-up regenerations (`docs/workflows/overview.md#follow-up-regenerations`). *Triggered* counts with the switches (`REGEN_REPAIR_ROUND`, `REGEN_RETRY`) off as well; *marked* below *triggered* with a switch on is a refused or failed dispatch, so read the step summary of the run that merged or kept the PR. A follow-up row's verdict names its predecessor (`repair of #N`): compare the two. A kept follow-up's `writeback` is `follow_up` and never a failure. Follow-ups stay out of the merge rate and the re-score drift above: a follow-up re-scores a file reviewed hours before. Run the collector from current `main`: the gate's record check rejects keys it doesn't know, so a checkout older than the follow-up keys drops every newer record and shows its PR as having none. |
 | First reviews at exactly 90–91 | not a pile | A pile at the line with few at 88–89 is a reviewer aiming at the line. |
 | Stuck or failed review PRs | 0 | `stuck`: open or verdict-less regen PR. `review_failed`: the watchdog only flags regens; one manual re-review is the owner's call. |
