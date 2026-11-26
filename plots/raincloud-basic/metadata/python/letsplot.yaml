@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:23:48Z'
-updated: '2026-11-26T15:14:53Z'
+updated: '2026-11-26T15:23:06Z'
 generated_by: claude-sonnet
-workflow_run: 45846127397
+workflow_run: 45847338899
 issue: 1876
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,36 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct raincloud anatomy with lets-plot's native half violin (geom_violin(show_half=1))
-    nudged above each baseline, box centered on it and rain below via per-layer position_nudge
-  - 'Strict basic scope: only cloud, box and rain, no callouts or reference lines'
-  - Imprint palette in canonical order, identical across themes; theme tokens make
-    both renders fully legible
-  - Bimodal Treatment B demonstrates exactly what the cloud and rain reveal beyond
-    the box
-  - Axis limits derived from the data and axis titles from the column constants
+  - geom_violin(show_half=1) gives lets-plot's native half violin, nudged above the
+    baseline with position_nudge, so cloud, box and rain each sit in their own band
+  - 'Treatment B''s bimodal data shows the raincloud''s point: the wide box hides
+    two clusters that cloud and rain reveal'
+  - Theme tokens threaded through every chrome element; both renders fully legible
+    with identical Imprint data colors
+  - x limits derived from the data range with a padding for the untrimmed KDE tails,
+    so every cloud tapers out inside the axis
   weaknesses:
-  - 'SC-03 (both): Treatment B''s cloud is cut off with a vertical edge at the x-limit
-    200, where its density is still clearly above zero → lower limit about 30 ms further
-    out so the whole tail shows (≈ −30 ms). Likely cause: x_low = floor(min/50)*50
-    − 50 with geom_violin(trim=False), whose KDE tail extends further than one 50
-    ms step.'
-  - 'Suggestion: a subtle tooltip spec on the rain layer would make individual reaction
-    times readable in the HTML view.'
+  - 'Suggestion: a tooltip spec on the rain layer would make individual reaction times
+    readable in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold dark title "raincloud-basic · python · letsplot · anyplot.ai"; bold dark category labels Control / Treatment A / Treatment B; axis titles "Reaction Time (ms)" and "Experimental Condition" in dark ink; dark-gray x ticks 200-700; subtle vertical gridlines only. All readable.
-      Data: three half-violin clouds rising above their baselines in #009E73 (Control), #C475FD (Treatment A), #4467A3 (Treatment B, bimodal); cream-filled boxes with dark outline and median on each baseline; translucent color-matched rain points in a narrow band below. Treatment B's cloud tail ends with a vertical cut at x=200.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: bold dark title 'raincloud-basic · python · letsplot · anyplot.ai' about 58 % of the width; axis titles 'Reaction Time (ms)' and 'Experimental Condition' in dark ink; x ticks 150-750 in soft ink; bold category labels Control, Treatment A, Treatment B; subtle vertical gridlines only.
+      Data: three rows from top: Control (#009E73), Treatment A (#C475FD), Treatment B (#4467A3); translucent half-violin clouds rise above each baseline, off-white boxes with dark outline, median and whiskers on the baseline, translucent jittered rain below. Treatment B's cloud is bimodal and tapers to zero near 150 and 750.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, category labels and axis titles in light ink, ticks in light gray, faint gridlines. No dark-on-dark text.
-      Data: same three categorical colors as light; boxes switch to the dark elevated fill with light outlines; rain identical in color. Brand green clearly visible.
+      Chrome: title, axis titles and category labels in light ink, ticks in soft light grey, gridlines faint but visible; no dark-on-dark text.
+      Data: the same three Imprint colors as the light render; boxes filled with the dark elevated surface and light outlines; clouds and rain clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,36 +55,35 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; rain bands sit just under their boxes without
-          hiding points
+        comment: No text collisions; rain sits in its own band below each box
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rain points size 4 with alpha 0.5 and a thin outline suit 80 points
-          per group; clouds and boxes clearly visible in both themes
+        comment: 80 points per group at size 4 with alpha 0.5 and thin outline; clouds
+          and boxes clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, lavender and blue are CVD-distinguishable; categories are
-          also labelled on the y axis
+        comment: Green, purple and blue are CVD-distinguishable and the y axis names
+          each group, so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Drawing fills the landscape canvas with balanced margins; nothing
+        comment: Three rows fill the 3200x1800 canvas with balanced margins; nothing
           cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles 'Reaction Time (ms)' and 'Experimental Condition' with
-          unit, taken from the column constants
+        comment: '''Reaction Time (ms)'' with unit and ''Experimental Condition''
+          from the column constants'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -105,27 +99,27 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
+        passed: false
         comment: 'Beyond baseline: bold INK category labels against INK_SOFT ticks
-          create a clear label hierarchy; boxes filled with the elevated surface token
-          so the median reads on top of the cloud'
+          set a clear label hierarchy; boxes filled with the elevated surface token
+          so median and quartiles read on top of the cloud'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: 'Grid density chosen for this chart: only value-axis gridlines, categorical
-          gridlines and all ticks removed, leaving the baseline to the whisker line'
+        passed: false
+        comment: 'Grid density chosen for this chart: value-axis gridlines only, categorical
+          gridlines and ticks removed so the whisker line acts as the baseline'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: 'Data choice beyond the Notes: Treatment B is a bimodal mixture whose
-          box hides the two clusters the cloud and rain reveal, the raincloud''s core
-          argument'
+        passed: false
+        comment: 'Data chosen beyond the Notes: Treatment B is bimodal, so its wide
+          box hides two clusters that the cloud and rain reveal, the raincloud''s
+          core argument'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,29 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud: half violin + box + rain only, no extra layers'
+        comment: 'Correct raincloud: half violin, box and rain only, no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Horizontal orientation, cloud above, box on baseline, rain below,
-          jitter 0.05, alpha 0.5, median and quartiles: all Notes and C1-C5 bullets
-          met'
+        comment: Horizontal orientation, cloud above, box on baseline, rain below,
+          jitter 0.05, alpha 0.5, median and quartiles; C1-C5 met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Treatment B's cloud tail is cut off with a vertical edge at the x-limit
-          200 (defect line)
+        passed: true
+        comment: Marks at their values; x axis from the data with room for the untrimmed
+          KDE tails, which now taper to zero inside the limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend hidden as the y axis names every
-          category
+        comment: Mandated title format; legend hidden as the y axis names every category
     data_quality:
       score: 15
       max: 15
@@ -165,21 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows unimodal, skewed and bimodal groups, demonstrating everything
-          a raincloud reveals
+        comment: Unimodal, skewed and bimodal groups show everything a raincloud reveals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction times for control and two treatments, neutral and plausible
+        comment: 'Reaction times for a control and two treatments: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: About 250-620 ms is realistic for choice reaction times; spec has
-          no Check values
+        comment: About 250-620 ms is realistic for choice reaction times; the spec
+          has no Check values
     code_quality:
       score: 10
       max: 10
@@ -207,35 +198,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Concise, limits derived from the data, no fake UI
+        comment: Concise; limits derived from the data; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
+        passed: false
         comment: Idiomatic grammar layering with per-layer position_nudge, scale_y_discrete(limits=...)
           for order, column constants mapped directly
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: geom_violin(show_half=1) is lets-plot's native half-violin; HTML
+        passed: false
+        comment: geom_violin(show_half=1) is lets-plot's native half violin; HTML
           export with native tooltips
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T15:11:28Z'
+  rendered_at: '2026-11-26T15:19:58Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -247,4 +238,3 @@ impl_tags:
   styling:
   - alpha-blending
   - minimal-chrome
-  - grid-styling
