@@ -2,55 +2,66 @@ library: letsplot
 language: python
 specification_id: chord-basic
 created: '2025-12-23T10:01:36Z'
-updated: '2026-06-17T01:52:24Z'
-generated_by: claude-opus
-workflow_run: 27660191586
+updated: '2026-11-26T08:46:47Z'
+generated_by: claude-sonnet
+workflow_run: 45784949176
 issue: 858
-language_version: 3.13.14
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - 'First series Asia rendered in brand green #009E73; full Imprint palette used
-    in canonical order with distinct colors per continent.'
-  - 'Backgrounds correct in both themes (#FAF8F1 light / #1A1A17 dark); all chrome
-    (title, labels, legend, caption) flips theme-adaptively while data colors stay
-    identical.'
-  - 'Sophisticated hand-built chord geometry: proportional arc sizes with gaps, bezier-curved
-    ribbons, three-tier opacity hierarchy so weak flows stay legible, tick marks linking
-    arcs to labels.'
-  - Bidirectional flows shown as separate chords (e.g. Asia→Europe 45 and Europe→Asia
-    22), satisfying the spec's bidirectional requirement.
-  - 'Data storytelling via a ''Strongest: Asia→Europe (45)'' annotation and a caption
-    explaining the width/opacity encoding.'
-  - Correct square canvas (2400×2400), title in the exact mandated format, interactive
-    HTML export with hover tooltips, deterministic hardcoded data, flat KISS script
-    with clean imports.
+  - 'Asia, the first entity, is drawn in brand green #009E73 and the other five continents
+    follow the Imprint palette in canonical order. Ring arcs and chords keep identical
+    colors in both themes.'
+  - 'Chord geometry is built with geom_polygon: arc lengths are proportional to each
+    entity''s total flow, the ring has gaps between arcs, and ribbon widths are proportional
+    to flow at both ends. Bidirectional pairs (Asia→Europe 45 / Europe→Asia 22) show
+    as separate chords.'
+  - Entity labels wrap two-word names and set hjust/vjust from the arc angle, so every
+    label sits outside the ring next to its arc. Short leader ticks link each label
+    to the middle of its arc.
+  - layer_tooltips shows 'source → target' and the flow value on hover in the HTML
+    export. gggrid paints the full square canvas with the theme page color.
+  - 'Chrome flips correctly in both themes (#FAF8F1 / #1A1A17): the title, labels,
+    legend frame and caption are readable, with no dark-on-dark text.'
   weaknesses:
-  - 'The center annotation ''Strongest: Asia→Europe (45)'' overlaps the dense crossing
-    chord ribbons, reducing its legibility against the busy backdrop — consider a
-    small elevated background pill behind the text or relocating it to a calmer area.'
-  - The legend title 'Continent' sits very close to / slightly overlaps the first
-    column of legend swatches — add horizontal spacing between the legend title and
-    the keys.
-  - The central region is visually busy where many ribbons cross (inherent to chord
-    diagrams), but this compounds the annotation overlap above.
+  - 'SC-01 (both): chords are split into three value tiers with alpha 0.38/0.58/0.82,
+    and a caption explains that ''Opacity indicates relative strength''. This adds
+    an opacity encoding that the basic spec does not ask for, on top of width → one
+    alpha for all chords (about 0.6–0.7) and a caption without the opacity clause.
+    Likely cause: the chord_low/chord_mid/chord_high split and the three geom_polygon
+    layers.'
+  - 'VQ-03 (dark): low-tier chords at alpha 0.38 in the darker hues (e.g. the navy
+    Africa→North America and Africa→Asia ribbons) nearly merge with the #1A1A17 background
+    → raise their opacity so they read as clearly as on light (about +0.25 alpha).
+    Likely cause: alpha=0.38 on the chord_low layer.'
+  - 'VQ-02 (both): the legend title ''Continent'' runs straight into the key tile
+    of the first swatch column, with no gap → leave at least ~8 px between the title
+    and the keys. Likely cause: the horizontal legend with the title on its left;
+    set legend_title margin or put the title on top.'
+  - 'VQ-05 (both): the circle fills only about 60 % of the canvas width, with a wide
+    empty band (~15 % of the height) between the title and the Oceania label → shrink
+    the axis limits (about ±1.45 instead of ±1.7) so the ring uses more of the square.
+    Likely cause: scale_x/y_continuous limits=(-1.7, 1.7).'
+  - 'Suggestion: a slightly heavier seam between the chords'' page-colored outlines
+    would separate stacked chords at the arc ends more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) page and an elevated cream legend frame (#FFFDF6) — not pure white.
-      Chrome: bold near-black title "chord-basic · python · letsplot · anyplot.ai" top-left; bold dark continent labels (Asia, Oceania, South America, North America, Africa, Europe) around the ring; italic muted caption bottom-right; legend title "Continent" + 6 keys all dark-on-light. All text readable.
-      Data: outer ring arcs and bezier chords colored by Imprint palette — Asia = brand green #009E73 (first series), Europe = lavender, North America = ochre, Africa = blue, South America = matte red, Oceania = cyan. Chord width proportional to flow, three opacity tiers. Center annotation "Strongest: Asia→Europe (45)" in soft-ink bold overlaps the crossing ribbons (slightly busy but legible).
-      Legibility verdict: PASS (annotation is the only mildly-strained element, still readable).
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas; the legend frame is elevated cream #FFFDF6 with a soft-ink border.
+      Chrome: bold near-black title "chord-basic · python · letsplot · anyplot.ai" at top-left; bold dark continent labels (Asia, Oceania, South America and North America wrapped onto two lines, Africa, Europe) outside the ring with soft-ink leader ticks; a horizontal "Continent" legend at the bottom with six keys; an italic muted caption at bottom-right. All text is readable, and no label touches the ring.
+      Data: the outer ring has six arcs whose lengths are proportional to total flow. Asia is brand green #009E73, Europe lavender #C475FD, Africa blue #4467A3, North America ochre #BD8233, South America red #AE3030, Oceania cyan #2ABCCD. Bezier ribbons take the source color, with widths proportional to flow, in three opacity tiers. Bidirectional pairs show as separate chords. There is a large empty band between the title and the circle.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) page and elevated dark legend frame (#242420) — not pure black.
-      Chrome: light off-white title, labels, legend text and italic caption — all clearly readable, no dark-on-dark failures. Tick marks and arc separators use the dark theme's page-bg seam color.
-      Data: identical data colors to the light render (Asia green #009E73, Europe lavender, North America ochre, Africa blue, South America red, Oceania cyan) — only the chrome flipped. Three-tier chord opacity preserved.
-      Legibility verdict: PASS (center "Strongest" annotation in light-ink over mixed dark ribbons is readable; same mild central busyness as light).
+      Background: warm near-black #1A1A17; the legend frame is #242420 with a light border.
+      Chrome: the title, continent labels, legend text and caption are in light ink and clearly readable, with no dark-on-dark text. The leader ticks are light grey.
+      Data: arc and chord colors are identical to the light render; only the chrome flipped. The low-opacity tier in dark hues (navy Africa→North America and Africa→Asia ribbons) is dim and nearly merges with the background, though it is still faintly traceable.
+      Legibility verdict: PASS (text); the low-tier chords are dim in dark.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -58,104 +69,105 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All labels/title/legend/caption readable both themes; center annotation
-          slightly strained against busy chords.
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: false
-        comment: Center annotation overlaps crossing ribbons; legend title 'Continent'
-          nearly touches first swatch column.
+        comment: Legend title 'Continent' runs into the first swatch column (defect
+          line). Entity labels are clear of the ring
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Three-tier opacity keeps weak flows visible; arcs and chords all
-          distinguishable.
+        passed: false
+        comment: Low-tier dark-hued chords nearly merge with the dark background (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; adequate contrast in both themes.
+        comment: Distinct Imprint hues plus labels on arcs; not color-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Correct 2400x2400 square; nothing clipped; balanced composition.
+        passed: false
+        comment: Circle uses ~60% of the width, with a wide empty band under the title
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (chord); title + descriptive encoding caption present.
+        comment: 'N/A: no axes; mandated title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint canonical order; backgrounds correct
-          in both themes.'
+        comment: 'Asia #009E73 first, Imprint canonical order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom bezier chord geometry, proportional arcs+gaps, tick marks,
-          three-tier hierarchy — well above generic.
+        passed: false
+        comment: Wrapped two-line labels with angle-dependent justification and leader
+          ticks, ring gaps
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: theme_void, no chartjunk, subtle seams, generous whitespace.
+        passed: false
+        comment: Page-colored seams between chords and arcs; labels placed clear of
+          the ring
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strongest-flow annotation + opacity hierarchy guide the eye to dominant
-          flows.
+        passed: false
+        comment: Default; the opacity tiers are an unasked addition and earn no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct chord diagram.
+        passed: false
+        comment: Correct chord diagram; extra opacity-tier encoding of value (defect
+          line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct entity colors, width ~ flow, bidirectional separate chords,
-          hover tooltips in HTML.
+        comment: Distinct entity colors, width proportional to flow, bidirectional
+          separate chords, hover tooltips; C1–C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value mapped correctly; arcs sized by total flow.
+        comment: Arc length proportional to total flow; chords anchored on both entities
+          with value-proportional widths
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'chord-basic · python · letsplot · anyplot.ai'; legend
-          labels match continents.
+        comment: Exact mandated title; legend 'Continent' matches the entities
     data_quality:
       score: 15
       max: 15
@@ -165,20 +177,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bidirectional flows, proportional widths, multiple entities,
-          varied magnitudes.
+        comment: 6 entities, 18 flows, several bidirectional pairs, wide magnitude
+          range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Inter-continental migration flows — plausible and neutral.
+        comment: 'Inter-continental migration flows: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flow values 8–45 are sensible for the domain.
+        comment: Flows of 8–45 thousand are sensible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,63 +200,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no RNG.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity appropriate to hand-built chord geometry; no fake UI.
+        comment: 'Hand-built geometry is required: lets-plot has no chord geom'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html; current ggsave API.
-    library_features:
-      score: 8
+        comment: plot-{THEME}.png and .html via ggsave
+    library_mastery:
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: 'Idiomatic ggplot grammar: layered geoms, scale_fill_manual, coord_fixed,
-          theme_void.'
+        passed: false
+        comment: Layered grammar, scale_fill_manual, coord_fixed, theme_void
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: geom_polygon ribbons, layer_tooltips hover, interactive HTML export
-          — lets-plot strengths.
+        passed: false
+        comment: layer_tooltips with formatted lines for HTML hover; gggrid for full-canvas
+          paint
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T08:43:10Z'
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
   - bezier-curves
-  - annotations
-  - layer-composition
+  - patches
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - groupby-aggregation
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
