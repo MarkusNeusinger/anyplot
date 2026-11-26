@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-21
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -241,7 +241,7 @@ STOP = "1100011101011"
 QUIET = "0" * 10
 
 # Data
-content = "SHIP-2024-ABC123"
+content = "LAB-7731-B204"  # hospital specimen tube ID
 
 # Encode using Code 128 subset B with modulo-103 check digit
 barcode_binary = START_B
@@ -262,6 +262,7 @@ else:
 barcode_binary += STOP
 barcode_with_quiet = QUIET + barcode_binary + QUIET
 
+# Plot: zone boundaries, barcode matrix and annotation strip all derive from the encoded string
 # Zone boundary positions (column indices)
 n_cols = len(barcode_with_quiet)
 q = len(QUIET)  # 10
@@ -272,9 +273,9 @@ st = len(STOP)  # 13
 
 zone_defs = [
     (0, q, INK_SOFT, 0.20, ""),
-    (q, q + s, "#009E73", 0.85, "Start\n128B"),
-    (q + s, q + s + d, "#4467A3", 0.80, f"Data region · {len(content)} chars"),
-    (q + s + d, q + s + d + ck, "#C475FD", 0.85, "Check\nmod 103"),
+    (q, q + s, "#009E73", 0.85, "Start"),
+    (q + s, q + s + d, "#4467A3", 0.80, f"Data · {len(content)} chars"),
+    (q + s + d, q + s + d + ck, "#C475FD", 0.85, "Check"),
     (q + s + d + ck, q + s + d + ck + st, "#BD8233", 0.85, "Stop"),
     (n_cols - q, n_cols, INK_SOFT, 0.20, ""),
 ]
@@ -304,14 +305,14 @@ ax_ann.set_ylim(0, 1)
 for x0, x1, color, alpha, label in zone_defs:
     width = x1 - x0
     ax_ann.add_patch(plt.Rectangle((x0, 0), width, 1, color=color, alpha=alpha))
-    if label and width > 12:
+    if label:
         ax_ann.text(
             (x0 + x1) / 2,
             0.5,
             label,
             ha="center",
             va="center",
-            fontsize=5.5,
+            fontsize=7,
             color="white",
             fontweight="bold",
             linespacing=1.3,
