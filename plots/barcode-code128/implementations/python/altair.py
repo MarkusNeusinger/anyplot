@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -8,7 +8,6 @@ import os
 
 import altair as alt
 import pandas as pd
-from PIL import Image
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -268,17 +267,33 @@ for bar in bars_data:
     bar["x2"] += quiet_zone
 total_width_with_zones = total_width + 2 * quiet_zone
 
+# Plot
 df_bars = pd.DataFrame(bars_data)
-df_text = pd.DataFrame([{"x": total_width_with_zones / 2, "y": -0.15, "text": content}])
+df_text = pd.DataFrame([{"x": total_width_with_zones / 2, "y": -0.17, "text": content}])
 
-# Barcode bars — theme-adaptive INK color, tooltip shows encoded content
+# Scannable symbol: dark bars on a light tile in both themes (the spec asks for black on white).
+# The tile spans the quiet zones; the page around it follows the theme.
+TILE = "#FAF8F1"
+BAR_INK = "#1A1A17"
+margin = total_width_with_zones * 0.04
+df_tile = pd.DataFrame([{"x": 0, "x2": total_width_with_zones, "y": -0.32, "y2": 1.1}])
+x_scale = alt.Scale(domain=[-margin, total_width_with_zones + margin], nice=False)
+y_scale = alt.Scale(domain=[-0.4, 1.18], nice=False)
+
+tile_chart = (
+    alt.Chart(df_tile)
+    .mark_rect(color=TILE)
+    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), x2="x2:Q", y=alt.Y("y:Q", scale=y_scale, axis=None), y2="y2:Q")
+)
+
+# Barcode bars, tooltip shows encoded content
 bars_chart = (
     alt.Chart(df_bars)
-    .mark_rect(color="#1A1A17")
+    .mark_rect(color=BAR_INK)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, total_width_with_zones]), axis=None),
+        x=alt.X("x:Q", scale=x_scale, axis=None),
         x2="x2:Q",
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.3, 1.1]), axis=None),
+        y=alt.Y("y:Q", scale=y_scale, axis=None),
         y2="y2:Q",
         tooltip=[alt.Tooltip("encoded:N", title="Encoded")],
     )
@@ -287,38 +302,23 @@ bars_chart = (
 # Human-readable text below barcode
 text_chart = (
     alt.Chart(df_text)
-    .mark_text(fontSize=20, font="monospace", fontWeight="bold", color="#1A1A17")
-    .encode(x="x:Q", y="y:Q", text="text:N")
+    .mark_text(fontSize=22, font="monospace", fontWeight="bold", color=BAR_INK)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="text:N")
 )
 
 chart = (
-    (bars_chart + text_chart)
+    (tile_chart + bars_chart + text_chart)
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
-        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title("barcode-code128 · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
-    .interactive()
-    .configure_view(strokeWidth=0, fill="#FAF8F1", continuousWidth=620, continuousHeight=320)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_title(color=INK)
 )
 
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-# PAD to canonical 3200×1800 — vl-convert leaves chart undersized; never crop
-TW, TH = 3200, 1800
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
