@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 70/100 | Created: 2026-05-13
@@ -8,6 +8,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from lets_plot import *
 from scipy import stats
 from statsmodels.nonparametric.smoothers_lowess import lowess
@@ -15,22 +16,33 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 
 LetsPlot.setup_html()
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID_COLOR = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-SMOOTHER = "#C475FD"  # Okabe-Ito position 2
-REFERENCE = "#4467A3"  # Okabe-Ito position 3
-CONTOUR = "#BD8233"  # Okabe-Ito position 4
+# Imprint palette: points, smoothers, reference lines and contours take positions 1-4
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+SMOOTHER = IMPRINT_PALETTE[1]
+REFERENCE = IMPRINT_PALETTE[2]
+CONTOUR = IMPRINT_PALETTE[3]
 
-CREDIT = "diagnostic-regression-panel · letsplot · anyplot.ai"
+# Constants
+COOKS_LEVELS = [0.5, 1.0]  # the contour levels R's plot(lm) draws
+N_LABELLED = 3  # most influential observations labelled in every panel
 
-# Data: salary prediction regression with heteroscedasticity and influential points
+# Columns: set these to your table's column names
+FITTED = "Fitted log(Salary)"  # role: fitted
+RESIDUALS = "Residuals"  # role: residuals
+STD_RES = "Standardized Residuals"  # role: std_residuals
+LEVERAGE = "Leverage (Hat Value)"  # role: leverage
+COOKS_D = "Cook's distance"  # role: cooks_d
+
+# Data: replace this block with your own diagnostics table, one row per observation
 np.random.seed(42)
 n = 150
 # x1: years of experience (standardised), x2: education index
@@ -44,142 +56,146 @@ x1[[0, 1, 2]] = [4.0, -3.8, 4.5]
 x2[[0, 1, 2]] = [-3.0, 2.8, -2.5]
 y[[0, 1, 2]] = [16.0, -11.0, 19.0]
 
-X = np.column_stack([np.ones(n), x1, x2])
-p_params = 3
+fit = sm.OLS(y, sm.add_constant(np.column_stack([x1, x2]))).fit()
+influence = fit.get_influence()
+df = pd.DataFrame(
+    {
+        FITTED: fit.fittedvalues,
+        RESIDUALS: fit.resid,
+        STD_RES: influence.resid_studentized_internal,
+        LEVERAGE: influence.hat_matrix_diag,
+        COOKS_D: influence.cooks_distance[0],
+    }
+)
 
-XtX_inv = np.linalg.inv(X.T @ X)
-beta = XtX_inv @ X.T @ y
-fitted = X @ beta
-residuals = y - fitted
-mse = np.sum(residuals**2) / (n - p_params)
+# Plot
+n_obs = len(df)
+# Cook's D = r^2 h / (p (1 - h)) holds for every row, so the parameter count follows from the table
+h_col, r_col, d_col = df[LEVERAGE], df[STD_RES], df[COOKS_D]
+n_params = (r_col**2 * h_col / (d_col * (1 - h_col))).replace([np.inf, -np.inf], np.nan).median()
+top = df[COOKS_D].nlargest(N_LABELLED).index
+labels = pd.DataFrame({"obs": [str(i) for i in top]})
 
-H = X @ XtX_inv @ X.T
-leverage = np.diag(H)
-std_residuals = residuals / np.sqrt(mse * (1 - leverage))
-cooks_d = (std_residuals**2 * leverage) / (p_params * (1 - leverage))
-
-top3 = np.argsort(cooks_d)[-3:][::-1]
-
-# Shared theme — font sizes at required minimums, panel borders removed
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_border=element_blank(),
-    panel_grid_major=element_line(color=GRID_COLOR, size=0.5),
+    panel_grid_major=element_line(color=GRID_COLOR, size=0.3),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=9),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24, face="bold"),
-    plot_subtitle=element_text(color=INK_MUTED, size=14),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=18),
+    plot_title=element_text(color=INK, size=12),
 )
 
-# ── Plot 1: Residuals vs Fitted ──────────────────────────────────────────────
-lw1 = lowess(residuals, fitted, frac=0.4, return_sorted=True)
-df1 = pd.DataFrame({"fitted": fitted, "residuals": residuals})
-df1_smooth = pd.DataFrame({"x": lw1[:, 0], "y": lw1[:, 1]})
-df1_labels = pd.DataFrame({"fitted": fitted[top3], "residuals": residuals[top3], "label": [str(i) for i in top3]})
 
+def panel(frame, x, y_col, title, xlabel, ylabel):
+    """One diagnostic panel: the shared point styling, a panel title and theme."""
+    return (
+        ggplot(frame, aes(x=x, y=y_col))
+        + geom_point(color=BRAND, size=2, alpha=0.65)
+        + labs(x=xlabel, y=ylabel, title=title)
+        + anyplot_theme
+    )
+
+
+def label_layer(frame, x, y_col, dx=0.0, dy=0.0):
+    """Observation index beside each of the most influential points."""
+    pts = frame.loc[top].assign(obs=labels["obs"].to_numpy())
+    pts[x] = pts[x] + dx
+    pts[y_col] = pts[y_col] + dy
+    return geom_text(data=pts, mapping=aes(x=x, y=y_col, label="obs"), color=INK, size=4.5, fontface="bold")
+
+
+def span(col):
+    return df[col].max() - df[col].min()
+
+
+# Panel 1: Residuals vs Fitted
+lw1 = lowess(df[RESIDUALS], df[FITTED], frac=0.4, return_sorted=True)
+smooth1 = pd.DataFrame({FITTED: lw1[:, 0], RESIDUALS: lw1[:, 1]})
 p1 = (
-    ggplot(df1, aes("fitted", "residuals"))
-    + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
-    + geom_point(color=BRAND, size=3, alpha=0.65)
-    + geom_line(data=df1_smooth, mapping=aes("x", "y"), color=SMOOTHER, size=1.5)
-    + geom_text(data=df1_labels, mapping=aes("fitted", "residuals", label="label"), color=INK, size=12, nudge_y=0.6)
-    + labs(x="Fitted log(Salary)", y="Residuals", title="Residuals vs Fitted")
-    + anyplot_theme
-    + ggsize(800, 450)
+    panel(df, FITTED, RESIDUALS, "Residuals vs Fitted", FITTED, RESIDUALS)
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
+    + geom_line(data=smooth1, mapping=aes(x=FITTED, y=RESIDUALS), color=SMOOTHER, size=1.0)
+    + label_layer(df, FITTED, RESIDUALS, dx=-0.04 * span(FITTED))
+    + scale_y_continuous(expand=[0.08, 0])
 )
 
-# ── Plot 2: Normal Q-Q ───────────────────────────────────────────────────────
-sorted_idx = np.argsort(std_residuals)
-sorted_std = std_residuals[sorted_idx]
-theoretical_q = stats.norm.ppf(np.linspace(0.5 / n, 1 - 0.5 / n, n))
-
-q25, q75 = np.percentile(sorted_std, [25, 75])
+# Panel 2: Normal Q-Q (each observation at the quantile of its rank)
+qq = df.assign(theoretical=stats.norm.ppf((df[STD_RES].rank() - 0.5) / n_obs))
+q25, q75 = np.percentile(qq[STD_RES], [25, 75])
 t25, t75 = stats.norm.ppf([0.25, 0.75])
-slope_qq = (q75 - q25) / (t75 - t25)
-intercept_qq = q25 - slope_qq * t25
-t_range = np.linspace(theoretical_q.min() * 1.1, theoretical_q.max() * 1.1, 80)
-df2_ref = pd.DataFrame({"x": t_range, "y": intercept_qq + slope_qq * t_range})
-
-abs_rank = np.argsort(np.abs(sorted_std))[-3:]
-df2 = pd.DataFrame({"theoretical": theoretical_q, "std_res": sorted_std})
-
-# Compute staggered label positions to avoid overlap in the top-right cluster
-lab_theo = theoretical_q[abs_rank]
-lab_std = sorted_std[abs_rank]
-lab_labels = [str(sorted_idx[k]) for k in abs_rank]
-sort_order = np.argsort(lab_theo)
-lab_theo = lab_theo[sort_order]
-lab_std = lab_std[sort_order]
-lab_labels = [lab_labels[i] for i in sort_order]
-# Three extreme points: leftmost nudged left, next two separated up/down
-nudge_x = np.array([-0.50, 0.20, 0.20])
-nudge_y = np.array([0.0, 0.65, -0.55])
-df2_labels = pd.DataFrame({"lx": lab_theo + nudge_x, "ly": lab_std + nudge_y, "label": lab_labels})
-
+slope = (q75 - q25) / (t75 - t25)
+t_range = np.linspace(qq["theoretical"].min() * 1.1, qq["theoretical"].max() * 1.1, 80)
+ref_line = pd.DataFrame({"theoretical": t_range, STD_RES: q25 + slope * (t_range - t25)})
 p2 = (
-    ggplot(df2, aes("theoretical", "std_res"))
-    + geom_line(data=df2_ref, mapping=aes("x", "y"), color=REFERENCE, size=1.2)
-    + geom_point(color=BRAND, size=3, alpha=0.65)
-    + geom_text(data=df2_labels, mapping=aes("lx", "ly", label="label"), color=INK, size=12)
-    + labs(x="Theoretical Quantiles", y="Standardized Residuals", title="Normal Q-Q")
-    + anyplot_theme
-    + ggsize(800, 450)
+    panel(qq, "theoretical", STD_RES, "Normal Q-Q", "Theoretical Quantiles", STD_RES)
+    + geom_line(data=ref_line, mapping=aes(x="theoretical", y=STD_RES), color=REFERENCE, size=1.0)
+    + label_layer(qq, "theoretical", STD_RES, dx=-0.09 * (qq["theoretical"].max() - qq["theoretical"].min()), dy=0.3)
+    + scale_y_continuous(expand=[0.08, 0])
 )
 
-# ── Plot 3: Scale-Location ───────────────────────────────────────────────────
-sqrt_abs = np.sqrt(np.abs(std_residuals))
-lw3 = lowess(sqrt_abs, fitted, frac=0.4, return_sorted=True)
-df3 = pd.DataFrame({"fitted": fitted, "sqrt_abs": sqrt_abs})
-df3_smooth = pd.DataFrame({"x": lw3[:, 0], "y": lw3[:, 1]})
-df3_labels = pd.DataFrame({"fitted": fitted[top3], "sqrt_abs": sqrt_abs[top3], "label": [str(i) for i in top3]})
-
+# Panel 3: Scale-Location
+scale_loc = df.assign(sqrt_abs=np.sqrt(df[STD_RES].abs()))
+SQRT_ABS = f"√|{STD_RES}|"
+scale_loc = scale_loc.rename(columns={"sqrt_abs": SQRT_ABS})
+lw3 = lowess(scale_loc[SQRT_ABS], scale_loc[FITTED], frac=0.4, return_sorted=True)
+smooth3 = pd.DataFrame({FITTED: lw3[:, 0], SQRT_ABS: lw3[:, 1]})
 p3 = (
-    ggplot(df3, aes("fitted", "sqrt_abs"))
-    + geom_point(color=BRAND, size=3, alpha=0.65)
-    + geom_line(data=df3_smooth, mapping=aes("x", "y"), color=SMOOTHER, size=1.5)
-    + geom_text(data=df3_labels, mapping=aes("fitted", "sqrt_abs", label="label"), color=INK, size=12, nudge_y=0.07)
-    + labs(x="Fitted log(Salary)", y="√|Standardized Residuals|", title="Scale-Location")
-    + anyplot_theme
-    + ggsize(800, 450)
+    panel(scale_loc, FITTED, SQRT_ABS, "Scale-Location", FITTED, SQRT_ABS)
+    + geom_line(data=smooth3, mapping=aes(x=FITTED, y=SQRT_ABS), color=SMOOTHER, size=1.0)
+    + label_layer(scale_loc, FITTED, SQRT_ABS, dx=-0.04 * span(FITTED))
+    + scale_y_continuous(expand=[0.08, 0])
 )
 
-# ── Plot 4: Residuals vs Leverage ────────────────────────────────────────────
-h_seq = np.linspace(0.001, leverage.max() * 1.25, 400)
-std_lim = max(abs(std_residuals)) * 1.15
+# Panel 4: Residuals vs Leverage with Cook's distance contours
+std_lim = df[STD_RES].abs().max() * 1.15
+# Run the leverage axis far enough that the outermost contour comes inside the residual limits
+h_reach = max(COOKS_LEVELS) * n_params / (std_lim**2 + max(COOKS_LEVELS) * n_params)
+h_seq = np.linspace(df[LEVERAGE].min() * 0.5, max(df[LEVERAGE].max() * 1.15, h_reach * 1.08), 400)
 contour_rows = []
-for D in [0.5, 1.0]:
-    r_vals = np.sqrt(D * p_params * (1 - h_seq) / h_seq)
-    for sign, tag in [(1, "pos"), (-1, "neg")]:
-        mask = r_vals <= std_lim
-        contour_rows.append(pd.DataFrame({"h": h_seq[mask], "r": sign * r_vals[mask], "grp": f"D={D}_{tag}"}))
-df_contours = pd.concat(contour_rows, ignore_index=True)
-
-df4 = pd.DataFrame({"leverage": leverage, "std_res": std_residuals})
-df4_labels = pd.DataFrame({"leverage": leverage[top3], "std_res": std_residuals[top3], "label": [str(i) for i in top3]})
-
+end_labels = []
+for level in COOKS_LEVELS:
+    r_vals = np.sqrt(level * n_params * (1 - h_seq) / h_seq)
+    keep = r_vals <= std_lim
+    if not keep.any():
+        continue
+    name = f"D = {level:g}"
+    for sign in (1, -1):
+        contour_rows.append(pd.DataFrame({LEVERAGE: h_seq[keep], STD_RES: sign * r_vals[keep], "grp": f"{name}{sign}"}))
+        end_labels.append({LEVERAGE: h_seq[keep][-1], STD_RES: sign * r_vals[keep][-1], "name": name})
+contours = pd.concat(contour_rows, ignore_index=True)
+end_labels = pd.DataFrame(end_labels)
+end_labels[STD_RES] = end_labels[STD_RES] - np.sign(end_labels[STD_RES]) * 0.08 * std_lim
 p4 = (
-    ggplot(df4, aes("leverage", "std_res"))
-    + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
-    + geom_line(data=df_contours, mapping=aes("h", "r", group="grp"), color=CONTOUR, size=0.9, linetype="dashed")
-    + geom_point(color=BRAND, size=3, alpha=0.65)
-    + geom_text(data=df4_labels, mapping=aes("leverage", "std_res", label="label"), color=INK, size=12, nudge_y=0.35)
-    + labs(x="Leverage (Hat Value)", y="Standardized Residuals", title="Residuals vs Leverage")
-    + anyplot_theme
-    + ggsize(800, 450)
+    panel(df, LEVERAGE, STD_RES, "Residuals vs Leverage", LEVERAGE, STD_RES)
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
+    + geom_line(
+        data=contours, mapping=aes(x=LEVERAGE, y=STD_RES, group="grp"), color=CONTOUR, size=0.8, linetype="dashed"
+    )
+    + geom_text(
+        data=end_labels,
+        mapping=aes(x=LEVERAGE, y=STD_RES, label="name"),
+        color=CONTOUR,
+        size=4,
+        hjust=1,
+        fontface="bold",
+    )
+    + label_layer(df, LEVERAGE, STD_RES, dx=-0.05 * span(LEVERAGE))
+    + scale_y_continuous(limits=[-std_lim, std_lim])
 )
 
-# ── Assemble 2×2 panel with figure-level credit ──────────────────────────────
-panel = (
+# Assemble the 2x2 grid under one shared title; the grid paints the page colour
+figure = (
     gggrid([p1, p2, p3, p4], ncol=2)
-    + labs(subtitle=CREDIT)
-    + theme(plot_subtitle=element_text(color=INK_MUTED, size=14))
+    + ggtitle("diagnostic-regression-panel · python · letsplot · anyplot.ai")
+    + ggsize(800, 450)
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(color=INK, size=14, face="bold"),
+    )
 )
 
-ggsave(panel, f"plot-{THEME}.png", path=".", scale=3)
-ggsave(panel, f"plot-{THEME}.html", path=".")
+ggsave(figure, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(figure, f"plot-{THEME}.html", path=".")
