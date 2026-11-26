@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -21,6 +21,9 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_gradientn,
+    scale_fill_manual,
+    scale_shape_manual,
+    scale_size_manual,
     theme,
     theme_minimal,
 )
@@ -38,6 +41,8 @@ LAKE_FILL = "#81D4FA" if THEME == "light" else "#0D3B52"
 LAKE_COLOR = "#0288D1" if THEME == "light" else "#01579B"
 START_FILL = "#DDCC77"
 END_FILL = "#AE3030"
+CONTOUR_COLOR = "#8FB894" if THEME == "light" else "#4A7A50"
+TRAIL_COLOR = "#B59A6A" if THEME == "light" else "#7A6A4A"
 # Imprint sequential ramp for marks (colored lines on the page)
 SEQ_MARKS = (
     [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
@@ -54,6 +59,7 @@ N_POINTS = 200
 LON = "Longitude (°)"  # role: x
 LAT = "Latitude (°)"  # role: y
 PROGRESS = "Trail Progress (%)"  # role: color
+MARKER = "Route Marker"  # role: group
 
 # Data
 np.random.seed(42)
@@ -115,16 +121,53 @@ lake_lon = base_lon + 0.03 + 0.025 * np.cos(lake_t)
 lake_lat = base_lat + 0.02 + 0.015 * np.sin(lake_t)
 df_lake = pd.DataFrame({LON: lake_lon, LAT: lake_lat, "order": range(len(lake_t)), "area": "lake"})
 
+# Terrain context: elevation contours around a summit and two side trails
+contour_parts = []
+for ring, scale in enumerate([0.25, 0.5, 0.75, 1.0, 1.3]):
+    ang = np.linspace(0, 2 * np.pi, 80)
+    contour_parts.append(
+        pd.DataFrame(
+            {
+                LON: base_lon - 0.04 + scale * 0.07 * np.cos(ang) * (1 + 0.15 * np.sin(2 * ang)),
+                LAT: base_lat + 0.01 + scale * 0.05 * np.sin(ang) * (1 + 0.12 * np.cos(3 * ang)),
+                "ring": ring,
+            }
+        )
+    )
+df_contour = pd.concat(contour_parts, ignore_index=True)
+
+trail_parts = []
+for trail, (lon0, lat0, lon1, lat1) in enumerate([(-0.15, 0.10, -0.02, 0.02), (0.12, -0.09, 0.05, -0.01)]):
+    s = np.linspace(0, 1, 30)
+    trail_parts.append(
+        pd.DataFrame(
+            {
+                LON: base_lon + lon0 + (lon1 - lon0) * s + 0.01 * np.sin(6 * np.pi * s),
+                LAT: base_lat + lat0 + (lat1 - lat0) * s + 0.006 * np.cos(5 * np.pi * s),
+                "trail": trail,
+            }
+        )
+    )
+df_trails = pd.concat(trail_parts, ignore_index=True)
+
+# Start and end markers share one layer so the legend can name them
+df_markers = pd.DataFrame(
+    {MARKER: ["Start", "End"], LON: df[LON].iloc[[0, -1]].values, LAT: df[LAT].iloc[[0, -1]].values}
+)
+markers = df_markers[MARKER].tolist()
+
 # Plot
-start_point = df.iloc[[0]]
-end_point = df.iloc[[-1]]
 plot = (
     ggplot()
     + geom_polygon(aes(x=LON, y=LAT), data=df_park, fill=PARK_FILL, color=PARK_COLOR, size=0.5, alpha=0.7)
     + geom_polygon(aes(x=LON, y=LAT), data=df_lake, fill=LAKE_FILL, color=LAKE_COLOR, size=0.4, alpha=0.8)
+    + geom_path(aes(x=LON, y=LAT, group="ring"), data=df_contour, color=CONTOUR_COLOR, size=0.4, alpha=0.7)
+    + geom_path(aes(x=LON, y=LAT, group="trail"), data=df_trails, color=TRAIL_COLOR, size=0.6, linetype="dashed")
     + geom_path(aes(x=LON, y=LAT, color=PROGRESS), data=df, size=2.5, alpha=0.85, lineend="round")
-    + geom_point(aes(x=LON, y=LAT), data=start_point, color=INK, fill=START_FILL, size=9, shape="o", stroke=1)
-    + geom_point(aes(x=LON, y=LAT), data=end_point, color=INK, fill=END_FILL, size=3, shape="s", stroke=1)
+    + geom_point(aes(x=LON, y=LAT, fill=MARKER, shape=MARKER, size=MARKER), data=df_markers, color=INK, stroke=1)
+    + scale_fill_manual(values=[START_FILL, END_FILL], limits=markers)
+    + scale_shape_manual(values=["o", "s"], limits=markers)
+    + scale_size_manual(values=[9, 3], limits=markers)
     + scale_color_gradientn(colors=[c for _, c in SEQ_MARKS], values=[p for p, _ in SEQ_MARKS])
     + coord_fixed(ratio=1.3)
     + labs(title="map-route-path · python · plotnine · anyplot.ai")
