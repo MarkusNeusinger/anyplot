@@ -1,7 +1,7 @@
 """anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-06-17
+Quality: pending | Updated: 2026-06-17
 """
 
 import os
