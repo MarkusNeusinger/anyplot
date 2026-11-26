@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -22,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -41,27 +41,46 @@ sns.set_theme(
     },
 )
 
-# Data: tropical atmospheric sounding — 19 levels from surface (1000 hPa) to stratosphere (50 hPa)
-np.random.seed(42)
-pressure = np.array([1000, 950, 925, 900, 850, 800, 750, 700, 650, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50])
-temperature = np.array([30, 26, 23, 21, 18, 14, 10, 6, 2, -3, -12, -22, -38, -52, -60, -65, -75, -65, -55])
-dewpoint = np.array([26, 22, 18, 15, 10, 4, -2, -10, -18, -25, -38, -52, -60, -70, -75, -80, -85, -90, -90])
+# Constants
+P_REF = 1000  # hPa, reference pressure of the skew and of the potential temperature
+P_BOTTOM, P_TOP = 1050, 45  # hPa, axis range of the diagram
+T_LEFT, T_RIGHT = -50, 58  # skewed temperature axis range of the diagram
+
+# Columns: set these to your table's column names
+PRESSURE = "Pressure (hPa)"  # role: pressure
+TEMPERATURE = "Temperature (°C)"  # role: temperature
+DEWPOINT = "Dewpoint (°C)"  # role: dewpoint
+
+# Data: replace this block with your own sounding, for example df = pd.read_csv("sounding.csv")
+# Tropical atmospheric sounding: 19 levels from the surface (1000 hPa) to the stratosphere (50 hPa)
+df = pd.DataFrame(
+    {
+        PRESSURE: [1000, 950, 925, 900, 850, 800, 750, 700, 650, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50],
+        TEMPERATURE: [30, 26, 23, 21, 18, 14, 10, 6, 2, -3, -12, -22, -38, -52, -60, -65, -75, -65, -55],
+        DEWPOINT: [26, 22, 18, 15, 10, 4, -2, -10, -18, -25, -38, -52, -60, -70, -75, -80, -85, -90, -90],
+    }
+)
+
+# Plot: reads only df and the constants above
+pressure = df[PRESSURE].to_numpy()
+temperature = df[TEMPERATURE].to_numpy()
+dewpoint = df[DEWPOINT].to_numpy()
 
 # Figure with logarithmic inverted pressure axis
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 ax.set_yscale("log")
-ax.set_ylim(1050, 45)
-ax.set_xlim(-50, 58)
+ax.set_ylim(P_BOTTOM, P_TOP)
+ax.set_xlim(T_LEFT, T_RIGHT)
 
 # Skew-T transform: x_plot = T + tan(45°) * ln(p0/p)
 skew_slope = np.tan(np.radians(45))
-p_bg = np.logspace(np.log10(45), np.log10(1050), 150)
+p_bg = np.logspace(np.log10(P_TOP), np.log10(P_BOTTOM), 150)
 
 # Isotherms — seaborn lineplot with units for multi-line rendering (seaborn-idiomatic)
 iso_frames = []
 for t in np.arange(-80, 65, 10):
-    x_iso = t + skew_slope * np.log(1000 / p_bg)
+    x_iso = t + skew_slope * np.log(P_REF / p_bg)
     iso_frames.append(pd.DataFrame({"x": x_iso, "pressure": p_bg, "T": t}))
 df_iso = pd.concat(iso_frames, ignore_index=True)
 sns.lineplot(
@@ -81,8 +100,8 @@ sns.lineplot(
 # Dry adiabats (potential temperature θ = const) — seaborn lineplot
 dry_frames = []
 for theta in np.arange(250, 470, 20):
-    t_dry = theta * (p_bg / 1000) ** 0.286 - 273.15
-    x_dry = t_dry + skew_slope * np.log(1000 / p_bg)
+    t_dry = theta * (p_bg / P_REF) ** 0.286 - 273.15
+    x_dry = t_dry + skew_slope * np.log(P_REF / p_bg)
     dry_frames.append(pd.DataFrame({"x": x_dry, "pressure": p_bg, "theta": theta}))
 df_dry = pd.concat(dry_frames, ignore_index=True)
 sns.lineplot(
@@ -102,8 +121,8 @@ sns.lineplot(
 # Moist adiabats (equivalent potential temperature θ_e = const) — seaborn lineplot
 moist_frames = []
 for theta_e in np.arange(270, 400, 20):
-    t_moist = (theta_e - 30) * (p_bg / 1000) ** 0.30 - 273.15
-    x_moist = t_moist + skew_slope * np.log(1000 / p_bg)
+    t_moist = (theta_e - 30) * (p_bg / P_REF) ** 0.30 - 273.15
+    x_moist = t_moist + skew_slope * np.log(P_REF / p_bg)
     moist_frames.append(pd.DataFrame({"x": x_moist, "pressure": p_bg, "theta_e": theta_e}))
 df_moist = pd.concat(moist_frames, ignore_index=True)
 sns.lineplot(
@@ -122,11 +141,11 @@ sns.lineplot(
 )
 
 # Mixing ratio lines (w = const, g/kg) — lower troposphere only — seaborn lineplot
-p_mix = np.logspace(np.log10(400), np.log10(1050), 60)
+p_mix = np.logspace(np.log10(400), np.log10(P_BOTTOM), 60)
 mix_frames = []
 for w in [1, 2, 4, 7, 10, 16, 24]:
-    t_mix = 35 * np.log10(w) - 20 + 5 * np.log10(p_mix / 1000)
-    x_mix = t_mix + skew_slope * np.log(1000 / p_mix)
+    t_mix = 35 * np.log10(w) - 20 + 5 * np.log10(p_mix / P_REF)
+    x_mix = t_mix + skew_slope * np.log(P_REF / p_mix)
     mix_frames.append(pd.DataFrame({"x": x_mix, "pressure": p_mix, "w": w}))
 df_mix = pd.concat(mix_frames, ignore_index=True)
 sns.lineplot(
@@ -145,13 +164,13 @@ sns.lineplot(
 )
 
 # Apply skew transform to sounding data
-x_temp = temperature + skew_slope * np.log(1000 / pressure)
-x_dew = dewpoint + skew_slope * np.log(1000 / pressure)
+x_temp = temperature + skew_slope * np.log(P_REF / pressure)
+x_dew = dewpoint + skew_slope * np.log(P_REF / pressure)
 
 # CAPE region: shade area between temperature and dewpoint profiles (T > Td = instability)
 ax.fill_betweenx(pressure, x_dew, x_temp, alpha=0.12, color=IMPRINT[4], zorder=2)
 
-df = pd.DataFrame(
+df_prof = pd.DataFrame(
     {
         "x": np.concatenate([x_temp, x_dew]),
         "pressure": np.concatenate([pressure, pressure]),
@@ -161,7 +180,7 @@ df = pd.DataFrame(
 
 # Plot sounding profiles with seaborn lineplot (hue + style + markers = seaborn-idiomatic)
 sns.lineplot(
-    data=df,
+    data=df_prof,
     x="x",
     y="pressure",
     hue="profile",
@@ -183,8 +202,8 @@ ax.set_yticks(display_ticks)
 ax.set_yticklabels([str(p) for p in display_ticks])
 
 # Labels and title
-ax.set_xlabel("Temperature (°C)", fontsize=10, color=INK)
-ax.set_ylabel("Pressure (hPa)", fontsize=10, color=INK)
+ax.set_xlabel(TEMPERATURE, fontsize=10, color=INK)
+ax.set_ylabel(PRESSURE, fontsize=10, color=INK)
 ax.set_title("skewt-logp-atmospheric · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
