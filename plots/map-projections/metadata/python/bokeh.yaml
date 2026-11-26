@@ -2,113 +2,130 @@ library: bokeh
 language: python
 specification_id: map-projections
 created: '2026-01-20T02:50:38Z'
-updated: '2026-05-23T08:41:41Z'
+updated: '2026-11-26T13:19:05Z'
 generated_by: claude-sonnet
-workflow_run: 26327476926
+workflow_run: 45826578410
 issue: 3771
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 76
 review:
   strengths:
-  - Implements all four map projections (Equirectangular, Mercator, Sinusoidal, Mollweide)
-    with mathematically correct custom projection code — no GIS library dependency
-  - Real Natural Earth 110m country boundary data with local caching for reproducibility
-  - Tissot indicatrices implemented correctly with per-panel legend annotations that
-    contextualise each projection property (grows poleward, equal-area)
-  - Complete theme adaptation for both light and dark surfaces — all chrome tokens
-    (INK, INK_SOFT, PAGE_BG, ELEVATED_BG) applied consistently across all four panels
-  - NaN-separated graticule line segments and custom lat/lon text annotations are
-    an idiomatic Bokeh technique for multi-segment paths
-  - Bokeh gridplot + column layout is clean and idiomatic; Div HTML title with embedded
-    subtitle shows library-native composition
+  - Four projections (Equirectangular, Mercator, Sinusoidal, Mollweide) side by side,
+    each with its own panel title and identical world styling so only the projection
+    differs
+  - Real Natural Earth 110m country boundaries in a neutral INK_SOFT fill, clearly
+    set apart from the sea in both themes
+  - Graticule at 30° intervals transformed through each projection; its curvature
+    in the Sinusoidal and Mollweide panels shows how each bends the globe
+  - Per-panel Legend built from LegendItem with projection-specific notes (grows poleward,
+    equal-area) plus a subtitle that explains how to read the Tissot rings
+  - NaN-separated multi-segment lines for graticule and Tissot rings, and gridplot
+    + column + Div composition, are idiomatic Bokeh
+  - 'Theme tokens threaded through every chrome element; brand green #009E73 identical
+    in both renders'
   weaknesses:
-  - 'DE-01 / DE-02 design ceiling: panel borders (outline_line_color with line_width=2)
-    create a rigid grid-of-boxes look — removing or softening borders to a hairline
-    would improve visual refinement'
-  - 'LM-02 ceiling: gridplot and NaN-separated lines are good Bokeh techniques but
-    interactive features (HoverTool on Tissot circles, custom JS tooltip with projection
-    name) are absent — adding hover context would showcase Bokeh distinctiveness'
-  - Subtitle text at 20pt (≈27 source px) is below the style-guide tertiary minimum
-    — raise to 26–28pt for better mobile readability at the 400px srcset size
-  - Panel titles at 30pt are slightly above proportional for a half-canvas panel;
-    24–26pt would stay readable while giving more breathing room to the map area
-  - lat/lon annotation labels at 22pt extend beyond the sinusoidal map boundary on
-    the left edge — text_align right at the leftmost map edge forces bokeh to expand
-    x_range left, leaving an uneven whitespace strip
+  - 'VQ-02 (both): each panel''s bottom-right legend box covers the 90°E longitude
+    label (fully hidden in Mercator and Sinusoidal, half hidden as ''90°I'' / ''90°E''
+    in Equirectangular and Mollweide) and the Tissot ring at 60°S 150°E; the 60°N
+    / 30°N labels at 175°W sit on the 150°W Tissot rings in the Equirectangular and
+    Mercator panels → legend and labels clear of labels and rings. Likely cause: Legend
+    location=''bottom_right'' inside the frame and lat labels placed at x=radians(-175).'
+  - 'VQ-01 (both): lat/lon labels at 22pt and legend labels at 24pt are well below
+    the Bokeh reference of 34pt for tick and legend text and read small beside the
+    30pt panel titles → about 28–30pt (+6 to +8pt). Likely cause: text_font_size=''22pt''
+    and label_text_font_size=''24pt''.'
+  - 'VQ-03 (both): the legend glyphs are short hairline stubs; the graticule sample
+    is nearly invisible, especially on the dark background → longer, thicker glyphs.
+    Likely cause: default Legend glyph_width/glyph_height with no override.'
+  - 'SC-02 (both): the Tissot indicatrices are drawn as circles of 8° in longitude
+    and latitude, not as geodesic circles, so on the conformal Mercator they appear
+    as flattened ellipses at the equator and egg shapes at 60° instead of circles
+    that only change size, and on the Equirectangular they stay round where a true
+    indicatrix widens east-west (C4) → build each ring as a small circle on the sphere
+    (lon offset scaled by 1/cos(lat)) before projecting. Likely cause: clons = lon_d
+    + tissot_r*cos(a) without a 1/cos(lat) factor.'
+  - 'CQ-01 (code): five helper functions (_moll_theta, _country_patches_equirect/_mercator/_sinusoidal/_mollweide)
+    break the flat Imports → Data → Plot → Save structure → inline the projection
+    formulas in the data step. Likely cause: the per-projection helpers.'
+  - 'CQ-04 (code): the Mollweide Newton iteration is written out three more times
+    inline (lines 407–410, 416–418, 429–431, 467–470) although _moll_theta computes
+    it, and the four panel blocks repeat the same figure styling verbatim → one projection
+    step and one styling pass. Likely cause: copy-pasted panel blocks.'
+  - 'Suggestion: an equal-area projection that is not pseudocylindrical-sinusoidal
+    (Equal Earth or Lambert Cylindrical) would contrast more clearly with Mercator
+    than Sinusoidal does next to Mollweide.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
-      Chrome: Main title "map-projections · python · bokeh · anyplot.ai" in dark INK text at 40pt — readable. Subtitle "Green Tissot indicatrices reveal distortion…" in INK_SOFT at 20pt — small but visible. Each panel has a bold 30pt panel title (Equirectangular, Mercator, Sinusoidal, Mollweide) in dark text. Lat/lon annotation labels in INK_SOFT at 22pt — readable against the light background. Legend text in INK_SOFT at 24pt — readable.
-      Data: Country outlines and fills in INK_SOFT at alpha=0.15/0.6 — subtle neutral grey. Tissot indicatrices in brand green #009E73 at line_width=2.5 — clearly visible against both background and land fills. Graticule lines in INK_SOFT at alpha=0.5 — visible but not dominant.
-      Legibility verdict: PASS — all text readable; no light-on-light failures.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, including behind the centered title block.
+      Chrome: centered bold title "map-projections · python · bokeh · anyplot.ai" with a grey subtitle explaining the Tissot rings; four bold panel titles (Equirectangular (Plate Carrée), Mercator, Sinusoidal, Mollweide) in a 2x2 grid with thin INK_SOFT frames; grey lat (60°N…60°S) and lon (90°W, 0°, 90°E) labels; each panel has a bottom-right legend on an elevated off-white box. All text readable dark-on-light. The legends hide the 90°E label in every panel and the lat/lon labels are small next to the panel titles.
+      Data: neutral grey land fill with grey country borders, grey 30° graticule curved per projection, Tissot rings in brand green #009E73 (first series). Mercator rings are flattened at the equator and egg-shaped at 60°; Sinusoidal/Mollweide rings shear toward the edges.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, no pure black.
-      Chrome: All text tokens correctly flipped: main title and panel titles in light INK (#F0EFE8), lat/lon and legend labels in INK_SOFT (#B8B7B0). No dark-on-dark failures detected.
-      Data: Tissot indicatrices remain the same brand green #009E73 — identical to light render, data colors unchanged. Country outlines appear in a lighter tone against the dark background (INK_SOFT adapts correctly). Graticule lines visible and subtle.
-      Legibility verdict: PASS — all text readable against dark background; theme-adaptive chrome applied correctly; no dark-on-dark failures.
+      Background: warm near-black #1A1A17 over the whole canvas, no white strip.
+      Chrome: title and panel titles in light INK, subtitle, lat/lon labels and legend text in light grey INK_SOFT; legend boxes on #242420. No dark-on-dark text. The graticule legend glyph is barely visible.
+      Data: Tissot rings in the same #009E73 as the light render; land is a lighter grey fill on dark with light borders; graticule visible and subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 7
         max: 8
-        passed: true
-        comment: All text readable in both themes. Subtitle at 20pt is slightly below
-          tertiary minimum for mobile readability. Panel titles at 30pt are slightly
-          large for half-canvas panels but not a blocking issue.
+        passed: false
+        comment: All text readable in both themes; lat/lon labels 22pt and legend
+          24pt below the 34pt Bokeh reference (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No text or element overlaps detected in either render.
+        passed: false
+        comment: Legend boxes hide the 90°E label in all four panels and a Tissot
+          ring; lat labels sit on the 150°W rings (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Tissot circles clearly visible in brand green. Country fills appropriately
-          subtle. Graticule lines readable without dominating.
+        passed: false
+        comment: Tissot rings, land and graticule visible; legend glyphs are short
+          stubs, graticule sample nearly invisible (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green Tissot on neutral grey land — high contrast. No red-green-only
-          signal. CVD-safe.
+        comment: Green rings on neutral grey; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). 2x2 grid well-proportioned. No overflow
-          or clipping detected.
+        comment: Full-width centered title block, 2x2 grid fits the canvas with even
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Main title correct. Panel titles descriptive. Lat/lon annotations
-          serve as axis labels. Subtitle provides context.
+        comment: Axes hidden by design; lat/lon labels with degree units and descriptive
+          panel titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Tissot = #009E73 (brand green, position 1). Land uses INK_SOFT neutral
-          (not a categorical series). Backgrounds #FAF8F1 light / #1A1A17 dark. Data
-          colors identical across themes.'
+        comment: 'Tissot #009E73; backgrounds #FAF8F1 / #1A1A17 over the whole canvas;
+          land neutral'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -116,28 +133,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom projection math and Tissot indicatrices show conceptual sophistication.
-          Color usage intentional. But overall aesthetic is functional-educational
-          rather than visually inspired — rigid panel borders create a grid-of-boxes
-          look.
+        comment: Two-level title hierarchy (bold title, softer explanatory subtitle)
+          and bold panel titles over an elevated legend surface
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No axes, no grid (replaced by graticule), subtle country fills, theme-adaptive
-          legend. Panel border lines (outline_line_color, line_width=2) add slight
-          rigidity. Good but not polished.
+        comment: Hand-placed lat labels following each projection's left edge; thin
+          1px frames
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Educational narrative: 4 projections with per-panel legend contextualising
-          distortion (grows poleward, equal-area). Subtitle guides the viewer. Tissot
-          circles are the focal point. Clear and effective storytelling.'
+        comment: Subtitle and per-panel legend notes (grows poleward / equal-area)
+          guide the reader to the Tissot rings as the focal point
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -145,29 +158,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Four world map projections correctly shown: Equirectangular, Mercator,
-          Sinusoidal, Mollweide.'
+        comment: World maps in four projections side by side
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Multiple projections, graticule at 30° intervals, country coastlines/borders,
-          Tissot indicatrices, neutral land color — all spec features present.
+        passed: false
+        comment: 'Projections, 30° graticule, borders, neutral land, per-panel names
+          present; C4 missed: Tissot rings are lon/lat circles, not circular on the
+          conformal Mercator (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All country boundaries correctly transformed in each projection coordinate
-          system. All continents visible.
+        comment: Country rings correctly transformed in each projection; marks at
+          their positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-projections · python · bokeh · anyplot.ai' matches required
-          format exactly. Per-panel legends label graticule and Tissot renderers.
+        comment: Title matches the mandated format; per-panel legends label graticule
+          and Tissot rings
     data_quality:
       score: 15
       max: 15
@@ -177,95 +190,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: 4 projection families, graticule, Tissot indicatrices,
-          per-panel legends with distortion notes.'
+        comment: Conformal, equal-area and equidistant-type projections with graticule
+          and Tissot rings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Natural Earth 110m country data. Standard cartographic dataset,
-          widely used in GIS education. Neutral and appropriate.
+        comment: Real Natural Earth 110m country boundaries
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: World-scale at 110m resolution appropriate. Tissot radius of 8° visible
-          but not overwhelming at panel size.
+        comment: 'Checked: graticule at 30° steps, Mercator y=ln(tan(pi/4+phi/2)),
+          Mollweide theta via Newton, sinusoidal x=lambda cos(phi) — formulas correct'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Flat script. Helper functions (_moll_theta, _country_patches_*) are
-          justified minimal math utilities.
+        passed: false
+        comment: Five helper functions instead of a flat script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Geographic data from fixed URL with local
-          caching.
+        comment: Deterministic data from a fixed URL; seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: json, os, sys, time, urllib.request, pathlib,
-          numpy, bokeh modules, selenium, PIL.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake interactivity. sys.path manipulation avoids self-shadowing.
-          Newton's method for Mollweide is correct.
+        passed: false
+        comment: Mollweide Newton loop duplicated inline 4x despite _moll_theta; four
+          copy-pasted panel blocks (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly. Current Bokeh
-          3.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3 API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: gridplot(), column(), Div(), Legend/LegendItem, patches/line/text
-          glyphs, Selenium HTML->PNG — all idiomatic Bokeh patterns per bokeh.md.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: gridplot for multi-panel, NaN-separated line segments for graticule
-          paths, custom Legend construction with LegendItem, Div with inline HTML
-          for styled title. No HoverTool or other interactive Bokeh features — reasonable
-          for a static educational map but leaves distinctive feature space on the
-          table.
+        comment: figure/patches/line/text glyphs, Legend+LegendItem, gridplot, column
+          — standard Bokeh, no more
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Div with inline HTML for a two-level title block composed with gridplot
+          via column; NaN-separated multi-line paths
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  rendered_at: '2026-11-26T13:14:53Z'
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - subplots
-  - annotations
   - custom-legend
   - html-export
+  - annotations
+  - layer-composition
   patterns:
-  - iteration-over-groups
-  dataprep: []
+  - dataset-loading
+  - explicit-figure
+  dataprep:
+  - coordinate-transform
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending

@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-projections: World Map with Different Projections
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-23
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-26
 """
 
 import json
@@ -117,7 +117,7 @@ tissot_lons = [-150, -90, -30, 30, 90, 150]
 tissot_r = 8  # degrees
 
 PANEL_W = 1595
-PANEL_H = 848
+PANEL_H = 790
 
 # =============================================================================
 # PANEL 1: Equirectangular (Plate Carrée)
@@ -155,7 +155,7 @@ p1 = figure(
 p1.background_fill_color = PAGE_BG
 p1.border_fill_color = PAGE_BG
 p1.outline_line_color = INK_SOFT
-p1.outline_line_width = 2
+p1.outline_line_width = 1
 p1.title.text_color = INK
 p1.title.text_font_size = "30pt"
 p1.title.text_font_style = "bold"
@@ -246,7 +246,7 @@ p2 = figure(
 p2.background_fill_color = PAGE_BG
 p2.border_fill_color = PAGE_BG
 p2.outline_line_color = INK_SOFT
-p2.outline_line_width = 2
+p2.outline_line_width = 1
 p2.title.text_color = INK
 p2.title.text_font_size = "30pt"
 p2.title.text_font_style = "bold"
@@ -340,7 +340,7 @@ p3 = figure(
 p3.background_fill_color = PAGE_BG
 p3.border_fill_color = PAGE_BG
 p3.outline_line_color = INK_SOFT
-p3.outline_line_width = 2
+p3.outline_line_width = 1
 p3.title.text_color = INK
 p3.title.text_font_size = "30pt"
 p3.title.text_font_style = "bold"
@@ -445,7 +445,7 @@ p4 = figure(
 p4.background_fill_color = PAGE_BG
 p4.border_fill_color = PAGE_BG
 p4.outline_line_color = INK_SOFT
-p4.outline_line_width = 2
+p4.outline_line_width = 1
 p4.title.text_color = INK
 p4.title.text_font_size = "30pt"
 p4.title.text_font_style = "bold"
@@ -516,11 +516,11 @@ grid = gridplot([[p1, p2], [p3, p4]], merge_tools=False, toolbar_location=None)
 title_div = Div(
     text=(
         f"<style>body,html{{background:{PAGE_BG};margin:0;padding:0;}}</style>"
-        f"<div style='background:{PAGE_BG};text-align:center;padding:14px 0 6px 0;"
+        f"<div style='background:{PAGE_BG};text-align:center;padding:14px 0 6px 0;width:3200px;"
         f"font-family:sans-serif;'>"
         f"<span style='font-size:40pt;font-weight:bold;color:{INK};'>"
         f"map-projections · python · bokeh · anyplot.ai</span><br>"
-        f"<span style='font-size:20pt;color:{INK_SOFT};'>"
+        f"<span style='font-size:26pt;color:{INK_SOFT};'>"
         f"Green Tissot indicatrices reveal distortion — size shows area error, "
         f"shape shows angular error. Graticule at 30° intervals.</span></div>"
     ),
@@ -547,7 +547,13 @@ for arg in (
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, WIN_H)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

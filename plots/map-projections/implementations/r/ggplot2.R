@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-projections: World Map with Different Projections
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-05-23
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(maps)
@@ -149,7 +149,7 @@ p <- ggplot() +
     coord_fixed() +
     labs(
         title    = "map-projections · r · ggplot2 · anyplot.ai",
-        subtitle = "Mollweide equal-area projection  ·  Tissot indicatrices (green) confirm equal-area: every circle covers identical surface"
+        subtitle = "Mollweide equal-area projection  ·  green Tissot circles: equal area, changing shape"
     ) +
     theme_void(base_size = 8) +
     theme(
