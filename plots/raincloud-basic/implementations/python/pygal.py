@@ -1,7 +1,7 @@
 """ anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 78/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pygal
 from pygal.style import Style
+from scipy.stats import gaussian_kde
 
 
 # Theme tokens
@@ -48,16 +49,12 @@ groups = list(dict.fromkeys(df[GROUP]))
 data = {g: df.loc[df[GROUP] == g, REACTION].dropna().to_numpy() for g in groups}
 group_colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(groups))]
 
-# X-axis bounds with small padding
 x_lo = float(np.floor((df[REACTION].min() - 25) / 50) * 50)
 x_hi = float(np.ceil((df[REACTION].max() + 25) / 50) * 50)
 y_top = float(len(groups) + 1)
 
-# pygal renders one color per series; build the per-series color list so each
-# layer (rain, box outline, median line) matches the group color.
-series_colors = []
-for gc in group_colors:
-    series_colors.extend([gc, gc, gc])
+# Series order per group: rain, whisker
+series_colors = [c for gc in group_colors for c in (gc, gc)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -76,11 +73,8 @@ custom_style = Style(
     stroke_width=2.5,
 )
 
+
 CANVAS_W, CANVAS_H = 3200, 1800
-MARGIN_LEFT = 340
-MARGIN_RIGHT = 90
-MARGIN_TOP = 150
-MARGIN_BOTTOM = 160
 
 chart = pygal.XY(
     width=CANVAS_W,
@@ -98,133 +92,89 @@ chart = pygal.XY(
     xrange=(x_lo, x_hi),
     range=(0.0, y_top),
     margin=40,
-    margin_left=MARGIN_LEFT,
-    margin_right=MARGIN_RIGHT,
-    margin_top=MARGIN_TOP,
-    margin_bottom=MARGIN_BOTTOM,
+    margin_left=60,
+    margin_right=90,
+    margin_top=150,
+    margin_bottom=160,
     explicit_size=True,
+    css=(
+        "file://style.css",
+        "file://graph.css",
+        "inline:.dot { fill-opacity: 0.6 !important; stroke-opacity: 0.6 !important; }",
+    ),
 )
 
 # Raincloud layout
 cloud_height = 0.36
 rain_offset = -0.36
 rain_spread = 0.10
-n_kde_points = 96
 box_hw = 0.13
 
+rain_xy = []
 cloud_polygons = []
 box_specs = []
-medians = {}
 
 for i, (category, values) in enumerate(data.items()):
     center_y = i + 1
-    values = np.array(values)
 
-    # Silverman bandwidth for half-violin KDE
-    n = len(values)
-    std = float(np.std(values))
-    iqr_val = float(np.percentile(values, 75) - np.percentile(values, 25))
-    bandwidth = 0.9 * min(std, iqr_val / 1.34) * n ** (-0.2)
-
+    # Half-violin: Gaussian KDE with a Silverman bandwidth
+    bandwidth = 0.9 * min(values.std(), np.subtract(*np.percentile(values, [75, 25])) / 1.34) * len(values) ** -0.2
     pad = (values.max() - values.min()) * 0.08
-    x_kde = np.linspace(values.min() - pad, values.max() + pad, n_kde_points)
-    density = np.zeros_like(x_kde)
-    for v in values:
-        density += np.exp(-0.5 * ((x_kde - v) / bandwidth) ** 2)
-    density /= n * bandwidth * np.sqrt(2 * np.pi)
+    x_kde = np.linspace(values.min() - pad, values.max() + pad, 96)
+    density = gaussian_kde(values, bw_method=bandwidth / values.std(ddof=1))(x_kde)
 
     # Trim KDE tails at 5% of peak for cleaner cloud edges
-    peak = density.max()
-    keep = np.where(density > peak * 0.05)[0]
+    keep = np.where(density > density.max() * 0.05)[0]
     x_kde = x_kde[keep[0] : keep[-1] + 1]
     density = density[keep[0] : keep[-1] + 1]
-    density_scaled = density / density.max() * cloud_height
-
-    # Cloud polygon: baseline → top curve → baseline
-    poly = [(float(x_kde[0]), float(center_y))]
-    poly += [(float(x), float(center_y + d)) for x, d in zip(x_kde, density_scaled, strict=True)]
-    poly.append((float(x_kde[-1]), float(center_y)))
-    cloud_polygons.append((group_colors[i], poly))
+    cloud_polygons.append((group_colors[i], center_y, x_kde, density / density.max() * cloud_height))
 
     # Rain: jittered points below baseline
-    rng = np.random.default_rng(42 + i)
-    jitter = rng.uniform(-rain_spread, rain_spread, len(values))
+    jitter = np.random.default_rng(42 + i).uniform(-rain_spread, rain_spread, len(values))
     rain_points = [
         {"value": (float(v), center_y + rain_offset + float(j)), "label": f"{category}: {v:.0f} ms"}
         for j, v in zip(jitter, values, strict=True)
     ]
-    chart.add(f"{category} rain", rain_points, stroke=False, fill=False, dots_size=22)
+    rain_xy.extend(p["value"] for p in rain_points)
+    chart.add(f"{category} rain", rain_points, stroke=False, fill=False, dots_size=15)
 
-    # Box plot statistics
-    median = float(np.median(values))
-    q1 = float(np.percentile(values, 25))
-    q3 = float(np.percentile(values, 75))
-    iqr = q3 - q1
-    w_lo = float(max(values.min(), q1 - 1.5 * iqr))
-    w_hi = float(min(values.max(), q3 + 1.5 * iqr))
-    medians[category] = median
-    box_specs.append((group_colors[i], center_y, q1, q3, median, w_lo, w_hi))
-
-    # Whisker line (added via pygal so the box has a native-rendered backbone)
+    # Box statistics and whisker line
+    q1, median, q3 = (float(q) for q in np.percentile(values, [25, 50, 75]))
+    w_lo = float(max(values.min(), q1 - 1.5 * (q3 - q1)))
+    w_hi = float(min(values.max(), q3 + 1.5 * (q3 - q1)))
+    box_specs.append((group_colors[i], center_y, q1, q3, median))
     chart.add(
         "", [(w_lo, center_y), (w_hi, center_y)], stroke=True, fill=False, show_dots=False, stroke_style={"width": 4}
-    )
-    # Median rule (drawn as a vertical line inside the box via two XY points)
-    chart.add(
-        "",
-        [(median, center_y - box_hw * 1.05), (median, center_y + box_hw * 1.05)],
-        stroke=True,
-        fill=False,
-        show_dots=False,
-        stroke_style={"width": 10},
     )
 
 chart.y_labels = [{"value": 0.0, "label": ""}]
 chart.y_labels += [{"value": float(i + 1), "label": str(g)} for i, g in enumerate(groups)]
 chart.y_labels.append({"value": y_top, "label": ""})
 
-# Render base SVG
+# Translucent rain dots (alpha 0.6)
+
 base_svg = chart.render().decode("utf-8")
 
-# Extract the actual plot-area transform + dimensions from the rendered SVG
-# (pygal computes them from title/axis-label space, so reading them back beats
-# trying to predict them).
+# pygal's own mapping, read back from the rain circles it drew (data -> plot-local pixels)
+circles = np.array(re.findall(r'<circle cx="([0-9.]+)" cy="([0-9.]+)" r="15"', base_svg), dtype=float)
+rain_xy = np.array(rain_xy)
+x_fit = np.polyfit(rain_xy[:, 0], circles[:, 0], 1)
+y_fit = np.polyfit(rain_xy[:, 1], circles[:, 1], 1)
 plot_g = re.search(r'<g\s+transform="translate\(([0-9.]+)[,\s]+([0-9.]+)\)"\s+class="plot">', base_svg)
 plot_tx, plot_ty = float(plot_g.group(1)), float(plot_g.group(2))
 
-plot_rect = re.search(
-    r'class="plot">.*?<rect[^>]*width="([0-9.]+)"[^>]*height="([0-9.]+)"'
-    r'[^>]*class="background"',
-    base_svg,
-    re.DOTALL,
-)
-plot_w, plot_h = float(plot_rect.group(1)), float(plot_rect.group(2))
-
-# Data → plot-local SVG pixel mapping (SVG y is inverted relative to data y)
-x_scale = plot_w / (x_hi - x_lo)
-x_offset = -x_lo * x_scale
-y_data_lo, y_data_hi = 0.0, y_top
-y_scale = -plot_h / (y_data_hi - y_data_lo)
-y_offset = -y_data_hi * y_scale
-
-
-def to_svg(px, py):
-    return px * x_scale + x_offset, py * y_scale + y_offset
-
-
-# Cloud polygons — injected inside the plot group (uses plot-local coords).
-# Fill is the full polygon (closed back to baseline); the stroke is drawn
-# separately as a polyline along only the curved top edge so the baseline
-# closure doesn't show as a visible horizontal line.
+# Clouds: filled polygon, stroke only along the curved top
 clouds_svg = '<g class="raincloud-clouds">'
-for color, poly in cloud_polygons:
-    pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in (to_svg(px, py) for px, py in poly))
-    # Curve-only stroke: skip the first and last vertices (the baseline endpoints).
-    curve_pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in (to_svg(px, py) for px, py in poly[1:-1]))
+for color, cy, xs, ds in cloud_polygons:
+    px = np.array([np.polyval(x_fit, x) for x in xs])
+    py = np.array([np.polyval(y_fit, cy + d) for d in ds])
+    base = np.polyval(y_fit, cy)
+    pts = f"{px[0]:.1f},{base:.1f} " + " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(px, py, strict=True))
+    pts += f" {px[-1]:.1f},{base:.1f}"
+    curve = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(px, py, strict=True))
     clouds_svg += (
         f'<polygon points="{pts}" fill="{color}" fill-opacity="0.55" stroke="none"/>'
-        f'<polyline points="{curve_pts}" fill="none" '
-        f'stroke="{color}" stroke-width="2.5" stroke-opacity="0.9"/>'
+        f'<polyline points="{curve}" fill="none" stroke="{color}" stroke-width="2.5" stroke-opacity="0.9"/>'
     )
 clouds_svg += "</g>"
 
@@ -234,23 +184,16 @@ second_bg = base_svg.find(bg_marker, first_bg + 1)
 bg_end = base_svg.find("/>", second_bg) + 2
 base_svg = base_svg[:bg_end] + clouds_svg + base_svg[bg_end:]
 
-# Box-plot rectangles — drawn in absolute SVG coords (outside plot group)
+# Boxes with quartile edges and a thick median
 boxes_svg = '<g class="raincloud-boxes">'
-for color, cy, q1, q3, median, _w_lo, _w_hi in box_specs:
-    bx1, by1 = to_svg(q1, cy + box_hw)
-    bx2, by2 = to_svg(q3, cy - box_hw)
-    bx, by = bx1 + plot_tx, by1 + plot_ty
-    bw, bh = bx2 - bx1, by2 - by1
-    mx, _ = to_svg(median, cy)
-    mx += plot_tx
-    box_top_y = by
-    box_bot_y = by + bh
+for color, cy, q1, q3, median in box_specs:
+    bx, bx2 = np.polyval(x_fit, q1) + plot_tx, np.polyval(x_fit, q3) + plot_tx
+    by, by2 = np.polyval(y_fit, cy + box_hw) + plot_ty, np.polyval(y_fit, cy - box_hw) + plot_ty
+    mx = np.polyval(x_fit, median) + plot_tx
     boxes_svg += (
-        f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bw:.1f}" height="{bh:.1f}" '
-        f'fill="{BOX_FILL}" fill-opacity="0.92" '
-        f'stroke="{color}" stroke-width="5"/>'
-        f'<line x1="{mx:.1f}" y1="{box_top_y:.1f}" '
-        f'x2="{mx:.1f}" y2="{box_bot_y:.1f}" '
+        f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bx2 - bx:.1f}" height="{by2 - by:.1f}" '
+        f'fill="{BOX_FILL}" fill-opacity="0.92" stroke="{color}" stroke-width="5"/>'
+        f'<line x1="{mx:.1f}" y1="{by:.1f}" x2="{mx:.1f}" y2="{by2:.1f}" '
         f'stroke="{color}" stroke-width="8" stroke-linecap="round"/>'
     )
 boxes_svg += "</g>"
