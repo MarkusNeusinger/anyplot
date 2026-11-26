@@ -2,201 +2,189 @@ library: seaborn
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:53:37Z'
-updated: '2026-05-21T06:01:02Z'
+updated: '2026-11-26T12:48:11Z'
 generated_by: claude-sonnet
-workflow_run: 26207324569
+workflow_run: 45822130648
 issue: 3768
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 80
 review:
   strengths:
-  - Thoughtful dual-panel layout (route map + elevation profile) adds strong data
-    storytelling — the journey is shown geographically AND topographically
-  - Viridis colormap on waypoints effectively encodes time progression as a continuous
-    perceptual gradient — correct choice for sequential data
-  - 'Okabe-Ito palette correctly used: BRAND green (#009E73) for Start, vermillion
-    (#D55E00) for End, with shape differentiation (circle vs square) for color-blind
-    safety'
-  - Direction arrows at 4 equidistant intervals clearly indicate travel direction
-    without cluttering the route
-  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders are
-    readable, backgrounds correct, no dark-on-dark failures'
-  - sns.despine() applied to both axes, subtle y-axis-only grid on elevation panel
-    — clean visual hierarchy
-  - Clean reproducible code with np.random.seed(42) and realistic Crested Butte, Colorado
-    coordinates and elevation values
+  - Elapsed time is encoded with imprint_seq built from the theme's mark stops and
+    explained by a colorbar named 'Elapsed Time (min)'
+  - Start (brand-green circle) and End (purple square) differ in shape and hue and
+    carry an ink ring that separates them from the ramp's ends in both themes
+  - sns.lineplot(sort=False) keeps the waypoints in sequence order; four np.linspace-spaced
+    arrows show direction without hiding the line
+  - 'Theme-adaptive chrome throughout: all text, spines, grid, legend frame and colorbar
+    outline flip correctly between #FAF8F1 and #1A1A17'
+  - Clean, reproducible script with readable column constants and a realistic Crested
+    Butte track
   weaknesses:
-  - Missing geographic basemap (streets or terrain layer) — without it the route floats
-    on a blank coordinate plane, undermining the 'map' in map-route-path; consider
-    contextily.add_basemap() or a subtle grid of lat/lon reference lines as a lightweight
-    alternative
-  - Elevation profile tick labels at fontsize=7 are borderline-small for mobile readability
-    — increase to 8pt to match the map panel tick size
-  - Route line uses ax.scatter() (matplotlib) with sort=False override rather than
-    seaborn's native scatter API — LM-01 deduction; for the viridis colormap use case,
-    matplotlib.scatter is pragmatically correct but worth noting
-  - No explicit seaborn-idiomatic feature (e.g. relplot, FacetGrid) used — the layout
-    is built entirely with plt.subplots; acceptable but reduces library distinctiveness
+  - 'SC-02 (both): no geographic basemap — the route sits on a blank lon/lat plane,
+    missing the spec''s ''A good version shows: a geographic basemap of streets, terrain
+    or satellite imagery, quieter than the route, with the view fitted to the route''s
+    extent'' → draw a muted terrain or street tile layer under the route, fitted to
+    its extent. Likely cause: no basemap call (e.g. contextily.add_basemap on ax_map
+    with a reduced alpha).'
+  - 'SC-01 (both): an elevation-profile panel the spec does not ask for takes the
+    lower quarter of the canvas → remove it and give the route map the full canvas
+    (elevation may instead drive the path''s color gradient, as the Notes allow).
+    Likely cause: the second subplot ax_elev and its lineplot/fill_between.'
+  - 'Suggestion: set an equal-distance aspect on the map (ax_map.set_aspect(1 / np.cos(np.radians(38.9))))
+    so the track''s shape is not stretched east-west.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct. Both subplot panels share the background.
-      Chrome: Title "Colorado Mountain Bike Trail · map-route-path · python · seaborn · anyplot.ai" in dark ink, readable at fontsize=11. Axis labels ("Longitude (°)", "Latitude (°)", "Elapsed Time (min)", "Elevation (m)") in dark ink at fontsize=9-10, all readable. Tick labels at fontsize=7-8, slightly small but legible. Colorbar label "Elapsed Time (min)" readable in dark ink (vertical).
-      Data: Route path rendered with a light gray line (INK_SOFT) beneath viridis-colored scatter waypoints. Purple cluster at lower-left = early in ride, transitions through blue/teal/green to yellow-green at upper-right. Large green circle (BRAND #009E73) marks Start at lower-left; large orange square (#D55E00) marks End at upper-right. Four black direction arrows visible along route. Elevation profile below: BRAND green line with light green fill (alpha=0.15), showing the climb peaking around 2950m near minute 60-70.
-      Legibility verdict: PASS — all chrome elements are clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 across both panels and the figure.
+      Chrome: Title "Colorado Mountain Bike Trail · map-route-path · python · seaborn · anyplot.ai" in dark ink, centred, about 70 % of the width. Axis titles Longitude (°), Latitude (°), Elapsed Time (min), Elevation (m) in dark ink; tick labels in INK_SOFT; subtle grid; top/right spines removed. Colorbar "Elapsed Time (min)" 0–140 on the right. Legend (Start circle, End square) lower right on an elevated frame. All text readable.
+      Data: 250 waypoints over a grey path, colored by imprint_seq light stops (green #009E73 → blue → navy). Large #009E73 Start circle with dark ring at lower left, large #C475FD End square with dark ring at upper right; four dark arrowheads along the route. Lower panel: elevation profile in #009E73 with a light green fill. No basemap behind the route.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct. Both panels share the dark background.
-      Chrome: Title text is light (#F0EFE8), clearly readable. Axis labels in light ink, readable. Tick labels in light-gray (INK_SOFT = #B8B7B0 in dark mode), readable. Colorbar label readable in light ink. Legend box has elevated dark bg (#242420) with light text. No dark-on-dark failures detected.
-      Data: Viridis colors (purple → teal → yellow-green) appear identical to light render — correct, only chrome flips. Start green circle and End orange square are identical. Direction arrows appear as subtle light-gray arrowheads (INK_SOFT), visible against near-black. Elevation profile green line and fill are clearly visible against dark background.
-      Legibility verdict: PASS — theme adaptation complete; all text is readable against the near-black background, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 across both panels.
+      Chrome: Title, axis titles in light ink; tick labels light grey; grid subtle; legend frame #242420 with light text; colorbar ticks light. No dark-on-dark text.
+      Data: Waypoints use the dark stops of imprint_seq (deep green → #009E73 → pale blue), as required for a continuous ramp. Start #009E73 and End #C475FD are identical to the light render, now ringed in light ink; arrowheads in light ink; elevation line and fill green.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both renders; elevation panel tick labels at
-          7pt are borderline-small for mobile; title at 11pt (vs 12pt recommendation)
-          is acceptable for dual-panel layout
+        comment: Title 10 pt (scaled for the 80-char title), axis titles 10 pt, tick
+          labels 8 pt in both panels, colorbar label 9 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlapping data elements or other text; direction arrows
-          cleanly placed; legend in upper right avoids route data
+        comment: Legend sits lower right in empty space; no text collides with data
+          or other text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Route line (2.8pt) and viridis scatter (s=20, 250 points = medium
-          density) well-sized; Start (s=300) and End (s=400) markers very prominent;
-          elevation fill alpha=0.15 subtle but clear
+        comment: 250 waypoints at s=20 over a 2.8 pt line; Start/End markers prominent
+          with ink rings; legend glyphs scaled down and matching the markers in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is colorblind-safe; Start (#009E73) and End (#D55E00) are
-          Okabe-Ito and further differentiated by shape (circle vs square)
+        comment: Start/End differ by shape (circle vs square) and hue; sequential
+          ramp monotone in lightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Dual-panel 3:1 height ratio is well-proportioned;
-          no overflow or clipping detected
+        comment: Canvas gate passed (3200x1800); route panel fills the width, margins
+          keep the Start marker clear of the spines; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All four axes have descriptive labels with units: Longitude (°),
-          Latitude (°), Elapsed Time (min), Elevation (m)'
+        comment: Longitude (°), Latitude (°), Elapsed Time (min), Elevation (m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BRAND #009E73 for Start (Okabe-Ito pos 1); #D55E00 for End (pos
-          2); viridis for continuous time data; backgrounds #FAF8F1/#1A1A17 correct
-          in both renders'
+        comment: 'imprint_seq with the theme''s mark stops for elapsed time; Start
+          #009E73, End #C475FD; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Dual-panel layout (route + elevation) is a thoughtful design decision
-          above the default single-panel. Viridis temporal encoding is intentional.
-          However, no basemap undermines the 'geographic map' aspiration.
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes, Imprint
+          colors; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: sns.despine() on both axes, subtle y-axis-only grid on elevation
-          panel (alpha=0.10), elevation fill with alpha=0.15 is refined. Route map
-          panel has minimal visual texture without basemap.
+        comment: Spine and grid rules met (despine, subtle grid); the two panels'
+          x-extents are not aligned; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Dual panel creates clear narrative: WHERE the rider went (top) +
-          HOW the elevation changed (bottom). Viridis time gradient guides viewer
-          through the journey. Direction arrows add clarity.'
+        comment: Route displayed with the spec's gradient, markers and arrows; the
+          elevation panel is an unrequested addition and earns no credit
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct route path map: connected waypoints via lineplot + viridis
-          scatter overlay'
+        comment: Correct route path map, plus an unrequested elevation-profile panel
+          (a marginal the spec does not ask for)
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: 'Waypoints connected in sequence (sort=False), distinct start/end
-          markers, viridis time gradient, direction arrows — all present. Missing:
-          geographic basemap for spatial context (noted in spec as expected feature)'
+        passed: false
+        comment: C1 sequence line, C2 start/end markers, C3 time gradient with named
+          colorbar, C4 four sparse arrows all present; C5 geographic basemap missed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat→Y, lon→X, elapsed_min→color encoding. All 250 waypoints displayed.
+        comment: lon→x, lat→y, elapsed time→color; marks at their values; axes fitted
+          to the route
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Colorado Mountain Bike Trail · map-route-path · python
-          · seaborn · anyplot.ai'' — correct format. Legend: Start/End clearly labeled.'
+        comment: Title 'Colorado Mountain Bike Trail · map-route-path · python · seaborn
+          · anyplot.ai'; Start/End legend and named colorbar
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers route path, start/end markers, temporal color encoding, direction
-          arrows, elevation profile. Lacks geographic basemap context.
+        comment: Track with straight legs, a climb and a flat traverse; direction
+          readable
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mountain bike trail near Crested Butte, Colorado. Coordinates (~38.87-38.95°N,
-          106.88-106.99°W) accurate for that region. Elevation 2820-2950m (~9,250-9,678
-          ft) realistic. 150 min ride plausible.
+        comment: Mountain bike GPS track near Crested Butte, Colorado
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 250 waypoints within spec range (50-1000). Coordinate and elevation
-          values geographically accurate.
+        comment: No check values; checked coordinates ~38.87–38.95 N / 106.88–106.99
+          W (Crested Butte area), elevation 2820–2970 m, 250 points over 150 min
     code_quality:
       score: 10
       max: 10
@@ -206,55 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; sequential top-to-bottom structure
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity for dual-panel layout;
-          well-structured
+        comment: Column constants, arrows placed by np.linspace; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as f'plot-{THEME}.png'; no bbox_inches='tight'; current seaborn
-          API
+        comment: Saves plot-{THEME}.png at dpi=400; current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.lineplot() for route and elevation, sns.despine() for both axes,
-          sns.set_theme() with full rc dict. Waypoint scatter uses matplotlib scatter
-          (ax.scatter) for viridis c= mapping — pragmatic and correct, but slightly
-          outside pure seaborn.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() for comprehensive theme control, sns.despine() for
-          both panels, sns.lineplot() with sort=False to preserve sequence order.
-          fill_between for elevation area. No FacetGrid or relplot used.
+        comment: sns.set_theme rc, sns.lineplot(sort=False), sns.despine; waypoints
+          and markers via matplotlib scatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T12:44:41Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -264,9 +249,8 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
