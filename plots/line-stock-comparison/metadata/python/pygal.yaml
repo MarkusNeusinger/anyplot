@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:52Z'
-updated: '2026-11-26T13:49:44Z'
+updated: '2026-11-26T13:58:49Z'
 generated_by: claude-sonnet
-workflow_run: 45831623485
+workflow_run: 45833135839
 issue: 3748
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 86
 review:
   strengths:
   - All four series rebased to 100 on the first date and diverging cleanly, with a
@@ -26,38 +26,23 @@ review:
   - 'Adaptable structure: tidy df, pivot_table and a loop over columns, no per-ticker
     copy-paste'
   weaknesses:
-  - 'VQ-05 (both): y tick labels show two sizes — 100 and 150 render at 44 px while
-    70-170 render at 56 px → one size for all ticks, 44 px (-12 px on the minor labels).
-    Likely cause: label_font_size=56 vs major_label_font_size=44 in Style (line 82-83).'
-  - 'VQ-07 (dark): horizontal grid lines take pygal''s default black guide color and
-    almost vanish on #1A1A17 → muted grid from INK_MUTED. Likely cause: guide_stroke_color
-    and major_guide_stroke_color not set in Style.'
-  - 'SC-02 (both): y axis titled ''Rebased Price (Start = 100)'' names a price, while
-    the spec asks for an index or change from the start → e.g. ''Performance index
-    (start = 100)''. Likely cause: y_title on line 101.'
-  - 'DQ-02 (both): real tickers AAPL, GOOGL, MSFT and SPY on real 2024 trading dates
-    carry invented paths (MSFT -31.7%, SPY +58.5% in 2024) → replace the scenario
-    with clearly fictional symbols or real-shaped figures. Likely cause: the daily_return
-    dict keyed by real tickers.'
-  - 'CQ-01 (code): helper function fmt_ret (lines 62-64) → inline f-string f"{r:+.1f}%".
-    Likely cause: formatting factored into a def.'
   - 'Suggestion: the best performer''s 6 px stroke barely reads against the 3 px lines;
-    a clearer weight step would make the intended focal point visible.'
+    either make the weight step clearly visible or drop it.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1.
-      Chrome: title 'line-stock-comparison · python · pygal · anyplot.ai' in dark ink at top; y title 'Rebased Price (Start = 100)', x title 'Date'; y ticks 70-170 (100 and 150 rendered smaller than the rest); monthly x ticks Jan-Dec 2024 rotated 45°; dotted grey horizontal grid; bottom legend in one row. All readable.
-      Data: AAPL #009E73 green, GOOGL #C475FD purple, MSFT #4467A3 blue, SPY #BD8233 amber (canonical Imprint order); dashed grey baseline at 100. Lines start together at 100 and fan out: GOOGL peaks near 172 in Sep, SPY ends highest at 158.5, AAPL ~127, MSFT falls to ~68.
+      Chrome: title 'line-stock-comparison · python · pygal · anyplot.ai' in dark ink; y title 'Index (start = 100)', x title 'Date'; y ticks 70-170 all one size; monthly x ticks Jan-Dec 2024 rotated 45°; dashed muted horizontal grid; one-row bottom legend. All readable.
+      Data: NOVA #009E73 green, ORBX #C475FD purple, TERRA #4467A3 blue, FUND #BD8233 amber; dashed grey baseline at 100. Lines start together at 100 and fan out: ORBX peaks ~172 in Sep, FUND ends highest at 158.5, NOVA ~127, TERRA falls to ~68.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text. Horizontal grid nearly invisible (pygal default black guides).
-      Data: series colors identical to the light render; baseline lighter grey dotted, clearly visible; #009E73 reads well.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; muted grey grid visible.
+      Data: series colors identical to the light render; baseline lighter grey dashed and visible; #009E73 reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,49 +50,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis titles, tick labels and legend all set explicitly and
-          readable in both themes
+        comment: Title 66, ticks/legend 44, axis titles set explicitly; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the four lines cross near the start as the spec
-          permits
+        comment: No text collisions; lines bunch and cross near the shared base as
+          the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four lines at 3 px with tiny dots stay distinct over 252 points;
+        comment: Four 3 px lines with small dots stay distinct over 252 daily points;
           legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Series colors separable for CVD readers; no red-green-only signal
+        comment: Green, purple, blue and amber separate for CVD readers; no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas well used, but y tick labels show two sizes (100 and 150 smaller
-          than 70-170) (defect line)
+        passed: true
+        comment: Canvas well used; x and y tick labels one uniform size; legend row
+          fits at the bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis titles descriptive: Date and a rebased y title with its base'
+        comment: 'Descriptive axis titles: Date and an index title with its base'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Series in canonical Imprint order, backgrounds correct; dark-theme
-          grid left at pygal's default black guide color and nearly invisible (defect
-          line)
+        passed: true
+        comment: 'Series in canonical Imprint order from #009E73; #FAF8F1/#1A1A17
+          backgrounds; grid from INK_MUTED visible in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -124,17 +109,17 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: Monthly-only x labels via x_labels_major and y-only guides chosen
-          for a dense daily series
+        comment: Monthly-only x labels (x_labels_major + show_minor_x_labels=False)
+          and y-only guides chosen for a dense daily series
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
         comment: Legend entries carry each symbol's final return, ranking performance
-          without reading the line ends
+          without tracing line ends
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,17 +130,17 @@ review:
         comment: Multi-line rebased comparison chart, correct type
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Rebasing, distinct colors, legend, dashed reference at 100 and grid
-          present; y title still names a price, not an index (C2, defect line)
+        passed: true
+        comment: Rebasing, distinct colors, legend, dashed reference at 100, grid;
+          y axis named as an index (C2)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x in order, rebased values on y, range 65-172 fitted around
+        comment: Dates on x in order, rebased values on y, range ~65-172 fitted around
           100 without zero; round 10-unit ticks
       - id: SC-04
         name: Title & Legend
@@ -164,7 +149,7 @@ review:
         passed: true
         comment: Title in mandated format; legend names each symbol plus the baseline
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -172,33 +157,32 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rebasing, divergence over time, a series below 100 and the
-          reference line
+        comment: Shows common base, divergence over time, a series ending below 100
+          and the reference line
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Real tickers AAPL/GOOGL/MSFT/SPY on real 2024 dates carry invented
-          prices, e.g. MSFT -31.7% and SPY +58.5% (defect line)
+        passed: true
+        comment: Fictional tickers NOVA/ORBX/TERRA/FUND with plausible one-year returns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: every series starts at 100 on Jan 2 (computed from the
-          first price); end values match the legend (SPY 158.5, MSFT 68.3); y range
-          65-172 sensible for a year'
+        comment: 'Checked: every series starts at 100 on 2024-01-02 (computed as price
+          / first price * 100); end values match legend returns (e.g. +58.5% ends
+          at 158.5, -31.7% at 68.3); y range sensible for one year'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: A helper function fmt_ret (defect line)
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,10 +207,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,19 +218,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pivot_table to lists as the library prompt shows, plus x_labels_major
-          with show_minor_x_labels=False and legend_at_bottom_columns
+        comment: pivot_table to lists per the library prompt, plus x_labels_major
+          with show_minor_x_labels and legend_at_bottom_columns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Per-point dict labels feed pygal's native hover tooltips in the HTML;
-          per-series stroke_style with dasharray for the reference line
+        comment: Per-point dict labels feed pygal's native hover tooltips (symbol,
+          date, value) in the HTML; dasharray stroke_style for the reference line
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
-  rendered_at: '2026-11-26T13:45:55Z'
+  rendered_at: '2026-11-26T13:55:47Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -255,10 +239,10 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - long-to-wide
+  - iteration-over-groups
   dataprep:
   - normalization
   - time-series
   styling:
-  - publication-ready
+  - grid-styling
