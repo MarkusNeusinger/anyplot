@@ -1,7 +1,7 @@
 """ anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-30
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,6 +21,7 @@ from lets_plot import (
     geom_point,
     geom_polygon,
     geom_text,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -42,6 +43,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"  # INK at 15 %
 
 # Imprint palette — semantic assignments for stress diagram elements
 C_CIRCLE = "#4467A3"  # blue — structural circle outline
@@ -58,6 +60,8 @@ CAT_SHEAR = "Max Shear"
 sigma_x = 80.0  # MPa, axial + bending normal stress
 sigma_y = -30.0  # MPa, lateral normal stress
 tau_xy = 50.0  # MPa, shear stress from torsion
+
+# Plot: everything below is derived from the three stress values above
 
 # Mohr's Circle geometry
 center = (sigma_x + sigma_y) / 2.0
@@ -77,7 +81,7 @@ df_input = pd.DataFrame(
         "sigma": [sigma_x, sigma_y],
         "tau": [tau_xy, -tau_xy],
         "category": [CAT_INPUT, CAT_INPUT],
-        "label": [f"A (σx={sigma_x:.0f}, τxy={tau_xy:.0f})", f"B (σy={sigma_y:.0f}, −τxy={-tau_xy:.0f})"],
+        "label": [f"A (σx={sigma_x:.0f}, τxy={tau_xy:.0f})", f"B (σy={sigma_y:.0f},\n−τxy={-tau_xy:.0f})"],
         "detail": [
             f"Normal: {sigma_x:.0f} MPa | Shear: {tau_xy:.0f} MPa",
             f"Normal: {sigma_y:.0f} MPa | Shear: {-tau_xy:.0f} MPa",
@@ -196,8 +200,9 @@ plot = (
         mapping=aes(x="sigma", y="tau", label="label"),
         color=C_PRINCIPAL,
         size=5,
-        hjust=0.5,
-        nudge_y=-radius * 0.14,
+        hjust=0,
+        nudge_x=radius * 0.06,
+        nudge_y=-radius * 0.12,
     )
     # σ₂ label — nudged upward (above x-axis) to clear the B label in the lower-left
     + geom_text(
@@ -205,8 +210,9 @@ plot = (
         mapping=aes(x="sigma", y="tau", label="label"),
         color=C_PRINCIPAL,
         size=5,
-        hjust=0.5,
-        nudge_y=radius * 0.18,
+        hjust=1,
+        nudge_x=-radius * 0.06,
+        nudge_y=radius * 0.12,
     )
     # τmax label — nudged right, above the top marker
     + geom_text(
@@ -244,7 +250,13 @@ plot = (
     )
     # Center label
     + geom_text(
-        data=df_center, mapping=aes(x="sigma", y="tau", label="label"), color=INK_SOFT, size=5, nudge_y=-radius * 0.13
+        data=df_center,
+        mapping=aes(x="sigma", y="tau", label="label"),
+        color=INK_SOFT,
+        size=5,
+        hjust=0,
+        nudge_x=radius * 0.06,
+        nudge_y=-radius * 0.12,
     )
     # Axes, title, subtitle
     + labs(
@@ -263,7 +275,7 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_MUTED, size=0.3),
+        panel_grid_major=element_line(color=GRID, size=0.3),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
@@ -274,8 +286,11 @@ plot = (
         legend_text=element_text(color=INK_SOFT),
         legend_title=element_text(color=INK),
     )
-    + ggsize(600, 600)
 )
+
+# coord_fixed narrows the plot box and leaves the canvas edges transparent:
+# a one-panel grid of the square canvas carries the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")

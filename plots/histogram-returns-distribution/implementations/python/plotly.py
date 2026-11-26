@@ -1,12 +1,13 @@
 """ anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy import stats
 
@@ -19,50 +20,49 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # position 1 — normal return bars
-VERMILLION = "#C475FD"  # position 2 — tail region bars
-BLUE = "#4467A3"  # position 3 — normal distribution curve
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # normal return bars
+TAIL = IMPRINT_PALETTE[1]  # tail region bars
+CURVE = IMPRINT_PALETTE[2]  # normal distribution curve
 
-# Data - Simulated daily stock returns (504 trading days / 2 years)
+# Constants
+N_BINS = 40  # 20-50 bins suit 252+ observations
+TAIL_SIGMAS = 2  # tail regions lie beyond this many standard deviations
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+RETURNS = "Daily returns (%)"  # role: returns
+
+# Data: replace this block with your own table, for example df = pd.read_csv("returns.csv")
 np.random.seed(42)
-n_days = 504
+n_days = 504  # two years of trading days
 daily_returns = np.random.normal(loc=0.0005, scale=0.015, size=n_days)
-
-# Add fat tails (realistic financial returns)
 outliers = np.random.choice(n_days, size=20, replace=False)
 daily_returns[outliers] *= np.random.uniform(2, 4, size=20) * np.random.choice([-1, 1], size=20)
+df = pd.DataFrame({DATE: pd.bdate_range("2023-01-02", periods=n_days), RETURNS: daily_returns * 100})
 
-returns_pct = daily_returns * 100
-
-# Statistics
+# Plot: reads only df and the constants above
+returns_pct = df[RETURNS].dropna().to_numpy()
 mean_ret = np.mean(returns_pct)
 std_ret = np.std(returns_pct)
 skewness = stats.skew(returns_pct)
 kurtosis = stats.kurtosis(returns_pct)
 
-# Histogram bins
-n_bins = 40
-hist_values, bin_edges = np.histogram(returns_pct, bins=n_bins, density=True)
+hist_values, bin_edges = np.histogram(returns_pct, bins=N_BINS, density=True)
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 bin_width = bin_edges[1] - bin_edges[0]
 
-# Normal distribution overlay
 x_norm = np.linspace(returns_pct.min(), returns_pct.max(), 200)
 y_norm = stats.norm.pdf(x_norm, mean_ret, std_ret)
 
-# Tail region thresholds (±2 std dev)
-lower_tail = mean_ret - 2 * std_ret
-upper_tail = mean_ret + 2 * std_ret
+lower_tail = mean_ret - TAIL_SIGMAS * std_ret
+upper_tail = mean_ret + TAIL_SIGMAS * std_ret
 
 # Split bins into normal-range and tail for correct legend swatches
-normal_mask = (bin_centers >= lower_tail) & (bin_centers <= upper_tail)
-tail_mask = ~normal_mask
-
-normal_x = bin_centers[normal_mask]
-normal_y = hist_values[normal_mask]
-tail_x = bin_centers[tail_mask]
-tail_y = hist_values[tail_mask]
+tail_mask = (bin_centers < lower_tail) | (bin_centers > upper_tail)
+normal_x, normal_y = bin_centers[~tail_mask], hist_values[~tail_mask]
+tail_x, tail_y = bin_centers[tail_mask], hist_values[tail_mask]
 
 # Figure
 fig = go.Figure()
@@ -72,8 +72,9 @@ fig.add_trace(
     go.Bar(
         x=normal_x,
         y=normal_y,
-        width=bin_width * 0.9,
+        width=bin_width,
         marker_color=BRAND,
+        marker_line={"color": PAGE_BG, "width": 0.5},
         name="Returns Distribution",
         opacity=0.75,
         hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.4f}<br>Range: Normal<extra></extra>",
@@ -85,16 +86,17 @@ fig.add_trace(
     go.Bar(
         x=tail_x,
         y=tail_y,
-        width=bin_width * 0.9,
-        marker_color=VERMILLION,
-        name="Tail Region (>±2σ)",
+        width=bin_width,
+        marker_color=TAIL,
+        marker_line={"color": PAGE_BG, "width": 0.5},
+        name=f"Tail Region (>±{TAIL_SIGMAS}σ)",
         opacity=0.75,
         hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.4f}<br>Range: Tail<extra></extra>",
     )
 )
 
 fig.add_trace(
-    go.Scatter(x=x_norm, y=y_norm, mode="lines", line={"color": BLUE, "width": 3}, name="Normal Distribution")
+    go.Scatter(x=x_norm, y=y_norm, mode="lines", line={"color": CURVE, "width": 3}, name="Normal Distribution")
 )
 
 fig.add_vline(
@@ -104,8 +106,8 @@ fig.add_vline(
     annotation_position="top",
     annotation_font={"color": INK, "size": 11},
 )
-fig.add_vline(x=lower_tail, line={"color": VERMILLION, "width": 1.5, "dash": "dot"})
-fig.add_vline(x=upper_tail, line={"color": VERMILLION, "width": 1.5, "dash": "dot"})
+fig.add_vline(x=lower_tail, line={"color": TAIL, "width": 1.5, "dash": "dot"})
+fig.add_vline(x=upper_tail, line={"color": TAIL, "width": 1.5, "dash": "dot"})
 
 stats_text = (
     f"<b>Statistics</b><br>"
@@ -143,7 +145,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Daily Returns (%)", "font": {"size": 12, "color": INK}},
+        "title": {"text": RETURNS, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "tickformat": ".1f",
         "ticksuffix": "%",
@@ -171,7 +173,7 @@ fig.update_layout(
         "borderwidth": 1,
         "font": {"size": 10, "color": INK_SOFT},
     },
-    bargap=0.05,
+    bargap=0,
     barmode="overlay",
     showlegend=True,
 )
