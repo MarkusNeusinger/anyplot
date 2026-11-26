@@ -1,11 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-23
 """
 
+import math
 import os
 import sys
+from itertools import pairwise
+
+import pandas as pd
 
 
 # Remove this script's own directory from sys.path so 'pygal.py' doesn't shadow
@@ -17,16 +21,48 @@ from pygal.style import Style
 from pygal_maps_world.maps import World
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot_seq (4 stops, brand green → dark azure): maps equatorial→polar distortion
-ZONE_COLORS = ("#009E73", "#007E7E", "#005D89", "#003D94")
+# Imprint palette: all eight positions, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Mercator distortion factor (≈ sec²φ, i.e. area exaggeration vs true size)
-# 1.0 = accurate at equator; higher = more bloated toward the poles in Mercator
+# Imprint sequential ramp for colored map regions (fields), (position, hex) stops, low to high
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Constants
+# Zone upper bounds on the Mercator area exaggeration (sec^2 of latitude): equatorial, subtropical, temperate
+ZONE_BOUNDS = (1.1, 1.2, 2.4)
+ZONE_LABELS = ("0°–15° · <1.1×", "15°–30° · 1.1–1.2×", "30°–60° · 1.2–2.4×", "60°+ · ≥2.4×")
+ZONE_RAMP_POSITIONS = (0.1, 0.4, 0.7, 1.0)  # where each zone samples the ramp
+
+# Columns: set these to your table's column names
+COUNTRY = "Country code"  # role: country
+DISTORTION = "Mercator area exaggeration (x)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("countries.csv")
+# Mercator distortion factor (about sec^2 of latitude, area exaggeration vs true size):
+# 1.0 = accurate at the equator, higher = more bloated toward the poles
 country_distortion = {
     # ---- Polar zone (≥2.4×): extreme Mercator distortion ----
     "gl": 14.3,  # Greenland ~72°N
@@ -135,11 +171,15 @@ country_distortion = {
     "kh": 1.0,  # Cambodia
     "pg": 1.0,  # Papua New Guinea
 }
+df = pd.DataFrame({COUNTRY: list(country_distortion), DISTORTION: list(country_distortion.values())})
 
-equatorial_zone = {k: v for k, v in country_distortion.items() if v < 1.1}
-subtropical_zone = {k: v for k, v in country_distortion.items() if 1.1 <= v < 1.2}
-temperate_zone = {k: v for k, v in country_distortion.items() if 1.2 <= v < 2.4}
-polar_zone = {k: v for k, v in country_distortion.items() if v >= 2.4}
+# Plot
+zone_index = df[DISTORTION].apply(lambda v: sum(v >= bound for bound in ZONE_BOUNDS))
+zones = [
+    dict(zip(df[COUNTRY][zone_index == i], df[DISTORTION][zone_index == i], strict=True))
+    for i in range(len(ZONE_LABELS))
+]
+zone_colors = tuple(ramp_color(SEQ_FIELDS, t) for t in ZONE_RAMP_POSITIONS)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -147,7 +187,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ZONE_COLORS,
+    colors=zone_colors,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -160,7 +200,7 @@ worldmap = World(
     style=custom_style,
     width=3200,
     height=1800,
-    title="map-projections · python · pygal · anyplot.ai",
+    title="Mercator · map-projections · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
@@ -169,12 +209,9 @@ worldmap = World(
     print_labels=False,
 )
 
-# Zones ordered equatorial→polar so ZONE_COLORS maps low→high distortion
-# Labels shortened to prevent truncation in pygal's SVG renderer
-worldmap.add("0°–15° · <1.1×", equatorial_zone)
-worldmap.add("15°–30° · 1.1–1.2×", subtropical_zone)
-worldmap.add("30°–60° · 1.2–2.4×", temperate_zone)
-worldmap.add("60°+ · ≥2.4×", polar_zone)
+# Zones ordered equatorial to polar so the ramp runs low to high distortion
+for label, zone in zip(ZONE_LABELS, zones, strict=True):
+    worldmap.add(label, zone)
 
 worldmap.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
