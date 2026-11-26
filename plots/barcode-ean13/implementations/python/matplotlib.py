@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-21
@@ -164,7 +164,7 @@ for i, digit in enumerate(full_code[7:13]):
 # Check (13): right digit 13 at x=97.5
 sections = [("Country (1–3)", 14.0), ("Manufacturer (4–8)", 46.0), ("Product (9–12)", 80.0), ("Check (13)", 97.5)]
 for label, cx in sections:
-    ax.text(cx, digit_y - 2.0, label, fontsize=7, ha="center", va="top", color=INK_SOFT)
+    ax.text(cx, digit_y - 2.0, label, fontsize=9, ha="center", va="top", color=INK_SOFT)
 
 # Axis bounds and clean presentation
 x_max = start_x + total_modules + quiet_zone  # 9 + 95 + 9 = 113
