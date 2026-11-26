@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-27
@@ -14,201 +14,192 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Theme-adaptive chrome
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Anyplot sequential colorscale: brand green → blue (single-polarity continuous)
-imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+# Imprint palette: brand green first
+BRAND = "#009E73"
 
-# Theme-adaptive map tile style
-map_style = "open-street-map" if THEME == "light" else "carto-darkmatter"
-
-# Data — European City Landmarks with annual visitor counts
-np.random.seed(42)
-
-names = [
-    "Eiffel Tower",
-    "Colosseum",
-    "Sagrada Familia",
-    "Big Ben",
-    "Brandenburg Gate",
-    "Anne Frank House",
-    "Acropolis",
-    "Charles Bridge",
-    "St. Stephen's Basilica",
-    "Royal Palace",
-    "Manneken Pis",
-    "Tivoli Gardens",
-    "Schönbrunn Palace",
-    "Dubrovnik Old Walls",
-    "Rialto Bridge",
-]
-lats = [
-    48.8584,  # Eiffel Tower
-    41.8902,  # Colosseum
-    41.4036,  # Sagrada Familia
-    51.5007,  # Big Ben
-    52.5163,  # Brandenburg Gate
-    52.3752,  # Anne Frank House
-    37.9715,  # Acropolis
-    50.0865,  # Charles Bridge
-    47.5008,  # St. Stephen's Basilica
-    59.3268,  # Royal Palace
-    50.8450,  # Manneken Pis
-    55.6736,  # Tivoli Gardens
-    48.1845,  # Schönbrunn Palace
-    42.6411,  # Dubrovnik Old Walls
-    45.4380,  # Rialto Bridge
-]
-lons = [
-    2.2945,  # Eiffel Tower
-    12.4922,  # Colosseum
-    2.1744,  # Sagrada Familia
-    -0.1246,  # Big Ben
-    13.3777,  # Brandenburg Gate
-    4.8840,  # Anne Frank House
-    23.7267,  # Acropolis
-    14.4114,  # Charles Bridge
-    19.0538,  # St. Stephen's Basilica
-    18.0717,  # Royal Palace
-    4.3499,  # Manneken Pis
-    12.5681,  # Tivoli Gardens
-    16.3119,  # Schönbrunn Palace
-    18.1085,  # Dubrovnik Old Walls
-    12.3358,  # Rialto Bridge
-]
-visitors = np.array(
-    [
-        7_000_000,  # Eiffel Tower
-        7_400_000,  # Colosseum
-        4_500_000,  # Sagrada Familia
-        2_000_000,  # Big Ben
-        3_000_000,  # Brandenburg Gate
-        1_300_000,  # Anne Frank House
-        3_000_000,  # Acropolis
-        5_000_000,  # Charles Bridge
-        1_000_000,  # St. Stephen's Basilica
-        1_500_000,  # Royal Palace
-        500_000,  # Manneken Pis
-        4_000_000,  # Tivoli Gardens
-        4_000_000,  # Schönbrunn Palace
-        1_200_000,  # Dubrovnik Old Walls
-        5_000_000,  # Rialto Bridge
-    ]
+# Imprint sequential ramp for colored marks, per theme
+SEQ_MARKS = (
+    [[0.0, "#009E73"], [0.338, "#4467A3"], [1.0, "#002850"]]
+    if THEME == "light"
+    else [[0.0, "#007755"], [0.32, "#009E73"], [1.0, "#CDD9FF"]]
 )
 
-# Scale visitor counts to marker diameters (15–50 px range)
-sizes = 15 + (visitors - visitors.min()) / (visitors.max() - visitors.min()) * 35
-vmin, vmax = int(visitors.min()), int(visitors.max())
+# Theme-adaptive map tile style (tile providers do not follow the page colors)
+MAP_STYLE = "open-street-map" if THEME == "light" else "carto-darkmatter"
 
-# Split into two groups to alternate textposition for the crowded NW Europe cluster:
-# "bottom center" for Big Ben, St. Stephen's, Schönbrunn, Manneken Pis, Colosseum, Rialto
-bottom_idx = {3, 8, 12, 10, 1, 14}
-top_idx = set(range(len(names))) - bottom_idx
+# Columns: set these to your table's column names
+TRAILHEAD = "Trailhead"  # role: label
+LAT = "Latitude"  # role: lat
+LON = "Longitude"  # role: lon
+HIKERS = "Annual hikers (thousands)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trailheads.csv")
+df = pd.DataFrame(
+    {
+        TRAILHEAD: [
+            "Angels Landing",
+            "Half Dome",
+            "Bright Angel",
+            "Delicate Arch",
+            "Cascade Pass",
+            "Mount Whitney",
+            "Grinnell Glacier",
+            "Skyline Trail",
+            "Hoh River",
+            "Mount Washburn",
+            "Bear Lake",
+            "Cleetwood Cove",
+            "Jenny Lake",
+        ],
+        LAT: [
+            37.2590,
+            37.7326,
+            36.0576,
+            38.7436,
+            48.4730,
+            36.5786,
+            48.7966,
+            46.7860,
+            47.8602,
+            44.7920,
+            40.3126,
+            42.9690,
+            43.7513,
+        ],
+        LON: [
+            -112.9511,
+            -119.5577,
+            -112.1401,
+            -109.4993,
+            -121.0750,
+            -118.2292,
+            -113.7180,
+            -121.7350,
+            -123.9350,
+            -110.4330,
+            -105.6450,
+            -122.0070,
+            -110.7242,
+        ],
+        HIKERS: [250, 50, 650, 450, 30, 100, 120, 380, 90, 200, 550, 150, 480],
+    }
+)
+
+# Plot: reads only df and the constants above
+# View fitted to the data bounds: pick the zoom at which both spans fit the map area
+WIDTH, HEIGHT = 800, 450
+MAP_W, MAP_H = WIDTH - 40, HEIGHT - 70
+PAD = 1.2
 
 
-def _select(seq, indices):
-    return [seq[i] for i in sorted(indices)]
+def mercator_y(lat):
+    return np.degrees(np.log(np.tan(np.pi / 4 + np.radians(lat) / 2)))
 
+
+lon_span = df[LON].max() - df[LON].min()
+merc_span = mercator_y(df[LAT].max()) - mercator_y(df[LAT].min())
+zoom = min(np.log2(360 * MAP_W / (512 * lon_span * PAD)), np.log2(360 * MAP_H / (512 * merc_span * PAD)))
+center = {"lat": float(df[LAT].mean()), "lon": float((df[LON].max() + df[LON].min()) / 2)}
+
+# Marker diameters (12-28 px) scale with the visitor count
+size = 12 + (df[HIKERS] - df[HIKERS].min()) / (df[HIKERS].max() - df[HIKERS].min()) * 16
+
+# Labels alternate above and below along the west-east order so neighbors do not collide
+rank = df[LON].rank(method="first").astype(int)
 
 fig = go.Figure()
 
-# Main trace (top center labels) — carries colorbar
+# Halo in the page color keeps each marker separated from busy tiles
 fig.add_trace(
     go.Scattermap(
-        lat=_select(lats, top_idx),
-        lon=_select(lons, top_idx),
-        mode="markers+text",
-        marker={
-            "size": _select(list(sizes), top_idx),
-            "color": _select(list(visitors), top_idx),
-            "colorscale": imprint_seq,
-            "cmin": vmin,
-            "cmax": vmax,
-            "colorbar": {
-                "title": {"text": "Annual Visitors", "font": {"size": 12, "color": INK}},
-                "tickfont": {"size": 10, "color": INK_SOFT},
-                "bgcolor": ELEVATED_BG,
-                "bordercolor": INK_SOFT,
-                "borderwidth": 1,
-                "thickness": 18,
-                "len": 0.65,
-                "tickformat": ",.0f",
-            },
-            "opacity": 0.85,
-        },
-        text=_select(names, top_idx),
-        textposition="top center",
-        textfont={"size": 11, "color": INK},
-        hovertemplate=("<b>%{text}</b><br>Visitors: %{marker.color:,.0f}<extra></extra>"),
+        lat=df[LAT],
+        lon=df[LON],
+        mode="markers",
+        marker={"size": size + 4, "color": PAGE_BG, "opacity": 0.9},
+        hoverinfo="skip",
+        showlegend=False,
     )
 )
 
-# Secondary trace (bottom center labels) — no colorbar, same scale
-fig.add_trace(
-    go.Scattermap(
-        lat=_select(lats, bottom_idx),
-        lon=_select(lons, bottom_idx),
-        mode="markers+text",
-        marker={
-            "size": _select(list(sizes), bottom_idx),
-            "color": _select(list(visitors), bottom_idx),
-            "colorscale": imprint_seq,
-            "cmin": vmin,
-            "cmax": vmax,
-            "showscale": False,
-            "opacity": 0.85,
-        },
-        text=_select(names, bottom_idx),
-        textposition="bottom center",
-        textfont={"size": 11, "color": INK},
-        hovertemplate=("<b>%{text}</b><br>Visitors: %{marker.color:,.0f}<extra></extra>"),
+# Scattermap takes one textposition per trace, so each label side is its own trace
+side = np.where(rank % 2 == 0, "top center", "bottom center")
+for i, position in enumerate(["top center", "bottom center"]):
+    rows = df[side == position]
+    fig.add_trace(
+        go.Scattermap(
+            lat=rows[LAT],
+            lon=rows[LON],
+            mode="markers+text",
+            marker={
+                "size": size[rows.index],
+                "color": rows[HIKERS],
+                "colorscale": SEQ_MARKS,
+                "cmin": df[HIKERS].min(),
+                "cmax": df[HIKERS].max(),
+                "opacity": 0.92,
+                "showscale": i == 0,
+                "colorbar": {
+                    "title": {"text": HIKERS, "side": "right", "font": {"size": 12, "color": INK}},
+                    "tickfont": {"size": 11, "color": INK_SOFT},
+                    "bgcolor": ELEVATED_BG,
+                    "bordercolor": INK_SOFT,
+                    "borderwidth": 1,
+                    "thickness": 18,
+                    "len": 0.6,
+                    "x": 0.995,
+                    "xanchor": "right",
+                    "y": 0.62,
+                },
+            },
+            text=rows[TRAILHEAD],
+            textposition=position,
+            textfont={"size": 12, "color": INK},
+            hovertemplate="<b>%{text}</b><br>" + HIKERS + ": %{marker.color:,.0f}<extra></extra>",
+            showlegend=False,
+        )
     )
-)
+
+top = df.loc[df[HIKERS].idxmax()]
+title = "Western US Trailheads by Annual Hikers · map-tile-background · python · plotly · anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
 
 fig.update_layout(
     autosize=False,
     paper_bgcolor=PAGE_BG,
     font={"color": INK},
-    title={
-        "text": (
-            "European Landmarks by Visitor Count<br>"
-            "<span style='font-size:12px'>"
-            "map-tile-background · python · plotly · anyplot.ai"
-            "</span>"
-        ),
-        "font": {"size": 16, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    map={"style": map_style, "center": {"lat": 48.5, "lon": 10.0}, "zoom": 3.5},
-    margin={"l": 20, "r": 20, "t": 80, "b": 20},
-    showlegend=False,
+    title={"text": title, "font": {"size": max(title_size, 12), "color": INK}, "x": 0.5, "xanchor": "center"},
+    map={"style": MAP_STYLE, "center": center, "zoom": float(zoom)},
+    margin={"l": 20, "r": 20, "t": 50, "b": 20},
     annotations=[
         {
-            "text": "<b>★ Top attraction</b><br>Colosseum · 7.4M visitors/yr",
+            "text": f"<b>★ Busiest trailhead</b><br>{top[TRAILHEAD]} · {top[HIKERS]:,.0f}k hikers/yr",
             "xref": "paper",
             "yref": "paper",
-            "x": 0.68,
-            "y": 0.22,
+            "x": 0.015,
+            "y": 0.03,
+            "xanchor": "left",
+            "yanchor": "bottom",
             "showarrow": False,
-            "font": {"size": 11, "color": "#009E73"},
+            "font": {"size": 12, "color": INK},
             "bgcolor": ELEVATED_BG,
-            "bordercolor": "#009E73",
-            "borderwidth": 1,
-            "borderpad": 5,
+            "bordercolor": BRAND,
+            "borderwidth": 2,
+            "borderpad": 6,
             "align": "left",
         }
     ],
 )
 
-fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=WIDTH, height=HEIGHT, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
