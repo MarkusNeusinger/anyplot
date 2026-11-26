@@ -1,7 +1,7 @@
 """anyplot.ai
 histogram-basic: Basic Histogram
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-28
+Quality: pending | Updated: 2026-05-28
 """
 
 import os as _os
