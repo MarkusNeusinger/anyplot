@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-27
@@ -147,14 +147,9 @@ df["y_pix"] = (df["tile_y"] - ty_min) * tile_disp_h
 
 df = df[(df["x_pix"] >= 0) & (df["x_pix"] <= chart_width) & (df["y_pix"] >= 0) & (df["y_pix"] <= chart_height)]
 
-# Tile provider: CartoDB Positron (light, muted) or CartoDB Dark Matter (dark)
-# Demonstrates multiple tile provider support per spec; muted basemap lets anyplot colors pop
-if THEME == "dark":
-    tile_base_url = "https://basemaps.cartocdn.com/dark_all"
-    tile_provider = "CartoDB Dark Matter"
-else:
-    tile_base_url = "https://basemaps.cartocdn.com/light_all"
-    tile_provider = "CartoDB Positron"
+# Tile provider: OpenStreetMap standard tiles (CartoDB's free raster endpoints now serve "API KEY REQUIRED" placeholders)
+tile_base_url = "https://tile.openstreetmap.org"
+tile_provider = "OpenStreetMap"
 
 # Build tile grid for mark_image
 tiles = []
@@ -169,14 +164,14 @@ for tx in range(tx_min, tx_max + 1):
         )
 tiles_df = pd.DataFrame(tiles)
 
-# Layer 1: CartoDB tile background (Positron in light, Dark Matter in dark)
+# Layer 1: OpenStreetMap tile background (y scale reversed: tile rows grow southward)
 tile_layer = (
     alt.Chart(tiles_df)
     .mark_image(width=tile_disp_w, height=tile_disp_h)
     .encode(
         url="url:N",
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False, reverse=True), axis=None),
     )
 )
 
@@ -195,12 +190,17 @@ points_layer = (
     .mark_circle(opacity=0.85, stroke="#FFFFFF", strokeWidth=2)
     .encode(
         x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
-        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
+        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False, reverse=True), axis=None),
         size=alt.Size(
             "visitors:Q",
             scale=alt.Scale(domain=[0.5, 40], range=[80, 1200]),
             legend=alt.Legend(
-                title="Visitors (M/year)", titleFontSize=14, labelFontSize=12, orient="bottom-left", tickCount=4
+                title="Visitors (M/year)",
+                titleFontSize=14,
+                labelFontSize=12,
+                orient="bottom-left",
+                tickCount=4,
+                symbolFillColor=INK_MUTED,
             ),
         ),
         color=alt.Color(
@@ -216,28 +216,28 @@ points_layer = (
     )
 )
 
-# Layer 3: labels for top landmarks (≥10M threshold avoids cluster overlap)
+# Layer 3: labels for top landmarks (≥10M threshold avoids cluster overlap); fixed dark ink because the OSM tiles are light in both themes
 labels_df = df[df["visitors"] >= 10].copy()
 labels_layer = (
     alt.Chart(labels_df)
-    .mark_text(align="left", dx=14, dy=-10, fontSize=13, fontWeight="bold", color=INK)
+    .mark_text(align="left", dx=26, dy=12, fontSize=13, fontWeight="bold", color="#1A1A17")
     .encode(
         x=alt.X("x_pix:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
-        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
+        y=alt.Y("y_pix:Q", scale=alt.Scale(domain=[0, chart_height], nice=False, reverse=True), axis=None),
         text="name:N",
     )
 )
 
-# Layer 4: tile provider attribution (required by CartoDB and OSM license)
+# Layer 4: tile provider attribution (required by the OSM license)
 attribution_df = pd.DataFrame(
-    {"text": [f"© {tile_provider} | © OpenStreetMap contributors"], "x": [chart_width - 5], "y": [chart_height - 5]}
+    {"text": ["© OpenStreetMap contributors"], "x": [chart_width - 5], "y": [chart_height - 5]}
 )
 attribution_layer = (
     alt.Chart(attribution_df)
     .mark_text(align="right", baseline="bottom", fontSize=10, color=INK_MUTED)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, chart_width], nice=False), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, chart_height], nice=False, reverse=True), axis=None),
         text="text:N",
     )
 )
