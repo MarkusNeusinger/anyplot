@@ -12,195 +12,185 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Well-structured 2×2 facet layout comparing four distinct projections (Equirectangular,
-    Mercator, Robinson, Mollweide) side-by-side, immediately communicating the educational
-    value of the spec
-  - 'Scientifically correct projection implementations: Mercator correctly inflates
-    Antarctica, Mollweide shows the characteristic oval graticule boundary, Robinson
-    shows balanced compromise distortion'
-  - Custom projection mathematics built from scratch (Robinson lookup table, Mollweide
-    Newton's method, Mercator log-tan formula) — the only viable approach given plotnine's
-    lack of native geographic support
-  - Graticule grid lines at 30-degree intervals applied consistently across all four
-    projections, meeting the spec requirement exactly
-  - Country border lines added as a second geom_path layer, giving geographic context
-    beyond just coastlines
-  - Per-panel descriptive annotations ('equidistant cylindrical', 'conformal · area-distorting',
-    'compromise · balanced', 'equal-area pseudocylindrical') that guide the viewer
-    to understand what each projection does
-  - 'Theme-adaptive ocean panel backgrounds (#D0E8F5 light / #0F1F2D dark) cleanly
-    differentiate the ocean surface from land across both themes'
-  - 'Brand green #009E73 used for land masses, correct Imprint palette position 1,
-    identical across both light and dark renders'
+  - 2x2 facet_wrap small multiples with the same world, graticule and styling in each
+    panel, so only the projection differs (C3)
+  - 'Graticule at 30-degree intervals transformed by each projection, drawn thinner
+    and more transparent than coastlines (C2): straight in Mercator, curved in Robinson,
+    elliptical in Mollweide'
+  - 'Theme-adaptive ocean fill (#D0E8F5 light / #0F1F2D dark) separates land from
+    sea clearly in both themes (C1)'
+  - 'Correct projection mathematics: Mercator log-tan, Robinson table interpolation
+    with its standard scale factors, Mollweide via Newton iteration'
+  - 'All chrome threads INK / INK_SOFT / ELEVATED_BG tokens; land #009E73 identical
+    in both renders'
   weaknesses:
-  - Annotation text inside each panel (projection descriptions, size=7 at dpi=400
-    ≈ 39 source-px) is quite small — increase to size=8 or 9 to improve readability,
-    especially at sub-desktop viewport widths
-  - The `_mollweide` helper function deviates from the KISS no-functions guideline;
-    acceptable given mathematical necessity but worth noting for code purity
-  - 'DE-01 could be improved: adding a subtle pole-region highlight or opacity variation
-    on the Mercator panel would visually emphasize the area distortion that the annotation
-    describes, strengthening storytelling'
+  - 'SC-01 (both): an annotation layer the spec does not request — a property note
+    in every panel (''equidistant cylindrical'', ''conformal · area-distorting'',
+    ''compromise · balanced'', ''equal-area pseudocylindrical'') → remove it; the
+    strip label names each projection as the spec asks. Likely cause: the PROJ_NOTES
+    / df_annot block and its geom_text layer.'
+  - 'DQ-01 (both): the world is a coarse hand-traced continent outline: Greenland,
+    the British Isles, Japan, Indonesia, Madagascar and New Zealand are missing and
+    the ''country borders'' are about a dozen disconnected fragments instead of the
+    ~200 countries the Data asks for → trace the missing major islands and closed
+    national borders. Likely cause: the continents_raw and _borders_raw coordinate
+    lists.'
+  - 'CQ-01 (code): lines 94–101 define a `_mollweide` helper function → inline the
+    Newton iteration into the projection loop (no functions). Likely cause: the PROJ_FNS
+    dispatch needing a callable for Mollweide.'
+  - 'Suggestion: the per-panel notes sit on the southern tip of South America in every
+    panel; if kept, place them in open ocean.'
+  - 'Suggestion: Tissot indicatrices (allowed by the Notes) would make the area-vs-shape
+    trade-off visible instead of stated.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) page background, with light-blue ocean (#D0E8F5) filling each of the four map panels.
-      Chrome: Title "map-projections · python · plotnine · anyplot.ai" in bold dark ink (~12pt), clearly readable. Subtitle "Cartographic projections compared: Equirectangular, Mercator, Robinson, Mollweide" in soft dark ink (~10pt), readable. Strip labels "Equirectangular", "Mercator", "Robinson", "Mollweide" in bold dark ink against elevated-bg strips, clearly readable. No axis labels or tick labels (intentionally blank — appropriate for maps). Per-panel annotation text ("equidistant cylindrical", "conformal · area-distorting", "compromise · balanced", "equal-area pseudocylindrical") at size=7, small but readable at full canvas resolution.
-      Data: Land masses rendered in brand green #009E73 with light INK_SOFT borders. Graticule lines visible as subtle warm-gray paths at alpha=0.3. Country border lines in dark ink at alpha=0.65. Mercator panel correctly shows Antarctica massively inflated at bottom (characteristic distortion). Mollweide panel shows oval graticule boundary. Robinson shows curved graticule lines. Equirectangular is the standard rectangular baseline.
-      Legibility verdict: PASS — all primary text (title, subtitle, panel labels) is clearly readable. Annotation text is small but readable at full resolution.
+      Background: warm off-white #FAF8F1 page; each of the four panels filled with pale ocean blue #D0E8F5 inside an INK_SOFT frame.
+      Chrome: bold dark title 'map-projections · python · plotnine · anyplot.ai', dark-gray subtitle naming the four projections, bold dark strip labels (Equirectangular, Mercator, Robinson, Mollweide) on #FFFDF6 strips; panel notes in INK_SOFT centred low in each panel, crossing the southern tip of South America; no axes (blank by design). All readable.
+      Data: land in #009E73 with thin dark coastlines and dark border fragments; subtle gray graticule at 30 deg, straight in the cylindrical panels, curved in Robinson, elliptical in Mollweide; Antarctica a wide band, tallest in Mercator.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) page background, with dark ocean (#0F1F2D) filling each map panel.
-      Chrome: Title in light cream ink (#F0EFE8 equivalent), clearly readable against dark background. Subtitle in lighter gray, readable. Strip labels in light text against elevated dark-gray strip backgrounds, readable. No dark-on-dark failures observed. All text elements use light-on-dark correctly.
-      Data: Land masses in same brand green #009E73 — identical to light render (data colors unchanged). Graticule lines lighter/muted against dark ocean. Country borders in lighter ink. All four projection panels maintain the same geographic accuracy as the light render.
-      Legibility verdict: PASS — title, subtitle, and panel strip labels all clearly readable against the dark background. No dark-on-dark text failures detected.
+      Background: warm near-black #1A1A17 page; panels filled with navy ocean #0F1F2D.
+      Chrome: title in light ink, subtitle and panel notes in light gray (notes cross South America's tip), strip labels light on #242420 strips; no dark-on-dark text anywhere.
+      Data: land the same #009E73 as the light render; coastlines and borders flip to light gray; graticule a subtle light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, subtitle=10, strip=9, annotations=7).
-          Primary text readable at desktop and mobile scale. Annotation text at size=7
-          is small at mobile viewport widths.
+        comment: All sizes set explicitly (title 12, subtitle 10, strips 9, panel
+          notes 7); every text element readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Panel annotations are well-placed within each projection
-          panel. No collision with continent shapes.
+        comment: No text-on-text collisions; the unrequested panel notes cross the
+          South American tip in every panel (out-of-scope element, see SC-01)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Continent polygons clearly visible in green. Graticule lines subtle
-          but visible at alpha=0.3. Country borders add detail without overwhelming.
+        comment: Land, coastlines, border fragments and graticule all visible on both
+          ocean fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green land color against blue/dark ocean — high contrast CVD-safe
-          combination. No red-green only signals.
+        comment: Single land color against blue/navy ocean; strong luminance contrast,
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 facet grid fills canvas well. Good balance of whitespace around
-          plot area. No content cut off. Canvas gate passed (3200x1800).
+        comment: 3200x1800; 2x2 facets fill the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct anyplot format. No axis labels appropriate for map
-          visualization. Subtitle provides geographic context.
+        comment: Map axes intentionally blank (N/A); title plus descriptive subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Land uses #009E73 (Imprint palette position 1). Plot backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) correct. Chrome uses INK/INK_SOFT tokens.
-          Ocean panel background is contextual, not a data-series color violation.'
+        comment: 'Land #009E73 in both themes; page #FAF8F1/#1A1A17; chrome from INK/INK_SOFT
+          tokens'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom ocean/land color scheme, theme-adaptive panel
-          backgrounds, clean facet layout, per-panel annotations. Clearly above defaults.
-          Not quite FiveThirtyEight-level publication-ready.'
+        comment: 'Theme-adaptive ocean surface (#D0E8F5 / #0F1F2D) inside framed panels
+          gives a clear land-sea figure-ground beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: axis elements intentionally blank, panel grid removed,
-          graticule at subtle alpha=0.3, styled strip backgrounds, ocean background
-          differentiated. Appropriate all-4-spines for map panels.'
+        comment: 'Three-level line hierarchy chosen for the map: graticule 0.25/alpha
+          0.3, coastline 0.3, borders 0.35/alpha 0.65'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good storytelling: per-panel descriptive annotations explain each
-          projection''s characteristics. Mercator''s Antarctica distortion is visually
-          striking and educationally clear. Four-projection comparison creates immediate
-          visual narrative.'
+        passed: false
+        comment: Default; the per-panel property notes are an unrequested annotation
+          layer and earn no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: World map with four different projections (Equirectangular, Mercator,
-          Robinson, Mollweide) shown side-by-side.
+        comment: Correct 4-projection comparison; per-panel annotation layer the spec
+          does not request (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple projections, graticule at 30-degree intervals, coastlines
-          and country borders, neutral/brand color for land. Tissot indicatrices omitted
-          (spec says optional).
+        comment: C1 coastlines/borders with land vs sea, C2 30-degree graticule lighter
+          than coastlines and transformed, C3 each panel labelled; C4/C5 optional
+          and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All continents visible, projections applied correctly, geographic
-          coordinates correct.
+        comment: All land projected at its coordinates; whole world visible in each
+          panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exact format 'map-projections · python · plotnine · anyplot.ai'.
-          No legend appropriate for single-color map.
+        comment: Exact mandated title; no legend needed for single-color land (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All features of map projection visualization shown: multiple projection
-          types, graticule, coastlines, country borders, per-projection annotations,
-          Antarctica included.'
+        comment: Coarse hand-traced continents miss major islands and borders are
+          a few fragments (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real educational cartography context. Neutral geographic topic. World
-          boundaries are recognizable.
+        comment: Real world geography, neutral educational topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Projections implemented mathematically correctly. Mercator's polar
-          distortion is authentic. Robinson lookup table from standard PROK table.
-          Mollweide uses Newton's method for theta.
+        comment: 'Checked formulas: Mercator ln tan(pi/4+phi/2) clipped at 85 deg,
+          Robinson table with 0.8487/1.3523 scale, Mollweide Newton iteration on 2t+sin2t=pi
+          sin phi; outputs match the renders'
     code_quality:
       score: 9
       max: 10
@@ -210,40 +200,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: 'Mostly flat structure: imports → constants → projection data → DataFrame
-          construction → plot → save. Has _mollweide helper function (necessary for
-          Newton''s method) which technically deviates from no-functions guideline.'
+        comment: _mollweide helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present. Data is deterministic (hardcoded coordinates
-          + projection math).
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. os/sys for environment and path fix. numpy/pandas
-          for data. Plotnine elements all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. PROJ_FNS dict of lambdas is elegant. Systematic
-          DataFrame construction. sys.path fix is documented with a comment explaining
-          the naming conflict.
+        comment: Projection math has no available call (cartopy/pyproj not installed);
+          the length is coordinate data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
-          — correct format.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, 8x4.5 in)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -251,19 +235,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine: ggplot() + layered geoms (geom_path, geom_polygon,
-          geom_text), facet_wrap for multi-projection, coord_fixed for map proportions,
-          theme() for all styling, labs() for text. Correct grammar-of-graphics pattern.'
+        comment: Tidy long frames with an ordered Categorical driving facet order,
+          and separate data= per layer composed in one grammar
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses facet_wrap with scales='free' and coord_fixed within facets
-          for the 4-projection layout — a plotnine-native approach to small-multiples
-          comparison. Multiple geom layers composited via ggplot's + operator is distinctive
-          to the grammar-of-graphics approach.
+        comment: facet_wrap(scales='free') combined with coord_fixed so each projection
+          keeps its own aspect
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
 impl_tags:
   dependencies: []
   techniques:
