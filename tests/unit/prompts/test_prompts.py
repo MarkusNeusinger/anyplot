@@ -1011,8 +1011,8 @@ class TestLeanCode:
         assert "``CQ-04 (code): lines A–B" in cq04 and "→ `<call>` (<package>)" in cq04
         assert "Without a concrete replacement it is a `Suggestion:` line" in cq04
         assert "never takes CQ-04 to 0" in cq04
-        # A short helper is a valid replacement since CQ-01 allows it; a wrapper of the plot never is.
-        assert "a short helper above its first use (CQ-01)" in cq04
+        # The review names a call or a removal; CQ-01 no longer bans helpers, but a wrapper of the plot is never one.
+        assert "A replacement is a call or a removal" in cq04
         assert "A function that wraps the plot or the save is never a replacement" in cq04
         assert "never a new helper function" not in criteria
         assert "never credit a hand-roll for avoiding one" in cq04
