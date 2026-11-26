@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-projections: World Map with Different Projections
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 83/100 | Updated: 2026-11-26
+#' Quality: pending | Updated: 2026-11-26
 
 library(ggplot2)
 library(maps)
@@ -20,89 +20,58 @@ IMPRINT <- c(
     "#99B314", "#954477", "#BD8233"
 )
 
-# --- Mollweide projection math -----------------------------------------------
-# Solve 2*theta + sin(2*theta) = pi*sin(lat) via Newton-Raphson
-solve_theta <- function(phi_vec) {
-    sapply(phi_vec, function(p) {
-        if (is.na(p)) return(NA_real_)
-        if (abs(p) >= pi / 2 - 1e-9) return(sign(p) * pi / 2)
-        t <- p
-        for (i in seq_len(60)) {
-            delta <- (2 * t + sin(2 * t) - pi * sin(p)) / (2 + 2 * cos(2 * t))
-            t     <- t - delta
-            if (abs(delta) < 1e-11) break
-        }
-        t
-    })
-}
+# --- Data: every lon/lat point of every layer in one table --------------------
+world <- map_data("world")
 
-mollweide <- function(lon_deg, lat_deg) {
-    lon   <- lon_deg * pi / 180
-    lat   <- lat_deg * pi / 180
-    theta <- solve_theta(lat)
+# Graticule every 30 degrees; the equator and prime meridian are two of its lines
+lat_dense <- seq(-90, 90, length.out = 541)
+lon_dense <- seq(-180, 180, length.out = 1081)
+meridians <- do.call(rbind, lapply(seq(-180, 180, by = 30), function(lon0) {
+    data.frame(lon = lon0, lat = lat_dense, group = paste0("mer_", lon0))
+}))
+parallels <- do.call(rbind, lapply(seq(-90, 90, by = 30), function(lat0) {
+    data.frame(lon = lon_dense, lat = lat0, group = paste0("par_", lat0))
+}))
+
+# Tissot indicatrices: 5 degree geodesic circles on a 30 x 60 degree grid
+r_deg    <- 5
+t_circle <- seq(0, 2 * pi, length.out = 73)
+centers  <- expand.grid(lat0 = seq(-60, 60, by = 30), lon0 = seq(-150, 150, by = 60))
+tissot   <- do.call(rbind, lapply(seq_len(nrow(centers)), function(i) {
+    lat0 <- centers$lat0[i]
+    lon0 <- centers$lon0[i]
     data.frame(
-        x = (2 * sqrt(2) / pi) * lon * cos(theta),
-        y = sqrt(2) * sin(theta)
+        lon   = lon0 + r_deg * cos(t_circle) / max(cos(lat0 * pi / 180), 0.08),
+        lat   = pmax(pmin(lat0 + r_deg * sin(t_circle), 89.9), -89.9),
+        group = paste0("t_", lon0, "_", lat0)
     )
-}
+}))
 
-# --- World country boundaries (projected) ------------------------------------
-world      <- map_data("world")
-world_proj <- mollweide(world$long, world$lat)
-world$x    <- world_proj$x
-world$y    <- world_proj$y
-
-# --- Projection boundary (Mollweide ellipse: a=2√2, b=√2) -------------------
-t_ell    <- seq(0, 2 * pi, length.out = 721)
-boundary <- data.frame(
-    x = 2 * sqrt(2) * cos(t_ell),
-    y = sqrt(2) * sin(t_ell)
+pts <- rbind(
+    data.frame(lon = world$long, lat = world$lat, group = world$group, layer = "world"),
+    data.frame(rbind(meridians, parallels), layer = "graticule"),
+    data.frame(tissot, layer = "tissot")
 )
 
-# --- Graticule (lat/lon grid at 30° intervals) --------------------------------
-lat_dense <- seq(-90,  90,  length.out = 541)
-lon_dense <- seq(-180, 180, length.out = 1081)
+# Mollweide projection of all points at once: solve
+# 2*theta + sin(2*theta) = pi*sin(lat) by Newton-Raphson, vectorised
+phi   <- pts$lat * pi / 180
+theta <- phi
+for (i in 1:60) {
+    theta <- theta - (2 * theta + sin(2 * theta) - pi * sin(phi)) /
+        pmax(2 + 2 * cos(2 * theta), 1e-9)
+}
+theta[abs(phi) >= pi / 2 - 1e-9] <- sign(phi[abs(phi) >= pi / 2 - 1e-9]) * pi / 2
+pts$x <- (2 * sqrt(2) / pi) * (pts$lon * pi / 180) * cos(theta)
+pts$y <- sqrt(2) * sin(theta)
 
-meridians <- do.call(rbind, lapply(seq(-180, 180, by = 30), function(lon0) {
-    pts <- mollweide(rep(lon0, length(lat_dense)), lat_dense)
-    data.frame(x = pts$x, y = pts$y, group = paste0("mer_", lon0))
-}))
-
-parallels <- do.call(rbind, lapply(seq(-90, 90, by = 30), function(lat0) {
-    pts <- mollweide(lon_dense, rep(lat0, length(lon_dense)))
-    data.frame(x = pts$x, y = pts$y, group = paste0("par_", lat0))
-}))
-
-graticule <- rbind(meridians, parallels)
-
-# --- Tissot indicatrices (small geodesic circles on the sphere) ---------------
-# Radius in degrees; longitude offset corrected for latitude (cos projection)
-r_deg    <- 5
-t_circle <- seq(0, 2 * pi, length.out = 73)   # 73 pts → closed polygon
-
-lat_centers <- seq(-60, 60, by = 30)   # 5 latitude bands
-lon_centers <- seq(-150, 150, by = 60) # 6 longitude positions
-
-tissot <- do.call(rbind, lapply(lat_centers, function(lat0) {
-    cos_lat <- max(cos(lat0 * pi / 180), 0.08)
-    do.call(rbind, lapply(lon_centers, function(lon0) {
-        lon_c <- lon0 + r_deg * cos(t_circle) / cos_lat
-        lat_c <- pmax(pmin(lat0 + r_deg * sin(t_circle), 89.9), -89.9)
-        pts   <- mollweide(lon_c, lat_c)
-        data.frame(
-            x     = pts$x,
-            y     = pts$y,
-            group = paste0("t_", lon0, "_", lat0)
-        )
-    }))
-}))
-
-# --- Equator and prime meridian highlights -----------------------------------
-equator <- mollweide(lon_dense, rep(0, length(lon_dense)))
-equator$group <- "equator"
-
-prime_merid <- mollweide(rep(0, length(lat_dense)), lat_dense)
-prime_merid$group <- "prime"
+world     <- pts[pts$layer == "world", ]
+graticule <- pts[pts$layer == "graticule", ]
+tissot    <- pts[pts$layer == "tissot", ]
+boundary  <- data.frame(
+    x = 2 * sqrt(2) * cos(seq(0, 2 * pi, length.out = 721)),
+    y = sqrt(2) * sin(seq(0, 2 * pi, length.out = 721))
+)
 
 # --- Plot --------------------------------------------------------------------
 p <- ggplot() +
@@ -119,21 +88,12 @@ p <- ggplot() +
     # Country borders / coastlines
     geom_path(
         data = world, aes(x = x, y = y, group = group),
-        color = INK_SOFT, linewidth = 0.10, alpha = 0.55
+        color = INK_SOFT, linewidth = 0.25, alpha = 0.80
     ) +
-    # Standard graticule (30° grid)
+    # Graticule (30° grid, lighter than the coastlines)
     geom_path(
         data = graticule, aes(x = x, y = y, group = group),
-        color = INK_SOFT, linewidth = 0.18, alpha = 0.45
-    ) +
-    # Equator and prime meridian — slightly bolder
-    geom_path(
-        data = equator, aes(x = x, y = y, group = group),
-        color = INK_SOFT, linewidth = 0.35, alpha = 0.70
-    ) +
-    geom_path(
-        data = prime_merid, aes(x = x, y = y, group = group),
-        color = INK_SOFT, linewidth = 0.35, alpha = 0.70
+        color = INK_SOFT, linewidth = 0.12, alpha = 0.40
     ) +
     # Tissot indicatrices — anyplot brand green (position 1)
     geom_polygon(
