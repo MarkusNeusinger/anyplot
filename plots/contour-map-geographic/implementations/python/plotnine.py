@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-20
@@ -20,6 +20,7 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 from contourpy import contour_generator
+from matplotlib.path import Path
 from plotnine import (
     aes,
     coord_cartesian,
@@ -29,10 +30,11 @@ from plotnine import (
     element_text,
     geom_label,
     geom_path,
+    geom_polygon,
     geom_raster,
     ggplot,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradientn,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -40,181 +42,172 @@ from plotnine import (
 from scipy.ndimage import gaussian_filter
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+LAND_FILL = "#E6E1D0" if THEME == "light" else "#2D2C27"
 
-# Synthetic atmospheric pressure (hPa) over North Atlantic / Europe
-np.random.seed(42)
-lon_vec = np.linspace(-30, 50, 80)
-lat_vec = np.linspace(35, 75, 60)
+# Imprint sequential ramp for filled fields (single-polarity data), per theme
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+# Constants
+CONTOUR_STEP = 0.25  # isohaline interval in psu
+LABEL_EVERY = 2  # label every 2nd isohaline (0.5 psu)
+
+# Columns: set these to your table's column names
+LON = "Longitude (°E)"  # role: lon
+LAT = "Latitude (°N)"  # role: lat
+SALINITY = "Salinity (psu)"  # role: value
+
+# Data: replace this block with your own gridded table, for example df = pd.read_csv("salinity.csv")
+# Synthetic Mediterranean sea-surface salinity: saltier toward the east, fresher near river-fed basins
+lon_vec = np.linspace(-6, 28, 100)
+lat_vec = np.linspace(30, 46, 70)
 lon_grid, lat_grid = np.meshgrid(lon_vec, lat_vec)
 
-base = 1013.0
-# Azores High — subtropical anticyclone
-pressure = base + 18 * np.exp(-((lon_grid + 20) ** 2 + (lat_grid - 37) ** 2) / 350)
-# Icelandic Low — subpolar cyclone
-pressure -= 22 * np.exp(-((lon_grid + 15) ** 2 + (lat_grid - 65) ** 2) / 180)
-# Baltic / Scandinavian High
-pressure += 10 * np.exp(-((lon_grid - 22) ** 2 + (lat_grid - 57) ** 2) / 220)
-# Gentle Mediterranean trough
-pressure -= 6 * np.exp(-((lon_grid - 12) ** 2 + (lat_grid - 40) ** 2) / 280)
-pressure = gaussian_filter(pressure, sigma=3)
+east_ramp = 1 / (1 + np.exp(-(lon_grid - 14) / 8))  # Atlantic inflow to Levantine basin
+salinity = 36.3 + 2.7 * east_ramp
+salinity -= 0.9 * np.exp(-(((lon_grid - 13.5) / 2.2) ** 2 + ((lat_grid - 44.3) / 1.3) ** 2))  # Po / Adriatic
+salinity -= 0.6 * np.exp(-(((lon_grid - 4.5) / 2.0) ** 2 + ((lat_grid - 42.8) / 1.0) ** 2))  # Rhône plume
+salinity -= 0.7 * np.exp(-(((lon_grid - 25.0) / 2.0) ** 2 + ((lat_grid - 40.0) / 1.2) ** 2))  # Black Sea outflow
+salinity += 0.3 * np.exp(-(((lon_grid - 26) / 4.0) ** 2 + ((lat_grid - 34.5) / 1.8) ** 2))  # Levantine evaporation
+salinity = gaussian_filter(salinity, sigma=2)
 
-df_raster = pd.DataFrame({"lon": lon_grid.ravel(), "lat": lat_grid.ravel(), "pressure": pressure.ravel()})
+df = pd.DataFrame({LON: lon_grid.ravel(), LAT: lat_grid.ravel(), SALINITY: salinity.ravel()})
 
-# Compute isobar paths using contourpy (pure path-computation library, no pyplot)
-p_lo = int(np.floor(pressure.min() / 4) * 4)
-p_hi = int(np.ceil(pressure.max() / 4) * 4)
-contour_levels = list(range(p_lo, p_hi + 4, 4))
+# Plot: reads only df and the constants above
+# Simplified land polygons (lon, lat), closed through points outside the map frame
+north_shore = [
+    (-8, 36.0), (-5.6, 36.0), (-5.4, 36.1), (-4.4, 36.7), (-2.4, 36.8), (-0.9, 37.6), (-0.2, 38.4), (0.2, 38.7),
+    (-0.3, 39.5), (0.8, 40.7), (2.2, 41.4), (3.3, 42.3), (3.0, 43.2), (4.5, 43.4), (5.4, 43.3), (6.0, 43.1),
+    (7.3, 43.7), (8.9, 44.4), (9.8, 44.1), (10.3, 43.5), (10.5, 42.9), (11.8, 42.1), (12.3, 41.7), (13.5, 41.2),
+    (14.3, 40.8), (15.0, 40.5), (15.3, 40.0), (16.1, 39.0), (15.65, 38.0), (16.0, 37.9), (16.5, 38.4),
+    (17.1, 38.9), (16.7, 39.7), (17.2, 40.4), (18.0, 40.0), (18.4, 39.8), (18.5, 40.1), (17.9, 40.65),
+    (16.9, 41.1), (16.2, 41.95), (15.0, 42.0), (14.2, 42.5), (13.5, 43.6), (12.6, 44.1), (12.5, 44.9),
+    (12.3, 45.4), (13.7, 45.6), (13.6, 45.1), (14.4, 45.3), (15.2, 44.1), (16.4, 43.5), (18.1, 42.6),
+    (18.7, 42.4), (19.4, 41.3), (19.4, 40.4), (20.0, 39.7), (20.2, 39.3), (20.7, 38.95), (21.2, 38.4),
+    (21.8, 38.3), (21.4, 37.8), (21.7, 36.9), (22.5, 36.4), (23.2, 36.45), (22.8, 37.5), (23.0, 37.9),
+    (23.6, 37.9), (24.0, 37.65), (24.0, 38.0), (23.6, 38.4), (22.9, 39.3), (22.6, 40.5), (23.8, 40.0),
+    (24.3, 40.2), (24.4, 40.9), (25.9, 40.85), (26.2, 40.2), (26.5, 39.3), (27.1, 38.4), (27.3, 37.9),
+    (27.4, 37.0), (28.2, 36.8), (30, 36.6), (30, 50), (-8, 50),
+]  # fmt: skip
+south_shore = [
+    (-8, 35.8), (-5.9, 35.8), (-5.3, 35.9), (-4.5, 35.2), (-3.9, 35.2), (-2.9, 35.3), (-2.0, 35.1), (-0.6, 35.8),
+    (3.0, 36.8), (5.1, 36.75), (7.8, 36.9), (9.8, 37.3), (10.3, 36.8), (11.0, 37.05), (10.5, 36.4), (10.6, 35.8),
+    (10.8, 34.7), (10.1, 33.9), (10.9, 33.7), (13.2, 32.9), (15.1, 32.4), (16.5, 31.2), (18.0, 30.4),
+    (20.1, 32.1), (21.5, 32.9), (22.6, 32.8), (24.0, 32.1), (25.2, 31.6), (28, 31.2), (30, 31.2), (30, 20), (-8, 20),
+]  # fmt: skip
+islands = {
+    "sardinia": [(8.2, 40.9), (9.2, 41.25), (9.8, 40.5), (9.6, 39.5), (9.4, 39.0), (8.5, 38.9), (8.4, 39.5), (8.5, 40.4)],
+    "corsica": [(8.6, 42.4), (9.4, 43.0), (9.55, 42.2), (9.4, 41.4), (9.0, 41.5), (8.6, 41.9)],
+    "sicily": [(12.4, 38.1), (13.4, 38.2), (15.6, 38.3), (15.1, 37.3), (15.2, 36.7), (14.3, 36.8), (13.0, 37.5)],
+    "mallorca": [(2.4, 39.5), (3.2, 39.9), (3.4, 39.7), (3.0, 39.3), (2.6, 39.3)],
+    "crete": [(23.5, 35.5), (24.5, 35.4), (25.7, 35.3), (26.3, 35.3), (26.1, 35.0), (25.0, 34.95), (24.0, 35.2)],
+}  # fmt: skip
+land = {"north": north_shore, "south": south_shore, **islands}
+df_land = pd.DataFrame([{"lon": x, "lat": y, "group": name} for name, pts in land.items() for x, y in pts])
 
-gen = contour_generator(x=lon_vec, y=lat_vec, z=pressure)
+# Grid cells inside a land polygon carry no salinity: mask them for the isohalines
+points = df[[LON, LAT]].to_numpy()
+on_land = np.zeros(len(df), dtype=bool)
+for pts in land.values():
+    on_land |= Path(pts).contains_points(points)
 
-isobar_rows: list = []
-label_rows: list = []
-for i, level in enumerate(contour_levels):
+# Isohalines with contourpy (path computation only), over a masked grid
+lons = np.sort(df[LON].unique())
+lats = np.sort(df[LAT].unique())
+field = np.ma.masked_array(
+    df[SALINITY].to_numpy().reshape(len(lats), len(lons)), mask=on_land.reshape(len(lats), len(lons))
+)
+levels = np.arange(np.ceil(field.min() / CONTOUR_STEP), np.floor(field.max() / CONTOUR_STEP) + 1) * CONTOUR_STEP
+gen = contour_generator(x=lons, y=lats, z=field)
+
+iso_rows, label_rows = [], []
+for i, level in enumerate(levels):
     segs = gen.lines(level)
     if not segs:
         continue
-    # Label every 2nd contour level using midpoint of the longest segment
-    if i % 2 == 0:
+    if i % LABEL_EVERY == 0:
         longest = max(segs, key=len)
-        mid = len(longest) // 2
-        label_rows.append({"lon": float(longest[mid, 0]), "lat": float(longest[mid, 1]), "label": str(int(level))})
+        # prefer the point nearest the middle whose label box (about 1.8 x 1 degrees) stays clear of land
+        order = np.argsort(np.abs(np.arange(len(longest)) - len(longest) // 2))
+        box = np.array([(dx, dy) for dx in (-0.9, 0, 0.9) for dy in (-0.5, 0, 0.5)])
+        mid = next(
+            (
+                longest[j]
+                for j in order
+                if not any(Path(pts).contains_points(longest[j] + box).any() for pts in land.values())
+            ),
+            longest[len(longest) // 2],
+        )
+        label_rows.append({"lon": mid[0], "lat": mid[1], "label": f"{level:.1f}"})
     for seg_idx, seg in enumerate(segs):
-        if len(seg) < 2:
-            continue
-        group = f"iso_{level:.0f}_{seg_idx}"
-        for lon_c, lat_c in seg:
-            isobar_rows.append({"lon": lon_c, "lat": lat_c, "group": group})
-
-df_isobars = pd.DataFrame(isobar_rows)
+        iso_rows += [{"lon": x, "lat": y, "group": f"iso_{level:.2f}_{seg_idx}"} for x, y in seg]
+df_iso = pd.DataFrame(iso_rows)
 df_labels = pd.DataFrame(label_rows)
 
-# Simplified European geographic outlines (hardcoded, no geopandas required)
-# Western European continental coast (south → north)
-euro_coast = {
-    "lons": [-5.6, -9.0, -9.5, -9.2, -8.7, -9.2, -1.8, -1.5, -4.7, -2.5, -1.5, 0.0, 1.5, 2.5, 4.0, 5.0, 8.0, 8.5, 5.0],
-    "lats": [
-        36.1,
-        37.0,
-        38.5,
-        39.5,
-        43.0,
-        42.9,
-        43.5,
-        44.0,
-        48.0,
-        47.5,
-        49.0,
-        49.2,
-        50.5,
-        51.0,
-        52.5,
-        53.0,
-        55.0,
-        57.0,
-        58.0,
-    ],
-    "group": "euro",
-}
-# British Isles (closed polygon)
-uk_coast = {
-    "lons": [-5.7, 0.0, 1.7, 1.5, 0.5, -1.0, -2.5, -4.5, -6.0, -5.5, -4.5, -4.0, -3.5, -4.5, -5.0, -5.7],
-    "lats": [50.1, 51.0, 52.5, 53.5, 54.5, 57.5, 58.0, 58.5, 57.5, 56.0, 55.5, 54.5, 53.5, 52.5, 51.5, 50.1],
-    "group": "uk",
-}
-# Scandinavian Peninsula (closed polygon)
-scand_coast = {
-    "lons": [5.0, 8.0, 11.0, 12.5, 16.0, 18.0, 20.0, 22.0, 24.0, 27.0, 28.5, 25.0, 20.0, 16.0, 14.0, 12.0, 10.0, 5.0],
-    "lats": [
-        57.5,
-        57.5,
-        56.0,
-        56.0,
-        57.5,
-        59.0,
-        60.0,
-        63.0,
-        65.5,
-        69.0,
-        71.0,
-        71.0,
-        68.0,
-        66.0,
-        64.0,
-        62.0,
-        59.5,
-        57.5,
-    ],
-    "group": "scand",
-}
-# Iceland
-iceland_coast = {
-    "lons": [-13.5, -18.0, -24.0, -24.5, -22.0, -18.0, -14.0, -13.5, -13.5],
-    "lats": [63.5, 63.5, 64.0, 65.5, 66.5, 66.5, 65.5, 64.5, 63.5],
-    "group": "iceland",
-}
+lon_breaks = list(range(0, int(df[LON].max()) + 1, 5))
+lon_labels = [f"{x}°E" if x > 0 else "0°" for x in lon_breaks]
+lat_breaks = list(range(30, int(df[LAT].max()) + 1, 5))
+lat_labels = [f"{y}°N" for y in lat_breaks]
 
-outline_rows = []
-for feature in [euro_coast, uk_coast, scand_coast, iceland_coast]:
-    for lon_c, lat_c in zip(feature["lons"], feature["lats"], strict=True):
-        outline_rows.append({"lon": lon_c, "lat": lat_c, "group": feature["group"]})
-
-df_outlines = pd.DataFrame(outline_rows)
+title = "contour-map-geographic · python · plotnine · anyplot.ai"
 
 anyplot_theme = theme(
     figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
     axis_title=element_text(color=INK, size=10),
     axis_text=element_text(color=INK_SOFT, size=8),
     axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=12),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+    legend_key=element_rect(fill=ELEVATED_BG, color="none"),
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=9),
 )
 
-lon_breaks = [-20, -10, 0, 10, 20, 30, 40]
-lon_labels = [f"{abs(x)}°W" if x < 0 else ("0°" if x == 0 else f"{x}°E") for x in lon_breaks]
-lat_breaks = [40, 50, 60, 70]
-lat_labels = [f"{y}°N" for y in lat_breaks]
-
-title = "contour-map-geographic · python · plotnine · anyplot.ai"
-
 plot = (
-    ggplot(df_raster, aes("lon", "lat"))
-    + geom_raster(aes(fill="pressure"))
+    ggplot(df, aes(LON, LAT))
+    + geom_raster(aes(fill=SALINITY))
     + geom_path(
-        data=df_isobars,
-        mapping=aes(x="lon", y="lat", group="group"),
+        data=df_iso, mapping=aes("lon", "lat", group="group"), color=PAGE_BG, size=1.1, alpha=0.55, inherit_aes=False
+    )
+    + geom_path(
+        data=df_iso, mapping=aes("lon", "lat", group="group"), color=INK, size=0.45, alpha=0.9, inherit_aes=False
+    )
+    + geom_polygon(
+        data=df_land,
+        mapping=aes("lon", "lat", group="group"),
+        fill=LAND_FILL,
         color=INK_SOFT,
-        size=0.4,
-        alpha=0.65,
+        size=0.5,
         inherit_aes=False,
     )
-    + geom_path(data=df_outlines, mapping=aes(x="lon", y="lat", group="group"), color=INK, size=0.6, inherit_aes=False)
     + geom_label(
         data=df_labels,
-        mapping=aes(x="lon", y="lat", label="label"),
+        mapping=aes("lon", "lat", label="label"),
         color=INK,
         fill=PAGE_BG,
-        size=6,
-        label_padding=0.1,
+        size=8,
+        label_padding=0.12,
         label_size=0.2,
         inherit_aes=False,
     )
-    + scale_fill_cmap(cmap_name="BrBG", name="Pressure\n(hPa)")
-    + scale_x_continuous(breaks=lon_breaks, labels=lon_labels)
-    + scale_y_continuous(breaks=lat_breaks, labels=lat_labels)
-    + coord_cartesian(xlim=(-30, 50), ylim=(35, 75))
-    + labs(x="Longitude", y="Latitude", title=title)
+    + scale_fill_gradientn(colors=[c for _, c in SEQ_FIELDS], values=[p for p, _ in SEQ_FIELDS], name="Salinity\n(psu)")
+    + scale_x_continuous(breaks=lon_breaks, labels=lon_labels, expand=(0, 0))
+    + scale_y_continuous(breaks=lat_breaks, labels=lat_labels, expand=(0, 0))
+    + coord_cartesian(xlim=(df[LON].min(), df[LON].max()), ylim=(df[LAT].min(), df[LAT].max()))
+    + labs(x=LON, y=LAT, title=title)
     + anyplot_theme
 )
 
