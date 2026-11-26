@@ -1,7 +1,7 @@
 """anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 75/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
