@@ -1,10 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
 """
 
-import io
 import os
 import sys
 import time
@@ -19,7 +18,6 @@ import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Range1d
 from bokeh.plotting import figure
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -123,8 +121,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome (Selenium 4 / Selenium Manager).
-# Chrome's internal UI overhead shrinks the viewport below --window-size by ~139 px.
-# Use a taller window (H + 200 buffer) so the viewport is >= H, then crop to exact dims.
+# Headless Chrome reserves a phantom title bar, so pin the viewport exactly via CDP.
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -132,16 +129,20 @@ for arg in (
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
-    "--force-device-scale-factor=1",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H + 200)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
-raw = driver.get_screenshot_as_png()
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-img = Image.open(io.BytesIO(raw)).crop((0, 0, W, H))
-img.save(f"plot-{THEME}.png")
