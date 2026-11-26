@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 84/100 | Created: 2026-05-23
@@ -46,7 +46,7 @@ def make_panel(proj_type, label, subtitle, w, h):
                 text=label,
                 subtitle=subtitle,
                 fontSize=12,
-                subtitleFontSize=9,
+                subtitleFontSize=10,
                 color=INK,
                 subtitleColor=INK_SOFT,
                 anchor="middle",
@@ -57,16 +57,16 @@ def make_panel(proj_type, label, subtitle, w, h):
 
 # 4 projections in a 2×2 grid
 # Mercator clips naturally at height=145 — avoids infinite polar distortion
-map_mercator = make_panel("mercator", "Mercator", "conformal · cylindrical · distorts area near poles", 240, 110)
-map_natural = make_panel("naturalEarth1", "Natural Earth", "compromise · minimises overall distortion", 240, 130)
-map_equal_earth = make_panel("equalEarth", "Equal Earth", "equal-area · preserves relative country sizes", 240, 120)
-map_orthographic = make_panel("orthographic", "Orthographic", "azimuthal · perspective view from space", 195, 185)
+map_mercator = make_panel("mercator", "Mercator", "conformal · cylindrical · distorts area near poles", 380, 165)
+map_natural = make_panel("naturalEarth1", "Natural Earth", "compromise · minimises overall distortion", 380, 165)
+map_equal_earth = make_panel("equalEarth", "Equal Earth", "equal-area · preserves relative country sizes", 380, 165)
+map_orthographic = make_panel("orthographic", "Orthographic", "azimuthal · perspective view from space", 380, 165)
 
-row1 = alt.hconcat(map_mercator, map_natural, spacing=20)
-row2 = alt.hconcat(map_equal_earth, map_orthographic, spacing=20)
+row1 = alt.hconcat(map_mercator, map_natural, spacing=10)
+row2 = alt.hconcat(map_equal_earth, map_orthographic, spacing=10)
 
 chart = (
-    alt.vconcat(row1, row2, spacing=18)
+    alt.vconcat(row1, row2, spacing=12)
     .properties(background=PAGE_BG, title=alt.Title(text=MAIN_TITLE, fontSize=16, color=INK, anchor="middle"))
     .configure_view(stroke=None)
 )
