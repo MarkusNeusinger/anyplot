@@ -350,6 +350,15 @@ class TestWritebackStep:
         assert setup.remote_branch() == ""
         setup.assert_workspace_untouched()
 
+    def test_a_keep_without_a_rescore_leaves_the_stored_note(self, setup):
+        """A technical keep writes nothing back, so main's note stays with main's review: the live file did not change."""
+        self._store_on_main(setup, {**RECORD, "pr": 11900, "keep_note": NOTE.replace("11955", "11900")})
+        setup.record.write_text(json.dumps({**RECORD, "code": "canvas_failed", "keep_note": ""}), encoding="utf-8")
+        assert setup.run(PREV_RESCORED="n/a", GATE_CODE="canvas_failed").returncode == 0
+        assert setup.status() == "no_rescore"
+        stored = yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"main:{META}"))
+        assert stored["review"]["last_kept"]["pr"] == 11900
+
     def test_invalid(self, setup):
         bad = {**PREV_REVIEW, "criteria_checklist": _checklist_json({**PREV_CHECKLIST, "VQ-02": 5})}
         (setup.ws / "review_prev.json").write_text(json.dumps(bad), encoding="utf-8")
@@ -393,24 +402,26 @@ class TestWritebackStep:
         assert setup.remote_branch() == ""
         setup.assert_workspace_untouched()
 
-    def _store_on_main(self, setup, record: dict[str, Any]) -> None:
-        """main already stores this run's re-score, written back with `record`'s note."""
+    def _store_on_main(self, setup, record: dict[str, Any] | None) -> None:
+        """main already stores this run's re-score, written back with `record`'s note (None: by the older code)."""
         meta, impl = setup.ws / "applied.yaml", setup.ws / "applied.R"
         meta.write_text(yaml.safe_dump(METADATA, sort_keys=False), encoding="utf-8")
         impl.write_text(HEADER, encoding="utf-8")
-        stored_record = setup.tmp / "stored-record.json"
-        stored_record.write_text(json.dumps(record), encoding="utf-8")
         args = ["apply", "--metadata", str(meta), "--prev-review", str(setup.ws / "review_prev.json"), "--score", "80"]
         args += ["--model", "claude-opus-5", "--criteria-version", "qc-a.aqr-b.sg-c.lib-d", "--impl", str(impl)]
-        assert wb.main([*args, "--gate-record", str(stored_record)]) == 0
+        if record is not None:
+            stored_record = setup.tmp / "stored-record.json"
+            stored_record.write_text(json.dumps(record), encoding="utf-8")
+            args += ["--gate-record", str(stored_record)]
+        assert wb.main(args) == 0
         setup.commit_on_main(META, meta.read_text(encoding="utf-8"))
         setup.commit_on_main(IMPL, impl.read_text(encoding="utf-8"))
         meta.unlink()
         impl.unlink()
 
     def test_a_note_alone_is_not_unchanged(self, setup):
-        """main stores the same re-score from a keep without a note: the new note still travels."""
-        self._store_on_main(setup, {**RECORD, "code": "canvas_failed", "keep_note": ""})
+        """main stores the same re-score, written back before the note existed: the new note still travels."""
+        self._store_on_main(setup, None)
         result = setup.run()
         assert result.returncode == 0, result.stdout + result.stderr
         assert setup.status() == "opened"
@@ -423,10 +434,11 @@ class TestWritebackStep:
         assert new["review"].pop("last_kept") == LAST_KEPT
         assert new == old
 
-    def test_a_keep_without_a_note_removes_an_older_one(self, setup):
+    def test_a_write_back_without_a_note_removes_an_older_one(self, setup):
+        """The one keep that has a re-score and no note: a criterion floor the new checklist left uncheckable."""
         self._store_on_main(setup, {**RECORD, "pr": 11900, "keep_note": NOTE.replace("11955", "11900")})
-        setup.record.write_text(json.dumps({**RECORD, "code": "canvas_failed", "keep_note": ""}), encoding="utf-8")
-        result = setup.run(PREV_META_BLOB=setup.blob(META), PREV_IMPL_BLOB=setup.blob(IMPL))
+        setup.record.write_text(json.dumps({**RECORD, "code": "criterion_below", "keep_note": ""}), encoding="utf-8")
+        result = setup.run(GATE_CODE="criterion_below")
         assert result.returncode == 0, result.stdout + result.stderr
         assert setup.status() == "opened"
         head = setup.remote_branch()

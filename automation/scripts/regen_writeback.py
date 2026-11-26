@@ -16,7 +16,9 @@ header"): a re-score is a review that ran, so the write-back removes the mark.
 With the new review, the write-back stores why the gate kept the live
 implementation, ``review.last_kept`` (``{pr, code, note}``, from the gate
 record's ``keep_note``), so the pair's next regeneration learns why this one
-failed; a keep without a note removes an older one.
+failed; a write-back whose record has no note removes an older one. A keep
+that writes nothing back (no re-score, or a follow-up) leaves the stored note
+as it leaves the stored review.
 
 ``main`` takes changes only through a merged pull request, so the write-back
 travels as one:
