@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-21
@@ -14,6 +14,9 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Symbol: dark bars on a light tile, in both themes, so the code stays scannable
+BAR_COLOR = "#1A1A17"
+TILE_BG = "#FAF8F1"
 
 # Code 128 encoding patterns (11-module per symbol; STOP is 13 modules)
 CODE128_PATTERNS = {
@@ -196,15 +199,33 @@ BAR_Y0 = 90
 BAR_Y1 = 510
 mid_bar_y = (BAR_Y0 + BAR_Y1) / 2
 
+# Light tile behind the symbol and its quiet zones (visible on the dark page)
+fig.add_shape(
+    type="rect",
+    x0=0,
+    x1=total_width,
+    y0=BAR_Y0 - 10,
+    y1=BAR_Y1 + 4,
+    fillcolor=TILE_BG,
+    line={"width": 0},
+    layer="below",
+)
+
 # Barcode bars — tall to utilize canvas space
 for x, w in zip(x_positions, bar_widths_list, strict=True):
-    fig.add_shape(type="rect", x0=x - w / 2, x1=x + w / 2, y0=BAR_Y0, y1=BAR_Y1, fillcolor=INK, line={"width": 0})
+    fig.add_shape(type="rect", x0=x - w / 2, x1=x + w / 2, y0=BAR_Y0, y1=BAR_Y1, fillcolor=BAR_COLOR, line={"width": 0})
 
 # --- Structural anatomy annotations ---
 # Horizontal bracket line spanning the full barcode (above bars)
 BRACKET_Y = BAR_Y1 + 14
 fig.add_shape(
-    type="line", x0=START_X0, x1=stop_x1, y0=BRACKET_Y, y1=BRACKET_Y, line={"color": INK_SOFT, "width": 1}, opacity=0.55
+    type="line",
+    x0=START_X0,
+    x1=stop_x1,
+    y0=BRACKET_Y,
+    y1=BRACKET_Y,
+    line={"color": INK_SOFT, "width": 1.5},
+    opacity=0.85,
 )
 
 # Vertical tick marks at each region boundary
@@ -215,17 +236,17 @@ for bx in [START_X0, START_X1, data_end_x, check_x1, stop_x1]:
         x1=bx,
         y0=BRACKET_Y - 6,
         y1=BRACKET_Y + 6,
-        line={"color": INK_SOFT, "width": 1},
-        opacity=0.55,
+        line={"color": INK_SOFT, "width": 1.5},
+        opacity=0.85,
     )
 
 # Region labels just above the bracket line (narrow regions use smaller font)
 LABEL_Y = BRACKET_Y + 10
 for x0, x1, label, fsize in [
-    (START_X0, START_X1, "START B", 10),
-    (data_start_x, data_end_x, f"DATA  ({len(content)} chars)", 11),
-    (check_x0, check_x1, "CHK", 10),
-    (stop_x0, stop_x1, "STOP", 10),
+    (START_X0, START_X1, "START B", 12),
+    (data_start_x, data_end_x, f"DATA  ({len(content)} chars)", 13),
+    (check_x0, check_x1, "CHK", 12),
+    (stop_x0, stop_x1, "STOP", 12),
 ]:
     fig.add_annotation(
         x=(x0 + x1) / 2,
@@ -278,7 +299,7 @@ for cx, hover_text in [
 # Human-readable text below barcode
 fig.add_annotation(
     x=total_width / 2,
-    y=45,
+    y=32,
     text=content,
     showarrow=False,
     font={"size": 26, "family": "Courier New, monospace", "color": INK},
