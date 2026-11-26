@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-23
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
@@ -23,7 +23,6 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
-    layer_tooltips,
     scale_color_manual,
     scale_shape_manual,
     scale_x_datetime,
@@ -47,7 +46,17 @@ GRID_COLOR = "#4A4A4433" if THEME == "light" else "#B8B7B033"
 DRAWDOWN_COLOR = "#AE3030"  # palette pos 3
 RECOVERY_COLOR = "#009E73"  # palette pos 1
 
-# Data
+# Constants
+MAX_LABEL = "Max Drawdown"
+RECOVERY_LABEL = "Recovery Point"
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+PRICE = "Price"  # role: price
+DRAWDOWN = "Drawdown (%)"  # role: extra
+MARKER = "Marker"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 500
 dates = pd.date_range(start="2022-01-01", periods=n_days, freq="B")
@@ -60,53 +69,47 @@ returns[230:300] = np.random.normal(0.008, 0.012, 70)
 returns[350:400] = np.random.normal(-0.007, 0.016, 50)
 returns[400:450] = np.random.normal(0.009, 0.01, 50)
 
-price = 100 * np.cumprod(1 + returns)
-running_max = np.maximum.accumulate(price)
-drawdown = (price - running_max) / running_max * 100
-
-df = pd.DataFrame({"date": dates, "price": price, "drawdown": drawdown})
-
-max_dd_idx = int(np.argmin(drawdown))
-max_dd_value = drawdown[max_dd_idx]
-max_dd_date = dates[max_dd_idx].strftime("%Y-%m-%d")
-
-recovery_mask = (drawdown == 0) & (np.roll(drawdown, 1) < 0)
-recovery_points = df[recovery_mask].copy()
-recovery_points["marker_type"] = "Recovery Point"
-
-max_dd_df = df.iloc[[max_dd_idx]].copy()
-max_dd_df["marker_type"] = "Max Drawdown"
-
-markers_df = pd.concat([max_dd_df, recovery_points], ignore_index=True)
+df = pd.DataFrame({DATE: dates, PRICE: 100 * np.cumprod(1 + returns)})
 
 # Plot
-marker_tooltips = (
-    layer_tooltips().format("@drawdown", ".1f").line("@marker_type").line("Date|@date").line("Drawdown (%)|@drawdown")
+df[DRAWDOWN] = (df[PRICE] / df[PRICE].cummax() - 1) * 100
+
+max_dd_idx = int(df[DRAWDOWN].idxmin())
+max_dd_value = df[DRAWDOWN].iloc[max_dd_idx]
+peak_idx = int(df.index[(df[DRAWDOWN] == 0) & (df.index <= max_dd_idx)][-1])
+after_trough = df.index[(df[DRAWDOWN] == 0) & (df.index > max_dd_idx)]
+duration_days = (df[DATE].iloc[max_dd_idx] - df[DATE].iloc[peak_idx]).days
+if len(after_trough):
+    recovery_text = f"{(df[DATE].iloc[after_trough[0]] - df[DATE].iloc[max_dd_idx]).days} days to recover"
+else:
+    recovery_text = "not yet recovered"
+caption = (
+    f"Max Drawdown: {max_dd_value:.1f}% | Duration: {duration_days} days peak to trough | Recovery: {recovery_text}"
 )
 
+recovery_points = df[(df[DRAWDOWN] == 0) & (df[DRAWDOWN].shift(1) < 0)].copy()
+recovery_points[MARKER] = RECOVERY_LABEL
+max_dd_point = df.iloc[[max_dd_idx]].copy()
+max_dd_point[MARKER] = MAX_LABEL
+markers = pd.concat([max_dd_point, recovery_points], ignore_index=True)
+
 plot = (
-    ggplot(df, aes(x="date", y="drawdown"))
+    ggplot(df, aes(x=DATE, y=DRAWDOWN))
     + geom_area(fill=DRAWDOWN_COLOR, alpha=0.30)
     + geom_line(color=DRAWDOWN_COLOR, size=1.2)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + geom_point(
-        data=markers_df,
-        mapping=aes(x="date", y="drawdown", color="marker_type", shape="marker_type"),
+        data=markers,
+        mapping=aes(x=DATE, y=DRAWDOWN, color=MARKER, shape=MARKER),
         size=5,
         stroke=2.0,
         fill=PAGE_BG,
         alpha=0.8,
-        tooltips=marker_tooltips,
     )
-    + scale_color_manual(name="", values={"Max Drawdown": DRAWDOWN_COLOR, "Recovery Point": RECOVERY_COLOR})
-    + scale_shape_manual(name="", values={"Max Drawdown": 16, "Recovery Point": 21})
+    + scale_color_manual(name="", values={MAX_LABEL: DRAWDOWN_COLOR, RECOVERY_LABEL: RECOVERY_COLOR})
+    + scale_shape_manual(name="", values={MAX_LABEL: 16, RECOVERY_LABEL: 21})
     + scale_x_datetime()
-    + labs(
-        x="Date",
-        y="Drawdown (%)",
-        title="drawdown-basic · python · letsplot · anyplot.ai",
-        caption=f"Max Drawdown: {max_dd_value:.1f}% on {max_dd_date}",
-    )
+    + labs(x=DATE, y=DRAWDOWN, title="drawdown-basic · python · letsplot · anyplot.ai", caption=caption)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
