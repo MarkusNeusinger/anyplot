@@ -87,7 +87,7 @@ Based on the AI feedback, fix the defects you kept in "Which weaknesses to fix" 
 - Code quality issues
 - Spec compliance issues
 
-Keep the data scenario and variant, add no code without a visible effect (for Python, a self-check line from Step 5b is the exception), and never move marks off their data values beyond the SC-03 exemptions. Keep the file's Data block intact: a fix below the block reads `df` and the column constants, never a typed sample value.
+Keep the data scenario and variant, add no code without a visible effect (for Python, a self-check line from Step 5b is the exception), and never move marks off their data values beyond the SC-03 exemptions. A fix adds no helper function or class (CQ-01): loop over the repeated values or write the few calls out; a callback or formatter the library's API asks for is not a helper. Keep the file's Data block intact: a fix below the block reads `df` and the column constants, never a typed sample value.
 
 ## Step 5: Test the fix (BOTH themes)
 
