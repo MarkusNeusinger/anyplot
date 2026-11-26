@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-26
@@ -43,6 +43,18 @@ LOWER_IS_BETTER = "Lower is better"  # role: extra
 # One row per history point; the tile-level columns repeat on every row of a metric.
 rng = np.random.default_rng(42)
 n_points = 30
+
+
+def make_history(current, change_percent, noise):
+    """Walk from the previous-period value to the current one, so the trend agrees with the change."""
+    previous = current / (1 + change_percent / 100)
+    trend = np.linspace(previous, current, n_points)
+    walk = np.cumsum(rng.normal(0, noise * current, n_points))
+    bridge = walk - np.linspace(walk[0], walk[-1], n_points)
+    settle = np.minimum(1.0, (n_points - 1 - np.arange(n_points)) / 5)  # last points follow the trend exactly
+    return trend + bridge * settle
+
+
 df = pd.concat(
     [
         pd.DataFrame(
@@ -58,12 +70,12 @@ df = pd.concat(
             }
         )
         for name, current, unit, change, status, lower_is_better, history in [
-            ("CPU Usage", 45, "%", -5.2, "good", True, 30 + np.cumsum(rng.normal(0, 2, n_points))),
-            ("Memory", 72, "%", 8.3, "warning", True, 60 + np.cumsum(rng.normal(0, 1.5, n_points))),
-            ("Response Time", 120, "ms", -15.4, "good", True, 100 + np.cumsum(rng.normal(0, 5, n_points))),
-            ("Requests/sec", 1250, "", 12.7, "good", False, 1000 + np.cumsum(rng.normal(0, 50, n_points))),
-            ("Error Rate", 2.3, "%", 45.0, "critical", True, 1 + np.abs(np.cumsum(rng.normal(0, 0.3, n_points)))),
-            ("Disk I/O", 85, "MB/s", -2.1, "good", False, 70 + np.cumsum(rng.normal(0, 3, n_points))),
+            ("CPU Usage", 45, "%", -5.2, "good", True, make_history(45, -5.2, 0.012)),
+            ("Memory", 72, "%", 8.3, "warning", True, make_history(72, 8.3, 0.01)),
+            ("Response Time", 120, "ms", -15.4, "good", True, make_history(120, -15.4, 0.02)),
+            ("Requests/sec", 1250, "", 12.7, "good", False, make_history(1250, 12.7, 0.015)),
+            ("Error Rate", 2.3, "%", 45.0, "critical", True, make_history(2.3, 45.0, 0.03)),
+            ("Disk I/O", 85, "MB/s", -2.1, "good", False, make_history(85, -2.1, 0.012)),
         ]
     ],
     ignore_index=True,
