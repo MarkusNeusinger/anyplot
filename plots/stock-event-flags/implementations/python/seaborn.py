@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-27
@@ -56,78 +56,90 @@ sns.set_theme(
     },
 )
 
-# Data — 180 trading days; 2:1 split applied at May 2025 to show real price adjustment
+# Constants
+# Semantic event styling: color (Imprint positions 2-5) and marker per event type; unknown types fall back
+EVENT_STYLE = {
+    "earnings": (IMPRINT_PALETTE[1], "s"),
+    "dividend": (IMPRINT_PALETTE[2], "D"),
+    "split": (IMPRINT_PALETTE[3], "^"),
+    "news": (IMPRINT_PALETTE[4], "o"),
+}
+FALLBACK_MARKERS = ["P", "X", "v", "h"]
+SPLIT_TYPE = "split"  # an event of this type starts a new price regime, so the trend is fitted per regime
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Stock Price ($)"  # role: close
+EVENT_DATE = "Event date"  # role: event_date
+EVENT_TYPE = "Event type"  # role: event_type
+EVENT_LABEL = "Event label"  # role: event_label
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices_with_events.csv")
+# One row per trading day; the event columns are filled on the trading day an event falls on
 np.random.seed(42)
 n_days = 180
 dates = pd.date_range("2025-01-02", periods=n_days, freq="B")
 returns = np.random.normal(0.0005, 0.018, n_days)
 price = 150 * np.cumprod(1 + returns)
 
-split_date = pd.Timestamp("2025-05-08")
-split_idx = dates.searchsorted(split_date)
+# A 2:1 split in May 2025 shows a real price adjustment
+split_idx = dates.searchsorted(pd.Timestamp("2025-05-08"))
 price[split_idx:] = price[split_idx:] * 0.5
 
-df = pd.DataFrame({"date": dates, "close": price})
-# Numeric x using matplotlib date floats — matches the internal scale of the date axis,
-# so sns.regplot overlays correctly without a secondary axis
-df["x_mpl"] = mdates.date2num(df["date"].values)
-
-# Event type styling — Imprint palette positions 2–5
-event_colors = {
-    "earnings": IMPRINT_PALETTE[1],
-    "dividend": IMPRINT_PALETTE[2],
-    "split": IMPRINT_PALETTE[3],
-    "news": IMPRINT_PALETTE[4],
-}
-event_markers = {"earnings": "s", "dividend": "D", "split": "^", "news": "o"}
-
-events = pd.DataFrame(
-    {
-        "event_date": pd.to_datetime(
-            [
-                "2025-01-28",
-                "2025-02-14",
-                "2025-03-15",
-                "2025-04-22",
-                "2025-05-08",
-                "2025-05-28",
-                "2025-06-18",
-                "2025-07-24",
-            ]
-        ),
-        "event_type": ["earnings", "dividend", "news", "earnings", "split", "dividend", "news", "earnings"],
-        "event_label": [
-            "Q4 Earnings",
-            "Div $0.50",
-            "Product Launch",
-            "Q1 Earnings",
-            "2:1 Split",
-            "Div $0.55",
-            "Partnership",
-            "Q2 Earnings",
-        ],
-    }
+event_dates = pd.to_datetime(
+    ["2025-01-28", "2025-02-14", "2025-03-15", "2025-04-22", "2025-05-08", "2025-05-28", "2025-06-18", "2025-07-24"]
 )
+event_types = ["earnings", "dividend", "news", "earnings", "split", "dividend", "news", "earnings"]
+event_labels = [
+    "Q4 Earnings",
+    "Div $0.50",
+    "Product Launch",
+    "Q1 Earnings",
+    "2:1 Split",
+    "Div $0.55",
+    "Partnership",
+    "Q2 Earnings",
+]
+# Each event sits on the nearest trading day
+event_rows = [int(np.abs(dates - d).argmin()) for d in event_dates]
+
+df = pd.DataFrame({DATE: dates, CLOSE: price, EVENT_DATE: pd.NaT, EVENT_TYPE: None, EVENT_LABEL: None})
+df.loc[event_rows, EVENT_DATE] = event_dates
+df.loc[event_rows, EVENT_TYPE] = event_types
+df.loc[event_rows, EVENT_LABEL] = event_labels
 
 # Plot
+events = df[df[EVENT_TYPE].notna()]
+present_types = list(dict.fromkeys(events[EVENT_TYPE]))
+type_order = [t for t in EVENT_STYLE if t in present_types] + [t for t in present_types if t not in EVENT_STYLE]
+event_colors, event_markers = {}, {}
+for i, etype in enumerate(type_order):
+    fallback = (IMPRINT_PALETTE[(i + 1) % len(IMPRINT_PALETTE)], FALLBACK_MARKERS[i % len(FALLBACK_MARKERS)])
+    event_colors[etype], event_markers[etype] = EVENT_STYLE.get(etype, fallback)
+
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Stock price line (seaborn lineplot)
-sns.lineplot(data=df, x="date", y="close", ax=ax, color=BRAND, linewidth=2.0, label="Stock Price")
-y_base = df["close"].min() * 0.9
-ax.fill_between(df["date"], y_base, df["close"], alpha=0.12, color=BRAND)
+sns.lineplot(data=df, x=DATE, y=CLOSE, ax=ax, color=BRAND, linewidth=2.0, label="Stock Price")
+y_base = df[CLOSE].min() * 0.9
+ax.fill_between(df[DATE], y_base, df[CLOSE], alpha=0.12, color=BRAND)
 
-# Seaborn-distinctive: per-segment linear regression trend with 95% CI.
-# Two separate regplots (pre- and post-split) avoid a spurious downward slope
-# from the discontinuity; the CI bands give statistical context for each period.
-for mask in [df["date"] < split_date, df["date"] >= split_date]:
-    df_seg = df[mask]
+# Seaborn-distinctive: per-regime linear regression trend with 95% CI.
+# Separate regplots before and after a split avoid a spurious slope from the discontinuity;
+# the CI bands give statistical context for each period.
+split_dates = events.loc[events[EVENT_TYPE] == SPLIT_TYPE, DATE]
+if len(split_dates):
+    split_date = split_dates.iloc[0]
+    segments = [df[df[DATE] < split_date], df[df[DATE] >= split_date]]
+else:
+    segments = [df]
+for df_seg in segments:
     if len(df_seg) > 2:
+        # Dates as matplotlib floats match the internal scale of the date axis, so the fit overlays correctly
         sns.regplot(
-            data=df_seg,
-            x="x_mpl",
-            y="close",
+            x=mdates.date2num(df_seg[DATE].to_numpy()),
+            y=df_seg[CLOSE].to_numpy(),
             ax=ax,
             scatter=False,
             color=INK_MUTED,
@@ -135,15 +147,11 @@ for mask in [df["date"] < split_date, df["date"] >= split_date]:
             line_kws={"linewidth": 1.0, "linestyle": ":", "alpha": 0.9},
         )
 
-# Flags — percentage-based offset keeps proportions consistent across the split
+# Flags: percentage-based offset keeps proportions consistent across the split
 for idx, (_, event) in enumerate(events.iterrows()):
-    event_date = event["event_date"]
-    event_type = event["event_type"]
-    event_label = event["event_label"]
-
-    closest_idx = int(np.abs(df["date"] - event_date).values.argmin())
-    actual_date = df["date"].iloc[closest_idx]
-    price_at_event = df["close"].iloc[closest_idx]
+    actual_date = event[DATE]
+    price_at_event = event[CLOSE]
+    event_type = event[EVENT_TYPE]
 
     flag_pct = price_at_event * 0.06 * (1 + (idx % 3) * 0.3)
     if idx % 2 == 0:
@@ -161,7 +169,7 @@ for idx, (_, event) in enumerate(events.iterrows()):
         [actual_date], [price_at_event], color=color, s=70, marker=marker, zorder=5, edgecolors=PAGE_BG, linewidths=0.8
     )
     ax.annotate(
-        event_label,
+        event[EVENT_LABEL],
         xy=(actual_date, flag_y),
         fontsize=8,
         fontweight="bold",
@@ -177,7 +185,7 @@ for idx, (_, event) in enumerate(events.iterrows()):
         },
     )
 
-# Legend — lower right avoids the early-session price area and first-event flags
+# Legend — upper right sits in the empty space above the post-split price, clear of line and flags
 legend_elements = [
     Line2D([0], [0], color=BRAND, linewidth=2.0, label="Stock Price"),
     Line2D([0], [0], color=INK_MUTED, linewidth=1.0, linestyle=":", alpha=0.9, label="Trend (95% CI)"),
@@ -198,7 +206,7 @@ for etype, color in event_colors.items():
 
 ax.legend(
     handles=legend_elements,
-    loc="lower right",
+    loc="upper right",
     fontsize=8,
     title="Events",
     title_fontsize=8,
@@ -210,8 +218,8 @@ ax.legend(
 # Style
 title = "stock-event-flags · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
-ax.set_xlabel("Date", fontsize=10, color=INK)
-ax.set_ylabel("Stock Price ($)", fontsize=10, color=INK)
+ax.set_xlabel(DATE, fontsize=10, color=INK)
+ax.set_ylabel(CLOSE, fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
