@@ -1,7 +1,7 @@
 """ anyplot.ai
 roc-curve: ROC Curve with AUC
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-21
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,7 +21,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "#1A1A17" if THEME == "light" else "#F0EFE8"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 NEUTRAL = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette
@@ -63,16 +63,12 @@ plot = (
     + scale_x_continuous(limits=[0, 1], expand=[0, 0.01])
     + scale_y_continuous(limits=[0, 1], expand=[0, 0.01])
     + coord_fixed(ratio=1)
-    + labs(
-        title="Credit Default Risk · roc-curve · python · letsplot · anyplot.ai",
-        color="Classifier",
-        linetype="Classifier",
-    )
+    + labs(title="Credit Default Risk · roc-curve · python · letsplot · anyplot.ai", color=MODEL, linetype=MODEL)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=GRID, size=0.2),
+        panel_grid_major=element_line(color=GRID, size=0.3),
         panel_grid_minor=element_blank(),
         plot_title=element_text(size=14, color=INK),
         axis_title=element_text(size=12, color=INK),
@@ -84,8 +80,10 @@ plot = (
         legend_position=[0.97, 0.04],
         legend_justification=[1, 0],
     )
-    + ggsize(600, 600)
 )
+
+# The fixed aspect leaves transparent strips; a one-panel grid paints the whole square canvas
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
