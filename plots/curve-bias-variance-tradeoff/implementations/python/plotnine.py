@@ -1,7 +1,7 @@
 """ anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-28
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 75/100 | Updated: 2026-11-26
 """
 
 import os
@@ -10,13 +10,12 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_line,
-    geom_rect,
-    geom_text,
     geom_vline,
     ggplot,
     labs,
@@ -29,72 +28,65 @@ from plotnine import (
 )
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per curve in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Columns: set these to your table's column names
+COMPLEXITY = "Model Complexity"  # role: model_complexity
+BIAS = "Bias²"  # role: bias_squared
+VARIANCE = "Variance"  # role: variance
+IRREDUCIBLE = "Irreducible Error"  # role: irreducible_error
+TOTAL = "Total Error"  # role: total_error
+ERROR = "Prediction Error"  # role: extra
+CURVE = "Curve"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("curves.csv")
 complexity = np.linspace(0.1, 10, 100)
-n = len(complexity)
-irreducible = 0.20
 bias_sq = 1.0 / (1.0 + complexity * 0.4) ** 0.9
 variance = 0.018 * complexity**1.6
-total_error = bias_sq + variance + irreducible
-
-opt_idx = int(np.argmin(total_error))
-opt_x = float(complexity[opt_idx])
-opt_y = float(total_error[opt_idx])
-y_max = float(np.max(total_error))
-
-series_order = ["Bias²", "Variance", "Irreducible Error", "Total Error"]
-
+irreducible = np.full(len(complexity), 0.20)
 df = pd.DataFrame(
     {
-        "complexity": np.tile(complexity, 4),
-        "error": np.concatenate([bias_sq, variance, np.full(n, irreducible), total_error]),
-        "component": pd.Categorical(
-            ["Bias²"] * n + ["Variance"] * n + ["Irreducible Error"] * n + ["Total Error"] * n, categories=series_order
-        ),
+        COMPLEXITY: complexity,
+        BIAS: bias_sq,
+        VARIANCE: variance,
+        IRREDUCIBLE: irreducible,
+        TOTAL: bias_sq + variance + irreducible,
     }
 )
 
-colors = dict(zip(series_order, IMPRINT_PALETTE, strict=False))
-linetypes = {"Bias²": "dashed", "Variance": "dashed", "Irreducible Error": "dotted", "Total Error": "solid"}
-line_sizes = {"Bias²": 0.9, "Variance": 0.9, "Irreducible Error": 0.7, "Total Error": 1.3}
+# Plot: reads only df and the constants above
+curves = [BIAS, VARIANCE, IRREDUCIBLE, TOTAL]
+long_df = df.melt(id_vars=COMPLEXITY, value_vars=curves, var_name=CURVE, value_name=ERROR)
+long_df[CURVE] = pd.Categorical(long_df[CURVE], categories=curves)
+
+colors = dict(zip(curves, IMPRINT_PALETTE, strict=False))
+linetypes = dict(zip(curves, ["dashed", "dashed", "dotted", "solid"], strict=True))
+line_sizes = dict(zip(curves, [0.9, 0.9, 0.7, 1.3], strict=True))
+
+x_min, x_max = df[COMPLEXITY].min(), df[COMPLEXITY].max()
+x_span = x_max - x_min
+y_top = df[TOTAL].max() * 1.05
+opt_idx = df[TOTAL].idxmin()
+opt_x = df.loc[opt_idx, COMPLEXITY]
+opt_y = df.loc[opt_idx, TOTAL]
 
 
-def y_at(arr, x_val):
-    idx = min(int(np.searchsorted(complexity, x_val)), n - 1)
-    return float(arr[idx])
-
-
-# Shaded underfitting (left) / overfitting (right) zones
-zone_df = pd.DataFrame(
-    {"xmin": [0.1, opt_x], "xmax": [opt_x, 11.5], "ymin": [0.0, 0.0], "ymax": [y_max * 1.05, y_max * 1.05]}
-)
-
-# Direct curve labels at well-separated positions
-curve_label_df = pd.DataFrame(
-    {
-        "x": [2.2, 8.0, 6.5, 5.8],
-        "y": [y_at(bias_sq, 2.2) + 0.06, y_at(variance, 8.0) + 0.05, irreducible - 0.06, y_at(total_error, 5.8) + 0.06],
-        "label": ["Bias²", "Variance", "Irreducible Error", "Total Error"],
-        "component": pd.Categorical(["Bias²", "Variance", "Irreducible Error", "Total Error"], categories=series_order),
-    }
-)
-
-opt_label_df = pd.DataFrame({"x": [opt_x + 0.25], "y": [opt_y - 0.07], "label": ["Optimal\nComplexity"]})
-
-formula_df = pd.DataFrame(
-    {"x": [5.5], "y": [y_max * 0.93], "label": ["Total Error = Bias² + Variance + Irreducible Error"]}
-)
-
-title = "curve-bias-variance-tradeoff · python · plotnine · anyplot.ai"
+# Direct curve labels, each placed on its own curve at a well-separated position
+label_x = x_min + x_span * np.array([0.21, 0.79, 0.64, 0.57])
+label_y = [
+    np.interp(label_x[0], df[COMPLEXITY], df[BIAS]) + 0.06,
+    np.interp(label_x[1], df[COMPLEXITY], df[VARIANCE]) + 0.05,
+    df[IRREDUCIBLE].iloc[0] - 0.06,
+    np.interp(label_x[3], df[COMPLEXITY], df[TOTAL]) + 0.06,
+]
 
 anyplot_theme = theme(
     figure_size=(8, 4.5),
@@ -112,49 +104,50 @@ anyplot_theme = theme(
     legend_position="none",
 )
 
-# Plot
 plot = (
-    ggplot(df, aes(x="complexity", y="error", color="component", linetype="component", size="component"))
-    + geom_rect(
-        data=zone_df,
-        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+    ggplot(long_df, aes(x=COMPLEXITY, y=ERROR, color=CURVE, linetype=CURVE, size=CURVE))
+    # Underfitting (left) and overfitting (right) zones around the optimum
+    + annotate(
+        "rect",
+        xmin=[x_min, opt_x],
+        xmax=[opt_x, x_max * 1.15],
+        ymin=[0.0, 0.0],
+        ymax=[y_top, y_top],
         fill=INK_MUTED,
         alpha=0.07,
-        inherit_aes=False,
     )
     + geom_line()
-    + geom_vline(xintercept=opt_x, color=INK_MUTED, linetype="dashed", size=0.5, inherit_aes=False)
-    + geom_text(
-        data=curve_label_df,
-        mapping=aes(x="x", y="y", label="label", color="component"),
-        size=3.5,
-        ha="left",
-        inherit_aes=False,
-    )
-    + geom_text(
-        data=opt_label_df,
-        mapping=aes(x="x", y="y", label="label"),
+    + geom_vline(xintercept=opt_x, color=INK_MUTED, linetype="dashed", size=0.5)
+    + annotate("text", x=label_x, y=label_y, label=curves, color=[colors[c] for c in curves], size=3.5, ha="left")
+    + annotate(
+        "text",
+        x=opt_x + 0.025 * x_span,
+        y=opt_y - 0.07,
+        label="Optimal\nComplexity",
         color=INK_MUTED,
         size=3.2,
         ha="left",
-        inherit_aes=False,
     )
-    + geom_text(
-        data=formula_df,
-        mapping=aes(x="x", y="y", label="label"),
+    + annotate(
+        "text",
+        x=x_min + 0.55 * x_span,
+        y=y_top * 0.93 / 1.05,
+        label=f"{TOTAL} = {BIAS} + {VARIANCE} + {IRREDUCIBLE}",
         color=INK_SOFT,
         size=3.2,
         ha="center",
-        inherit_aes=False,
     )
     + scale_color_manual(values=colors)
     + scale_linetype_manual(values=linetypes)
     + scale_size_manual(values=line_sizes)
     + scale_x_continuous(
-        name="Model Complexity", breaks=[0, 2, 4, 6, 8, 10], labels=["Low", "", "", "", "", "High"], limits=(0.1, 11.5)
+        name=COMPLEXITY,
+        breaks=np.linspace(0, x_max, 6),
+        labels=["Low", "", "", "", "", "High"],
+        limits=(x_min, x_max * 1.15),
     )
-    + scale_y_continuous(name="Prediction Error", limits=(0.0, y_max * 1.05))
-    + labs(title=title)
+    + scale_y_continuous(name=ERROR, limits=(0.0, y_top))
+    + labs(title="curve-bias-variance-tradeoff · python · plotnine · anyplot.ai")
     + anyplot_theme
 )
 
