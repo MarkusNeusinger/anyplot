@@ -1,16 +1,17 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -18,159 +19,117 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # position 1 — Basquin fit line
-C2 = "#C475FD"  # position 2 — test data markers
-C3 = "#4467A3"  # position 3 — ultimate strength
-C4 = "#BD8233"  # position 4 — yield strength
-C5 = "#AE3030"  # position 5 — endurance limit
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Steel fatigue test data (Basquin model)
+# Constants: material properties of the steel and the regime boundary
+ULTIMATE_STRENGTH = 650  # MPa
+YIELD_STRENGTH = 450  # MPa
+ENDURANCE_LIMIT = 230  # MPa
+LCF_HCF_BOUNDARY = 1e4  # cycles, below this fatigue is low-cycle (plastic)
+
+# Columns: set these to your table's column names
+CYCLES = "Cycles to Failure (N)"  # role: cycles
+STRESS = "Stress Amplitude (MPa)"  # role: stress
+
+# Data: replace this block with your own table, for example df = pd.read_csv("fatigue_tests.csv")
 np.random.seed(42)
-
-A = 1200  # Fatigue coefficient (MPa)
-b = -0.12  # Fatigue strength exponent
-
+basquin_coefficient = 1200  # MPa
+basquin_exponent = -0.12
 stress_levels = np.array([600, 550, 500, 450, 400, 350, 320, 300, 280, 260, 250, 240])
-cycles_base = (stress_levels / A) ** (1 / b)
+rows = []
+for level in stress_levels:
+    n_base = (level / basquin_coefficient) ** (1 / basquin_exponent)
+    for factor in 10 ** np.random.normal(0, 0.15, np.random.randint(2, 5)):
+        rows.append((n_base * factor, level))
+df = pd.DataFrame(rows, columns=[CYCLES, STRESS])
 
-cycles = []
-stress = []
-for s, n_base in zip(stress_levels, cycles_base, strict=False):
-    n_samples = np.random.randint(2, 5)
-    scatter = 10 ** (np.random.normal(0, 0.15, n_samples))
-    for factor in scatter:
-        cycles.append(n_base * factor)
-        stress.append(s)
+# Plot: reads only df and the constants above
+valid = df[[CYCLES, STRESS]].dropna().astype(float)
+slope, intercept = np.polyfit(np.log10(valid[CYCLES]), np.log10(valid[STRESS]), 1)
+x_lo = 10 ** np.floor(np.log10(df[CYCLES].min()))
+x_hi = 10 ** np.ceil(np.log10(df[CYCLES].max()))
+y_lo = min(ENDURANCE_LIMIT, df[STRESS].min()) * 0.85
+y_hi = max(ULTIMATE_STRENGTH, df[STRESS].max()) * 1.25
+fit_cycles = np.logspace(np.log10(x_lo), np.log10(x_hi), 100)
+fit_stress = 10**intercept * fit_cycles**slope
 
-cycles = np.array(cycles)
-stress = np.array(stress)
-
-# Material properties
-ultimate_strength = 650  # MPa
-yield_strength = 450  # MPa
-endurance_limit = 230  # MPa
-
-# Basquin fit line
-fit_cycles = np.logspace(2, 7, 100)
-fit_stress = A * fit_cycles**b
-n_knee = (endurance_limit / A) ** (1 / b)  # transition point to infinite life
-
-# Plot
 fig = go.Figure()
+
+# Light regime shading: low-cycle region and infinite-life band
+fig.add_vrect(x0=x_lo, x1=LCF_HCF_BOUNDARY, fillcolor=INK_SOFT, opacity=0.08, layer="below", line_width=0)
+fig.add_hrect(y0=y_lo, y1=ENDURANCE_LIMIT, fillcolor=IMPRINT_PALETTE[0], opacity=0.18, layer="below", line_width=0)
 
 fig.add_trace(
     go.Scatter(
         x=fit_cycles,
         y=fit_stress,
         mode="lines",
-        name="Basquin Fit",
-        line={"color": BRAND, "width": 3},
-        hovertemplate="Cycles: %{x:.2e}<br>Stress: %{y:.0f} MPa<extra>Basquin Fit</extra>",
+        name="Basquin fit",
+        line={"color": IMPRINT_PALETTE[0], "width": 3},
+        hovertemplate="Cycles: %{x:.2e}<br>Stress: %{y:.0f} MPa<extra>Basquin fit</extra>",
     )
 )
 
 fig.add_trace(
     go.Scatter(
-        x=cycles,
-        y=stress,
+        x=df[CYCLES],
+        y=df[STRESS],
         mode="markers",
-        name="Test Data",
-        marker={"color": C2, "size": 12, "line": {"color": PAGE_BG, "width": 1.5}},
-        hovertemplate="Cycles: %{x:.2e}<br>Stress: %{y:.0f} MPa<extra>Test Data</extra>",
+        name="Test data",
+        marker={"color": IMPRINT_PALETTE[1], "size": 12, "line": {"color": PAGE_BG, "width": 1.5}},
+        hovertemplate="Cycles: %{x:.2e}<br>Stress: %{y:.0f} MPa<extra>Test data</extra>",
     )
 )
 
-x_range = [100, 1e7]
-
-# Infinite-life zone fill — opacity raised so the region registers as a meaningful cue
-fig.add_hrect(y0=200, y1=endurance_limit, opacity=0.11, fillcolor=BRAND, layer="below")
-
-# Reference lines — excluded from legend; annotated directly at right edge instead
-fig.add_trace(
-    go.Scatter(
-        x=x_range,
-        y=[ultimate_strength, ultimate_strength],
-        mode="lines",
-        name=f"Ultimate Strength ({ultimate_strength} MPa)",
-        line={"color": C3, "width": 2, "dash": "dash"},
-        showlegend=False,
-        hovertemplate=f"Ultimate Strength: {ultimate_strength} MPa<extra></extra>",
+# Reference lines, labeled directly at the right edge instead of in the legend
+references = [
+    ("Ultimate strength", ULTIMATE_STRENGTH, IMPRINT_PALETTE[2], "bottom"),
+    ("Yield strength", YIELD_STRENGTH, IMPRINT_PALETTE[3], "bottom"),
+    ("Endurance limit", ENDURANCE_LIMIT, IMPRINT_PALETTE[4], "bottom"),
+]
+for name, value, color, anchor in references:
+    fig.add_trace(
+        go.Scatter(
+            x=[x_lo, x_hi],
+            y=[value, value],
+            mode="lines",
+            name=name,
+            line={"color": color, "width": 2, "dash": "dash"},
+            showlegend=False,
+            hovertemplate=f"{name}: {value} MPa<extra></extra>",
+        )
     )
-)
-
-fig.add_trace(
-    go.Scatter(
-        x=x_range,
-        y=[yield_strength, yield_strength],
-        mode="lines",
-        name=f"Yield Strength ({yield_strength} MPa)",
-        line={"color": C4, "width": 2, "dash": "dash"},
-        showlegend=False,
-        hovertemplate=f"Yield Strength: {yield_strength} MPa<extra></extra>",
-    )
-)
-
-fig.add_trace(
-    go.Scatter(
-        x=x_range,
-        y=[endurance_limit, endurance_limit],
-        mode="lines",
-        name=f"Endurance Limit ({endurance_limit} MPa)",
-        line={"color": C5, "width": 2, "dash": "dash"},
-        showlegend=False,
-        hovertemplate=f"Endurance Limit: {endurance_limit} MPa<extra></extra>",
-    )
-)
-
-# Direct line labels via add_annotation — plotly-native, cleaner than legend entries
-for y_val, label, color, anchor in [
-    (ultimate_strength, f"Ult. Strength<br>{ultimate_strength} MPa", C3, "top"),
-    (yield_strength, f"Yield Strength<br>{yield_strength} MPa", C4, "bottom"),
-    (endurance_limit, f"End. Limit<br>{endurance_limit} MPa", C5, "top"),
-]:
     fig.add_annotation(
-        x=8e6,
-        y=y_val,
-        text=label,
-        xanchor="right",
+        x=np.log10(x_hi) - 0.08 if value != ENDURANCE_LIMIT else np.log10(x_lo) + 0.08,
+        y=np.log10(value),
+        text=f"{name}, {value} MPa",
+        xanchor="right" if value != ENDURANCE_LIMIT else "left",
         yanchor=anchor,
+        yshift=4,
         showarrow=False,
-        font={"color": color, "size": 12},
+        font={"color": color if THEME == "light" else INK, "size": 12},
         bgcolor=ELEVATED_BG,
         bordercolor=color,
         borderwidth=1,
         borderpad=3,
     )
 
-# Fatigue knee annotation — where Basquin fit intersects endurance limit
+# Region labels: plain text for the three fatigue regimes
+lcf_x = np.log10(x_lo) + (np.log10(LCF_HCF_BOUNDARY) - np.log10(x_lo)) / 2
+hcf_x = np.log10(LCF_HCF_BOUNDARY) + (np.log10(x_hi) - np.log10(LCF_HCF_BOUNDARY)) / 2
+for text, x_pos in [("Low-cycle fatigue", lcf_x), ("High-cycle fatigue", hcf_x)]:
+    fig.add_annotation(
+        x=x_pos, y=0.97, xref="x", yref="paper", text=text, showarrow=False, font={"size": 12, "color": INK_SOFT}
+    )
 fig.add_annotation(
-    x=n_knee,
-    y=endurance_limit,
-    text="Fatigue Knee<br>(~10⁶ cycles)",
-    showarrow=True,
-    arrowhead=2,
-    arrowcolor=INK_SOFT,
-    arrowsize=1.2,
-    ax=-70,
-    ay=-70,
-    font={"size": 10, "color": INK_SOFT},
-    bgcolor=ELEVATED_BG,
-    bordercolor=INK_SOFT,
-    borderwidth=1,
-    borderpad=3,
-    xanchor="center",
-)
-
-# Infinite-life zone label inside the green fill region
-fig.add_annotation(
-    x=5e5,
-    y=218,
-    text="Infinite Life Zone",
-    showarrow=False,
-    font={"size": 10, "color": BRAND},
-    xanchor="center",
+    x=np.log10(x_hi) - 0.08,
+    y=np.log10((y_lo * ENDURANCE_LIMIT) ** 0.5),
+    text="Infinite life",
+    xanchor="right",
     yanchor="middle",
+    showarrow=False,
+    font={"size": 12, "color": INK_SOFT},
 )
 
 # Style
@@ -186,7 +145,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Cycles to Failure (N)", "font": {"size": 12, "color": INK}},
+        "title": {"text": CYCLES, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
@@ -196,11 +155,11 @@ fig.update_layout(
         "linewidth": 1,
         "linecolor": INK_SOFT,
         "mirror": False,
-        "range": [2, 7],
+        "range": [np.log10(x_lo), np.log10(x_hi)],
         "zerolinecolor": GRID,
     },
     yaxis={
-        "title": {"text": "Stress Amplitude (MPa)", "font": {"size": 12, "color": INK}},
+        "title": {"text": STRESS, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
         "showgrid": True,
@@ -210,20 +169,20 @@ fig.update_layout(
         "linewidth": 1,
         "linecolor": INK_SOFT,
         "mirror": False,
-        "range": [2.3, 2.9],
+        "range": [np.log10(y_lo), np.log10(y_hi)],
         "zerolinecolor": GRID,
     },
     legend={
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.05,
-        "y": 0.05,
+        "x": 0.36,
+        "y": 0.2,
         "xanchor": "left",
         "yanchor": "bottom",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 60, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
 )
 
 # Save
