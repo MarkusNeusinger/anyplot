@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -31,6 +31,10 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 SKEW_FACTOR = 45  # degrees C of horizontal shift per decade of pressure (45 degree isotherms)
 P_REF = 1000.0  # reference pressure (hPa) for skew, adiabats and mixing ratios
 KAPPA = 0.286  # R/cp for dry air
+R_DRY = 287.0  # gas constant of dry air (J/kg/K)
+CP_DRY = 1004.0  # specific heat of dry air (J/kg/K)
+L_VAP = 2.5e6  # latent heat of vaporisation (J/kg)
+EPS = 0.622  # ratio of gas constants, dry air to water vapour
 ISOTHERMS = np.arange(-80, 50, 10)
 DRY_THETAS = np.arange(250, 400, 20)  # potential temperatures (K)
 MOIST_STARTS = np.arange(-10, 35, 10)  # surface temperatures (C) of the pseudoadiabats
@@ -151,15 +155,21 @@ for theta in DRY_THETAS:
             x="x", y="y", source=src, line_color=IMPRINT_PALETTE[4], line_width=1.5, line_alpha=0.50, line_dash="dashed"
         )
 
-# Moist adiabats (pseudoadiabats — simplified iterative approximation)
+# Moist adiabats (pseudoadiabats: integrated saturated lapse rate)
 for t_start in MOIST_STARTS:
     t_moist = [t_start]
-    p_prev, t_prev = p_range[0], t_start
-    for p_level in p_range[1:]:
-        dt = -0.006 * (p_prev - p_level) * 10 * 0.5
-        t_new = t_prev + dt
-        t_moist.append(t_new)
-        p_prev, t_prev = p_level, t_new
+    t_k = t_start + 273.15
+    for p_prev, p_level in zip(p_range[:-1], p_range[1:], strict=True):
+        n_sub = 8
+        dp = (p_level - p_prev) / n_sub
+        p_cur = p_prev
+        for _ in range(n_sub):
+            e_sat = 6.112 * np.exp(17.67 * (t_k - 273.15) / (t_k - 273.15 + 243.5))
+            r_sat = EPS * e_sat / (p_cur - e_sat)
+            dt_dp = (R_DRY * t_k + L_VAP * r_sat) / (p_cur * (CP_DRY + L_VAP**2 * r_sat * EPS / (R_DRY * t_k**2)))
+            t_k += dt_dp * dp
+            p_cur += dp
+        t_moist.append(t_k - 273.15)
     t_moist = np.array(t_moist)
     x_moist = t_moist - SKEW_FACTOR * log_p
     mask = (t_moist > -80) & (t_moist < 60)
@@ -177,12 +187,12 @@ for t_start in MOIST_STARTS:
 
 # Mixing ratio lines
 for mr in MIXING_RATIOS:
-    td_mr = -40 + 10 * np.log10(mr + 1)
-    x_mr = np.full_like(p_range, td_mr) - SKEW_FACTOR * log_p
+    e_mr = mr / 1000 * p_range / (EPS + mr / 1000)  # vapour pressure (hPa) at each level
+    ln_e = np.log(e_mr / 6.112)
+    td_mr = 243.5 * ln_e / (17.67 - ln_e)  # inverse Magnus formula
+    x_mr = td_mr - SKEW_FACTOR * log_p
     src = ColumnDataSource(data={"x": x_mr, "y": p_range})
-    fig.line(
-        x="x", y="y", source=src, line_color=IMPRINT_PALETTE[3], line_width=1.2, line_alpha=0.40, line_dash="dotted"
-    )
+    fig.line(x="x", y="y", source=src, line_color=IMPRINT_PALETTE[3], line_width=2, line_alpha=0.60, line_dash="dotted")
 
 # Highlighted 0°C isotherm
 x_freeze = -SKEW_FACTOR * log_p
@@ -225,7 +235,7 @@ fig.add_layout(
     Label(x=-12, y=270, text="Dry Adiabats", text_font_size="33pt", text_color=IMPRINT_PALETTE[4], text_alpha=0.90)
 )
 fig.add_layout(
-    Label(x=24, y=195, text="Moist Adiabats", text_font_size="33pt", text_color=IMPRINT_PALETTE[5], text_alpha=0.90)
+    Label(x=34, y=195, text="Moist Adiabats", text_font_size="33pt", text_color=IMPRINT_PALETTE[5], text_alpha=0.90)
 )
 fig.add_layout(
     Label(x=-44, y=590, text="Mixing Ratio", text_font_size="33pt", text_color=IMPRINT_PALETTE[3], text_alpha=0.90)
