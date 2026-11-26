@@ -409,7 +409,7 @@ class TestReturningKeeps:
         assert rp.returning_keeps([odd, good, "not a pull"]) == {71: "regression"}
 
     def test_the_return_codes_are_the_regression_and_the_technical_keeps(self):
-        judged = {"no_visible_improvement", "no_defect_improvement", "below_tolerance", "score_zero"}
+        judged = {"no_visible_improvement", "no_defect_improvement", "below_tolerance", "criterion_below", "score_zero"}
         assert set(regen_gate.REASON_CODES) - {"merge", "adapt_identity"} == rp.RETURN_CODES | judged | {
             "adapt_regression"
         }
