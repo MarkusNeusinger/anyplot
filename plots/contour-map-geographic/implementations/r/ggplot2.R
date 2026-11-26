@@ -6,8 +6,6 @@
 library(ggplot2)
 library(ragg)
 
-set.seed(42)
-
 # Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
@@ -33,12 +31,11 @@ grid$pressure <- with(grid,
   1013 +
   12 * exp(-((lon + 28)^2 + (lat - 32)^2) / 250) +     # Azores High centre
   (-15) * exp(-((lon + 22)^2 + (lat - 65)^2) / 200) +  # Icelandic Low centre
-  5 * exp(-((lon - 12)^2 + (lat - 51)^2) / 280) +       # European High ridge
-  rnorm(nrow(grid), 0, 0.4)
+  5 * exp(-((lon - 12)^2 + (lat - 51)^2) / 280)         # European High ridge
 )
 
 # 4 hPa isobar intervals — standard for synoptic weather maps
-isobar_breaks <- seq(994, 1026, by = 4)
+isobar_breaks <- seq(998, 1026, by = 4)
 
 # Compute isobar label positions — midpoint of the longest segment per level
 pressure_matrix <- matrix(grid$pressure, nrow = length(lon_seq), ncol = length(lat_seq))
@@ -93,9 +90,11 @@ p <- ggplot() +
   scale_fill_manual(values = band_fill, drop = FALSE, name = "Pressure\n(hPa)") +
   labs(
     title = "N. Atlantic Isobars · contour-map-geographic · r · ggplot2 · anyplot.ai",
-    x     = "Longitude",
-    y     = "Latitude"
+    x     = "Longitude (°E)",
+    y     = "Latitude (°N)"
   ) +
+  scale_x_continuous(labels = function(x) paste0(x, "°")) +
+  scale_y_continuous(labels = function(x) paste0(x, "°")) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
