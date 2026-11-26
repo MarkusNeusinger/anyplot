@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-06-03
@@ -20,13 +20,13 @@ from lets_plot import (
     geom_point,
     geom_segment,
     geom_text,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
     labs,
     layer_tooltips,
     scale_color_identity,
-    scale_fill_identity,
     theme,
     theme_void,
     xlim,
@@ -49,7 +49,16 @@ BOSON_COLOR = "#C475FD"  # lavender — Z* boson (dashed propagator, key mediato
 GLUON_COLOR = "#4467A3"  # blue — gluon (curly bremsstrahlung)
 PHOTON_COLOR = "#BD8233"  # ochre — photon γ (wavy, shown in legend)
 
-# Diagram: e+e- → Z* → qq̄g  (QED+QCD: annihilation, Z-mediated pair creation, gluon emission)
+# Columns shared by every layer's table (schematic coordinates, no data axes)
+X = "x"  # role: extra
+Y = "y"  # role: extra
+XEND = "xend"  # role: extra
+YEND = "yend"  # role: extra
+GROUP = "grp"  # role: extra
+LABEL = "label"  # role: extra
+COLOR = "color"  # role: extra
+
+# Data: schematic layout of e+e- → Z* → qq̄g (annihilation, Z-mediated pair creation, gluon emission)
 v1x, v1y = 0.28, 0.50  # V1: e+e- annihilation vertex
 v2x, v2y = 0.58, 0.50  # V2: qq̄ pair creation vertex
 v3x, v3y = 0.76, 0.63  # V3: gluon bremsstrahlung vertex
@@ -60,21 +69,20 @@ ext = 0.20  # external leg length
 # q: arrows away from V2/V3; q̄: arrow toward V2 (antiquark fermion-flow reversal)
 fermion_df = pd.DataFrame(
     {
-        "x": [0.06, v1x, v2x, v3x, 0.95],
+        "x": [0.11, v1x, v2x, v3x, 0.89],
         "y": [v1y + ext, v1y, v2y, v3y, v1y - ext],
-        "xend": [v1x, 0.06, v3x, 0.95, v2x],
+        "xend": [v1x, 0.11, v3x, 0.89, v2x],
         "yend": [v1y, v1y - ext, v3y, v3y + 0.14, v2y],
         "particle": ["e⁻ (electron)", "e⁺ (positron)", "q (up quark)", "q (up quark cont.)", "q̅ (down antiquark)"],
     }
 )
-fermion_df["color"] = FERMION_COLOR
 
 # Z* boson propagator — the key interaction mediator (emphasized: thicker, dashed)
 boson_df = pd.DataFrame({"x": [v1x], "xend": [v2x], "y": [v1y], "yend": [v2y]})
 
 # Gluon bremsstrahlung: V3 → lower-right (curly/looped via geom_path)
 t_g = np.linspace(0, 1, 600)
-gluon_dx, gluon_dy = 0.19, -0.21
+gluon_dx, gluon_dy = 0.13, -0.17
 gluon_df = pd.DataFrame(
     {
         "x": v3x + t_g * gluon_dx + 0.011 * np.sin(t_g * 10 * 2 * np.pi),
@@ -96,9 +104,8 @@ vertex_df = pd.DataFrame(
 labels_df = pd.DataFrame(
     {
         "x": [0.03, 0.03, (v1x + v2x) / 2, 0.97, 0.97, 0.97],
-        "y": [v1y + ext + 0.02, v1y - ext - 0.02, v1y + 0.065, v3y + 0.15, v3y + gluon_dy + 0.06, v1y - ext - 0.02],
+        "y": [v1y + ext + 0.02, v1y - ext - 0.02, v1y + 0.13, v3y + 0.15, v3y + gluon_dy + 0.04, v1y - ext - 0.02],
         "label": ["e⁻", "e⁺", "Z*", "q", "g", "q̅"],
-        "fill": [ELEVATED_BG] * 6,
     }
 )
 
@@ -137,15 +144,14 @@ leg_text = pd.DataFrame(
     }
 )
 
-# Reaction equation — data storytelling focal point (bold, right of legend)
-eq_df = pd.DataFrame({"x": [0.57], "y": [0.975], "label": ["e⁻e⁺ → Z* → qq̅g"]})
-
+# Plot
+fermion_df[COLOR] = FERMION_COLOR
 title = "feynman-basic · python · letsplot · anyplot.ai"
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    plot_title=element_text(size=13, color=INK_SOFT),
+    plot_title=element_text(size=16, color=INK_SOFT),
     plot_margin=[20, 15, 15, 15],
     legend_position="none",
 )
@@ -155,74 +161,59 @@ plot = (
     + theme_void()
     # Z* boson: the key mediator — emphasized with thicker dashed line
     + geom_segment(
-        data=boson_df,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
-        size=3.8,
-        color=BOSON_COLOR,
-        linetype="dashed",
+        data=boson_df, mapping=aes(x=X, y=Y, xend=XEND, yend=YEND), size=3.8, color=BOSON_COLOR, linetype="dashed"
     )
     # Fermion lines with direction arrows (lets-plot distinctive: native arrow())
     + geom_segment(
         data=fermion_df,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend", color="color"),
+        mapping=aes(x=X, y=Y, xend=XEND, yend=YEND, color=COLOR),
         size=2.5,
         arrow=arrow(angle=20, length=10, type="closed"),
         tooltips=layer_tooltips().line("@particle"),
     )
     + scale_color_identity()
     # Gluon bremsstrahlung (curly loops via geom_path)
-    + geom_path(data=gluon_df, mapping=aes(x="x", y="y", group="grp"), size=2.5, color=GLUON_COLOR)
+    + geom_path(data=gluon_df, mapping=aes(x=X, y=Y, group=GROUP), size=2.5, color=GLUON_COLOR)
     # Vertex dots with interactive hover (lets-plot distinctive: layer_tooltips)
     + geom_point(
-        data=vertex_df,
-        mapping=aes(x="x", y="y"),
-        size=10,
-        color=INK,
-        shape=16,
-        tooltips=layer_tooltips().line("@vertex"),
+        data=vertex_df, mapping=aes(x=X, y=Y), size=10, color=INK, shape=16, tooltips=layer_tooltips().line("@vertex")
     )
     # Particle labels with rounded backgrounds (lets-plot distinctive: geom_label)
     + geom_label(
         data=labels_df,
-        mapping=aes(x="x", y="y", label="label", fill="fill"),
+        mapping=aes(x=X, y=Y, label=LABEL),
+        fill=ELEVATED_BG,
         size=22,
         color=INK_SOFT,
         fontface="italic",
         label_padding=0.2,
         label_r=0.15,
         label_size=0.3,
-        alpha=0.92,
+        alpha=1.0,
     )
-    + scale_fill_identity()
     # Time axis arrow
     + geom_segment(
         data=time_df,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        mapping=aes(x=X, y=Y, xend=XEND, yend=YEND),
         size=0.8,
         color=INK_SOFT,
         arrow=arrow(angle=20, length=7, type="open"),
     )
-    + geom_text(data=time_lbl, mapping=aes(x="x", y="y", label="label"), size=10, color=INK_SOFT, fontface="italic")
+    + geom_text(data=time_lbl, mapping=aes(x=X, y=Y, label=LABEL), size=10, color=INK_SOFT, fontface="italic")
     # Legend
     + geom_segment(
         data=leg_fermion,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        mapping=aes(x=X, y=Y, xend=XEND, yend=YEND),
         size=1.8,
         color=FERMION_COLOR,
         arrow=arrow(angle=20, length=6, type="closed"),
     )
     + geom_segment(
-        data=leg_boson_seg,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
-        size=1.8,
-        color=BOSON_COLOR,
-        linetype="dashed",
+        data=leg_boson_seg, mapping=aes(x=X, y=Y, xend=XEND, yend=YEND), size=1.8, color=BOSON_COLOR, linetype="dashed"
     )
-    + geom_path(data=leg_photon, mapping=aes(x="x", y="y", group="grp"), size=1.8, color=PHOTON_COLOR)
-    + geom_path(data=leg_gluon, mapping=aes(x="x", y="y", group="grp"), size=1.8, color=GLUON_COLOR)
-    + geom_text(data=leg_text, mapping=aes(x="x", y="y", label="label"), size=10, color=INK_SOFT, hjust=0)
-    # Reaction equation — bold focal point showing the full QED+QCD process
-    + geom_text(data=eq_df, mapping=aes(x="x", y="y", label="label"), size=13, color=INK, fontface="bold")
+    + geom_path(data=leg_photon, mapping=aes(x=X, y=Y, group=GROUP), size=1.8, color=PHOTON_COLOR)
+    + geom_path(data=leg_gluon, mapping=aes(x=X, y=Y, group=GROUP), size=1.8, color=GLUON_COLOR)
+    + geom_text(data=leg_text, mapping=aes(x=X, y=Y, label=LABEL), size=10, color=INK_SOFT, hjust=0)
     + coord_fixed(ratio=0.5625)
     + xlim(-0.02, 1.08)
     + ylim(0.02, 1.05)
@@ -230,6 +221,9 @@ plot = (
     + anyplot_theme
     + ggsize(800, 450)
 )
+
+# The fixed aspect leaves canvas strips transparent; a one-panel grid paints the page color
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
