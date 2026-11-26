@@ -2,131 +2,137 @@ library: plotly
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:51:18Z'
-updated: '2026-05-20T06:04:00Z'
+updated: '2026-11-26T02:39:15Z'
 generated_by: claude-sonnet
-workflow_run: 26143584991
+workflow_run: 45743145237
 issue: 3811
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 79
 review:
   strengths:
-  - Correct Data Matrix barcode structure with L-shaped finder pattern, alternating
-    timing pattern, and simulated ECC 200 data cells
-  - 'Excellent theme adaptation: binary cell colors invert correctly between light
-    (#FAF8F1 bg, dark cells) and dark (#1A1A17 bg, light cells) themes — no dark-on-dark
-    failures'
-  - Educational callout annotations (L-Finder, Timing arrows) with interactive Plotly
-    hover showing cell type (Finder/Timing/Data) leverages Plotly interactivity distinctively
-  - 'Perfect spec compliance: quiet zone dashed border, encoded content annotation,
-    matrix size label, and correct title format all present'
-  - Clean reproducible code using content_hash seed and np.flipud for correct visual
-    orientation
+  - 'Clean single symbol: sharp, gap-free square modules on a regular grid with a
+    solid bottom finder and an alternating clock pattern on the top and right edges'
+  - Square modules guaranteed by scaleanchor/constrain on a square 2400x2400 canvas
+    with a generous quiet zone
+  - Plotly-native hover via customdata + hovertemplate labels each module as Finder,
+    Timing or Data in the HTML view
   weaknesses:
-  - Callout annotation font size (8px) is small — at mobile scale (~400px wide) the
-    L-Finder and Timing labels may be barely readable; consider increasing to 10px
-  - Design storytelling (DE-03) is limited to structural annotations; no analytical
-    insight or emphasis hierarchy beyond identifying the barcode regions
-  - DE-01 aesthetic sophistication is functional but not visually impressive — the
-    binary heatmap approach is correct but lacks design flair beyond clean minimalism
+  - 'SC-02 (dark): the symbol is inverted, light #F0EFE8 modules on the #1A1A17 page,
+    so the finder and clock pattern are light and the quiet zone is dark, against
+    the spec''s black-on-white modules and white quiet zone → black modules on a white
+    tile with a quiet-zone margin in both themes (a white tile behind the symbol in
+    dark is permitted). Likely cause: CELL_ON/CELL_OFF switch per theme and CELL_OFF
+    = PAGE_BG.'
+  - 'SC-02 (both): the top-left module of the left finder column is white, so the
+    L finder is broken at its top end → that module black, with the top clock row
+    starting black at column 0. Likely cause: the top-row loop matrix[0, i] = i %
+    2 overwrites matrix[0, 0] after the finder is set.'
+  - 'DQ-03 (code): the data region is random noise from np.random.seed(sum of the
+    characters) and does not encode ''SERIAL:12345678'' with ECC 200, so the symbol
+    does not decode to its content → generate the modules from the content with an
+    ECC 200 encoder (the spec recommends pylibdmtx or treepoem). Likely cause: the
+    simulated-data loop.'
+  - 'CQ-04 (code): element-by-element loops fill the timing row/column and the 14x14
+    data region (the two timing loops and the nested randint loop) → matrix[0, :]
+    = np.arange(n) % 2 style slicing and one np.random.randint(0, 2, size=(n-2, n-2))
+    call (or the encoder). Likely cause: scalar-loop construction.'
+  - 'Suggestion: a visible white tile behind the symbol in the dark theme would read
+    as a printed label, which the spec permits.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "datamatrix-basic · python · plotly · anyplot.ai" centered at top (16px), dark ink on light background — clearly readable. "L-Finder" and "Timing" callout labels with arrows (8px) are small but legible at render resolution. "Encoded: SERIAL:12345678" (12px) and "ECC 200 | 16×16 Matrix" (10px) below the matrix are readable. No tick labels (correctly suppressed for a barcode).
-      Data: 16×16 binary matrix with dark near-black (#1A1A17) cells on light background. L-shaped finder pattern clearly visible on left column and bottom row. Alternating timing pattern on top row and right column. Interior data cells show varied pattern. Dashed quiet zone border visible around the matrix. Cell gaps (xgap=ygap=1.5) provide clean visual separation between modules.
-      Legibility verdict: PASS — all text readable; no light-on-light failures.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: centered title 'datamatrix-basic · python · plotly · anyplot.ai' in dark ink, clearly readable; no axes, ticks or legend (spec permission).
+      Data: a 16x16 Data Matrix of near-black square modules on the off-white page, sharp edges, no gaps. Solid finder along the bottom row and left column, except the top-left module, which is white; alternating clock pattern along the top row and right column; noise-like data region; blank page margin as quiet zone, about 3 modules wide.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light (#F0EFE8) on dark background — clearly readable. "L-Finder" and "Timing" callout labels visible in light-gray (INK_SOFT=#B8B7B0). "Encoded" and "ECC 200" annotations in appropriate muted light tones. No dark-on-dark text failures observed.
-      Data: Same 16×16 matrix structure but inverted — light (#F0EFE8) cells on dark (#1A1A17) background. The finder/timing/data patterns are identical in structure to the light render; only the color role is flipped (the "on" cells are now light, "off" cells are the dark background). This is correct behavior for a barcode rendered on a dark surface.
-      Legibility verdict: PASS — all chrome text is light-colored on dark background; no dark-on-dark failures.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title in light ink #F0EFE8, clearly readable; no dark-on-dark text.
+      Data: the same module pattern with the roles inverted: light #F0EFE8 modules on the near-black page, so the finder and clock pattern are light and the quiet zone is dark instead of a white tile with black modules.
+      Legibility verdict: PASS (chrome); the symbol's inversion is a spec defect, not a legibility failure
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16px, annotations=8-12px).
-          Minor concern: callout labels at 8px are small at mobile scale.'
+        comment: Title font size set explicitly (16 px at scale 4); readable in both
+          themes; the only text on the canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps in either render. L-Finder and Timing callouts positioned
-          outside matrix bounds.
+        comment: No text near the symbol; nothing collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode cells clearly visible in both themes. Cell gaps (1.5) provide
-          module definition.
+        comment: 16x16 modules at about 85 px each, crisp and clearly visible in both
+          renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum contrast binary colors. CVD-safe (no hue dependency for encoding).
+        comment: Maximum-contrast binary rendering; no hue carries meaning
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400 at scale=4) perfectly suited for square
-          barcode. Good balanced margins.
+        comment: Square 2400x2400 canvas; the symbol fills about 70 % of the width
+          with balanced margins and fits with its title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Axes suppressed (appropriate for barcode).
-          Encoded content shown as annotation.
+        comment: 'N/A: a barcode has no data axes (spec permission); title in mandated
+          form'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Binary barcode uses theme-adaptive high-contrast colors (valid exception
-          to Okabe-Ito). Backgrounds #FAF8F1/#1A1A17 correct. Full chrome theme compliance.'
+        comment: 'Backgrounds #FAF8F1 / #1A1A17 correct; binary symbol needs no categorical
+          palette; chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above well-configured default: callout annotations, cell gaps, dashed
-          quiet zone border. Not publication-ready in aesthetic sense but clean and
-          purposeful.'
+        passed: false
+        comment: 'Style-guide baseline: clean minimal symbol on the page, nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good: axes completely hidden, cell gaps for module definition, dashed
-          quiet zone border, clean margins. Some details could be more polished.'
+        passed: false
+        comment: Axes hidden and margins balanced, which the barcode form requires;
+          nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Structural annotations (L-Finder, Timing arrows) explain barcode
-          anatomy. Limited analytical storytelling by nature of chart type — structural
-          explanation is the appropriate story here.
+        passed: false
+        comment: Symbol shown as is; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -134,32 +140,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode visualization using go.Heatmap for
-          binary matrix rendering.
+        comment: Single Data Matrix symbol, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: L-shaped finder (solid left+bottom), alternating timing (top+right),
-          interior ECC 200 data cells, quiet zone border, high contrast, encoded content
-          shown.
+        passed: false
+        comment: Finder, clock pattern and quiet zone present in the light render,
+          but the dark render inverts the symbol (light modules, dark quiet zone)
+          against C3/C4, and the top-left module of the finder column is white, breaking
+          C1 (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 16x16 matrix correctly mapped, np.flipud for correct L-finder visual
-          orientation, axes suppressed.
+        comment: Module grid on square cells with scaleanchor; all 16x16 modules shown
+          at their positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'datamatrix-basic · python · plotly · anyplot.ai'.
-          No legend (appropriate for binary visualization).
+        comment: Title exactly 'datamatrix-basic · python · plotly · anyplot.ai';
+          no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -167,24 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all components: finder pattern, timing pattern, data/ECC cells,
-          quiet zone, encoded content annotation, matrix size.'
+        comment: 'Shows every structural element of the type: finder, clock pattern,
+          data region, quiet zone'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SERIAL:12345678 is a realistic industrial serial number for electronics/aerospace/medical
-          device traceability — directly from spec applications.
+        comment: SERIAL:12345678 is a plausible part-marking serial straight from
+          the spec's applications
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16x16 is a valid Data Matrix size per ISO/IEC 16022. Content length
-          appropriate for matrix capacity.
+        passed: false
+        comment: 16x16 is a valid ECC 200 size for 15 characters, but the data region
+          is seeded noise and does not encode the content (defect line)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -192,62 +198,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens → matrix construction → plot → save. No functions
-          or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(content_hash) — deterministic based on encoded content.
+        comment: Deterministic seed derived from the content
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic. Appropriate complexity for the visualization task.
+        passed: false
+        comment: Element-by-element Python loops where numpy slicing and a sized randint
+          call compute the same matrix (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current write_image/write_html
+          API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Idiomatic go.Heatmap with customdata/hovertemplate, add_shape for
-          quiet zone, update_layout/update_yaxes for aspect ratio control.
+        passed: false
+        comment: go.Heatmap with a two-stop colorscale, scaleanchor/constrain for
+          square modules — standard idioms, default level
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Interactive hover showing cell type (Finder/Timing/Data) via customdata+hovertemplate
-          is distinctively Plotly. xgap/ygap for cell separation. HTML export alongside
-          PNG.
+        passed: false
+        comment: customdata + hovertemplate label each module as Finder / Timing /
+          Data in the HTML view — Plotly-native interactivity
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-e1c896f739.lib-3ee145f960
+  rendered_at: '2026-11-26T02:35:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap
