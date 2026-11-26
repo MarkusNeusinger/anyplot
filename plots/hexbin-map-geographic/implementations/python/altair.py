@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -89,16 +89,9 @@ for (c, r), count in hex_counts.items():
         {
             "type": "Feature",
             "geometry": {"type": "Polygon", "coordinates": [verts]},
-            "properties": {SIGHTINGS: int(count)},
+            "properties": {SIGHTINGS: int(count), "lon_c": round(lon_c, 2), "lat_c": round(lat_c, 2)},
         }
     )
-
-# Labels for the three strongest migration hubs — guide viewer to the story
-ann_data = [
-    {LON: -75.2, LAT: 41.6, "label": "NYC Metro"},
-    {LON: -122.3, LAT: 47.0, "label": "Seattle"},
-    {LON: -87.6, LAT: 42.5, "label": "Chicago"},
-]
 
 # Base map — vega CDN, no local package required
 WORLD_URL = "https://cdn.jsdelivr.net/npm/vega-datasets@v1.29.0/data/world-110m.json"
@@ -131,24 +124,25 @@ hexbin = (
                 interpolate="rgb",
             ),
             legend=alt.Legend(
-                title=SIGHTINGS, gradientLength=220, gradientThickness=16, labelFontSize=12, titleFontSize=13
+                title=SIGHTINGS,
+                gradientLength=220,
+                gradientThickness=16,
+                labelFontSize=12,
+                titleFontSize=12,
+                padding=14,
             ),
         ),
-        tooltip=[alt.Tooltip(f"properties.{SIGHTINGS}", type="quantitative", title=SIGHTINGS)],
+        tooltip=[
+            alt.Tooltip(f"properties.{SIGHTINGS}", type="quantitative", title=SIGHTINGS),
+            alt.Tooltip("properties.lon_c", type="quantitative", title="Cell centre lon (°)"),
+            alt.Tooltip("properties.lat_c", type="quantitative", title="Cell centre lat (°)"),
+        ],
     )
     .project(**proj_params)
 )
 
-# Text annotations directing the viewer to the densest migration hubs
-annotation = (
-    alt.Chart(alt.InlineData(values=ann_data))
-    .mark_text(color=INK, fontSize=11, fontWeight="bold", align="right", dy=-4)
-    .encode(longitude=f"{LON}:Q", latitude=f"{LAT}:Q", text="label:N")
-    .project(**proj_params)
-)
-
 chart = (
-    alt.layer(basemap, hexbin, annotation)
+    alt.layer(basemap, hexbin)
     .properties(
         width=800,
         height=450,
