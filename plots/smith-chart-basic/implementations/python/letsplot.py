@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 73/100 | Updated: 2026-11-22
@@ -17,6 +17,7 @@ from lets_plot import (
     geom_path,
     geom_point,
     geom_text,
+    gggrid,
     ggplot,
     ggsize,
     labs,
@@ -34,8 +35,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
-COLOR_START = "#4467A3"  # Okabe-Ito position 3
-COLOR_END = "#C475FD"  # Okabe-Ito position 2
 
 # Constants
 Z0 = 50  # Reference impedance (ohms)
@@ -47,18 +46,11 @@ Z_IMAG = "Reactance (Ω)"  # role: z_imag
 
 # Data: replace this block with your own table, for example df = pd.read_csv("s11.csv")
 # Simulated antenna impedance sweep 1-6 GHz
-np.random.seed(42)
 n_points = 60
 t = np.linspace(0, 2.5 * np.pi, n_points)
 r_base = 20 + 80 * (1 - np.exp(-t / 2.5))
 x_base = 50 * np.sin(t) * np.exp(-t / 6)
-df = pd.DataFrame(
-    {
-        FREQUENCY: np.linspace(1e9, 6e9, n_points),
-        Z_REAL: r_base + 3 * np.random.randn(n_points),
-        Z_IMAG: x_base + 2 * np.random.randn(n_points),
-    }
-)
+df = pd.DataFrame({FREQUENCY: np.linspace(1e9, 6e9, n_points), Z_REAL: r_base, Z_IMAG: x_base})
 
 # Plot: reads only df and the constants above
 n_points = len(df)
@@ -116,8 +108,12 @@ theta_circle = np.linspace(0, 2 * np.pi, 200)
 df_boundary = pd.DataFrame({"x": np.cos(theta_circle), "y": np.sin(theta_circle)})
 df_axis = pd.DataFrame({"x": [-1, 1], "y": [0, 0]})
 
-# Resistance labels at leftmost point of each r-circle on the real axis
-df_r_labels = pd.DataFrame([{"x": (r - 1) / (r + 1), "y": 0, "label": str(r)} for r in r_values])
+# Resistance labels at the top of each r-circle (clear of the locus near the real axis);
+# the r=0 circle is the boundary, labelled at its left end
+df_r_labels = pd.DataFrame(
+    [{"x": r / (r + 1), "y": 1 / (r + 1) + 0.06, "label": str(r)} for r in r_values if r > 0]
+    + [{"x": -1.06, "y": 0, "label": "0"}]
+)
 
 # Reactance labels at unit-circle boundary intersection
 # For xv: boundary at x2=(xv²-1)/(xv²+1), y2=xv*(1-x2)
@@ -131,8 +127,8 @@ for xv in xv_values:
 df_x_labels = pd.DataFrame(xv_label_rows)
 
 label_indices = [0, n_points // 2, n_points - 1]
-# Per-label nudge to avoid crowding: 1.0 GHz left+up, 3.5 GHz upper-left, 6.0 GHz lower-right
-label_nudges = [(-0.18, 0.13), (-0.18, 0.28), (0.26, -0.22)]
+# Per-label nudge: each label sits right beside its own point
+label_nudges = [(-0.02, -0.1), (-0.1, -0.12), (0.2, 0.07)]
 df_freq_labels = pd.DataFrame(
     {
         "x": [gamma_real[i] + nx for i, (nx, ny) in zip(label_indices, label_nudges, strict=True)],
@@ -141,18 +137,8 @@ df_freq_labels = pd.DataFrame(
     }
 )
 
-df_start = df_locus.iloc[[0]]
-df_end = df_locus.iloc[[-1]]
 df_center = pd.DataFrame({"x": [0], "y": [0]})
-
-df_legend = pd.DataFrame(
-    {
-        "x": [-1.4, -0.4, 0.6],
-        "y": [-1.55, -1.55, -1.55],
-        "grp": ["locus", "start", "end"],
-        "label": ["Impedance locus", "Start (1.0 GHz)", "End (6.0 GHz)"],
-    }
-)
+df_freq_points = df_locus.iloc[label_indices]
 
 plot = (
     ggplot()
@@ -177,11 +163,11 @@ plot = (
         alpha=0.5,
     )
     # Resistance labels along real axis
-    + geom_text(aes(x="x", y="y", label="label"), data=df_r_labels, size=10, nudge_y=-0.08, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_r_labels, size=10, color=INK_SOFT)
     # Reactance labels at chart boundary
     + geom_text(aes(x="x", y="y", label="label"), data=df_x_labels, size=9, color=INK_SOFT)
     # Impedance locus path
-    + geom_path(aes(x="gamma_real", y="gamma_imag"), data=df_locus, color=BRAND, size=3.2)
+    + geom_path(aes(x="gamma_real", y="gamma_imag"), data=df_locus, color=BRAND, size=2)
     # Interactive hover points
     + geom_point(
         aes(x="gamma_real", y="gamma_imag"),
@@ -197,29 +183,23 @@ plot = (
         .format("z_imag", ".1f")
         .format("vswr", ".2f"),
     )
-    # Start marker
-    + geom_point(aes(x="gamma_real", y="gamma_imag"), data=df_start, color=COLOR_START, size=10)
-    # End marker
-    + geom_point(aes(x="gamma_real", y="gamma_imag"), data=df_end, color=COLOR_END, size=10)
+    # Key frequency points
+    + geom_point(aes(x="gamma_real", y="gamma_imag"), data=df_freq_points, color=INK, size=5)
     # Matched condition marker at chart center
     + geom_point(aes(x="x", y="y"), data=df_center, color=INK_SOFT, size=6, shape=3)
     # Frequency labels along trajectory (pre-nudged per-label to avoid crowding)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_freq_labels, size=11, color=INK)
-    # Manual legend outside chart area
-    + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "locus"], color=BRAND, size=5)
-    + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "start"], color=COLOR_START, size=7)
-    + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "end"], color=COLOR_END, size=7)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_legend, size=9, hjust=0, nudge_x=0.07, color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_freq_labels, size=10, color=INK)
     + labs(title="smith-chart-basic · python · letsplot · anyplot.ai")
     + theme_void()
     + theme(
-        plot_title=element_text(size=16, hjust=0.5, color=INK),
+        plot_title=element_text(size=20, hjust=0.5, color=INK),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
     )
-    + coord_fixed(ratio=1, xlim=(-1.58, 1.58), ylim=(-1.7, 1.4))
-    + ggsize(600, 600)
+    + coord_fixed(ratio=1, xlim=(-1.25, 1.25), ylim=(-1.25, 1.25))
 )
+# The one-panel grid paints the whole square canvas with the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
