@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
@@ -36,14 +36,16 @@ np.random.seed(42)
 n_days = 252  # approximately 1 year of trading days
 date_range = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
 stocks = {
-    "AAPL": {"drift": 0.0008, "volatility": 0.018},
-    "GOOGL": {"drift": 0.0006, "volatility": 0.020},
-    "MSFT": {"drift": 0.0007, "volatility": 0.016},
-    "SPY": {"drift": 0.0004, "volatility": 0.012},
+    "AAPL": {"total_return": 1.32, "volatility": 0.014},
+    "GOOGL": {"total_return": 1.08, "volatility": 0.016},
+    "MSFT": {"total_return": 0.93, "volatility": 0.013},
+    "SPY": {"total_return": 1.18, "volatility": 0.007},
 }
 frames = []
 for symbol, params in stocks.items():
-    returns = np.random.normal(params["drift"], params["volatility"], n_days)
+    noise = np.random.normal(0, params["volatility"], n_days)
+    # centre the noise so the year ends at the stated total return
+    returns = noise - noise.mean() + np.log(params["total_return"]) / n_days
     frames.append(pd.DataFrame({DATE: date_range, SYMBOL: symbol, PRICE: 100 * np.exp(np.cumsum(returns))}))
 df = pd.concat(frames, ignore_index=True)
 
@@ -74,7 +76,7 @@ fig.add_hline(
     line_color=INK_MUTED,
     line_width=1.5,
     annotation_text=f"Starting Point ({BASE})",
-    annotation_position="top right",
+    annotation_position="right",
     annotation_font_size=10,
     annotation_font_color=INK_MUTED,
 )
