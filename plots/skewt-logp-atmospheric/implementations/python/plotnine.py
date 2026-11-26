@@ -1,7 +1,7 @@
 """ anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 68/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
@@ -10,19 +10,21 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
+    coord_fixed,
     element_blank,
     element_line,
     element_rect,
     element_text,
-    geom_line,
-    geom_segment,
+    geom_hline,
+    geom_path,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
     scale_linetype_manual,
     scale_x_continuous,
-    scale_y_continuous,
+    scale_y_reverse,
     theme,
 )
 
@@ -37,16 +39,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Imprint palette (canonical order)
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Constants: Skew-T geometry and the standard reference families
-SKEW_FACTOR = np.tan(np.radians(45))  # 45-degree isotherms
-P_SURFACE = 1000  # reference pressure (hPa)
-P_MIN = 100
-P_MAX = 1050
-T_MIN = -80
-T_MAX = 50
-LABEL_LEVEL = 600  # pressure level (hPa) where the T / Td labels sit
-ISOBARS = [1000, 850, 700, 500, 300, 200, 100]
-PRESSURE_BREAKS = [1000, 850, 700, 500, 400, 300, 200, 150, 100]
+# Constants: Skew-T geometry (isotherm shift per pressure decade, in degrees C; coord_fixed makes it 45 degrees)
+SKEW = 80
 
 # Column constants
 PRESSURE = "Pressure (hPa)"  # role: pressure
@@ -83,150 +77,111 @@ for p, t in zip(pressure_levels, temp_profile, strict=True):
 
 df = pd.DataFrame({PRESSURE: pressure_levels, TEMPERATURE: temp_profile, DEWPOINT: dewpoint_profile})
 
-# Plot
-p_top = df[PRESSURE].min()
-p_bottom = df[PRESSURE].max()
+# Plot: vertical coordinate is log10(pressure), drawn reversed so the surface sits at the bottom
+y_bottom = np.log10(df[PRESSURE].max())
+y_top = np.log10(df[PRESSURE].min())
 
-
-def skew_transform(temp, pressure):
-    log_p = np.log10(pressure / P_SURFACE)
-    return temp + SKEW_FACTOR * log_p * 40
-
-
-def segments(xs, ps, label):
-    return [
-        {"x": xs[i], "xend": xs[i + 1], "y": ps[i], "yend": ps[i + 1], "line_type": label} for i in range(len(xs) - 1)
-    ]
-
-
-# Isotherms (skewed 45°)
-isotherm_df = pd.DataFrame(
-    [
-        {
-            "x": skew_transform(t_ref, P_MIN),
-            "xend": skew_transform(t_ref, P_MAX),
-            "y": P_MIN,
-            "yend": P_MAX,
-            "line_type": "Isotherms (10°C)",
-        }
-        for t_ref in np.arange(-100, 60, 10)
-    ]
-)
-
-# Isobars (horizontal reference lines, structural, no legend entry)
-isobar_df = pd.DataFrame(
-    [{"x": skew_transform(T_MIN - 20, p), "xend": skew_transform(T_MAX + 20, p), "y": p, "yend": p} for p in ISOBARS]
-)
-
-# Dry adiabats (constant potential temperature)
-dry_rows = []
-for theta in np.arange(-40, 100, 10):
-    ps = np.arange(P_MIN, P_MAX + 1, 25)
-    ts = (theta + 273.15) * (ps / 1000) ** 0.286 - 273.15
-    dry_rows += segments(skew_transform(ts, ps), ps, "Dry Adiabats")
-
-# Moist adiabats (saturated adiabatic lapse rate)
-moist_rows = []
-for theta_e in np.arange(-30, 50, 10):
-    xs, ps = [], []
-    t_cur = theta_e + 5
-    for p in np.arange(P_MAX, P_MIN - 1, -25):
-        xs.append(skew_transform(t_cur, p))
-        ps.append(p)
-        t_cur -= (5.5 if t_cur > 0 else 6.0) * 0.05
-    moist_rows += segments(xs, ps, "Moist Adiabats")
-
-# Mixing ratio lines (constant saturation mixing ratio)
-mixing_rows = []
-for w in [1, 2, 4, 7, 10, 15, 20]:
-    xs, ps = [], []
-    for p in np.arange(P_MIN + 50, P_MAX + 1, 25):
-        e = w * p / (622 + w)
-        td = (243.5 * np.log(e / 6.112)) / (17.67 - np.log(e / 6.112))
-        if T_MIN - 20 < td < T_MAX + 20:
-            xs.append(skew_transform(td, p))
-            ps.append(p)
-    mixing_rows += segments(xs, ps, "Mixing Ratios")
-
-all_ref_lines = pd.concat([isotherm_df, pd.DataFrame(dry_rows), pd.DataFrame(moist_rows), pd.DataFrame(mixing_rows)])
-
-# Profile data in skewed coordinates; "line_type" matches the reference lines for a unified legend
-profile_df = pd.DataFrame(
+# Isotherms: straight lines, skewed by SKEW degrees per pressure decade
+iso_t = np.arange(-120, 60, 10)
+isotherms = pd.DataFrame(
     {
-        "pressure": np.concatenate([df[PRESSURE], df[PRESSURE]]),
-        "x": np.concatenate(
-            [skew_transform(df[TEMPERATURE], df[PRESSURE]), skew_transform(df[DEWPOINT], df[PRESSURE])]
-        ),
-        "line_type": ["Temperature"] * len(df) + ["Dewpoint"] * len(df),
+        "curve": np.repeat([f"iso{t}" for t in iso_t], 2),
+        "y": np.tile([y_bottom, y_top], len(iso_t)),
+        "t": np.repeat(iso_t, 2),
+        "family": "Isotherms (10 °C)",
     }
 )
 
-x_min = skew_transform(T_MIN - 10, P_MAX)
-x_max = skew_transform(T_MAX + 10, P_MIN)
+# Dry adiabats: constant potential temperature, T = theta * (p / 1000)^0.286
+dry_theta = np.arange(-40, 180, 20)
+dry_y = np.linspace(y_bottom, y_top, 40)
+dry = pd.DataFrame(
+    {
+        "curve": np.repeat([f"dry{th}" for th in dry_theta], len(dry_y)),
+        "y": np.tile(dry_y, len(dry_theta)),
+        "t": ((np.repeat(dry_theta, len(dry_y)) + 273.15) * (10 ** np.tile(dry_y, len(dry_theta)) / 1000) ** 0.286)
+        - 273.15,
+        "family": "Dry adiabats",
+    }
+)
 
-LEGEND_ORDER = ["Temperature", "Dewpoint", "Isotherms (10°C)", "Dry Adiabats", "Moist Adiabats", "Mixing Ratios"]
-LINE_COLORS = {name: IMPRINT_PALETTE[i] for i, name in enumerate(LEGEND_ORDER)}
-LINE_STYLES = dict(zip(LEGEND_ORDER, ["solid", "dashed", "solid", "dashed", "dotted", "dashdot"], strict=True))
+# Moist adiabats: integrate the saturated lapse rate upward from 1000 hPa
+moist_start = np.arange(-10, 41, 10).astype(float)
+moist_y = np.linspace(y_bottom, y_top, 150)
+t_moist = np.empty((len(moist_y), len(moist_start)))
+t_moist[0] = moist_start + 273.15
+for k in range(len(moist_y) - 1):
+    p_k = 10 ** moist_y[k]
+    p_next = 10 ** moist_y[k + 1]
+    t_k = t_moist[k]
+    e_sat = 6.112 * np.exp(17.67 * (t_k - 273.15) / (t_k - 273.15 + 243.5))
+    r_sat = 0.622 * e_sat / (p_k - e_sat)
+    dt_dp = (287 * t_k + 2.5e6 * r_sat) / (p_k * (1005 + 2.5e6**2 * r_sat * 0.622 / (287 * t_k**2)))
+    t_moist[k + 1] = t_k + dt_dp * (p_next - p_k)
+moist = pd.DataFrame(
+    {
+        "curve": np.tile([f"moist{int(t0)}" for t0 in moist_start], len(moist_y)),
+        "y": np.repeat(moist_y, len(moist_start)),
+        "t": (t_moist - 273.15).ravel(),
+        "family": "Moist adiabats",
+    }
+)
 
-profile_df = profile_df.dropna()
-complete = df.dropna()
-label_row = complete.iloc[(complete[PRESSURE] - LABEL_LEVEL).abs().argmin()]
-pressure_breaks = [p for p in PRESSURE_BREAKS if p_top * 0.9 <= p <= p_bottom * 1.1]
+# Mixing ratio lines: dewpoint of air holding w g/kg at each pressure, from the surface to 600 hPa
+mix_w = np.array([1, 2, 4, 8, 12, 16, 20]) / 1000
+mix_y = np.linspace(y_bottom, np.log10(600), 20)
+vapor = np.outer(10**mix_y, mix_w / (0.622 + mix_w)).ravel(order="F")
+ln_e = np.log(vapor / 6.112)
+mixing = pd.DataFrame(
+    {
+        "curve": np.repeat([f"mix{int(w * 1000)}" for w in mix_w], len(mix_y)),
+        "y": np.tile(mix_y, len(mix_w)),
+        "t": 243.5 * ln_e / (17.67 - ln_e),
+        "family": "Mixing ratios",
+    }
+)
+
+# Sounding profiles in the same long format
+profile = pd.DataFrame(
+    {
+        "curve": np.repeat(["Temperature", "Dewpoint"], len(df)),
+        "y": np.tile(np.log10(df[PRESSURE]), 2),
+        "t": np.concatenate([df[TEMPERATURE], df[DEWPOINT]]),
+        "family": np.repeat(["Temperature", "Dewpoint"], len(df)),
+    }
+)
+
+# Skew the temperature axis: lines at lower pressure shift to the right
+FAMILIES = ["Temperature", "Dewpoint", "Isotherms (10 °C)", "Dry adiabats", "Moist adiabats", "Mixing ratios"]
+LINE_COLORS = dict(zip(FAMILIES, IMPRINT_PALETTE, strict=False))
+LINE_STYLES = dict(zip(FAMILIES, ["solid", "dashed", "solid", "dashed", "dotted", "dashdot"], strict=True))
+reference = pd.concat([isotherms, dry, moist, mixing], ignore_index=True)
+sounding = profile
+for frame in (reference, sounding):
+    frame["x"] = frame["t"] + SKEW * (y_bottom - frame["y"])
+    frame["family"] = pd.Categorical(frame["family"], categories=FAMILIES)
+x_lo = np.floor(sounding["x"].min() / 10) * 10 - 10
+x_hi = np.ceil(sounding["x"].max() / 10) * 10 + 20
+
+# Isobars and pressure ticks at one tenth of the surface pressure's order of magnitude
+isobar_step = 10 ** (np.floor(np.log10(df[PRESSURE].max())) - 1)
+isobar_levels = np.arange(np.ceil(df[PRESSURE].min() / isobar_step) * isobar_step, df[PRESSURE].max() + 1, isobar_step)
+tick_step = 10 ** np.floor(np.log10((x_hi - x_lo) / 5))
+temperature_ticks = np.arange(np.ceil(x_lo / tick_step) * tick_step, x_hi, tick_step)
 
 plot = (
-    ggplot(profile_df, aes(x="x", y="pressure"))
-    # Isobars first (background structural lines, no legend entry)
-    + geom_segment(
-        aes(x="x", xend="xend", y="y", yend="yend"),
-        data=isobar_df,
-        color=INK_SOFT,
-        size=0.7,
-        linetype="solid",
-        inherit_aes=False,
-    )
-    # Reference lines with color/linetype aesthetic for legend
-    + geom_segment(
-        aes(x="x", xend="xend", y="y", yend="yend", color="line_type", linetype="line_type"),
-        data=all_ref_lines,
-        size=0.6,
-        inherit_aes=False,
-    )
-    # Temperature and dewpoint profiles (drawn on top)
-    + geom_line(
-        aes(x="x", y="pressure", color="line_type", linetype="line_type", group="line_type"),
-        data=profile_df,
-        size=2.5,
-        inherit_aes=False,
-    )
-    + scale_color_manual(values=LINE_COLORS, name="Lines", breaks=LEGEND_ORDER)
-    + scale_linetype_manual(values=LINE_STYLES, name="Lines", breaks=LEGEND_ORDER)
-    + scale_y_continuous(
-        trans="log10",
-        limits=(p_bottom * 1.1, p_top * 0.9),
-        breaks=pressure_breaks if len(pressure_breaks) > 1 else True,
-        labels=lambda breaks: [f"{b:g}" for b in breaks],
-    )
-    + scale_x_continuous(breaks=[], labels=[], limits=(x_min - 10, x_max + 20))
-    + annotate(
-        "text",
-        x=skew_transform(label_row[TEMPERATURE], label_row[PRESSURE]) + 6,
-        y=label_row[PRESSURE],
-        label="T",
-        color=IMPRINT_PALETTE[0],
-        size=12,
-        fontweight="bold",
-    )
-    + annotate(
-        "text",
-        x=skew_transform(label_row[DEWPOINT], label_row[PRESSURE]) - 6,
-        y=label_row[PRESSURE],
-        label="Td",
-        color=IMPRINT_PALETTE[1],
-        size=12,
-        fontweight="bold",
-    )
+    ggplot(mapping=aes(x="x", y="y", group="curve", color="family", linetype="family"))
+    + geom_hline(yintercept=np.log10(isobar_levels), color=INK_SOFT, size=0.3, alpha=0.5)
+    + geom_path(data=reference, size=0.55, alpha=0.7)
+    + geom_path(data=sounding, size=1.6)
+    + scale_color_manual(values=LINE_COLORS, breaks=FAMILIES, name="Line")
+    + scale_linetype_manual(values=LINE_STYLES, breaks=FAMILIES, name="Line")
+    + scale_x_continuous(breaks=temperature_ticks, expand=(0, 0))
+    + scale_y_reverse(breaks=np.log10(isobar_levels), labels=[f"{p:g}" for p in isobar_levels], expand=(0, 0))
+    + coord_fixed(ratio=SKEW, xlim=(x_lo, x_hi), ylim=(y_bottom, y_top), expand=False)
+    + guides(color=guide_legend(override_aes={"size": 1.2, "alpha": 1}))
     + labs(
-        x=f"{TEMPERATURE.split(' (')[0]} (°C, skewed 45°)",
+        x="Temperature at 1000 hPa (°C), isotherms skewed 45°",
         y=PRESSURE,
         title="skewt-logp-atmospheric · python · plotnine · anyplot.ai",
     )
@@ -240,19 +195,15 @@ plot = (
         axis_line=element_line(color=INK_SOFT, size=0.8),
         text=element_text(size=8),
         axis_title=element_text(size=10, color=INK),
-        axis_title_x=element_text(margin={"t": 8}),
-        axis_title_y=element_text(margin={"r": 8}),
-        axis_text_x=element_blank(),
-        axis_ticks_major_x=element_blank(),
-        axis_text_y=element_text(size=8, color=INK_SOFT),
-        plot_title=element_text(size=12, ha="center", color=INK),
-        legend_position="right",
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_ticks_major=element_line(color=INK_SOFT, size=0.8),
+        plot_title=element_text(size=11, ha="center", color=INK),
+        legend_position="bottom",
         legend_title=element_text(size=9, fontweight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_key_width=20,
-        legend_key_height=12,
-        axis_ticks_major_y=element_line(color=INK_SOFT, size=0.8),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key_width=26,
     )
 )
 

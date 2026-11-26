@@ -1,10 +1,11 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 63/100 | Updated: 2026-05-14
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -13,144 +14,193 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Imprint sequential ramp for colored cells (heatmap fields), light and dark stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-# Panel A: Wide time series overview (top - spans full width)
-dates = pd.date_range("2024-01-01", periods=100, freq="D")
-revenue = np.cumsum(np.random.randn(100) * 10 + 5) + 1000
-df_overview = pd.DataFrame({"date": dates, "revenue": revenue})
-df_overview["day_num"] = range(len(df_overview))
+# Constants: the mosaic, drawn as text. Repeated letters span cells, "." leaves a gap
+LAYOUT = "AAA;BBC;DEF"
+ROW_WEIGHTS = [0.9, 1.1, 1.0]  # relative row heights, one per row of LAYOUT
+GAP = 0.02  # spacing between panels, as a share of the canvas
+TITLE_SHARE = 0.05  # top share of the canvas reserved for the main title
 
-# Panel B: Bar chart data (middle left - large panel)
-categories = ["Product A", "Product B", "Product C", "Product D", "Product E"]
+# Columns: set these to your table's column names
+PANEL = "Panel"  # role: extra
+X = "Day"  # role: x
+Y = "Value"  # role: y
+CATEGORY = "Category"  # role: extra
+GROUP = "Group"  # role: extra
+Z = "Score"  # role: z
+
+# Data: replace this block with your own table, for example df = pd.read_csv("panels.csv")
+rng = np.random.default_rng(42)
+n_days = 100
+revenue = np.cumsum(rng.normal(5, 10, n_days)) + 1000
+products = ["Laptops", "Monitors", "Keyboards", "Webcams", "Headsets"]
 sales = [450, 380, 290, 520, 340]
-df_bar = pd.DataFrame({"category": categories, "sales": sales})
-
-# Panel C: Scatter data (middle right)
-x_scatter = np.random.uniform(20, 80, 60)
-y_scatter = x_scatter * 0.7 + np.random.randn(60) * 8 + 10
-df_scatter = pd.DataFrame({"effort": x_scatter, "output": y_scatter})
-
-# Panel D: Histogram data (bottom left)
-values = np.concatenate([np.random.normal(50, 10, 150), np.random.normal(80, 8, 100)])
-df_hist = pd.DataFrame({"metric": values})
-
-# Panel E: Line chart data (bottom middle)
+effort = rng.uniform(20, 80, 60)
+output = effort * 0.7 + rng.normal(0, 8, 60) + 10
+scores = np.concatenate([rng.normal(50, 10, 150), rng.normal(80, 8, 100)])
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 growth = [2.1, 3.5, 2.8, 4.2, 3.9, 5.1]
-df_line = pd.DataFrame({"month": months, "growth": growth})
-df_line["month_num"] = range(len(df_line))
+quarters = ["Q1", "Q2", "Q3", "Q4"]
+regions = ["North", "South", "West"]
+heat = rng.integers(60, 100, (len(quarters), len(regions)))
 
-# Panel F: Heatmap data (bottom right - with some empty notation)
-matrix_data = []
-for row_label in ["Q1", "Q2", "Q3", "Q4"]:
-    for col_label in ["Region A", "Region B", "Region C"]:
-        value = int(np.random.uniform(60, 100))
-        matrix_data.append({"quarter": row_label, "region": col_label, "value": value})
-df_heatmap = pd.DataFrame(matrix_data)
+df = pd.concat(
+    [
+        pd.DataFrame({PANEL: "A", X: np.arange(n_days), Y: revenue}),
+        pd.DataFrame({PANEL: "B", CATEGORY: products, Y: sales}),
+        pd.DataFrame({PANEL: "C", X: effort, Y: output}),
+        pd.DataFrame({PANEL: "D", X: scores}),
+        pd.DataFrame({PANEL: "E", X: np.arange(len(months)), CATEGORY: months, Y: growth}),
+        pd.DataFrame(
+            {PANEL: "F", CATEGORY: np.repeat(quarters, len(regions)), GROUP: regions * len(quarters), Z: heat.ravel()}
+        ),
+    ],
+    ignore_index=True,
+)
 
-# Theme configuration
+
+# Plot: reads only df and the constants above
+def panel(letter):
+    return df[df[PANEL] == letter].dropna(axis=1, how="all")
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+def luminance(hex_color):
+    lin = [(int(hex_color[i : i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+
+def regions_from_layout(layout):
+    """One (x, y, width, height) region per letter, in ggbunch's canvas fractions."""
+    rows = layout.split(";")
+    n_cols = len(rows[0])
+    edges = np.concatenate([[0], np.cumsum(ROW_WEIGHTS)]) / np.sum(ROW_WEIGHTS)
+    out = {}
+    for letter in sorted({c for c in layout if c.isalpha()}):
+        cells = [(r, c) for r, row in enumerate(rows) for c, ch in enumerate(row) if ch == letter]
+        r0, r1 = min(r for r, _ in cells), max(r for r, _ in cells)
+        c0, c1 = min(c for _, c in cells), max(c for _, c in cells)
+        top = TITLE_SHARE + edges[r0] * (1 - TITLE_SHARE)
+        bottom = TITLE_SHARE + edges[r1 + 1] * (1 - TITLE_SHARE)
+        out[letter] = (c0 / n_cols + GAP / 2, top + GAP / 2, (c1 + 1 - c0) / n_cols - GAP, bottom - top - GAP)
+    return out
+
+
 base_theme = theme_minimal() + theme(
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    plot_title=element_text(size=22, face="bold", color=INK),
-    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=GRID, size=0.3),
     panel_grid_minor=element_blank(),
+    axis_title=element_text(size=11, color=INK),
+    axis_text=element_text(size=9, color=INK_SOFT),
+    plot_title=element_text(size=12, face="bold", color=INK),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT),
-    legend_title=element_text(color=INK),
+    legend_text=element_text(size=9, color=INK_SOFT),
+    legend_title=element_text(size=10, color=INK),
 )
 
-# Panel A: Wide time series (top, spans all 3 columns)
+# A: primary panel, the revenue trend over time
+data_a = panel("A")
 plot_a = (
-    ggplot(df_overview, aes("day_num", "revenue"))
-    + geom_area(fill=IMPRINT[0], alpha=0.3)
-    + geom_line(color=IMPRINT[0], size=2)
-    + labs(x="Day", y="Revenue ($)", title="Daily Revenue Overview")
+    ggplot(data_a, aes(x=X, y=Y))
+    + geom_area(fill=IMPRINT_PALETTE[0], alpha=0.3)
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
+    + scale_y_continuous(limits=[0, float(data_a[Y].max()) * 1.05])
+    + labs(x=X, y="Revenue ($)", title="Daily Revenue Overview")
     + base_theme
 )
 
-# Panel B: Bar chart (middle row, spans 2/3 width)
+# B: sales per product
 plot_b = (
-    ggplot(df_bar, aes("category", "sales"))
-    + geom_bar(stat="identity", fill=IMPRINT[0], color=INK_SOFT, size=0.6, alpha=0.85)
-    + labs(x="Product Category", y="Units Sold", title="Sales by Product")
+    ggplot(panel("B"), aes(x=CATEGORY, y=Y))
+    + geom_bar(stat="identity", fill=IMPRINT_PALETTE[0], color=INK_SOFT, size=0.3, alpha=0.9)
+    + labs(x="Product", y="Units Sold", title="Sales by Product")
     + base_theme
-    + theme(axis_text_x=element_text(angle=45, hjust=1))
 )
 
-# Panel C: Scatter plot (middle row, 1/3 width)
+# C: scatter with a linear trend
 plot_c = (
-    ggplot(df_scatter, aes("effort", "output"))
-    + geom_point(color=IMPRINT[0], size=6, alpha=0.7, fill=IMPRINT[0])
-    + geom_smooth(method="lm", color=IMPRINT[1], size=1.5, se=False)
+    ggplot(panel("C"), aes(x=X, y=Y))
+    + geom_point(color=IMPRINT_PALETTE[0], size=2.5, alpha=0.7)
+    + geom_smooth(method="lm", color=IMPRINT_PALETTE[1], size=1.0, se=False)
     + labs(x="Effort (hours)", y="Output (units)", title="Effort vs Output")
     + base_theme
 )
 
-# Panel D: Histogram (bottom left)
+# D: histogram
 plot_d = (
-    ggplot(df_hist, aes("metric"))
-    + geom_histogram(bins=25, fill=IMPRINT[0], color=INK_SOFT, alpha=0.8, size=0.3)
+    ggplot(panel("D"), aes(x=X))
+    + geom_histogram(bins=25, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
     + labs(x="Performance Score", y="Frequency", title="Score Distribution")
     + base_theme
 )
 
-# Panel E: Line chart with points (bottom middle)
+# E: line with markers over months
+data_e = panel("E")
 plot_e = (
-    ggplot(df_line, aes("month_num", "growth"))
-    + geom_line(color=IMPRINT[0], size=2.5)
-    + geom_point(color=IMPRINT[0], size=8, fill=IMPRINT[0], alpha=0.8)
-    + scale_x_continuous(breaks=list(range(6)), labels=months)
+    ggplot(data_e, aes(x=X, y=Y))
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
+    + geom_point(color=IMPRINT_PALETTE[0], size=3.5)
+    + scale_x_continuous(breaks=data_e[X].tolist(), labels=data_e[CATEGORY].tolist())
     + labs(x="Month", y="Growth Rate (%)", title="Monthly Growth")
     + base_theme
 )
 
-# Panel F: Heatmap (bottom right)
+# F: heatmap, cell values in a color that contrasts with each tile
+data_f = panel("F").copy()
+z_min, z_max = data_f[Z].min(), data_f[Z].max()
+tile_hex = [ramp_color(SEQ_FIELDS, (v - z_min) / (z_max - z_min)) for v in data_f[Z]]
+on_dark_tile = np.array([luminance(h) < 0.18 for h in tile_hex])
 plot_f = (
-    ggplot(df_heatmap, aes("region", "quarter", fill="value"))
-    + geom_tile(color=INK_SOFT, size=1)
-    + geom_text(aes(label="value"), format=".0f", size=14, color=INK)
-    + scale_fill_viridis(name="Value")
-    + labs(x="Region", y="Quarter", title="Regional Performance")
+    ggplot(data_f, aes(x=GROUP, y=CATEGORY, fill=Z))
+    + geom_tile(color=PAGE_BG, size=0.8)
+    + geom_text(aes(label=Z), data=data_f[on_dark_tile], size=6, color="#FAF8F1")
+    + geom_text(aes(label=Z), data=data_f[~on_dark_tile], size=6, color="#1A1A17")
+    + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)])
+    + scale_y_discrete(limits=data_f[CATEGORY].unique().tolist()[::-1])
+    + labs(x="Region", y="Quarter", title="Regional Score (value in cell)")
     + base_theme
-    + theme(legend_position="right", legend_text=element_text(size=14))
+    + theme(legend_position="none")
 )
 
-# Create mosaic layout using ggbunch with regions
-# AAA (top - full width)
-# BBC (middle - B spans 2/3, C spans 1/3)
-# DEF (bottom - three equal panels)
-final_plot = ggbunch(
-    plots=[plot_a, plot_b, plot_c, plot_d, plot_e, plot_f],
-    regions=[
-        (0, 0, 1.0, 0.22),
-        (0, 0.24, 0.65, 0.38),
-        (0.67, 0.24, 0.33, 0.38),
-        (0, 0.64, 0.32, 0.36),
-        (0.34, 0.64, 0.32, 0.36),
-        (0.68, 0.64, 0.32, 0.36),
-    ],
-) + ggsize(1600, 900)
+plots = [plot_a, plot_b, plot_c, plot_d, plot_e, plot_f]
+placement = regions_from_layout(LAYOUT)
+final_plot = (
+    ggbunch(plots=plots, regions=[placement[letter] for letter in sorted(placement)])
+    + ggsize(800, 450)
+    + ggtitle("subplot-mosaic · python · letsplot · anyplot.ai")
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=16, color=INK, face="bold", hjust=0.5),
+    )
+)
 
 output_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Add centered title to the plot
-final_plot_with_title = (
-    final_plot
-    + ggtitle("subplot-mosaic · letsplot · anyplot.ai")
-    + theme(plot_title=element_text(size=26, color=INK, face="bold", hjust=0.5))
-)
-
-ggsave(final_plot_with_title, os.path.join(output_dir, f"plot-{THEME}.png"), scale=3)
-ggsave(final_plot_with_title, os.path.join(output_dir, f"plot-{THEME}.html"))
+ggsave(final_plot, os.path.join(output_dir, f"plot-{THEME}.png"), scale=4)
+ggsave(final_plot, os.path.join(output_dir, f"plot-{THEME}.html"))
