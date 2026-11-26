@@ -1,7 +1,7 @@
 # anyplot.ai
 # raincloud-basic: Basic Raincloud Plot
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 91/100 | Created: 2026-05-27
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 84/100 | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
@@ -136,7 +136,7 @@ for (i, vals) in enumerate(DATA_BY_CAT)
     y_rain = baseline .- rain_gap .- rand(n) .* rain_spread
     scatter!(ax, vals, y_rain;
         color       = (color, 0.6),
-        markersize  = 6,
+        markersize  = 8,
         strokewidth = 0)
 end
 
