@@ -2,47 +2,50 @@ library: pygal
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:58Z'
-updated: '2026-05-21T01:10:18Z'
+updated: '2026-11-26T11:26:09Z'
 generated_by: claude-sonnet
-workflow_run: 26198580868
+workflow_run: 45809816084
 issue: 3809
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Full Code 128 spec implementation: START/STOP patterns, check digit (modulo 103),
-    quiet zones, Code B→C subset switching all correct'
-  - Clever ELEVATED_BG (#FFFDF6) fixed for barcode panel regardless of theme, justified
-    by scan-reliability; dark theme creates a visually appealing frame-within-frame
-    effect
-  - Deterministic realistic data (SHIP-20240101) with informative x_title metadata
-    showing subset, char count, check digit
-  - 'Perfect visual quality: all unnecessary chrome removed, clean layout, both themes
-    pass legibility checks'
+  - 'Full manual Code 128 encoding: Start B, Code B characters, a Code C switch with
+    digit pairs, the modulo-103 check (15) and the 7-element stop pattern'
+  - Bar and space widths follow the pattern table in whole modules, with 10-module
+    quiet zones on both sides
+  - 'Bars are opaque #000000 (opacity=1, stroke_width=0) on a light tile that stays
+    light in the dark theme while page and text chrome follow the theme'
+  - Interactive HTML output alongside the PNG
   weaknesses:
-  - 'Design Excellence is modest: barcode panel is thoughtful but does not reach publication
-    aesthetic level; DE-01 could be raised with typography refinement or annotations
-    showing the subset boundary'
-  - 'LM-02: pygal used as a passive renderer for pre-computed bar widths rather than
-    leveraging library-specific chart logic; adding per-bar tooltips in HTML output
-    showing encoded character/value would demonstrate more library mastery'
+  - 'SC-02 (both): every multi-module bar is drawn as adjacent one-module pygal bars
+    with a ~2 px light seam between them (pixel row y=1200: ''########..########''),
+    so a 2-, 3- or 4-module bar reads as several thin bars instead of one solid bar
+    (C5, and the widths C2 asks for) → one solid bar per bar run with no seam. Likely
+    cause: one pygal.Bar column per module; pygal.Histogram with one (100, start,
+    end) tuple per bar run draws each run as a single rect.'
+  - 'Suggestion: keep the human-readable line to the encoded content (SHIP-20240101)
+    and move the subset/char-count/check metadata into a smaller second line so it
+    does not wrap mid-phrase.'
+  - 'Suggestion: per-bar tooltips in the HTML naming the encoded symbol (start, character,
+    check, stop) would use pygal''s interactivity.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) outer background — correct theme surface
-      Chrome: Title "barcode-code128 · python · pygal · anyplot.ai" in dark text at top (~50% width); x_title "SHIP-20240101 | Subset: Code B→C | 13 chars | Check: 15" in dark text below barcode; all other chrome (axes, ticks, grid) hidden intentionally
-      Data: Elevated cream-white (#FFFDF6) inner panel hosting black vertical bars of varying widths forming a valid Code 128 barcode pattern with quiet zones on both sides; first series uses black (#000000) which is domain-required for scan reliability
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+      Background: warm off-white #FAF8F1 page around an elevated #FFFDF6 tile holding the barcode (2400x2400 square canvas).
+      Chrome: title "barcode-code128 · python · pygal · anyplot.ai" in dark ink at the top; below the tile the human-readable line "SHIP-20240101 | Subset: Code B→C | 13 chars | Check: 15" in dark ink, wrapped over two lines; no axes, ticks, grid or legend. All text readable.
+      Data: one row of equal-height opaque #000000 bars with irregular thick/thin widths, blank quiet zones left and right. Every multi-module bar shows a ~2 px light seam between its modules, so wide bars read as pairs of thin bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) outer background — correct dark surface
-      Chrome: Title in light off-white text, fully readable against dark background; x_title in light text below barcode, also readable; no dark-on-dark failures observed
-      Data: Same elevated off-white (#FFFDF6) barcode panel preserved regardless of theme (intentional — barcodes require white background for scan reliability); barcode bar colors identical to light render (black bars on white panel)
-      Legibility verdict: PASS — all text clearly readable; frame-within-frame effect from dark outer + white inner panel is visually distinctive
+      Background: warm near-black #1A1A17 page; the barcode stays on the same light #FFFDF6 tile (permitted white tile in the dark theme).
+      Chrome: title and human-readable line in light #F0EFE8 ink, fully readable; no dark-on-dark text.
+      Data: bars identical to the light render (black, same module seams) on the light tile.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,74 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=66, label=56, major_label=44, legend=44);
-          readable in both themes
+        comment: Title 66 and human-readable line 56 explicitly sized; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x_title wraps cleanly over two lines
+        comment: No text collisions; human-readable line clear of the tile and the
+          bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars clearly visible against elevated white panel in both
-          themes
+        comment: Bars clearly visible on the light tile in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Black on white/cream: maximum contrast, CVD-safe'
+        comment: Monochrome dark-on-light, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square appropriate; barcode panel fills ~70% of canvas;
-          balanced margins
+        comment: Square 2400x2400; tile fills the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; x_title provides encoding metadata
+        comment: Title in mandated format; axes N/A for a barcode
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Black bars domain-required by spec; backgrounds #FAF8F1/#1A1A17
-          correct; elevated panel #FFFDF6 justified'
+        comment: 'Page backgrounds #FAF8F1/#1A1A17 correct; black bars are domain-required
+          by the spec, not a palette series'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured above defaults; elevated white panel deliberate domain
-          design choice; dark frame-within-frame effect
+        passed: false
+        comment: Style-guide baseline; the light tile is permitted by the spec, nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: All non-essential chrome removed; explicit margins; spacing=0 for
-          authentic barcode look
+        passed: false
+        comment: Chrome removed as the spec permits; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: x_title exposes encoding metadata (subset switching B→C, check digit,
-          char count) providing context beyond raw display
+        passed: false
+        comment: No hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,27 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization with genuine binary bar-width
-          encoding
+        comment: Correct Code 128 linear barcode
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Quiet zones, start/stop patterns, check digit (modulo 103), human-readable
-          text, Code B→C subset switching
+        passed: false
+        comment: Start, data, check, stop, quiet zones and human-readable text present;
+          bars are opaque black, but every multi-module bar is split by a light seam
+          between its modules (C5, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bar widths correctly expanded from CODE128_PATTERNS; encoding verified
+        comment: Bar/space widths expanded from the Code 128 pattern table in whole
+          modules
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no legend correct for single-series
+        comment: Title correct; legend N/A (single monochrome encoding)
     data_quality:
       score: 15
       max: 15
@@ -158,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Code B, Code C, subset switching, quiet zones, check digit, start/stop
-          all present
+        comment: Shows Start B, a Code C switch with digit pairs, the mod-103 check
+          and the stop pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SHIP-20240101 is a realistic shipping label; logistics context matches
-          spec; neutral
+        comment: Shipping label SHIP-20240101, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13 chars within 48-char recommendation; check digit 15 is valid modulo-103
-          result
+        comment: 'Checked: 104+1*51+2*40+3*41+4*48+5*13+6*99+7*20+8*24+9*1+10*1=1560,
+          1560 mod 103 = 15, matching the printed check; 13 chars within 48'
     code_quality:
       score: 10
       max: 10
@@ -183,53 +184,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → encoding → chart → render; no
-          functions/classes'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random elements
+        comment: Deterministic content
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, pygal.style.Style — all used
+        comment: os, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity for manual barcode
-          encoding
+        comment: Pattern table needed; no barcode library installed in CI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
-          pygal)
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Style object theming, show_x/y_labels=False, spacing=0, range=(0,100)
-          — proper idiomatic pygal.Bar usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: HTML interactive export is distinctive; but barcode logic is pure
-          Python, pygal used only as passive bar renderer
+        comment: Style object, pygal.Bar with spacing=0 and range; standard usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  rendered_at: '2026-11-26T11:22:58Z'
 impl_tags:
   dependencies: []
   techniques:
