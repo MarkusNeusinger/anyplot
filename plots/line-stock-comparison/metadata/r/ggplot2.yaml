@@ -2,141 +2,141 @@ library: ggplot2
 language: r
 specification_id: line-stock-comparison
 created: '2026-05-23T10:02:15Z'
-updated: '2026-05-23T21:59:45Z'
+updated: '2026-11-26T13:57:03Z'
 generated_by: claude-sonnet
-workflow_run: 26329788039
+workflow_run: 45833098248
 issue: 3748
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'All spec requirements implemented: rebased-to-100 normalization, reference line
-    at 100, 4-series comparison with correct Imprint palette order'
-  - 'Excellent data storytelling: NVDA ribbon fill creates clear focal point highlighting
-    outperformance vs other series'
-  - 'Realistic, accurate historical context: SVB bank collapse (Mar 2023), NVDA AI
-    Surge (May 2023), Rates Peak (Oct 2023) are all correct events'
-  - 'Advanced ggplot2 features used idiomatically: geom_ribbon(), annotate(''label'')
-    styled callouts, coord_cartesian(clip=''off'') for off-panel labels'
-  - 'Theme adaptation fully correct: all chrome tokens flip between #FAF8F1 and #1A1A17,
-    data colors stay identical between renders'
-  - Clean code with set.seed(42), no functions/classes, correct canvas (3200x1800),
-    proper ragg device, themed output filenames
+  - All lines start together at exactly 100 (cumprod from 1.0) and separate by relative
+    performance; dashed reference at 100 is subordinate yet visible in both themes
+  - Bold, series-colored end-of-line labels let each final value be read without the
+    legend
+  - Theme tokens thread through every chrome element; Imprint line colors identical
+    across light and dark
+  - 'Idiomatic ggplot2: named theme object on theme_minimal, scale_x_date with date_breaks,
+    annotate(''label'') callouts, coord_cartesian(clip = ''off'')'
   weaknesses:
-  - 'End-of-line label for MSFT shows as ''MSF.'' in both renders — MSFT and SPY end
-    the year at similar rebased values (~115-120), causing their hjust=-0.2 ticker
-    labels to overlap vertically, partially obscuring the ''T'' in MSFT. Fix: add
-    a small y-nudge to separate close end labels (e.g., use ggrepel::geom_text_repel
-    or manually offset last_pts y-values for overlapping labels by ±2-3 units).'
-  - Right legend inside panel potentially crowds the end-of-line labels for mid-range
-    lines (MSFT, SPY). Consider moving legend to a corner with legend.justification
-    or reducing legend.key.size to reduce collision risk.
+  - 'VQ-02, SC-02 (both): the rotated ''NVDA AI Surge'' and ''Rates Peak'' label boxes
+    are drawn on top of the lines and cover segments of MSFT, AAPL, SPY and NVDA around
+    late May and late October, against C5''s ''stay behind the lines'' → place the
+    callouts where no series runs (e.g. ''NVDA AI Surge'' above y≈150, ''Rates Peak''
+    below y≈90) or draw them before geom_line. Likely cause: annotate(''label'', y
+    = 102, hjust = 0) layered after geom_line().'
+  - 'VQ-07 (both): AAPL, the third series, is drawn in matte red #AE3030 and SPY in
+    blue #4467A3, skipping ochre; with no loss meaning per ticker, canonical order
+    is #009E73, #C475FD, #4467A3, #BD8233 → AAPL #4467A3, SPY #BD8233. Likely cause:
+    IMPRINT <- c(''#009E73'', ''#C475FD'', ''#AE3030'', ''#4467A3'') instead of the
+    eight-hue Imprint list indexed by position.'
+  - 'DQ-02 (both): real tickers NVDA, MSFT, AAPL and SPY plus real 2023 events (SVB
+    collapse, ''NVDA AI Surge'') carry invented random-walk prices — e.g. AAPL ends
+    2023 at about 88 and NVDA at about 139, far from their actual year → use fictional
+    tickers/company names for the simulated series (or real data). Likely cause: tickers
+    <- c(''NVDA'', ''MSFT'', ''AAPL'', ''SPY'') on rnorm returns.'
+  - 'Suggestion: the legend repeats what the bold end-of-line labels already say;
+    one of the two could carry the identification alone and give the panel more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
-      Chrome: Title "line-stock-comparison · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17) clearly readable. Subtitle in softer INK_SOFT. Y-axis label "Rebased Price (Start = 100)" and X-axis label "Date" in dark INK, properly sized (10pt). Tick labels in INK_SOFT (8pt), x-axis ticks rotated 30° for date readability. Grid lines subtle (0.18 linewidth, soft alpha). All text is legible against the warm off-white background.
-      Data: Four lines in Imprint palette canonical order — NVDA (#009E73 green, first series correct), MSFT (#9418DB purple), AAPL (#B71D27 red), SPY (#16B8F3 sky blue). Subtle green ribbon fill under NVDA line emphasizing outperformance. SVB region shaded in faint red (#B71D27 at alpha=0.07). Dashed horizontal reference line at rebased=100. Vertical dotted event markers with styled label annotations (SVB Collapse in red, NVDA AI Surge in green, Rates Peak in INK_SOFT). End-of-line ticker labels: NVDA visible at ~150, AAPL at ~90-95; MSFT label appears as "MSF." — the "T" is obscured, likely overlapping with the nearby SPY end label (both stocks finish at similar values ~115-120).
-      Legibility verdict: PASS overall, with VQ-02 concern on MSFT/SPY end-label overlap at right edge.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'line-stock-comparison · r · ggplot2 · anyplot.ai' and subtitle readable; horizontal legend (NVDA, MSFT, AAPL, SPY) in an elevated box top-left; y axis 'Rebased Price (Start = 100)' ticks 100/120/140; x axis 'Date' with rotated monthly ticks Feb '23–Dec '23; subtle major grid. All dark text readable.
+      Data: NVDA #009E73 with a pale green ribbon to 100, MSFT #C475FD, AAPL #AE3030, SPY #4467A3; dashed reference at 100; faint red SVB band in March; dotted event lines with rotated 'SVB Collapse', 'NVDA AI Surge', 'Rates Peak' label boxes (the latter two sit over lines); bold end labels NVDA ~139, SPY ~119, MSFT ~107, AAPL ~88, all complete.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title and subtitle fully flipped to light text (#F0EFE8 INK and #B8B7B0 INK_SOFT). All axis labels, tick labels, and legend text rendered in light tones against the dark background. No dark-on-dark failures detected. Grid lines remain subtle with dark-theme adjusted alpha. SVB collapse region shading still uses #B71D27 (red) which is visible on dark background.
-      Data: All four data line colors are identical to the light render — NVDA green #009E73, MSFT purple #9418DB, AAPL red #B71D27, SPY blue #16B8F3. Ribbon fill, reference line, and event annotations render correctly on dark surface. The "MSF." end-label overlap issue persists identically to light render, confirming it is a real visual issue (MSFT and SPY end labels overlap vertically).
-      Legibility verdict: PASS, with same VQ-02 MSFT/SPY end-label overlap as in light render.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, ticks and legend text flip to light tones; legend box #242420; grid subtle. No dark-on-dark text; the red 'SVB Collapse' label is dimmer but readable.
+      Data: line colors identical to the light render; ribbon, reference line and event markers visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title (12pt), axis labels (10pt), ticks (8pt) all match style guide;
-          readable in both themes. Minor deduction for end-label collision reducing
-          MSFT readability.
+        comment: Title 12 pt, axis titles 10 pt, ticks/legend 8 pt, bold end labels;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: MSFT and SPY end-of-line labels overlap vertically at right edge
-          (both stocks finish at similar rebased values ~115-120), causing 'T' in
-          MSFT to be obscured. Visible as 'MSF.' in both light and dark renders.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines at linewidth=1.1 and alpha=0.92 are well visible for 252 data
-          points per series. Ribbon at alpha=0.12 is subtle but intentional. SVB shading
-          at alpha=0.07 is very faint on dark theme.
+        comment: No text collides with other text; the rotated 'NVDA AI Surge' and
+          'Rates Peak' label boxes cover segments of the MSFT/AAPL/SPY/NVDA lines
+          (defect line)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Four lines at linewidth 1.1 over 252 points each, clearly visible
+          in both themes; legend line samples match the lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is colorblind-safe by design. 4 colors with good
-          perceptual separation. No red-green sole signal.
+        comment: Four distinct hue families, strong contrast on both surfaces; red
+          is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800. 70pt right margin accommodates end labels.
-          No canvas gate failure. Minor deduction for crowding between end labels
-          and legend.
+        comment: Plot fills the canvas, legend in a top band, right margin holds the
+          end labels; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Rebased Price (Start = 100)' descriptive with units. Title
-          format correct. Informative subtitle provided.
+        comment: '''Date'' and ''Rebased Price (Start = 100)'' — descriptive, index
+          named relative to the start'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series NVDA = #009E73 (brand green). Canonical order followed
-          for all 4 series. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct.
-          Chrome tokens fully flipped between themes.'
+        comment: 'Backgrounds and chrome correct in both themes, first series #009E73,
+          but AAPL takes matte red #AE3030 at position 3 instead of blue #4467A3 and
+          ochre is skipped (defect line)'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Clear design intent: NVDA ribbon fill creates focal point, styled
-          annotate(''label'') callouts for events, end-of-line labels complementing
-          legend. SVB shading color-coded to match annotation. Professional composition.'
+        comment: 'Beyond baseline: bold series-colored end-of-line labels and italic
+          event callouts color-coded to what they mark'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_minimal removes top/right spines; major-grid-only with 0.18
-          linewidth and alpha via adjustcolor; panel border removed. Axis lines kept
-          appropriately for time-series readability. Good whitespace.
+        comment: End labels placed in a reserved right margin, legend left-aligned
+          with the title in a top band, major grid only
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Strong narrative: NVDA outperformance visually emphasized with ribbon
-          fill; dashed reference at 100 anchors comparison; historical events annotated
-          with contextual labels guiding viewer through 2023 market story.'
+        comment: 'Chose its own focal point: the soft green ribbon between NVDA and
+          100 makes the leader''s outperformance the first read'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -144,56 +144,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line time series comparing rebased stock prices.
+        comment: Correct multi-line rebased stock comparison
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features: rebased to 100, distinct colors per stock, clear
-          legend, Y-axis shows rebased values, horizontal reference line at 100, SVB
-          region shading as optional event highlight.'
+        comment: Rebased to 100, distinct colors + legend, rebased y axis, dashed
+          reference at 100, grid; but the event callout boxes sit on top of the lines
+          instead of behind them (C5, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: trading dates. Y-axis: rebased price (start=100). All 4
-          series visible across full year.'
+        comment: Dates on x, rebased values on y; y fitted to the data (~86–150) without
+          being forced to zero; date ticks every two months
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-stock-comparison · r · ggplot2 · anyplot.ai' correct.
-          Legend identifies all 4 tickers. End-of-line labels add further readability.
+        comment: Title in mandated format; legend and direct labels name each ticker
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: 4 stocks with varied volatility profiles, reference
-          line, event shading, event markers, end-of-period labels. Full year of trading
-          days.'
+        comment: Shows lines starting together at 100, separation, crossing, series
+          above and below 100, widening spread
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: NVDA/MSFT/AAPL/SPY is a natural 2023 portfolio. Events (SVB collapse
-          Mar 2023, NVDA AI Surge May 2023, Rates Peak Oct 2023) are historically
-          accurate. Neutral financial data.
+        comment: Real tickers (NVDA, MSFT, AAPL, SPY) and real 2023 events carry simulated
+          random-walk prices (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NVDA reaching ~150 (50% gain) reflects real 2023 NVDA performance.
-          Other stocks modest. 252 trading days correct for one year.
+        comment: No Check values in the spec; 252 trading days, rebase starts at exactly
+          100 (cumprod from 1.0 × 100), daily vols 0.8–2.8 % plausible
     code_quality:
       score: 10
       max: 10
@@ -203,52 +200,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, sequential flow.
+        comment: Flat script, no functions or classes beyond small lapply closures
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top, fully deterministic.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only library(ggplot2) and library(ragg) — both used.
+        comment: ggplot2 and ragg only, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for feature richness, named theme object,
-          good ggplot2 patterns. No fake UI.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf, ragg device, correct dims.
+        comment: Saves plot-{THEME}.png with ragg at 3200×1800; current API (linewidth
+          on annotate label)
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Grammar of graphics properly applied; theme() layering; scale_color_manual;
-          coord_cartesian(clip='off'); annotate(); all idiomatic ggplot2 patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: geom_ribbon() for outperformance area, annotate('label') for styled
-          callout boxes, geom_rect() for SVB shading, coord_cartesian(clip='off')
-          for off-panel labels — all distinctively ggplot2.
+        comment: Named theme object composed onto theme_minimal, scale_color_manual
+          with named values, scale_x_date date_breaks/date_labels, coord_cartesian(clip='off')
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: annotate('label') callout boxes and geom_ribbon against a constant
+          baseline — ggplot2 idioms beyond the mandated set
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
+  rendered_at: '2026-11-26T13:52:58Z'
 impl_tags:
   dependencies:
   - ragg
@@ -257,9 +256,10 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
-  - time-series
   - normalization
+  - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
