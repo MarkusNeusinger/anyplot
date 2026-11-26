@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tile-background: Map with Tile Background
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-27
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -13,12 +13,13 @@ _here = os.path.abspath(os.path.dirname(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import time
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
-import xyzservices.providers as xyz
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper, Range1d, WMTSTileSource
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -30,57 +31,116 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: European capital cities with annual visitor counts (millions)
-cities = {
-    "Paris": (2.3522, 48.8566),
-    "London": (-0.1276, 51.5074),
-    "Rome": (12.4964, 41.9028),
-    "Barcelona": (2.1734, 41.3851),
-    "Amsterdam": (4.9041, 52.3676),
-    "Berlin": (13.4050, 52.5200),
-    "Prague": (14.4378, 50.0755),
-    "Vienna": (16.3738, 48.2082),
-    "Madrid": (-3.7038, 40.4168),
-    "Lisbon": (-9.1393, 38.7223),
-    "Brussels": (4.3517, 50.8503),
-    "Dublin": (-6.2603, 53.3498),
-    "Copenhagen": (12.5683, 55.6761),
-    "Stockholm": (18.0686, 59.3293),
-    "Warsaw": (21.0122, 52.2297),
-}
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-names = list(cities.keys())
-lons = np.array([cities[c][0] for c in names])
-lats = np.array([cities[c][1] for c in names])
-visitors = np.array([19.1, 21.0, 10.1, 12.0, 8.0, 6.1, 8.0, 7.7, 7.5, 4.5, 4.0, 5.5, 3.5, 4.0, 3.0])
+# Imprint sequential ramp for colored marks on the page, as (position, hex) stops
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-# Web Mercator projection (required for tile maps)
-k = 6378137
-x_merc = lons * (k * np.pi / 180.0)
-y_merc = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
 
-source = ColumnDataSource(
-    data={
-        "x": x_merc,
-        "y": y_merc,
-        "lon": lons,
-        "lat": lats,
-        "name": names,
-        "visitors": visitors,
-        "size": visitors * 2.0 + 20,
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Columns: set these to your table's column names
+LABEL = "City"  # role: label
+LON = "Longitude (°)"  # role: lon
+LAT = "Latitude (°)"  # role: lat
+VALUE = "Visitors (M/year)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("places.csv")
+df = pd.DataFrame(
+    {
+        LABEL: [
+            "Paris",
+            "London",
+            "Rome",
+            "Barcelona",
+            "Amsterdam",
+            "Berlin",
+            "Prague",
+            "Vienna",
+            "Madrid",
+            "Lisbon",
+            "Brussels",
+            "Dublin",
+            "Copenhagen",
+            "Stockholm",
+            "Warsaw",
+        ],
+        LON: [
+            2.3522,
+            -0.1276,
+            12.4964,
+            2.1734,
+            4.9041,
+            13.4050,
+            14.4378,
+            16.3738,
+            -3.7038,
+            -9.1393,
+            4.3517,
+            -6.2603,
+            12.5683,
+            18.0686,
+            21.0122,
+        ],
+        LAT: [
+            48.8566,
+            51.5074,
+            41.9028,
+            41.3851,
+            52.3676,
+            52.5200,
+            50.0755,
+            48.2082,
+            40.4168,
+            38.7223,
+            50.8503,
+            53.3498,
+            55.6761,
+            59.3293,
+            52.2297,
+        ],
+        VALUE: [19.1, 21.0, 10.1, 12.0, 8.0, 6.1, 8.0, 7.7, 7.5, 4.5, 4.0, 5.5, 3.5, 4.0, 3.0],
     }
 )
 
-# imprint_seq colormap: #009E73 (brand green) → #4467A3 (blue)
-ANYPLOT_SEQ256 = [
-    "#{:02X}{:02X}{:02X}".format(
-        int(round(0 + 68 * t / 255)), int(round(158 - 55 * t / 255)), int(round(115 + 48 * t / 255))
-    )
-    for t in range(256)
-]
-color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=visitors.min(), high=visitors.max())
+# Plot
+# Web Mercator projection (required for tile maps)
+k = 6378137
+df["x"] = df[LON] * (k * np.pi / 180.0)
+df["y"] = np.log(np.tan((90 + df[LAT]) * np.pi / 360.0)) * k
+df["size"] = df[VALUE] * 2.0 + 20
 
-tile_provider = xyz.CartoDB.Positron if THEME == "light" else xyz.CartoDB.DarkMatter
+source = ColumnDataSource(df)
+
+ANYPLOT_SEQ256 = [ramp_color(SEQ_MARKS, i / 255) for i in range(256)]
+color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=df[VALUE].min(), high=df[VALUE].max())
+
+# Esri gray canvas tiles: a light and a dark basemap that follow the page theme
+ESRI_CANVAS = "World_Light_Gray_Base" if THEME == "light" else "World_Dark_Gray_Base"
+tile_provider = WMTSTileSource(
+    url=f"https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/{ESRI_CANVAS}/MapServer/tile/{{Z}}/{{Y}}/{{X}}",
+    attribution="Tiles © Esri — Esri, DeLorme, NAVTEQ",
+    max_zoom=16,
+)
+
+# View fitted to the data bounds with a margin
+pad_x = (df["x"].max() - df["x"].min()) * 0.12
+pad_y = (df["y"].max() - df["y"].min()) * 0.12
+x_range = Range1d(df["x"].min() - pad_x, df["x"].max() + pad_x)
+y_range = Range1d(df["y"].min() - pad_y, df["y"].max() + pad_y)
 
 title = "map-tile-background · python · bokeh · anyplot.ai"
 n = len(title)
@@ -89,6 +149,8 @@ title_pt = max(34, round(50 * 67 / n)) if n > 67 else 50
 p = figure(
     width=3200,
     height=1800,
+    x_range=x_range,
+    y_range=y_range,
     x_axis_type="mercator",
     y_axis_type="mercator",
     title=title,
@@ -108,7 +170,7 @@ p.scatter(
     "y",
     source=source,
     size="size",
-    fill_color={"field": "visitors", "transform": color_mapper},
+    fill_color={"field": VALUE, "transform": color_mapper},
     fill_alpha=0.85,
     line_color="white",
     line_width=2,
@@ -116,7 +178,7 @@ p.scatter(
 
 color_bar = ColorBar(
     color_mapper=color_mapper,
-    title="Visitors (M/year)",
+    title=VALUE,
     title_text_font_size="28pt",
     title_text_color=INK,
     major_label_text_font_size="24pt",
@@ -127,7 +189,11 @@ color_bar = ColorBar(
 p.add_layout(color_bar, "right")
 
 hover = HoverTool(
-    tooltips=[("City", "@name"), ("Visitors", "@visitors{0.0}M/year"), ("Location", "@lat{0.00}°N, @lon{0.00}°E")]
+    tooltips=[
+        (LABEL, f"@{{{LABEL}}}"),
+        (VALUE, f"@{{{VALUE}}}{{0.0}}"),
+        ("Location", f"@{{{LAT}}}{{0.00}}, @{{{LON}}}{{0.00}}"),
+    ]
 )
 p.add_tools(hover)
 
@@ -135,8 +201,8 @@ p.title.text_font_size = f"{title_pt}pt"
 p.title.align = "center"
 p.title.text_color = INK
 
-p.xaxis.axis_label = "Longitude (°)"
-p.yaxis.axis_label = "Latitude (°)"
+p.xaxis.axis_label = LON
+p.yaxis.axis_label = LAT
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
