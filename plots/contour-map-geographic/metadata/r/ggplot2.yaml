@@ -2,60 +2,54 @@ library: ggplot2
 language: r
 specification_id: contour-map-geographic
 created: '2026-05-20T22:58:02Z'
-updated: '2026-05-20T23:15:32Z'
+updated: '2026-11-26T10:45:12Z'
 generated_by: claude-sonnet
-workflow_run: 26194564492
+workflow_run: 45803324987
 issue: 3772
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 83
 review:
   strengths:
-  - Multi-layer geographic composition (geom_contour_filled + geom_contour + geom_polygon
-    + geom_label) is idiomatic ggplot2 grammar and creates a professional synoptic
-    weather map aesthetic
-  - Theme-adaptive ocean panel background (OCEAN_COL) and all chrome tokens correctly
-    flip between light/dark — no dark-on-dark or light-on-light failures
-  - 'Meteorologically accurate data: Azores High, Icelandic Low, European ridge all
-    represented with realistic pressure values (994–1032 hPa) and standard 4 hPa isobar
-    intervals'
-  - Isobar label positioning via contourLines() midpoint algorithm is clever and places
-    labels cleanly on the longest contour segment for each level
-  - viridis_d is correctly applied to the discrete-binned fill from geom_contour_filled,
-    and the ocean background / viridis gradient together communicate the pressure
-    field intuitively
-  - 'Perfect spec compliance: filled contours, line contours, labeled isobars, geographic
-    basemap (coastlines + borders), and colorbar legend all present'
+  - Filled bands use the imprint_seq fields stops for each theme, sampled once per
+    4 hPa band, so light and dark both read low→high correctly
+  - geom_contour_filled with explicit 4 hPa breaks and scale_fill_manual(drop = FALSE)
+    gives an exact stepped legend 'Pressure (hPa)' matching the isolines
+  - Isobar labels in page-colored boxes (size 3, bold) stay readable over every band
+    in both themes
+  - Coastlines and borders from map_data('world') drawn in the theme ink stay legible
+    beneath the fills in both renders
+  - Realistic North Atlantic synoptic pattern with standard 4 hPa isobar interval
   weaknesses:
-  - Isobar labels use geom_label size=2.2 (~6.3pt equivalent), which is readable at
-    full 3200×1800 canvas resolution but will be marginal at mobile viewport (~400px
-    scaled down ~8×); consider increasing to size=2.8–3.0 for better mobile legibility
-  - The panel background OCEAN_COL is fully covered by geom_contour_filled over the
-    entire data grid, so the ocean color never shows through; it only adds value at
-    grid edges — this is cosmetically fine but architecturally misleading
-  - Design storytelling (DE-03) could be elevated by adding minimal text annotations
-    for the key pressure systems (e.g., 'Azores H' and 'Icelandic L' labels) to guide
-    viewers unfamiliar with synoptic meteorology — the current plot shows the gradient
-    clearly but doesn't name the story
-  - 'DE-01 capped below 8: the aesthetic is professional and well-composed but relies
-    on standard viridis + contour-fill without distinctive typographic hierarchy or
-    focal emphasis beyond the gradient itself'
+  - 'SC-02 (both): isolines are jagged and the field throws spurious small closed
+    loops (e.g. 1018 islands over Germany/Poland, scattered loops over Russia) because
+    white noise of sd 0.4 hPa sits on a 4 hPa interval, so C1''s smooth isolines are
+    missed → drop the per-cell noise or smooth it (sd ≤ 0.1, or a low-frequency perturbation).
+    Likely cause: rnorm(nrow(grid), 0, 0.4) in the pressure field.'
+  - 'VQ-06 (both): axis titles ''Longitude'' / ''Latitude'' carry no unit and ticks
+    read -20 / 0 / 20 → ''(°E)'' / ''(°N)'' in the titles or degree tick labels (e.g.
+    20°W). Likely cause: labs(x = ''Longitude'', y = ''Latitude'') without units.'
+  - 'Suggestion: OCEAN_COL never shows because geom_contour_filled covers the whole
+    panel; a land/sea distinction (e.g. lighter fill alpha) would make the basemap
+    read faster.'
+  - 'Suggestion: naming the Azores High and Icelandic Low with small H/L marks would
+    guide readers unfamiliar with synoptic maps.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "N. Atlantic Isobars · contour-map-geographic · r · ggplot2 · anyplot.ai" in dark bold text at top, clearly readable. Axis labels "Latitude" (Y) and "Longitude" (X) in dark text, readable. Tick labels in muted dark (#4A4A44-equivalent) at 8pt, fully readable. Legend box upper-right with elevated background, "Pressure (hPa)" title and interval labels legible.
-      Data: viridis filled contours from deep purple (994–998 hPa, Icelandic Low region) through teal/cyan (1006–1014 hPa) to yellow-green (1022–1026 hPa, Azores High). Coastlines and political borders drawn as thin dark lines over filled contours. Bold isobar value labels (998, 1002, 1006, 1010, 1014, 1018, 1022) in geom_label boxes with PAGE_BG fill and INK text — all readable. Geographic extent covers North Atlantic and Europe (-30°W to 45°E, 35°N to 72°N).
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 page; map panel framed by a thin INK_SOFT border.
+      Chrome: bold title 'N. Atlantic Isobars · contour-map-geographic · r · ggplot2 · anyplot.ai' in dark ink, axis titles 'Longitude'/'Latitude' and ticks (-20..40, 40..70) in dark/soft ink; legend 'Pressure (hPa)' on an elevated panel with eight interval keys (994–1026). All readable.
+      Data: filled 4 hPa bands in imprint_seq light fields stops — pale mint for the Icelandic Low (NW), brand green, then blue to navy for the Azores High (SW); dark isolines and black coastlines/borders over Europe; bold labels 998–1022 in page-colored boxes. Isolines are jagged, with small noise loops over Central Europe and Russia.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light (#F0EFE8-equivalent) bold text, clearly readable against dark background. Axis labels in light text, readable. Tick labels in muted light (#B8B7B0-equivalent), readable. Legend box with elevated dark background (#242420), legend text in light muted color — all legible. No dark-on-dark failures observed.
-      Data: viridis data colors are IDENTICAL to light render — same purple for Icelandic Low, same yellow-green for Azores High. The contour palette did not shift. Coastlines/borders rendered as lighter lines (INK flipped to #F0EFE8-equivalent) on the dark surface. Isobar labels use INK (light) text on PAGE_BG (dark) fill — readable. Ocean panel uses OCEAN_COL dark variant (#1E2E3B), providing appropriate maritime context.
-      Legibility verdict: PASS — all text is clearly readable against warm near-black background; data colors are unchanged from light render; chrome correctly flipped.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend text in light ink, ticks in soft light ink; legend on #242420 panel. No dark-on-dark text.
+      Data: same bands with the dark fields stops (deep green low → brand green → pale blue high), as intended for a continuous ramp; isolines and borders in light ink; labels in dark boxes with light text. Brand green #009E73 visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,93 +57,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=11pt, axis.title=10pt, axis.text=8pt,
-          legend.text=8pt, legend.title=9pt. Readable at full canvas resolution in
-          both themes. Isobar labels at size=2.2 (~6.3pt) are readable at 3200×1800
-          but marginal at mobile scale (~400px).'
+        comment: Title 11 pt, axis titles 10 pt, ticks 8 pt, contour labels size 3
+          (~8.5 pt bold); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps detected. Isobar labels placed at midpoints of longest
-          contour segment, well-spaced. Legend positioned clearly outside data area.
+        comment: No text collides with text or data; the 1006 and 1010 labels sit
+          close but clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contours clearly visible with viridis colormap. Contour lines
-          at linewidth=0.3 visible. Coastlines at linewidth=0.25 provide geographic
-          context without competing with data. Labels clearly visible.
+        comment: Isolines, coastlines and borders visible over every band in both
+          themes; legend swatches match the bands
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe. Contour lines in INK
-          provide contrast against all fill levels. No red-green dependency.
+        comment: Single-hue-family sequential ramp, lightness-ordered, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 landscape canvas (gate passed). Map fills plot area well
-          with coord_fixed maintaining geographic proportions. Legend positioned at
-          upper-right without obscuring key data. Balanced margins.
+        comment: Map fills the canvas width at its fixed aspect with title and legend;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Axis labels 'Longitude' and 'Latitude' are standard descriptive geographic
-          terms (no degree units needed for synoptic map). Title follows extended
-          format with descriptive prefix.
+        comment: '''Longitude'' / ''Latitude'' carry no degree unit and the ticks
+          show signed numbers (-20 for 20°W) (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous/binned data correctly uses scale_fill_viridis_d (viridis).
-          Plot backgrounds #FAF8F1 (light) and #1A1A17 (dark) confirmed visually.
-          All chrome tokens flip correctly. Data colors identical across themes.'
+        comment: 'imprint_seq fields stops per theme (light mint→green→blue→navy,
+          dark deep green→green→pale blue), sampled once per band; backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: viridis palette is well-chosen for pressure data,
-          theme-adaptive ocean background adds geographic context, professional weather-map
-          aesthetic with bold labeled isobars. Clearly above library defaults. Stopped
-          short of 8 as typographic hierarchy and focal emphasis (pressure system
-          annotations) could be sharper.'
+        comment: 'Style-guide baseline: theme tokens, explicit sizes; nothing decided
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: minor grids removed, major grid as subtle dotted
-          lines at linewidth=0.15, panel border adds geographic frame, legend with
-          elevated background and styled border, ocean background color. Meaningful
-          polish above defaults.'
+        comment: Contour labels set in page-colored boxes with thin borders so they
+          read on any band; framed elevated legend panel
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good storytelling: viridis gradient naturally communicates pressure
-          gradient, isobar labels guide readers to specific values, geographic context
-          anchors interpretation. Missing named system annotations (Azores High, Icelandic
-          Low) that would complete the meteorological narrative for non-expert viewers.'
+        passed: false
+        comment: 'Default: the field is shown, no hierarchy beyond what the Notes
+          prescribe'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -157,33 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: contour lines overlaid on geographic basemap. Both line
-          contours (geom_contour) and filled contours (geom_contour_filled) implemented
-          with geographic polygons.'
+        comment: Filled contours with isolines over a coastline/border basemap — correct
+          type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: geographic basemap (coastlines + borders
-          via map_data), labeled contour lines at 4 hPa intervals, both filled and
-          line contours, viridis colormap appropriate for pressure data, colorbar
-          legend showing pressure range, meteorologically meaningful intervals.'
+        comment: Basemap, labelled isolines, filled bands and legend present; but
+          the added noise (rnorm sd 0.4) makes isolines jagged and spawns spurious
+          small closed loops over Germany/Poland and Russia, missing C1's smooth isolines
+          (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped to y/x. coord_fixed maintains geographic
-          proportions. Full geographic extent shown.
+        comment: lon/lat on x/y with coord_fixed; contours at their grid values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'N. Atlantic Isobars · contour-map-geographic · r · ggplot2
-          · anyplot.ai' matches extended format with descriptive prefix. Legend shows
-          'Pressure (hPa)' with correct binned interval labels.
+        comment: Title in the mandated format with descriptive prefix; legend 'Pressure
+          (hPa)' with interval keys
     data_quality:
       score: 15
       max: 15
@@ -193,27 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range of features: low pressure system (Icelandic Low
-          ~994-998 hPa), high pressure ridge (Azores High ~1022+ hPa), transition
-          zones, labeled isobars at multiple levels, geographic overlay showing both
-          ocean and land.'
+        comment: Shows filled bands, line contours, labels, closed high/low systems
+          and a basemap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real meteorological scenario: synoptic weather map of North Atlantic/Europe.
-          Named climatological features (Azores High, Icelandic Low, European ridge)
-          are actual atmospheric circulation patterns. Neutral scientific domain.'
+        comment: 'Plausible North Atlantic synoptic pattern: Azores High, Icelandic
+          Low, European ridge'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pressure values 994-1032 hPa are physically realistic for synoptic
-          weather systems. 4 hPa intervals are standard for synoptic-scale charts.
-          Geographic extent (35-72°N, 30°W-45°E) correctly covers North Atlantic and
-          Europe. Pressure gradient magnitude is plausible.
+        comment: 'Checked: 994–1026 hPa range is realistic sea-level pressure; 4 hPa
+          isobar interval (no Check values: in spec)'
     code_quality:
       score: 10
       max: 10
@@ -223,71 +196,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → data generation → label positions
-          → map data → plot → save. No functions or classes.'
+        comment: Linear script; one inline lapply for label positions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present. Synthetic data is deterministic.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only library(ggplot2) and library(ragg) imported, both actively used.
-          map_data() uses ggplot2's built-in geographic support.
+        comment: ggplot2 and ragg used; scales called by namespace
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean R code. The lapply over isobar_breaks for label positioning
-          is appropriately complex for the task. No over-engineering, no fake functionality.
+        comment: Label placement via contourLines is the shortest route without an
+          extra contour-label package
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device.
-          Modern ggplot2 API (linewidth= not size= for lines).
+        comment: Saves plot-{THEME}.png via ragg at 3200x1800
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot2 grammar: geom_contour_filled + geom_contour + geom_polygon
-          + geom_label in proper layer order, scale_fill_viridis_d for discrete bins,
-          coord_fixed for geographic proportions, theme_minimal + extensive theme()
-          customization, map_data() for geographic polygons.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot2-distinctive multi-layer composition, geom_contour_filled
-          (a ggplot2-specific geom not easily replicated elsewhere), and the base
-          R contourLines() + ggplot2 geom_label combination for smart isobar label
-          placement. Stopped short of 5 as no sf/projection features or ggplot2-extension
-          features were used.
+        comment: geom_contour_filled with explicit breaks, map_data('world'), coord_fixed
+          with expand=FALSE, scale_fill_manual(drop=FALSE)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_contour_filled's native ordered band factor drives the stepped
+          legend; map_data world basemap
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
+  rendered_at: '2026-11-26T10:41:55Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
+  - maps
   techniques:
-  - layer-composition
-  - annotations
-  - colorbar
+  - contour-filled
+  - contour-lines
+  - contour-labels
+  - geographic-basemap
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - gaussian-field
+  - contour-extraction
   styling:
-  - custom-colormap
-  - alpha-blending
-  - grid-styling
+  - theme-adaptive
+  - sequential-colormap
