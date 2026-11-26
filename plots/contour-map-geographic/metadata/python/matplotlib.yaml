@@ -2,149 +2,137 @@ library: matplotlib
 language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:53:33Z'
-updated: '2026-05-20T23:06:59Z'
+updated: '2026-11-26T10:21:34Z'
 generated_by: claude-sonnet
-workflow_run: 26193839168
+workflow_run: 45799722264
 issue: 3772
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - European Alps elevation data is realistic, domain-appropriate, and factually grounded
-    (real peak heights for Mont Blanc, Matterhorn, Großglockner)
-  - Two-layer contour approach (contourf filled + contour lines + clabel) demonstrates
-    the full spec feature set elegantly
-  - Theme-adaptive chrome is thorough throughout — title, axis labels, tick labels,
-    spines, colorbar outline, annotation boxes all flip correctly between light and
-    dark
-  - Peak annotations with styled rounded boxes create clear geographic focal points
-    and contextual depth
-  - 'Perfect code quality: flat KISS structure, np.random.seed(42), explicit font
-    sizes, idiomatic Axes methods, no bbox_inches=''tight'''
-  - Canvas gate passed (figsize=(8,4.5), dpi=400 → 3200×1800 px, subplots_adjust for
-    padding)
+  - Filled field on the Imprint imprint_seq fields ramp with the exact per-theme stops;
+    colorbar 'Elevation (m)' with extend arrow
+  - Contour labels at 500 m intervals in INK on page-colored halo boxes, readable
+    in both themes
+  - Idiomatic contourf + contour + clabel layering with styled returned label Text
+    objects
+  - Fully theme-adaptive chrome; all text readable in both renders
   weaknesses:
-  - 'VQ-07: ''terrain'' colormap is domain-appropriate (spec explicitly calls for
-    terrain colors for elevation) but deviates from the style-guide approved list
-    (viridis/cividis/BrBG). Consider using viridis or cividis if a style-guide-compliant
-    sequential cmap can convey elevation effectively.'
-  - 'VQ-01/mobile: Peak annotation text at fontsize=7 is technically explicit but
-    will be effectively unreadable when the 3200px image is scaled to ~400px mobile
-    width. Increase to fontsize=8 or 9 to improve mobile legibility.'
-  - 'VQ-02: Mont Blanc and Matterhorn annotation boxes are very close together (peaks
-    only ~0.8° apart in longitude with fixed offset logic). At small render scales
-    the boxes may appear to merge. Consider adjusting annotation offsets to stagger
-    them more (e.g., place Matterhorn annotation above its marker instead of below-right).'
+  - 'VQ-02 (both): the ''2000 m'' and ''2500 m'' contour labels at about 12.5–13.5°E,
+    47.7–47.9°N touch each other and the dashed border line runs through ''2000 m''
+    → labels clear of each other and of the border by at least a few px, thinned where
+    the 2000–3500 m lines crowd. Likely cause: ax.clabel labelling every 500 m level
+    with automatic placement on the steep NE flank (pass a level subset or manual
+    positions).'
+  - 'SC-02 (both): filled bands step 200 m (levels=np.arange(0, 5000, 200)) while
+    the lines step 500 m, so band edges do not match the line levels (C4) → bands
+    on the line levels or an even subdivision of them (e.g. 250 m or 500 m). Likely
+    cause: the separate levels/line_levels arrays.'
+  - 'SC-02 (both): σ=80 m random noise makes the isolines jagged and scatters dozens
+    of tiny spurious loops in the SE and along 48.5°N, so the lines are not smooth
+    (C1) → noise of a few metres or a smoothed field. Likely cause: np.random.normal(0,
+    80, ...) added to the elevation grid.'
+  - 'SC-04 (both): the dashed lines (country borders) carry no key or label, so a
+    reader cannot tell what they are → a legend entry ''Country border'' or direct
+    country labels. Likely cause: ax.plot for borders without label and no ax.legend.'
+  - 'Suggestion: the Matterhorn leader line crosses the ''4500 m'' contour label;
+    a different callout offset would keep it clear.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "contour-map-geographic · python · matplotlib · anyplot.ai" in dark near-black INK (#1A1A17) clearly readable. "Longitude" (x-axis) and "Latitude" (y-axis) labels dark and legible. Tick labels in INK_SOFT gray (°E / °N format) readable. Colorbar label "Elevation (m)" and tick labels clearly visible in dark tones.
-      Data: Filled contours use the "terrain" colormap — blues at low elevation (sea-level, Po Valley ~44°N), greens through yellows and browns across mid-elevation, gray/white at high peaks. Contour lines at 500m intervals in dark semi-transparent ink with inline labels (e.g., "500 m", "1000 m", "1500 m") in INK_MUTED gray. Three peak annotation boxes with triangle markers: "Mont Blanc 4808 m", "Matterhorn 4478 m" (close together in western Alps ~46°N, 7-8°E), "Großglockner 3798 m" (eastern Alps ~47°N, 13°E). Dashed country border lines in INK_SOFT. Colorbar on right side 0-4800 m. Subtle dashed grid alpha=0.15.
-      Legibility verdict: PASS — all primary text readable; annotation fontsize=7 may be marginal at mobile scale
+      Background: warm off-white #FAF8F1
+      Chrome: title, Longitude/Latitude labels, °E/°N ticks and colorbar 'Elevation (m)' in dark ink, all readable
+      Data: imprint_seq fields ramp, pale mint lowlands → brand green → blue → navy at the Mont Blanc / Tyrol highs; dark 500 m contour lines with labels on halo boxes; dashed border lines; three peak callouts
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in light INK (#F0EFE8), axis labels light-colored, tick labels in INK_SOFT (#B8B7B0) readable against dark background. Colorbar label and ticks in light tones. Spines in INK_SOFT color. No dark-on-dark failures observed — all text uses appropriate light tokens.
-      Data: Terrain colormap colors appear identical to light render (continuous data, no categorical color change expected). Contour lines in near-white INK, inline labels in INK_MUTED (#A8A79F). Annotation boxes use ELEVATED_BG (#242420) fill with INK_SOFT edges — dark boxes with light text. Peak markers (triangles) in near-white INK.
-      Legibility verdict: PASS — all chrome adapts correctly to dark theme; no dark-on-dark failures
+      Background: warm near-black #1A1A17
+      Chrome: light text for title, labels, ticks and colorbar; no dark-on-dark
+      Data: dark-theme imprint_seq stops, deep green lowlands → brand green → pale blue highs; light contour lines, labels on dark halos
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axes=10, ticks=8, clabel=9,
-          colorbar=8/10). Minor deduction: annotation fontsize=7 will be effectively
-          unreadable at 400px mobile scale.'
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, contour labels and peak
+          callouts 9 pt; all readable in both themes, contour labels sit on page-colored
+          halos
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mont Blanc and Matterhorn annotation boxes are close (peaks 0.8deg
-          apart) but distinct. No severe overlap. Minor proximity concern at small
-          scales.
+        comment: The '2000 m' and '2500 m' contour labels on the NE flank touch each
+          other and the dashed border runs through '2000 m' (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All contour fills, lines, colorbar, border lines, and peak markers
-          clearly visible. Alpha values well-chosen (0.85 fills, 0.45 lines).
+        comment: Contour lines (2.0 lw, alpha 0.45) visible over the fill in both
+          themes; colorbar and markers visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Terrain colormap provides luminance gradient distinguishable without
-          hue alone. Contour labels add text channel. Peak markers use triangle shape
-          as additional channel.
+        comment: Single-hue lightness ramp, no red-green signal; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions with subplots_adjust(left=0.08,
-          right=0.88, top=0.93, bottom=0.12). No overflow.
+        comment: Map and colorbar fill the landscape canvas; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude as axis labels. Colorbar labeled 'Elevation
-          (m)'. Tick labels formatted with degree symbols (6degE etc). Title in correct
-          format.
+        comment: Longitude / Latitude with degree tick labels, 'Elevation (m)' colorbar
+          label
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct: #FAF8F1 light / #1A1A17 dark. Chrome fully
-          theme-adaptive. Terrain colormap used for continuous data — spec-justified
-          (spec says terrain colors for elevation) but deviates from style guide approved
-          list (viridis/cividis/BrBG). Partial credit.'
+        comment: 'imprint_seq fields ramp with the exact theme stops; #FAF8F1 / #1A1A17
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: two-layer contour approach (filled+lines+labels),
-          domain-appropriate terrain colormap, styled annotation boxes with rounded
-          corners, dashed country borders. Clearly above defaults but not FiveThirtyEight/Nature
-          publication level.'
+        comment: Style-guide baseline; no typographic hierarchy decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: All 4 spines kept (appropriate for geographic map) with theme-adaptive
-          colors. Subtle grid (alpha=0.15, dashed). Colorbar with styled outline and
-          theme-adaptive label colors. Contour lines at reduced alpha (0.45) for layering
-          depth.
+        comment: Contour labels carry page-colored halo boxes and the map keeps a
+          full frame as a map border — a refinement beyond the spine/grid rules
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Peak annotations create clear geographic focal points at the highest
-          elevations. Elevation color gradient tells the terrain story immediately.
-          Po Valley lowlands (south) contrast with high Alps (center/north). Dual
-          contour approach adds visual depth.
+        passed: false
+        comment: Data displayed; the peak callouts are an annotation layer the spec
+          does not request and earn no storytelling credit
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -152,29 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled geographic contour map with labeled isoline overlay.'
+        comment: 'Filled + line contours over a lon/lat map: correct type'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'All spec requirements met: basemap context (border lines), contour
-          line labels (clabel), both filled and line contours, terrain colormap, colorbar,
-          meaningful intervals (200m filled / 500m labeled).'
+        comment: Filled bands step 200 m while lines step 500 m, so bands do not match
+          the line levels (C4); noise makes the isolines jagged with many spurious
+          small loops (C1) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon coordinates correctly mapped to geographic axes. Elevation
-          as continuous fill variable. Full range displayed.
+        comment: Lon/lat on x/y, field at its grid positions; colorbar ticks every
+          600 m readable
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title is 'contour-map-geographic · python · matplotlib · anyplot.ai'.
-          Colorbar serves as legend for continuous elevation data.
+        comment: Title in mandated format; the dashed border lines have no key or
+          label (defect line)
     data_quality:
       score: 15
       max: 15
@@ -184,24 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: filled contours, labeled isolines, geographic
-          context (borders), peak annotations, colorbar, terrain variation (high peaks
-          + lowland valleys + intermediate terrain).'
+        comment: Filled + line contours, inline labels, closed loops around highs,
+          steep and flat zones, colorbar with extend arrow
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European Alps elevation data — scientifically neutral, real-world
-          domain, highly plausible scenario for this plot type.
+        comment: European Alps elevation with real peak names and heights; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Factually correct: Mont Blanc 4808m, Matterhorn 4478m, Grossglockner
-          3798m all accurate. Lat/lon range 43.5-48.5N, 5-17E correctly covers the
-          Alps region. Elevation range 0-5000m appropriate.'
+        comment: 'Checked: peak field near 4800 m at Mont Blanc, Po Valley lowlands
+          near 0–300 m; 500 m line interval meaningful'
     code_quality:
       score: 10
       max: 10
@@ -211,66 +196,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports -> data -> plot -> save. No functions
-          or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity for geographic visualization.
-          No fake functionality.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches='tight'. No
-          deprecated APIs.
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses ax.contourf, ax.contour, ax.clabel (high-level API),
-          fig.colorbar with ax parameter, fig.subplots_adjust, Axes methods throughout
-          (not pyplot functions).
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ax.clabel for inline contour labeling is a distinctive matplotlib
-          feature. Two-layer contourf+contour with independent alpha. cbar.outline.set_edgecolor
-          for matplotlib-specific colorbar styling. Could push further with e.g. geographic
-          transform or contour fill hatching.
+        comment: contourf + contour + clabel with returned Text objects styled via
+          set_bbox, fig.colorbar(extend) — idiomatic Axes API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: clabel inline contour labeling is a distinctive matplotlib feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
+  rendered_at: '2026-11-26T10:17:53Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
