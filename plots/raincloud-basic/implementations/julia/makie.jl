@@ -97,25 +97,15 @@ for (i, vals) in enumerate(DATA_BY_CAT)
     color    = PALETTE_BY_CAT[i]
     n        = length(vals)
 
-    # Summary statistics — drive both boxplot and KDE bandwidth
+    # Summary statistics — drive the boxplot
     q1, med, q3 = quantile(vals, [0.25, 0.5, 0.75])
     iqr_v       = q3 - q1
-    sd_v        = std(vals)
 
-    # Inline Gaussian KDE on a 256-point grid (Silverman + IQR fallback)
-    vmin, vmax = extrema(vals)
-    pad        = 0.06 * (vmax - vmin)
-    grid       = collect(range(vmin - pad, vmax + pad; length = 256))
-    bw         = 0.9 * min(sd_v, iqr_v / 1.34) * n^(-1/5)
-    sqdiffs    = (grid' .- vals) .^ 2 ./ (2 * bw^2)
-    dens       = vec(sum(exp.(-sqdiffs); dims = 1)) ./ (n * bw * sqrt(2π))
-    dens_h     = dens ./ maximum(dens) .* cloud_height
-
-    # Cloud — half-violin rising ABOVE the baseline
-    base_y = fill(baseline + cloud_gap, length(grid))
-    top_y  = baseline .+ cloud_gap .+ dens_h
-    band!(ax, grid, base_y, top_y; color = (color, 0.55))
-    lines!(ax, grid, top_y; color = color, linewidth = 1.6)
+    # Cloud — half-violin rising ABOVE the baseline (Makie's KDE, Silverman bandwidth)
+    violin!(ax, fill(baseline + cloud_gap, n), vals;
+        orientation = :horizontal, side = :right, scale = :width,
+        width = 2 * cloud_height, npoints = 256,
+        color = (color, 0.55), strokecolor = color, strokewidth = 1.6)
 
     # Boxplot — sits ON the baseline (whiskers, box, median)
     lo_w = max(minimum(vals), q1 - 1.5 * iqr_v)
@@ -142,7 +132,7 @@ end
 
 # --- Axis limits ------------------------------------------------------------
 all_vals = vcat(DATA_BY_CAT...)
-xlims!(ax, minimum(all_vals) - 60, maximum(all_vals) + 60)
+xlims!(ax, minimum(all_vals) - 200, maximum(all_vals) + 200)
 ylims!(ax, 0.45, length(CATEGORIES) + 0.65)
 
 # --- Save -------------------------------------------------------------------
