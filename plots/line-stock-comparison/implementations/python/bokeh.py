@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 88/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import base64
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirna
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import Band, ColumnDataSource, HoverTool, Label, Legend, Range1d, Span  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, Range1d, Span  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -35,7 +35,6 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Constants
 BASE = 100  # every series is rebased to this value on the first date
-BAND = 15  # half-width of the shaded "normal" envelope around the base
 
 # Columns: set these to your table's column names
 DATE = "Date"  # role: date
@@ -98,14 +97,6 @@ p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
-
-# Subtle performance band around the base, behind the lines
-band_source = ColumnDataSource(
-    data={"x": all_dates, "lower": np.full(len(all_dates), BASE - BAND), "upper": np.full(len(all_dates), BASE + BAND)}
-)
-p.add_layout(
-    Band(base="x", lower="lower", upper="upper", source=band_source, fill_color=INK, fill_alpha=0.04, line_color=None)
-)
 
 # Reference line at the base (starting point indicator)
 p.add_layout(Span(location=BASE, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3))
