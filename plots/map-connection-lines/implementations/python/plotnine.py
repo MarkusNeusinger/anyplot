@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -26,7 +26,7 @@ from plotnine import (
     geom_polygon,
     ggplot,
     labs,
-    scale_color_gradient,
+    scale_color_gradientn,
     scale_size_continuous,
     theme,
     theme_minimal,
@@ -42,6 +42,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette position 1
 LAND_FILL = "#E0DED4" if THEME == "light" else "#282824"
 LAND_BORDER = "#BCBBB1" if THEME == "light" else "#3A3A30"
+
+# Imprint sequential ramp for colored lines (marks stops), low -> high
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
 
 TITLE = "Global Flight Routes · map-connection-lines · python · plotnine · anyplot.ai"
 _n = len(TITLE)
@@ -236,7 +243,9 @@ plot = (
     + geom_point(
         aes(x="lon", y="lat"), data=df_airports, color=INK_SOFT, fill=BRAND, size=3.5, shape="o", stroke=0.8, alpha=0.95
     )
-    + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers\n(thousands/yr)")
+    + scale_color_gradientn(
+        colors=[c for _, c in SEQ_MARKS], values=[p for p, _ in SEQ_MARKS], name="Passengers\n(thousands/yr)"
+    )
     + scale_size_continuous(range=(0.8, 2.2), guide=None)
     + coord_cartesian(xlim=(-180, 180), ylim=(-60, 80))
     + labs(title=TITLE, x="Longitude (°)", y="Latitude (°)")
