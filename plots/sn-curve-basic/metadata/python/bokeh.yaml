@@ -2,51 +2,58 @@ library: bokeh
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:47:36Z'
-updated: '2026-05-20T17:27:34Z'
+updated: '2026-11-26T09:27:55Z'
 generated_by: claude-sonnet
-workflow_run: 26178360839
+workflow_run: 45790924384
 issue: 3826
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all three material property reference lines (Ultimate/Yield/Endurance),
-    Basquin fit curve, log-log axes, and infinite life shading all present and correct'
-  - Semantic Okabe-Ito color assignment (orange=ultimate strength, blue=endurance
-    limit, pink=yield strength) is intuitive and CVD-safe
-  - Subtle fill_alpha=0.12 BoxAnnotation for the infinite life zone adds visual depth
-    without clutter
-  - CDP Emulation.setDeviceMetricsOverride ensures exact 3200x1800 PNG dimensions
-  - Clean y-only grid at 10% alpha gives the plot a professional, uncluttered look
-  - All font sizes explicitly set (50pt title, 42pt axis labels, 34pt ticks/legend,
-    28pt reference annotations) readable in both themes
+  - Reference lines for ultimate, yield and endurance limit as native Span models,
+    each labeled in its own color and placed in the empty right side clear of the
+    data
+  - Basquin fit computed from the data with np.polyfit in log space, coefficients
+    shown in the legend
+  - Native BoxAnnotation shades the infinite-life zone below the endurance limit
+  - HoverTool with scientific-notation formatting for the HTML view
+  - Theme tokens threaded through all chrome; both renders readable
   weaknesses:
-  - Default Bokeh font throughout — setting custom text_font (e.g. 'helvetica') on
-    title and axis labels would lift typographic sophistication for DE-01
-  - Axis spine lines still visible via axis_line_color=INK_SOFT — setting axis_line_color=None
-    would add polish and complete the minimal-chrome aesthetic (DE-02)
-  - Bokeh interactive capabilities beyond HoverTool not utilized — TapTool or BoxSelectTool
-    would better showcase distinctive Bokeh features (LM-02)
+  - 'SC-02 (both): the Basquin fit line spans the whole axis 10^2 to 2·10^7, far beyond
+    the data (about 3·10^3 to 2.6·10^6), crossing the Ultimate Strength line at upper
+    left and continuing down through the shaded infinite-life zone below the 200 MPa
+    endurance limit → run the fit only over the sloping part of the data, from the
+    smallest to the largest tested cycle count. Likely cause: cycles_fit = np.logspace(np.log10(x_low),
+    np.log10(x_high), 100).'
+  - 'VQ-03 (both): 37 sparse test points drawn at size 18 read small and are partly
+    hidden under the 7 px fit line → markers about 26-30 (+8 to +12) or a fit line
+    about 4 px (-3 px). Likely cause: scatter size=18 with line_width=7.'
+  - 'VQ-05 (dark): a 1 px light line (rgb 197,197,196) runs along the top and left
+    edge of the PNG → page color #1A1A17. Likely cause: the page background is not
+    painted with PAGE_BG before the screenshot (library prompt''s document.documentElement.style.background
+    script missing).'
+  - 'Suggestion: plain labels for the low-cycle and high-cycle regions would let the
+    three regions the Notes name be read directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "sn-curve-basic · python · bokeh · anyplot.ai" in bold dark text (#1A1A17), clearly readable. X-axis label "Number of Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" in dark ink, readable. Tick labels in INK_SOFT (#4A4A44), clearly readable. Y-only grid at 10% alpha, subtle and non-dominant.
-      Data: Primary scatter and fit line in #009E73 (Okabe-Ito pos 1). Reference lines: Ultimate Strength dashed orange (#D55E00), Yield Strength dashed pink (#CC79A7), Endurance Limit dashed blue (#0072B2). Subtle blue-tinted shading below 200 MPa. Bold inline labels for each reference line positioned in data-sparse left area.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light failures
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold title 'sn-curve-basic · python · bokeh · anyplot.ai' top left; italic axis titles 'Number of Cycles to Failure (N)' and 'Stress Amplitude (MPa)'; log tick labels 10^2..10^7 and 200..600 in soft ink; faint y-only grid. Legend lower left on elevated background: 'Basquin Fit (S = 1119·N^-0.115)' and 'Fatigue Test Data'.
+      Data: about 37 #009E73 points falling from 450 MPa at ~3·10^3 cycles to ~210 MPa at ~2.5·10^6, with a straight green fit line across the full axis. Dashed reference lines at 500 (purple #C475FD), 350 (ochre #BD8233) and 200 MPa (blue #4467A3); labels for the first two right-aligned at the right, 'Endurance Limit (200 MPa) <- infinite life' at the left; light blue shading below 200 MPa. Points smallish and partly under the fit line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in light tones (INK_SOFT = #B8B7B0 for dark theme), clearly readable. Y-axis grid lines are subtle light lines at 10% alpha. Legend has elevated dark background (#242420) with light label text.
-      Data: Colors are identical to light render — #009E73 scatter and fit, orange ultimate, pink yield, blue endurance. The reference line label annotations (orange, pink, blue text) remain readable on the dark background.
-      Legibility verdict: PASS — all text clearly readable, no dark-on-dark failures detected
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink, tick labels in light soft ink, legend on #242420 with light labels; no dark-on-dark text. A 1 px light line runs along the top and left canvas edge.
+      Data: identical colors to the light render (#009E73 points and fit, purple/ochre/blue reference lines and labels); shading below 200 MPa reads as a dark blue tint. Endurance label is the dimmest text but legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,50 +61,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks/legend, 28pt reference annotations). Readable in both themes.
+        comment: '50pt title, 42pt axis titles, 34pt ticks/legend, 28pt bold reference
+          labels; all readable in both themes (Endurance Limit #4467A3 label dimmest
+          on dark but legible)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Reference labels in data-sparse left area; no text collisions.
+        comment: Reference labels right-aligned in the empty upper right, clear of
+          the fit line and points; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=18 scatter with fill_alpha=0.65 appropriate for ~35-40 points;
-          fit line width=7 prominent.
+        comment: 37 sparse points at size 18 read small and are partly covered by
+          the 7 px fit line (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito, CVD-safe, distinguishable by hue and position.
+        comment: Hue plus position separate the reference lines; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed 3200x1800. Balanced margins, min_border values
-          prevent clipping.
+        comment: Canvas 3200x1800, balanced margins; dark render has a 1 px light
+          line along the top and left edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Number of Cycles to Failure (N) and Stress Amplitude (MPa) — descriptive
-          with units.
+        comment: '''Number of Cycles to Failure (N)'' and ''Stress Amplitude (MPa)''
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; reference lines use Okabe-Ito pos 2-4; backgrounds
-          #FAF8F1/#1A1A17; chrome flips correctly.'
+        comment: 'Data #009E73; reference lines Imprint positions 2-4; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -105,25 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color assignment shows design intent; infinite life shading
-          adds sophistication. Default Bokeh font prevents reaching 'strong design'
-          level.
+        comment: Each reference label set in its line's color and bold, giving a clear
+          hierarchy against the soft-ink chrome
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: X-grid disabled, Y-grid 10% alpha, outline removed, border matches
-          background. Axis spines still visible via axis_line_color=INK_SOFT.
+        comment: Labels placed in the data-free right side above each line, legend
+          tucked in the empty lower left inside the shaded zone
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Infinite life shading and <- infinite life annotation guide viewer.
-          Color-coded reference lines make three fatigue regions apparent.
+        comment: Shaded infinite-life zone with '<- infinite life' makes the endurance
+          threshold the focal boundary
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,28 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N curve with log-log axes, scatter data, and Basquin fit
-          overlay.
+        comment: S-N scatter on log-log axes with Basquin fit; shading of the infinite-life
+          region is permitted by the spec
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Log-log axes, all three reference lines, Basquin fit, per-stress
-          scatter, infinite life zone.
+        comment: Log axes, three labeled reference lines, fit present; fit extrapolated
+          far beyond the sloping data and through the infinite-life zone (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: cycles (log), Y: stress amplitude MPa (log). All data visible.'
+        comment: Cycles on x, stress on y, every specimen at its value; log ticks
+          readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sn-curve-basic · python · bokeh · anyplot.ai'; legend labels
-          accurate.
+        comment: Title format correct; legend entries 'Basquin Fit (S = 1119·N^-0.115)'
+          and 'Fatigue Test Data'
     data_quality:
       score: 15
       max: 15
@@ -162,21 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple specimens per stress level, Basquin fit, three material
-          properties, lognormal scatter, three fatigue regions.
+        comment: Several specimens per stress level, scatter along cycles, fit, three
+          material properties, endurance approach
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel coupon fatigue testing — neutral, scientifically standard domain.
+        comment: Steel coupon fatigue testing, neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ultimate 500 MPa, Yield 350 MPa, Endurance 200 MPa for steel are
-          factually correct. Basquin A=1200, b=-0.12 realistic.
+        comment: 'Checked: UTS 500, yield 350, endurance 200 MPa (0.4·UTS) plausible
+          for steel; Basquin b≈-0.115 computed by polyfit from data'
     code_quality:
       score: 10
       max: 10
@@ -186,64 +196,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports -> Data -> Plot -> Save. No functions or classes.
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation is a necessary workaround.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. CDP device-metrics override is robust. No
-          fake UI.
+        comment: Fit via np.polyfit in log space; reference lines in one loop; appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh 3.x API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource, Span, BoxAnnotation, Label, HoverTool — all idiomatic
-          Bokeh patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Span, BoxAnnotation, Label, HoverTool with scientific notation. Interactive
-          selection callbacks not explored.
+        comment: ColumnDataSource from tidy df, x/y_axis_type='log', Span/BoxAnnotation/Label
+          layout models
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool with numeral format specifiers; native Span and BoxAnnotation
+          annotation models
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  rendered_at: '2026-11-26T09:24:18Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

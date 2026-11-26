@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-parametric: Parametric Curve Plot
 Library: letsplot 4.10.1 | Python 3.13.14
-Quality: 90/100 | Updated: 2026-06-20
+Quality: 84/100 | Updated: 2026-06-20
 """
 
 import os
