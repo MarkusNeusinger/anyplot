@@ -12,118 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 77
 review:
   strengths:
-  - 'Critical title bug from the previous attempt is fixed: both plot-light.png and
-    plot-dark.png now render the full mandated title ''windrose-basic · python · letsplot
-    · anyplot.ai'' (verified via pixel bounding-box measurement, ~59% canvas width,
-    no clipping)'
-  - 'New distinctive lets-plot feature added this round: layer_tooltips() surfaces
-    per-segment compass direction, speed band, and formatted frequency on hover in
-    the HTML export, directly addressing the prior ''nothing distinctive to lets-plot''
-    weakness'
-  - Correct 16-sector wind rose via geom_bar(stat='identity', position='stack') +
-    coord_polar(start=0, direction=1), North fixed at top, clockwise compass order
-    (N/NE/E/SE/S/SW/W/NW) matches meteorological convention
-  - 'Imprint palette applied in correct canonical order with first series #009E73;
-    both renders keep identical data hues (verified via pixel bbox comparison), only
-    chrome flips between light/dark'
-  - Realistic Weibull-distributed, direction-dependent wind speeds (direction_speed_factor)
-    create an immediately legible dominant NW/W prevailing-wind story without needing
-    annotations
-  - Clean, reproducible, KISS-structured script (np.random.seed(42), linear import→data→aggregate→plot→save
-    flow); the PIL alpha-composite step is a legitimate one-off fix for coord_polar's
-    transparent-margin quirk, not fake functionality
+  - Correct stacked polar bar wind rose via geom_bar(stat='identity', position='stack')
+    + coord_polar with 16 equal sectors
+  - layer_tooltips() adds compass direction, speed band and formatted frequency on
+    hover in the HTML export
+  - Realistic direction-dependent Weibull speeds give a clear prevailing NW/W pattern;
+    seeded and reproducible
   weaknesses:
-  - 'Legend column still has noticeably more surrounding whitespace than the plot
-    area: the polar chart fills ~69% of the canvas height while the legend content
-    occupies only ~29% of its own column height, giving a slightly isolated look on
-    the right'
-  - Design remains a fairly standard ggplot-family bar+coord_polar composition; beyond
-    the new tooltip layer and required brand tokens, there is limited additional creative
-    polish (DE-01 default territory)
-  - Smallest stacked segments (e.g. the thin 15+ m/s cyan sliver, sub-1% bins in calm
-    E/SE/S sectors) are only a few pixels tall and hard to distinguish at small preview
-    sizes — largely inherent to the realistic data distribution rather than a styling
-    flaw
-  - Speed-bin colors follow the canonical Imprint palette order rather than a monotonic
-    cool-to-warm ramp suggested by the spec notes ('traditionally cool to warm');
-    acceptable under the canonical-order palette rule, but a sequential imprint_seq
-    ramp could tell the calm-to-strong story slightly more intuitively
+  - 'SC-02, SC-03 (both): the rose is rotated 11.25° clockwise: the N label and the
+    N spoke sit half a sector right of the top, so every direction is drawn off its
+    compass bearing → N centered at the top (−11.25°). Likely cause: coord_polar(start=0)
+    with x limits [-0.5, 15.5]; set coord_polar(start=-np.pi / 16).'
+  - 'VQ-07 (both): the ordered speed bins are colored with unrelated categorical hues
+    (green, lavender, blue, ochre, red, cyan), which hides their calm-to-strong order
+    → discrete steps of the imprint_seq marks ramp with each theme''s stops (style
+    guide, Ordered Categories). Likely cause: colors = the first six Imprint categorical
+    hues.'
+  - 'DE-02 (both): grid rings and spokes drawn in INK_SOFT at full opacity read bold,
+    most visibly on light → a subtle grid at about 15 % ink. Likely cause: panel_grid_major/minor
+    color=INK_SOFT without alpha.'
+  - 'CQ-03 (code): from lets_plot import * with noqa F403/F405 markers → explicit
+    imports of the names used. Likely cause: star import.'
+  - 'CQ-04 (code): a PIL alpha-composite pass (about 5 lines and the PIL import) flattens
+    coord_polar''s transparent margins → wrap the plot in a one-panel gggrid carrying
+    the page color, as the library prompt names. Likely cause: post-processing the
+    saved PNG.'
+  - 'Suggestion: tighten the space around the legend card so it sits closer to the
+    rose.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark. Confirmed via pixel sampling.
-      Chrome: Title reads "windrose-basic · python · letsplot · anyplot.ai" in dark ink, centered, fully within the canvas (pixel bbox measurement: title spans x=351-1764 of 2400px, ~59% width, no overflow/clipping -- the "python" token that was missing in the prior attempt's rendered PNG is now present). Radial axis ticks (0/5/10/15) and rotated "Frequency (%)" axis label at the left are dark-gray and clearly readable, comfortably inside the left canvas edge. Compass tick labels (N, NE, E, SE, S, SW, W, NW) around the circle are legible; "S" label at the bottom sits with visible margin above the canvas edge. Legend titled "Wind Speed" sits in an elevated off-white card with a thin border on the right, with 6 correctly labeled speed-range swatches (0-3, 3-6, 6-9, 9-12, 12-15, 15+ m/s), text fully within canvas bounds.
-      Data: Stacked polar bars across 16 direction sectors. Innermost/first color is Imprint brand green (#009E73) for 0-3 m/s, followed by lavender (3-6), blue (6-9), ochre (9-12), red (12-15), cyan (15+) in canonical Imprint order. Largest bars are clearly at NW and the adjacent NNW/W sectors, a secondary bump at SW, small slivers elsewhere -- a legible, honest wind-rose story with visible white borders separating stacked segments.
-      Legibility verdict: PASS -- all title tokens present, no clipping, no light-on-light failures found.
+      Background: warm off-white #FAF8F1 over the whole canvas.
+      Chrome: title 'windrose-basic · python · letsplot · anyplot.ai' dark and centered; radial ticks 0/5/10/15 and 'Frequency (%)' at the left; compass labels N…NW around the rim (N sits about 11° right of the top); 'Wind Speed' legend in an elevated card. Grid rings and spokes drawn in dark ink at full opacity and read bold. All text readable.
+      Data: 16 stacked polar spokes with white outlines; speed bins 0-3 #009E73, 3-6 lavender, 6-9 blue, 9-12 ochre, 12-15 red, 15+ cyan; longest spokes NW, W, NNW.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light. Confirmed via pixel sampling; content bounding box is pixel-identical to the light render (x: 10-2388, y: 199-2032 of 2400x2400), confirming layout consistency between themes.
-      Chrome: Same title text "windrose-basic · python · letsplot · anyplot.ai" now in light ink, fully readable against the dark background; no dark-on-dark failures observed anywhere -- axis ticks, compass labels, legend text and title are all light-colored and clearly legible. Legend card uses the darker elevated background with a visible border and readable light text.
-      Data: Colors are pixel-identical to the light render -- same brand green first, then lavender/blue/ochre/red/cyan in the same canonical order and the same dominant NW/W pattern. Only the chrome (background, grid, text, legend box) flips; data hues are unchanged, confirming correct theme-adaptive implementation.
-      Legibility verdict: PASS -- all chrome elements legible in this theme, matching the light render's fix.
-
-    Cross-check: Both renders verified for edge clipping via pixel bounding-box analysis (10-12px comfortable margins on all sides in both images, no AR-09 violation) and for palette identity between themes (identical bbox and data hues). The critical title-token omission flagged in the previous review is resolved in both renders.
+      Background: warm near-black #1A1A17.
+      Chrome: title, ticks, compass labels and legend text in light ink, all readable; no dark-on-dark text; light grid lines.
+      Data: same six categorical hues as the light render; white outlines around every segment and legend swatch.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); fully readable in both
-          themes. Mandated title now renders correctly with all four tokens including
-          the previously-missing 'python'.
+        comment: Explicit sizes (title 16, axis text 10, legend 10/12 at scale 4);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized for dominant directions; smallest speed-bin slivers
-          in low-frequency sectors are only a few px tall and may be hard to spot
-          at small preview sizes.
+        comment: Segments clearly visible with white outlines; thin slivers permitted
+          by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; white bar edges give definition between
-          adjacent stacked segments.
+        comment: Six distinct Imprint hues, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Polar plot fills ~69% of canvas height with title at ~59% width (ideal);
-          no clipping (bbox 10-2388 x 199-2032 of 2400x2400). Legend column has noticeably
-          more surrounding whitespace than the plot side.
+        comment: Rose and legend use the canvas; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis labeled 'Frequency (%)' with units; compass directions
-          are self-explanatory category labels.
+        comment: '''Frequency (%)'' with unit; legend with m/s ranges'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73, remaining 5 series follow canonical Imprint
-          order; backgrounds and chrome are theme-correct in both renders; data hues
-          pixel-identical across themes.'
+        passed: false
+        comment: Ordered speed bins drawn in unrelated categorical hues instead of
+          steps of one Imprint ramp (defect line)
     design_excellence:
-      score: 12
+      score: 7
       max: 20
       items:
       - id: DE-01
@@ -131,25 +113,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured brand-compliant styling and an elevated legend card,
-          but no design choices beyond what the style guide mandates.
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, elevated legend
+          card'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Grid toned down via INK_SOFT tokens, legend boxed and padded with
-          tuned key size/spacing; polar frame/gridlines are structurally required
-          so cannot be further stripped.
+        passed: false
+        comment: Grid in INK_SOFT at full opacity reads bold, short of the subtle-grid
+          baseline (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Size variation across sectors makes the prevailing NW/W wind pattern
-          immediately obvious without any annotation.
+        passed: false
+        comment: Data displayed; prevailing NW/W emerges from the data alone
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -157,57 +137,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar stacked-bar wind rose via geom_bar(stat='identity',
-          position='stack') + coord_polar().
+        comment: Polar stacked bar wind rose, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 16 direction sectors, meaningful speed bins, North at top, legend
-          with speed ranges, radial frequency axis -- all present.
+        passed: false
+        comment: 'C1 missed: north is not at the top; rose rotated 11.25° clockwise
+          (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Direction correctly mapped to angle, frequency to radius; all 16
-          sectors visible.
+        passed: false
+        comment: Directions drawn 11.25° off their compass bearing (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered title now matches the mandated '{spec-id} · {language} ·
-          {library} · anyplot.ai' format exactly in both themes; legend labels match
-          speed bins.
+        comment: Mandated title; legend gives each speed range
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full speed range (0 to 15+ m/s) in dominant directions and
-          realistically narrower ranges in calm directions.
+        comment: 16 sectors, 6 speed bins, lopsided prevailing pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world meteorological scenario (hourly wind measurements
-          over a year).
+        comment: One year of hourly station wind data, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weibull-distributed speeds clipped to 0-25 m/s and direction-dependent
-          speed factor are physically plausible.
+        comment: 'Weibull speeds 0-25 m/s, sector frequencies up to ~14 %: plausible;
+          no Check values in the spec'
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -215,55 +189,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → aggregation → plot → save, no functions/classes.
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: os, numpy, pandas, lets_plot, PIL -- all used; PIL needed for the
-          background-flatten workaround.
+        passed: false
+        comment: from lets_plot import * with noqa F403/F405 instead of explicit imports
+          (defect line)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or over-engineering; the PIL alpha-composite step and
-          layer_tooltips() are legitimate, well-motivated additions.
+        passed: false
+        comment: PIL alpha-composite post-process stands in for the gggrid page-color
+          wrapper (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API.
+        comment: plot-{THEME}.png and .html via ggsave
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper grammar-of-graphics composition (ggplot + geom_bar + coord_polar
-          + scale_x_continuous + theme), correct use of scale_fill_manual with named
-          legend.
+        passed: false
+        comment: Grammar-of-graphics composition with coord_polar and scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: geom_bar + coord_polar is a generic ggplot-family pattern shared
-          with plotnine/ggplot2, but the newly added layer_tooltips() per-segment
-          hover detail (title/line/format) is a genuine lets-plot-specific interactive
-          feature.
+        comment: layer_tooltips() with title/line/format for per-segment hover detail
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
 impl_tags:
   dependencies:
   - pillow
