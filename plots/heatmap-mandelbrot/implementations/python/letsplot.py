@@ -1,7 +1,7 @@
 """anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-30
+Quality: pending | Updated: 2026-05-30
 """
 
 import math
