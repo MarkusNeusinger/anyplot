@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-23
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,73 +21,76 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 SELECTOR_ACTIVE = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Generate synthetic stock price data for 4 companies
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+SYMBOL = "Symbol"  # role: symbol
+PRICE = "Adjusted close (USD)"  # role: price
+
+# Constants
+BASE = 100  # every series is rebased to this value on its first date
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
-n_days = 252  # Approximately 1 year of trading days
+n_days = 252  # approximately 1 year of trading days
 date_range = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
-
-# Define stocks with different volatility and drift characteristics
 stocks = {
     "AAPL": {"drift": 0.0008, "volatility": 0.018},
     "GOOGL": {"drift": 0.0006, "volatility": 0.020},
     "MSFT": {"drift": 0.0007, "volatility": 0.016},
     "SPY": {"drift": 0.0004, "volatility": 0.012},
 }
-
-# Generate price paths using geometric Brownian motion
-price_data = {}
+frames = []
 for symbol, params in stocks.items():
     returns = np.random.normal(params["drift"], params["volatility"], n_days)
-    prices = 100 * np.exp(np.cumsum(returns))
-    price_data[symbol] = prices
+    frames.append(pd.DataFrame({DATE: date_range, SYMBOL: symbol, PRICE: 100 * np.exp(np.cumsum(returns))}))
+df = pd.concat(frames, ignore_index=True)
 
-# Create DataFrame and normalize all series to 100 at the starting point (rebasing)
-df = pd.DataFrame(price_data, index=date_range)
-df_rebased = (df / df.iloc[0]) * 100
-dates = df_rebased.index.strftime("%Y-%m-%d").tolist()
+# Plot: rebase every series to BASE at its first date
+REBASED = f"Rebased price (start = {BASE})"
+df[REBASED] = df[PRICE] / df.groupby(SYMBOL, sort=False)[PRICE].transform("first") * BASE
 
-# Plot
 fig = go.Figure()
-
-for i, symbol in enumerate(stocks.keys()):
+ends = []
+for i, (symbol, rows) in enumerate(df.groupby(SYMBOL, sort=False)):
+    color = IMPRINT[i % len(IMPRINT)]
     fig.add_trace(
         go.Scatter(
-            x=dates,
-            y=df_rebased[symbol],
+            x=rows[DATE],
+            y=rows[REBASED],
             mode="lines",
-            name=symbol,
-            line={"width": 2.5, "color": IMPRINT[i]},
+            name=str(symbol),
+            line={"width": 2.5, "color": color},
             hovertemplate=f"{symbol}<br>Date: %{{x|%Y-%m-%d}}<br>Value: %{{y:.1f}}<extra></extra>",
         )
     )
+    ends.append((rows[DATE].iloc[-1], rows[REBASED].iloc[-1], color))
 
-# Add horizontal reference line at 100
+# Add horizontal reference line at the base value
 fig.add_hline(
-    y=100,
+    y=BASE,
     line_dash="dash",
     line_color=INK_MUTED,
     line_width=1.5,
-    annotation_text="Starting Point (100)",
-    annotation_position="bottom right",
+    annotation_text=f"Starting Point ({BASE})",
+    annotation_position="top right",
     annotation_font_size=10,
     annotation_font_color=INK_MUTED,
 )
 
 # Add end-point value labels for each series to show final performance
-for i, symbol in enumerate(stocks.keys()):
-    final_value = df_rebased[symbol].iloc[-1]
-    pct = final_value - 100
+for end_date, final_value, color in ends:
+    pct = final_value - BASE
     sign = "+" if pct >= 0 else ""
     fig.add_annotation(
-        x=dates[-1],
+        x=end_date,
         y=final_value,
         text=f"  {sign}{pct:.0f}%",
         showarrow=False,
         xanchor="left",
         yanchor="middle",
-        font={"size": 9, "color": IMPRINT[i]},
+        font={"size": 9, "color": color},
     )
 
 # Layout
@@ -103,7 +106,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Date", "font": {"size": 12, "color": INK}},
+        "title": {"text": DATE, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "gridcolor": GRID,
@@ -125,7 +128,7 @@ fig.update_layout(
         "rangeslider": {"visible": True, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "thickness": 0.05},
     },
     yaxis={
-        "title": {"text": "Rebased Price (Starting = 100)", "font": {"size": 12, "color": INK}},
+        "title": {"text": REBASED, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridcolor": GRID,
@@ -143,7 +146,7 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 80, "r": 80, "t": 80, "b": 80},
+    margin={"l": 80, "r": 110, "t": 80, "b": 80},
     hovermode="x unified",
 )
 
