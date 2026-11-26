@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-21
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -146,7 +146,22 @@ CODE128_PATTERNS = {
 # Code 128B maps ASCII 32–126 (printable chars) to values 0–94
 CODE128B_CHARS = {chr(i + 32): i for i in range(95)}
 
-# Data — shipping label barcode
+# Constants
+QUIET_ZONE = 10  # modules of blank space left and right of the symbol
+BAR_YMIN, BAR_YMAX = 32.0, 98.0
+
+# Columns: names of the geometry and text tables
+XMIN = "xmin"  # role: extra
+XMAX = "xmax"  # role: extra
+YMIN = "ymin"  # role: extra
+YMAX = "ymax"  # role: extra
+FILL = "fill"  # role: extra
+SYMBOL = "symbol"  # role: extra
+X = "x"  # role: extra
+Y = "y"  # role: extra
+LABEL = "label"  # role: extra
+
+# Data: shipping label barcode, encoded to one row per bar
 content = "SHIP-2024-ABC123"
 
 # Encode each character to its Code 128B symbol value
@@ -162,9 +177,7 @@ checksum = checksum % 103
 sequence = [104] + char_values + [checksum, 106]
 
 # Rasterize symbols into bar rectangles; spaces are implicit gaps
-quiet_zone = 10
-x_pos = quiet_zone
-bar_ymin, bar_ymax = 32.0, 98.0
+x_pos = QUIET_ZONE
 bars = []
 
 for sym_idx, code in enumerate(sequence):
@@ -183,58 +196,54 @@ for sym_idx, code in enumerate(sequence):
         if is_bar:
             bars.append(
                 {
-                    "xmin": float(x_pos),
-                    "xmax": float(x_pos + w),
-                    "ymin": bar_ymin,
-                    "ymax": bar_ymax,
-                    "fill": "#000000",
-                    "symbol": sym_label,
+                    XMIN: float(x_pos),
+                    XMAX: float(x_pos + w),
+                    YMIN: BAR_YMIN,
+                    YMAX: BAR_YMAX,
+                    FILL: "#000000",
+                    SYMBOL: sym_label,
                 }
             )
         x_pos += w
         is_bar = not is_bar
 
-total_width = x_pos + quiet_zone
-cx = total_width / 2
+total_width = x_pos + QUIET_ZONE
+df = pd.DataFrame(bars)
 
-df_bars = pd.DataFrame(bars)
+# Plot
+cx = total_width / 2
 
 # White background rectangle ensures barcode contrast on both light and dark themes
 df_barcode_bg = pd.DataFrame(
     {
-        "xmin": [0.0],
-        "xmax": [float(total_width)],
-        "ymin": [bar_ymin - 4.0],
-        "ymax": [bar_ymax + 4.0],
-        "fill": ["#FFFFFF"],
+        XMIN: [0.0],
+        XMAX: [float(total_width)],
+        YMIN: [df[YMIN].min() - 4.0],
+        YMAX: [df[YMAX].max() + 4.0],
+        FILL: ["#FFFFFF"],
     }
 )
 
-df_text = pd.DataFrame({"x": [cx], "y": [18.0], "label": [content]})
+df_text = pd.DataFrame({X: [cx], Y: [18.0], LABEL: [content]})
 df_annotation = pd.DataFrame(
-    {"x": [cx], "y": [7.0], "label": [f"{len(content)} chars · Code 128B · check digit: {checksum}"]}
+    {X: [cx], Y: [7.0], LABEL: [f"{len(content)} chars · Code 128B · check digit: {checksum}"]}
 )
-df_subtitle = pd.DataFrame(
-    {"x": [cx], "y": [118.0], "label": [f"Shipping label · Code 128B · {len(content)} characters"]}
-)
-df_title = pd.DataFrame({"x": [cx], "y": [127.0], "label": ["barcode-code128 · python · letsplot · anyplot.ai"]})
+df_subtitle = pd.DataFrame({X: [cx], Y: [118.0], LABEL: [f"Shipping label · Code 128B · {len(content)} characters"]})
+df_title = pd.DataFrame({X: [cx], Y: [127.0], LABEL: ["barcode-code128 · python · letsplot · anyplot.ai"]})
 
-# Plot
 plot = (
     ggplot()
+    + geom_rect(aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX, fill=FILL), data=df_barcode_bg, color="#FFFFFF")
     + geom_rect(
-        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_barcode_bg, color="#FFFFFF"
-    )
-    + geom_rect(
-        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),
-        data=df_bars,
-        tooltips=layer_tooltips().line("@{symbol}"),
+        aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX, fill=FILL),
+        data=df,
+        tooltips=layer_tooltips().line(f"@{{{SYMBOL}}}"),
     )
     + scale_fill_identity()
-    + geom_text(aes(x="x", y="y", label="label"), data=df_text, size=14, color=INK)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_annotation, size=9, color=INK_SOFT)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_subtitle, size=9, color=INK_SOFT)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=11, color=INK_SOFT)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_text, size=14, color=INK)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_annotation, size=9, color=INK_SOFT)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_subtitle, size=9, color=INK_SOFT)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_title, size=11, color=INK)
     + xlim(0, total_width)
     + ylim(0, 135)
     + theme_void()
