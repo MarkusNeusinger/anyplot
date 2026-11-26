@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -16,8 +16,10 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
+    geom_contour,
     geom_path,
     geom_point,
+    geom_polygon,
     gggrid,
     ggplot,
     ggsize,
@@ -95,6 +97,31 @@ df = pd.DataFrame(
 df = df.sort_values(SEQUENCE)
 markers_df = pd.concat([df.iloc[[0]].assign(**{MARKER: "Start"}), df.iloc[[-1]].assign(**{MARKER: "End"})])
 
+# Terrain basemap drawn from the route's own extent: quiet contour lines of a smooth relief
+# and a lake, both fixed-color layers so they stay below the route in visual weight
+lon_lo, lon_hi = df[LON].min(), df[LON].max()
+lat_lo, lat_hi = df[LAT].min(), df[LAT].max()
+lon_pad, lat_pad = (lon_hi - lon_lo) * 0.12, (lat_hi - lat_lo) * 0.12
+gx, gy = np.meshgrid(
+    np.linspace(lon_lo - lon_pad, lon_hi + lon_pad, 90), np.linspace(lat_lo - lat_pad, lat_hi + lat_pad, 90)
+)
+u, v = (gx - lon_lo) / (lon_hi - lon_lo), (gy - lat_lo) / (lat_hi - lat_lo)
+relief = (
+    np.exp(-(((u - 0.2) / 0.35) ** 2 + ((v - 0.75) / 0.3) ** 2))
+    + 0.8 * np.exp(-(((u - 0.8) / 0.3) ** 2 + ((v - 0.3) / 0.35) ** 2))
+    + 0.15 * np.sin(5 * u) * np.cos(4 * v)
+)
+relief_df = pd.DataFrame({LON: gx.ravel(), LAT: gy.ravel(), "Relief": relief.ravel()})
+angle = np.linspace(0, 2 * np.pi, 60)
+lake_df = pd.DataFrame(
+    {
+        LON: lon_lo + (0.62 + 0.09 * np.cos(angle)) * (lon_hi - lon_lo),
+        LAT: lat_lo + (0.78 + 0.06 * np.sin(angle)) * (lat_hi - lat_lo),
+    }
+)
+CONTOUR = "rgba(26,26,23,0.22)" if THEME == "light" else "rgba(240,239,232,0.20)"
+LAKE = "#CFE0E8" if THEME == "light" else "#223038"
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=TERRAIN_BG),
@@ -111,6 +138,8 @@ anyplot_theme = theme(
 
 plot = (
     ggplot()
+    + geom_contour(aes(x=LON, y=LAT, z="Relief"), data=relief_df, bins=10, color=CONTOUR, size=0.4)
+    + geom_polygon(aes(x=LON, y=LAT), data=lake_df, fill=LAKE, color=CONTOUR, size=0.4)
     + geom_path(
         aes(x=LON, y=LAT, color=PROGRESS),
         data=df,
