@@ -229,6 +229,10 @@ CHECK_PATTERNS = [
     [4, 1, 1, 1, 3, 1],
 ]
 
+# Columns of the drawing tables
+X0, X1, Y0, Y1 = "x", "x2", "y", "y2"
+TEXT, ENCODED = "text", "encoded"
+
 # Data — encode a shipping label
 content = "SHIP-2024-ABC123"
 
@@ -254,7 +258,7 @@ x = 0
 is_bar = True  # Start with bar (dark)
 for width in pattern:
     if is_bar:
-        bars_data.append({"x": x, "x2": x + width, "y": 0, "y2": 1, "encoded": f"Code 128B: {content}"})
+        bars_data.append({X0: x, X1: x + width, Y0: 0, Y1: 1, ENCODED: f"Code 128B: {content}"})
     x += width
     is_bar = not is_bar
 
@@ -263,27 +267,32 @@ total_width = x
 # Add quiet zones (10% on each side)
 quiet_zone = total_width * 0.1
 for bar in bars_data:
-    bar["x"] += quiet_zone
-    bar["x2"] += quiet_zone
+    bar[X0] += quiet_zone
+    bar[X1] += quiet_zone
 total_width_with_zones = total_width + 2 * quiet_zone
 
 # Plot
 df_bars = pd.DataFrame(bars_data)
-df_text = pd.DataFrame([{"x": total_width_with_zones / 2, "y": -0.17, "text": content}])
+df_text = pd.DataFrame([{X0: total_width_with_zones / 2, Y0: -0.17, TEXT: content}])
 
 # Scannable symbol: dark bars on a light tile in both themes (the spec asks for black on white).
 # The tile spans the quiet zones; the page around it follows the theme.
 TILE = "#FAF8F1"
 BAR_INK = "#1A1A17"
 margin = total_width_with_zones * 0.04
-df_tile = pd.DataFrame([{"x": 0, "x2": total_width_with_zones, "y": -0.32, "y2": 1.1}])
+df_tile = pd.DataFrame([{X0: 0, X1: total_width_with_zones, Y0: -0.32, Y1: 1.1}])
 x_scale = alt.Scale(domain=[-margin, total_width_with_zones + margin], nice=False)
 y_scale = alt.Scale(domain=[-0.4, 1.18], nice=False)
 
 tile_chart = (
     alt.Chart(df_tile)
     .mark_rect(color=TILE)
-    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), x2="x2:Q", y=alt.Y("y:Q", scale=y_scale, axis=None), y2="y2:Q")
+    .encode(
+        x=alt.X(f"{X0}:Q", scale=x_scale, axis=None),
+        x2=f"{X1}:Q",
+        y=alt.Y(f"{Y0}:Q", scale=y_scale, axis=None),
+        y2=f"{Y1}:Q",
+    )
 )
 
 # Barcode bars, tooltip shows encoded content
@@ -291,11 +300,11 @@ bars_chart = (
     alt.Chart(df_bars)
     .mark_rect(color=BAR_INK)
     .encode(
-        x=alt.X("x:Q", scale=x_scale, axis=None),
-        x2="x2:Q",
-        y=alt.Y("y:Q", scale=y_scale, axis=None),
-        y2="y2:Q",
-        tooltip=[alt.Tooltip("encoded:N", title="Encoded")],
+        x=alt.X(f"{X0}:Q", scale=x_scale, axis=None),
+        x2=f"{X1}:Q",
+        y=alt.Y(f"{Y0}:Q", scale=y_scale, axis=None),
+        y2=f"{Y1}:Q",
+        tooltip=[alt.Tooltip(f"{ENCODED}:N", title="Encoded")],
     )
 )
 
@@ -303,7 +312,7 @@ bars_chart = (
 text_chart = (
     alt.Chart(df_text)
     .mark_text(fontSize=22, font="monospace", fontWeight="bold", color=BAR_INK)
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="text:N")
+    .encode(x=alt.X(f"{X0}:Q", scale=x_scale), y=alt.Y(f"{Y0}:Q", scale=y_scale), text=f"{TEXT}:N")
 )
 
 chart = (
