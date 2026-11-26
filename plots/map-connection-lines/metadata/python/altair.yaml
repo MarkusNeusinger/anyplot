@@ -12,114 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-conne
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - Mathematically correct SLERP great-circle arc computation — routes follow true
-    geodesic paths
-  - Dual encoding (color + strokeWidth) for passenger volume reinforces the key variable
-    through redundant visual channels
-  - Hub connectivity encoded in marker size via runtime Counter computation — adds
-    a third data dimension without extra data
-  - 'Complete theme adaptation: map land fill, border stroke, hub label ink, legend
-    box, and title all correctly switch between #FAF8F1 and #1A1A17 themes'
-  - 'Full use of Altair geographic capabilities: topo_feature, projection, geo encodings,
-    detail/order arc path mechanism, and four-layer alt.layer() composition'
+  - 'Mathematically correct SLERP great-circle arcs: every route follows its geodesic
+    from origin to destination'
+  - Value encoded twice (color and stroke width) so heavy corridors like JFK–LHR and
+    LHR–DXB stand out
+  - Complete theme adaptation of land fill, borders, hub labels, legend surface and
+    title
+  - 'Altair-native geo stack: topo_feature base map, naturalEarth1 projection and
+    detail+order path encoding in one layered chart, with route and airport tooltips
+    in the HTML'
   weaknesses:
-  - Hub labels (LHR, NRT, DXB) at fontSize=9 are borderline at desktop and effectively
-    invisible at mobile viewport widths (~400px); increasing to fontSize=11-12 would
-    improve mobile readability without cluttering the map
+  - 'VQ-02 (both): the legend title ''Passengers (k/yr)'' is wider than the legend
+    box and runs into its left and right border → fit inside with ~8 px padding. Likely
+    cause: no legend padding / title wider than symbol column.'
+  - 'VQ-05 (both): the 620×320 view padded to 3200×1800 leaves an empty band of ~200
+    px above the title and wide side margins; the map uses about 70% of the width
+    → size the whole chart with autosize fit at 800×450. Likely cause: .properties(width=620,
+    height=320) without autosize type="fit".'
+  - 'VQ-07 (both): the volume ramp is a two-stop #009E73→#4467A3 scale, identical
+    in both themes, not imprint_seq''s marks stops → light (0 #009E73, 0.338 #4467A3,
+    1 #002850), dark (0 #007755, 0.32 #009E73, 1 #CDD9FF). Likely cause: alt.Scale(range=["#009E73",
+    "#4467A3"]) without per-theme stops (use domain/range stops at the ramp positions
+    over the volume extent).'
+  - 'VQ-03 (both): the color legend draws hollow rings while the encoded marks are
+    lines; the 1,000 ring nearly vanishes on the dark legend surface → line-sample
+    glyphs matching the arcs. Likely cause: symbolType="stroke" not producing a line
+    glyph here; set symbolType to a horizontal path such as "M-1,0L1,0".'
+  - 'Suggestion: hub labels at 9 px could go to 11–12 px for more presence beside
+    the markers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Flight Routes · map-connection-lines · python · altair · anyplot.ai" in dark ink, clearly readable. Hub labels (LHR, NRT, DXB) in dark bold text (fontSize=9), readable at desktop. Legend title "Passengers (k/yr)" and tick labels (1,000–3,500) in INK_SOFT color, readable.
-      Data: Great-circle arcs colored via imprint_seq gradient (brand green #009E73 at low volume → blue #4467A3 at high volume) at opacity=0.5. Stroke width encodes volume (0.3–2.5px). Airport markers as brand-green circles sized by connectivity. Land masses in beige-gray #DDD9CC; subtle country border strokes.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: warm off-white #FAF8F1, land #DDD9CC with hairline ink borders.
+      Chrome: bold dark title placed low with a wide empty band above; legend 'Passengers (k/yr)' top-right whose title runs into the box border; 9 px bold hub labels LHR, NRT, DXB. All readable.
+      Data: 25 great-circle arcs green→blue by volume, width 0.3–2.5 px, opacity 0.5 so corridors build up; 12 brand-green #009E73 airport circles sized by connectivity; map uses about 70% of the canvas width.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in warm white (#F0EFE8 INK token for dark mode). Hub labels (LHR, NRT, DXB) rendered in warm white, readable against dark background. Legend text in INK_SOFT (#B8B7B0) — readable. Legend box uses ELEVATED_BG (#242420) with INK_SOFT stroke.
-      Data: Arc colors are IDENTICAL to light render — imprint_seq gradient (green→blue) unchanged. Airport markers retain same brand-green. Land masses shift to dark gray #2A2A26; border strokes adapt to INK_SOFT. Only chrome flips, data colors constant.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text readable against dark background
+      Background: warm near-black #1A1A17, land #2A2A26 with light borders.
+      Chrome: title, labels and legend text in light ink; legend on #242420; no dark-on-dark text; 1,000 ring faint.
+      Data: arc and marker colors identical to light render; markers with light outline.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title and legend fully readable in both themes; hub labels at fontSize=9
-          borderline at mobile widths
+        comment: Title, legend and 9 px bold hub labels readable in both themes at
+          full size; sizes set explicitly
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Arc overlap near European hub cluster inherent to dense hub-and-spoke
-          data; opacity=0.5 mitigates
+        passed: false
+        comment: Legend title 'Passengers (k/yr)' is wider than its box and runs into
+          the border (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Arcs, markers, and labels all clearly visible; strokeWidth range
-          effectively encodes volume
+        passed: false
+        comment: Arcs and markers visible, but the legend glyphs are hollow rings
+          while the marks are lines; the 1,000 ring fades on dark (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe; brand-green markers have
-          sufficient contrast
+        comment: Green-to-blue ramp plus redundant stroke width; no red-green signal;
+          ink-outlined markers contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3200x1800 confirmed, canvas gate passed; map fills canvas proportionally;
-          legend non-intrusive
+        passed: false
+        comment: 620×320 view padded up to the canvas leaves a wide empty band above
+          the title and below the map; the map uses about 70% of the width (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes (geo map); legend titled Passengers (k/yr) with
-          units; title descriptive
+        comment: Geo map without axes; legend title 'Passengers (k/yr)' carries the
+          unit; descriptive title prefix
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: imprint_seq range=[#009E73,#4467A3] correct; brand-green markers;
-          correct PAGE_BG for both themes
+        passed: false
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct and markers brand green, but
+          the volume ramp is a two-stop #009E73→#4467A3 scale identical in both themes
+          instead of the imprint_seq marks stops (defect line)'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: dual encoding, hub connectivity marker sizing, theme-adaptive
-          land colors, professional layered composition'
+        comment: 'Beyond baseline: theme-tuned land tone (#DDD9CC / #2A2A26) kept
+          quieter than the routes, bold ink hub labels forming a second type level'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Map-appropriate minimalism; theme-adaptive land fill and borders;
-          legend box styled; arc opacity for overlap
+        comment: Hairline 0.3 px borders keep the base map recessive; legend on an
+          elevated surface
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Hub labels guide to key nodes; multiple encodings create visual hierarchy;
-          LHR dominates naturally
+        passed: false
+        comment: 'Default: data displayed; hub labels pick the three biggest nodes
+          but no further hierarchy is chosen'
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connection-lines map with geographic arcs and world base
-          map
+        comment: Correct origin-destination connection map on a world base map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Great-circle arcs, line thickness encoding, color intensity encoding,
-          endpoint markers, transparency, base map all present
+        comment: Great-circle arcs, value-driven color and width, endpoint markers,
+          translucent 0.5 lines and base map all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Origin/destination mapped via SLERP; geographic context fully shown;
-          all 25 routes visible
+        comment: SLERP great-circle points at true coordinates; all 25 routes and
+          12 airports shown; no displaced marks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with descriptive prefix; legend Passengers (k/yr)
-          with units
+        comment: Title format correct with descriptive prefix; legend titled with
+          unit explains color/width encoding
     data_quality:
       score: 15
       max: 15
@@ -161,22 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Curved arcs, volume dual-encoding, hub importance marker size, geographic
-          context, hub labels — all aspects represented
+        comment: Long transatlantic and Eurasian arcs, short regional links, hub bundling
+          and value encoding all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real major airports, realistic routes, passenger volumes in correct
-          real-world range, neutral topic
+        comment: Real major airports and plausible international routes; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25 routes within spec range; 12 globally distributed airports; volumes
-          plausible for busy international routes
+        comment: 25 connections inside the 10–100 range; volumes 900–3,800 k passengers/yr
+          plausible for busy long-haul routes
     code_quality:
       score: 10
       max: 10
@@ -186,53 +200,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → SLERP computation → DataFrame → chart assembly
-          → save'
+        comment: 'Flat script: data → SLERP loop → DataFrames → layered chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random elements
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras
+        comment: All imports used (Counter, numpy, pandas, PIL, altair)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SLERP computation clean; sys.path guard handles altair.py filename
-          conflict; PIL padding matches canonical pattern
+        comment: SLERP loop is the needed computation (no library call available in
+          the installed stack); size guard is short
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.1.0
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Altair
+          6 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of Altair geographic API: topo_feature, lon/lat encodings,
-          project, detail+order for arc paths, configure chaining'
+        comment: Idiomatic layered alt.layer composition with topo_feature, longitude/latitude
+          encodings and detail+order for paths
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
         passed: true
-        comment: alt.topo_feature, Natural Earth1 projection, longitude/latitude geo
-          encodings, detail+order SLERP arc mechanism — all Altair-distinctive
+        comment: 'Altair-native geo stack: alt.topo_feature + naturalEarth1 projection
+          driving all layers, tooltips in HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
 impl_tags:
   dependencies:
   - pillow
