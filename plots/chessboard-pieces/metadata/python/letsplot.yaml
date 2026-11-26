@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T22:05:57Z'
-updated: '2026-11-22T02:45:11Z'
+updated: '2026-11-26T08:41:23Z'
 generated_by: claude-sonnet
-workflow_run: 44977061307
+workflow_run: 45784515445
 issue: 3350
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,47 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 82
 review:
   strengths:
   - Board built from two native layers, geom_tile for the 64 squares and geom_text
     for the Unicode glyphs, with coord_fixed(ratio=1) keeping every square square
   - 'Standard orientation in both renders: a1 dark, h1 light, white at the bottom,
-    files a-h along the bottom and ranks 1-8 on the left via scale breaks/labels'
+    files a-h along the bottom rim and ranks 1-8 along the left rim via scale breaks/labels'
   - Every piece of the Scholar's Mate position sits centered on its named square;
     filled (black) and outline (white) glyphs are told apart on light and dark squares
     in both themes
   - Chrome threads theme tokens (PAGE_BG, INK, INK_SOFT) while the board colors stay
-    identical across themes; canonical 2400x2400 canvas
+    identical across themes; the whole 2400x2400 canvas is painted in the page color
   - 'Column constants and a single # Data block make the position replaceable without
     touching the plot code; HTML export keeps the interactive lets-plot output'
   weaknesses:
-  - 'VQ-05 (both): a gray (#474747) rectangle frames the expanded panel about half
-    a square outside the board, boxing an empty band and separating the a-h / 1-8
-    labels from the board''s rim → no frame, and the board edge flush with the panel
-    so the coordinates sit at the rim. Likely cause: the continuous scales'' default
-    expand plus the panel border that theme() leaves on; set expand=[0, 0] on both
-    scales and panel_border=element_blank().'
   - 'Suggestion: the glyphs fill only about a third of each square (geom_text size=14);
-    a larger size such as 20-22 would give the pieces more presence while keeping
-    the inset the Notes ask for.'
-  - 'Suggestion: drawing the piece glyphs in INK-independent near-black (#1A1A17)
-    instead of the default gray would sharpen the outline pieces on the dark squares.'
+    a size around 20 would give the pieces more presence while keeping the inset the
+    Notes ask for.'
+  - 'Suggestion: drawing the piece glyphs in near-black (#1A1A17) instead of the default
+    gray would sharpen the outline pieces on the dark squares.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 (sampled), 2400x2400 canvas; lets-plot leaves ~30 px transparent strips at the left and right edges (coord_fixed letterboxing)
-      Chrome: bold title "chessboard-pieces · python · letsplot · anyplot.ai" in INK at the top, ~56% of the width; bold INK_SOFT file letters a-h below and rank numbers 1-8 at the left, all readable; a thin gray frame surrounds the panel with an empty band between it and the board
-      Data: 8x8 board in #F0D9B5 / #B58863 with a thin brown square outline, a1 dark and h1 light; 34 Unicode pieces of the Scholar's Mate position (white Qf7, Bc4, e4; black e5, Nf6) centered on their squares, black pieces filled, white pieces outlined, both in the default dark gray. No Imprint series apply (board colors are domain colors)
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas, no transparent edge strips
+      Chrome: bold title "chessboard-pieces · python · letsplot · anyplot.ai" in INK at the top, ~56% of the width; bold INK_SOFT file letters a-h directly below the board and rank numbers 1-8 directly left of it, all readable; a thin dark-gray line runs along the board's own edge, no empty band
+      Data: 8x8 board in #F0D9B5 / #B58863 with thin brown square outlines, a1 dark and h1 light, filling most of the canvas; 34 Unicode pieces of the Scholar's Mate position (white Qf7, Bc4, e4; black e5, Nf6) centered on their squares, black pieces filled, white pieces outlined, both in the default dark gray. No Imprint series apply (board colors are domain colors)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 (sampled), same transparent edge strips
-      Chrome: title in light INK #F0EFE8, labels in INK_SOFT #B8B7B0, all clearly readable; no dark-on-dark text; the panel frame is the same gray and reads faintly
+      Background: warm near-black #1A1A17 across the full canvas
+      Chrome: title in light INK #F0EFE8, coordinates in INK_SOFT #B8B7B0, all clearly readable; no dark-on-dark text
       Data: board and piece colors identical to the light render; only chrome flipped
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,14 +54,14 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt bold and 9 pt bold coordinates set explicitly; readable
+        comment: Title 12 pt bold, coordinates 9 pt bold set explicitly; readable
           in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; each piece within its own square
+        comment: No text collisions; every glyph inside its own square
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -79,16 +73,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: White vs black told apart by filled vs outline glyph shape, not by
-          hue alone
+        comment: White vs black pieces told apart by outline vs filled glyph shape,
+          not hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Canonical 2400x2400 square canvas; a gray frame around the expanded
-          panel leaves an empty band and detaches the coordinates from the board (defect
-          line)
+        passed: true
+        comment: Canonical 2400x2400 canvas fully painted; board flush with the panel,
+          coordinates at its rim, board fills the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -119,8 +112,7 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: theme_void and thin square outlines meet the baseline; the leftover
-          panel frame earns no refinement credit
+        comment: theme_void and thin square outlines meet the baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -142,8 +134,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'C1 orientation with light h1, C2 centered pieces, C3 standard symbols,
-          C4 inset, C5 coordinates at a-left / 1-bottom: all present'
+        comment: 'C1 orientation with a1 dark / h1 light, C2 centered pieces, C3 standard
+          symbols, C4 inset, C5 coordinates a-left / 1-bottom: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -155,7 +147,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; no legend needed
+        comment: Title matches the mandated format; no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -177,8 +169,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Legal position: checked white Qf7/Bc4/e4 against black e5/Nf6 and
-          full back ranks'
+        comment: 'Checked the position: white Qf7, Bc4, e4 vs black e5, Nf6 with full
+          back ranks, a legal mate position'
     code_quality:
       score: 10
       max: 10
@@ -188,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script with one # Data block, no functions'
+        comment: 'Linear script, one # Data block, no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,7 +214,8 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Grammar-of-graphics layering with scale breaks/labels; default level
+        comment: Grammar-of-graphics layering (geom_tile + geom_text, scale breaks/labels,
+          coord_fixed); default level
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -231,16 +224,15 @@ review:
         comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
-  rendered_at: '2026-11-22T02:41:28Z'
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T08:38:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - manual-ticks
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
