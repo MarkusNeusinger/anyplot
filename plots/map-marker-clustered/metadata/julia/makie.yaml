@@ -2,106 +2,115 @@ library: makie
 language: julia
 specification_id: map-marker-clustered
 created: '2026-05-23T12:01:45Z'
-updated: '2026-05-23T12:20:23Z'
+updated: '2026-11-26T14:49:05Z'
 generated_by: claude-sonnet
-workflow_run: 26331984451
+workflow_run: 45840919535
 issue: 3766
-language_version: 1.11.9
-library_version: 0.22.10
+language_version: 1.13.4
+library_version: 0.24.16
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - Thoughtful basemap simulation using CairoMakie primitives (poly! for water, hlines!/vlines!
-    for streets, land/water color tokens that adapt per theme)
-  - Proportional cluster bubbles with dominant-category color and white count labels
-    — clean and informative hierarchy
-  - 'Full theme adaptation: all chrome tokens (PAGE_BG, LAND_COLOR, WATER_COLOR, INK,
-    INK_SOFT) correctly flip between light and dark; data colors stay identical'
-  - 'Perfect spec compliance: all static-feasible clustering features implemented;
-    interactive-only features appropriately skipped'
-  - 'Perfect code quality: clean linear structure, seeded, all imports used, correct
-    Makie 0.22 API'
+  - 'Basemap built from Makie primitives: poly!(ax, Rect2f(...)) water bodies, a block-spaced
+    hlines!/vlines! street grid and per-theme land/water/street tokens, quieter than
+    the markers in both themes'
+  - Cluster bubbles sized by count with fill and matching stroke in the dominant category's
+    color, count text chosen per fill (dark on lavender, white on green and blue)
+    so every count is legible in both themes
+  - Imprint positions 1-3 in canonical order, identical across themes; all chrome
+    threaded through PAGE_BG / ELEVATED_BG / INK / INK_SOFT
+  - 'Simple, seeded grid clustering: clusters at the mean of their members, cells
+    with fewer than 4 points drawn as individual markers at their own coordinates'
   weaknesses:
-  - Water body labels ('Hudson River', 'East River') are at fontsize=9, which may
-    not be legible at mobile scale (~400 px wide); consider bumping to 10-11pt
-  - Solo markers at markersize=15 are small relative to the cluster bubbles — increasing
-    to 18 would improve visual separation between individual points and empty space
-  - No real geographic coastline outline for Manhattan island — the simplified basemap
-    works but a Manhattan boundary polygon would significantly improve geographic
-    fidelity
-  - The '29' (red) and '37' (purple) cluster bubbles in the center of the map are
-    visually adjacent; a slight label offset or smaller bubbles would add breathing
-    room
+  - 'DQ-03 (both): three solo venues, the ''9'' cluster and the west half of the ''15''
+    cluster sit inside the drawn Hudson River (lon below -74.007), so cafés and bakeries
+    appear on the water → every venue on the drawn land (lon between about -74.006
+    and -73.979). Likely cause: the Financial District (-74.0060) and Tribeca (-74.0010)
+    centers with randn() * 0.0033 spread spill west past the Hudson rectangle Rect2f(-74.017,
+    ..., 0.010, ...); shift those centers east or narrow the spread, or move the shoreline
+    to the data.'
+  - 'LM-01 (code): the data is built in loose lats/lons/cat_ids vectors and the axis
+    limits are typed numbers, not the library prompt''s column constants + DataFrame
+    data block with limits read from the data → a `# Columns` block (LAT, LON, CATEGORY),
+    one `df = DataFrame(...)`, plot code reading df[!, LAT], limits from extrema of
+    the data. Likely cause: the push! loop and limits = ((-74.017f0, -73.963f0), (40.702f0,
+    40.760f0)).'
+  - 'Suggestion: a Manhattan shoreline polygon in place of the two water rectangles
+    would make the basemap read as a real coastline.'
+  - 'Suggestion: a small size key (e.g. bubbles for 5 / 20 / 35 venues) would tie
+    bubble area to the count without reading each label.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 canvas; axis area uses land color (~#EEE9DC beige) to simulate a basemap
-      Chrome: Title "map-marker-clustered · julia · makie · anyplot.ai" in dark ink — clearly readable. Axis labels "Longitude" / "Latitude" in dark INK, tick labels in INK_SOFT (#4A4A44). Legend box with styled frame in bottom-right, all labels readable. Water labels "Hudson River" / "East River" at 9pt — small but visible.
-      Data: Cluster bubbles in #009E73 (Coffee Shop), #9418DB (Bakery), #B71D27 (Tea House) with white count labels. Individual markers as small colored dots in same palette. Proportional bubble sizing (28-72pt) by cluster count. Simplified basemap with street grid (faint horizontal/vertical lines) and rectangular water bodies at western and eastern edges.
+      Background: Warm off-white #FAF8F1 page; the axis area is a beige land color with pale-blue Hudson River (left ~19 %) and East River (right ~28 %) rectangles, labelled in muted blue at 12 pt.
+      Chrome: Title "map-marker-clustered · julia · makie · anyplot.ai" bold dark ink, centered; "Longitude" / "Latitude" axis titles dark; tick labels in INK_SOFT; only left and bottom spines; faint white street grid plus a subtle axis grid. Legend bottom-right on an elevated off-white box with a soft frame: Coffee Shop, Bakery, Tea House.
+      Data: ~25 cluster bubbles (counts 4-37) sized by count, colored by dominant category in #009E73 (Coffee Shop), #C475FD (Bakery), #4467A3 (Tea House) at 80 % alpha with a matching stroke; white counts on green/blue, dark counts on lavender. About 14 individual markers at size 18 with a page-colored outline. Some solo markers and the 9 and 15 clusters sit in the Hudson River rectangle.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 canvas; axis area uses dark land color (~#333330) for the map area
-      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Axis labels and tick labels in INK_SOFT dark variant (#B8B7B0) — visible and readable. Legend box has dark elevated background (#242420) with light text. No dark-on-dark failures observed. Water labels in muted blue-gray — visible.
-      Data: Cluster bubble colors identical to light render (#009E73, #9418DB, #B71D27) with white count labels. Individual marker colors unchanged. Water and land colors adapt to dark theme while maintaining map context.
+      Background: Warm near-black #1A1A17 page; land is a dark olive-grey, both rivers deep navy, river labels in light muted blue.
+      Chrome: Title, axis titles in light #F0EFE8; tick labels in light grey INK_SOFT; legend on dark elevated #242420 with light labels. No dark-on-dark text anywhere. Street grid drawn as dark lines on the land.
+      Data: Categorical colors identical to the light render (#009E73, #C475FD, #4467A3); counts equally legible (dark on lavender, white on green and blue); solo markers outlined in the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; all critical labels readable. Minor
-          deduction: water body labels at 9pt may not scale well to mobile (~400 px).'
+        comment: All sizes set explicitly (title 20, labels 14, ticks 12, water labels
+          12, counts 14); counts dark on lavender and white on green/blue clusters,
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean. Minor deduction for '29' and '37' cluster bubbles
-          being visually adjacent in center area.
+        comment: No text collisions; adjacent 29 and 37 clusters touch only at their
+          outlines
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cluster bubbles excellent. Solo markers at markersize=15 are visible
-          but small given ~200+ scattered points.
+        comment: Solo markers at 18 with page-colored outline, cluster bubbles 28-72
+          with matching stroke; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette green/purple/red with good luminance contrast. CVD-safe.
+        comment: Green, lavender and blue differ in hue and lightness; no red-green
+          pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, good space utilization, no clipping, balanced margins.
+        comment: 3200x1800, map fills the canvas, nothing cut off, legend inside the
+          East River corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are correct geographic axis labels.
+        comment: Longitude / Latitude are the correct geographic axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Coffee Shop uses #009E73 as first series. Palette positions 1-3
-          in canonical order. Background #FAF8F1 (light) / #1A1A17 (dark). Both renders
-          theme-correct.'
+        comment: 'Imprint positions 1-3 in canonical order (#009E73, #C475FD, #4467A3),
+          identical across themes; #FAF8F1 / #1A1A17 page backgrounds'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -109,24 +118,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above typical defaults: simulated basemap with land/water/street
-          color differentiation, proportional cluster bubbles with matched stroke
-          colors. Not publication-ready but clearly above well-configured default.'
+        comment: A per-theme basemap palette (land, water, street, water-label tokens)
+          designed beyond the style guide; count text color chosen per fill
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, grid at alpha=0.10, styled legend with
-          elevated background, water labels for contextual detail.
+        comment: Block-spaced street grid in place of a generic grid, cluster strokes
+          matched to their fill, solo markers outlined in the page color
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: large cluster bubbles draw eye to high-density
-          areas; count labels quantify groupings; color by dominant category adds
-          a second data dimension.'
+        passed: false
+        comment: Size-by-count hierarchy is what the spec asks for; no focal point
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -136,31 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered marker map with distinct visual treatment for clusters
-          vs individual markers.
+        comment: 'Clustered marker map: count bubbles plus individual markers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster count labels, category colors, dominant-category cluster
-          color, basemap, proportional sizing all present. Interactive features (zoom,
-          click-to-zoom, convex hull) correctly omitted.
+        comment: C1 counts on markers, C2 clusters at member mean and solos at own
+          coordinates, C3 size grows with count, C4 dominant-category color + legend,
+          C5 basemap quieter than markers; interactive Notes omitted as the library
+          prompt directs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude on Y, longitude on X. All points within axis limits.
+        comment: Lon on x, lat on y, all points inside limits, no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'map-marker-clustered · julia · makie · anyplot.ai'. Legend
-          labels match category names.
+        comment: Title matches the mandated format; legend names the three categories
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -168,23 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: clustered bubbles with size variation, unclustered
-          individual markers, three categories with both cluster-dominant and solo-marker
-          representation.'
+        comment: Clusters of 4-37, isolated solos, all three categories as cluster
+          and solo
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lower Manhattan specialty venues (coffee shops, bakeries, tea houses)
-          across 8 named NYC districts. Realistic, neutral scenario.
+        comment: 'Coffee shops, bakeries and tea houses across lower Manhattan districts:
+          real, neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Geographic coordinates accurate for lower Manhattan. ~200-300 total
-          points. Cluster sizes (4-37) plausible for neighborhood density.
+        passed: false
+        comment: 'Checked: coordinates sit in lower Manhattan, but three solo venues,
+          the 9-cluster and half of the 15-cluster are drawn inside the Hudson River
+          rectangle (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -194,65 +200,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: constants -> data -> clustering -> plot -> save. No functions
-          or classes.'
+        comment: Linear script, no functions or structs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at top.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used.
+        comment: CairoMakie, Colors, Random, Statistics all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Julia code, appropriate complexity for the clustering + map
-          simulation. No fake functionality.
+        comment: Grid clustering is short and readable; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2). Uses size (correct
-          for Makie 0.22+).
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) with size keyword
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper Figure/Axis construction, scatter!, text!, poly!, hlines!/vlines!,
-          axislegend with custom styling, RGBAf color construction, colorant macro.
-          Correct use of size (not deprecated resolution).
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses poly!(ax, Rect2f()) for water body rectangles and hlines!/vlines!
-          for street grid — both distinctively Makie primitives. axislegend is Makie-specific
-          API. RGBAf float32 color construction leverages Makie's internal color model.
+        comment: Figure/Axis/scatter!/text!/axislegend used well, but the library
+          prompt's column-constant + DataFrame data block is not followed and limits
+          are typed numbers (defect line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: poly!(ax, Rect2f(...)) water bodies and hlines!/vlines! street grid
+          build a basemap from Makie primitives; axislegend with styling
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d9c138255d
+  rendered_at: '2026-11-26T14:45:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
+  - groupby-aggregation
   styling:
   - alpha-blending
   - edge-highlighting
