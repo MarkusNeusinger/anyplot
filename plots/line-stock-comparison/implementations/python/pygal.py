@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -43,7 +43,7 @@ PRICE = "Closing price (USD)"  # role: price
 np.random.seed(42)
 n_days = 252
 dates = pd.bdate_range("2024-01-02", periods=n_days)
-daily_return = {"AAPL": (0.0012, 0.018), "GOOGL": (0.0015, 0.022), "MSFT": (-0.0002, 0.016), "SPY": (0.0004, 0.010)}
+daily_return = {"NOVA": (0.0012, 0.018), "ORBX": (0.0015, 0.022), "TERRA": (-0.0002, 0.016), "FUND": (0.0004, 0.010)}
 df = pd.concat(
     [
         pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: 100 * np.cumprod(1 + np.random.normal(mu, sigma, n_days))})
@@ -59,11 +59,6 @@ dates = rebased.index
 final_returns = rebased.ffill().iloc[-1] - BASE_VALUE
 
 
-def fmt_ret(r):
-    sign = "+" if r >= 0 else ""
-    return f"{sign}{r:.1f}%"
-
-
 # Best performer gets a thicker stroke for visual emphasis
 best = final_returns.idxmax()
 
@@ -77,9 +72,11 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=series_colors,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -98,7 +95,7 @@ chart = pygal.Line(
     style=custom_style,
     title="line-stock-comparison · python · pygal · anyplot.ai",
     x_title=DATE,
-    y_title=f"Rebased Price (Start = {BASE_VALUE})",
+    y_title=f"Index (start = {BASE_VALUE})",
     show_x_guides=False,
     show_y_guides=True,
     dots_size=2,
@@ -114,7 +111,7 @@ chart.x_labels = x_labels_all
 
 for symbol in rebased.columns:
     chart.add(
-        f"{symbol} ({fmt_ret(final_returns[symbol])})",
+        f"{symbol} ({final_returns[symbol]:+.1f}%)",
         [
             {"value": val, "label": f"{symbol} | {d.strftime('%Y-%m-%d')} | {val:.1f}"}
             for d, val in zip(dates, rebased[symbol].tolist(), strict=True)
