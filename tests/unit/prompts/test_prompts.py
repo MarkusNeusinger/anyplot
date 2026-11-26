@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from automation.scripts import contract_check
 from automation.scripts.regen_gate import DEFECT_RE, SUGGESTION_RE
 from automation.scripts.spec_characteristics_lint import check_contract
 from core.adaptability import LIBRARIES as PYTHON_LIBRARIES
@@ -1748,7 +1749,9 @@ class TestGeneratorSelfChecks:
         """The wrap paints the strips; the legend below, the canvas and a map's span make the panel fill them."""
         canvas = self.LETSPLOT.read_text()
         canvas = canvas[canvas.index("## Canvas") : canvas.index("## Figure Size")]
-        assert "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color." in canvas
+        assert (
+            "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color." in canvas
+        )
         fill = canvas[canvas.index("**Then let a fixed-aspect panel fill the canvas.**") :]
         assert "**The legend goes below the panel** (`theme(legend_position='bottom')`)" in fill
         assert "**The canvas suits the figure with its title and legend below it**, not only its equal axes." in fill
@@ -1757,3 +1760,102 @@ class TestGeneratorSelfChecks:
         assert "plot = plot + theme(legend_position='bottom')\nplot = gggrid([plot])" in fill
         # The old sentence kept whatever canvas Step 0 picked, whatever the figure's shape.
         assert "Keep the canvas Step 0 picks for the plot" not in canvas
+
+    def test_step_2b_runs_the_contract_check_before_the_first_render(self, tmp_path: Path) -> None:
+        """Every language, right after the file is written; the command's output is the rule."""
+        content = GENERATE_PROMPT.read_text()
+        assert content.index("## Step 2:") < content.index("### Step 2b:") < content.index("## Step 3:")
+        step = content[content.index("### Step 2b: Contract self-check (every language)") : content.index("## Step 3:")]
+        command = (
+            ".venv/bin/python -I automation/scripts/contract_check.py selfcheck \\\n"
+            "    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} "
+            "--library {LIBRARY}"
+        )
+        assert command in step
+        for sentence in (
+            "It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.",
+            "**Fix every line that is not marked `(advisory)`,** then run the check again.",
+            "The output is the whole rule: don't read the script for its patterns.",
+            "**On a regeneration, also fix the lines the previous file already broke.**",
+            "Keep one only for a reason that holds, such as a semantic exception of the style guide or a colour the "
+            "spec names, and name the colour and the reason in the commit line",
+            "**Never trade a defect in the render for a clean check,** and never remove an element the spec asks for",
+            "it never blocks the implementation. `impl-review.yml` runs the same check on the committed file again, "
+            "record-only.",
+        ):
+            assert sentence in step, sentence
+        # The step names no rule key or pattern of its own: they live in the script and its output.
+        for mandate in contract_check.MANDATES:
+            assert mandate.key not in step, mandate.key
+        # The command the step names exists, with these arguments, in the workspace copy of the script.
+        source = tmp_path / "plot.py"
+        source.write_text('import os\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n', encoding="utf-8")
+        argv = ["selfcheck", str(source), "--spec-id", "scatter-basic", "--language", "python", "--library", "bokeh"]
+        assert contract_check.main(argv) == 1  # no title, no save target, the toolbar kept
+
+    def test_step_4_checks_the_plots_claims_by_computation(self) -> None:
+        """The review reads the picture; the generator recomputes what the picture states, outside the file."""
+        content = GENERATE_PROMPT.read_text()
+        step = content[content.index("## Step 4:") : content.index("## Step 5:")]
+        start = step.index("**What the plot claims (computed, not by eye)**")
+        claims = step[start : step.index("**When an answer is no**")]
+        for sentence in (
+            "These are answered by a computation, because the review reads the picture and cannot recompute it",
+            "**Check each one with a short computation in the session, never in the file.**",
+            "(for example `/tmp/anyplot-claims.py`)",
+            "The scratch files are never staged, and the implementation never carries checking code.",
+            "**Check what is drawn, not only what produced it.**",
+            "a check of the generator alone passes that maze.",
+            '**A failed claim is a "no" like the others,** fixed in the round below',
+            "Never shape the data only to make a claim come true.",
+        ):
+            assert sentence in claims, sentence
+        # The kinds of claim the blind check found wrong, each named once, none of them for one language only.
+        for kind in (
+            "a change indicator",
+            "the legend:",
+            "an axis title against its tick values",
+            "a projection named in the title",
+            "a maze with exactly one route from the entry to the goal",
+            "a legal position in a game",
+            "check digit",
+        ):
+            assert kind in claims, kind
+        assert "In Python, R and Julia one way is a copy of your file" in claims
+        assert "in JavaScript, copy the data and the computation into a short script" in claims
+        # The claims share Step 4's one fix round, and the record-only runs stay the last ones.
+        assert start < step.index("This step has one fix round of its own")
+        contract = step.index("run the contract self-check of Step 2b once more")
+        assert step.index("This step has one fix round of its own") < contract < step.index("run Step 3c once more")
+        assert "before the run of the next bullet" in step
+
+    def test_the_commit_body_carries_both_lines_in_every_language(self) -> None:
+        content = GENERATE_PROMPT.read_text()
+        commit = content[content.index("## Step 7:") : content.index("## Final Check")]
+        assert "Two more lines follow it in every language, as the last lines of the body:" in commit
+        assert (
+            '-m "Visual self-check: fixed (canvas, legend)\nContract self-check: pass\nClaims self-check: pass (3 checked)"'
+        ) in commit
+        assert (
+            "Readiness self-check: accepted\nContract self-check: fixed (bokeh-page-paint)\n"
+            "Claims self-check: fixed (peak label), 4 checked"
+        ) in commit
+        for form in (
+            "Contract self-check: pass; palette kept: #C0C0C0, the silver medal the spec names",
+            "Contract self-check: open (pygal-tick-sizes)",
+            "Contract self-check: not run (exit 2, the file is not UTF-8 text)",
+            "Claims self-check: fixed (maze route, legend entry), 5 checked",
+            "Claims self-check: open (change indicator), 6 checked",
+            "Claims self-check: none",
+        ):
+            assert form in commit, form
+        # The regeneration example carries them too, after the Python lines.
+        assert (
+            "Readiness self-check: accepted\nContract self-check: fixed (bbox-tight)\nClaims self-check: pass" in commit
+        )
+        final = content[content.index("## Final Check") :]
+        assert "11. ✅ Step 2b ran on the file" in final and "its `Contract self-check:` line" in final
+        assert "12. ✅ Every claim the plot states" in final and "its `Claims self-check:` line" in final
+        # Every key the examples name is one the script knows.
+        named = set(re.findall(r"Contract self-check: (?:fixed|open) \(([a-z-]+)\)", content))
+        assert named and named <= set(contract_check.RULES)
