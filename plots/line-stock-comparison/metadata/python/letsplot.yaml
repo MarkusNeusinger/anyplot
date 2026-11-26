@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:22:38Z'
-updated: '2026-11-26T13:43:43Z'
+updated: '2026-11-26T13:53:19Z'
 generated_by: claude-sonnet
-workflow_run: 45830638843
+workflow_run: 45832151175
 issue: 3748
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,50 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 83
 review:
   strengths:
   - Every series is rebased to 100 at the first date in a single groupby().transform,
     so all four lines start together and separate by relative performance (C1)
-  - Y axis titled 'Performance (rebased to 100)' and auto-ranged around 100 (about
-    80-170) without being forced to zero (C2)
+  - Y axis titled 'Performance (rebased to 100)' and auto-ranged around 100 without
+    being forced to zero (C2)
   - 'Imprint palette in canonical order with AAPL as #009E73; the four lines stay
     distinct in both themes and the legend identifies every symbol (C3)'
   - Dashed reference line at 100 in INK_SOFT at alpha 0.6 stays subordinate to the
     series and visible on both backgrounds (C4)
   - 'Theme tokens threaded through every chrome element: no dark-on-dark or light-on-light
     text in either render'
-  - layer_tooltips() with a .format('^y', '.1f') and per-line symbol/value rows gives
+  - layer_tooltips() with .format('^y', '.1f') and per-line symbol/value rows gives
     the HTML output a clean hover readout
-  - Column constants and a Data block that ends in one tidy df make the script adaptable
-    to a user's own price table
+  - Frameless panel with a subtle y-only grid, as the style guide asks for line charts
+  - 'Simulated returns are centred so each one-year return follows its drift: SPY
+    ends near +13 %, a plausible index year'
   weaknesses:
-  - 'DE-02 (both): the plot panel is framed by all four spines (a dark rectangle on
-    light, a grey one on dark) and the grid runs on both axes, where the style guide
-    asks for an L-shaped or no frame and a y-only grid on line charts → remove the
-    top and right spines and the vertical grid lines. Likely cause: the theme draws
-    a panel border; set panel_border=element_blank() (or axis_line only on x and y)
-    and panel_grid_major_x=element_blank().'
-  - 'DQ-03 (both): SPY, an S&P 500 index ETF with the lowest volatility parameter,
-    ends at about 164, a +64 % year that beats every single stock; an index gain of
-    that size is outside its realistic one-year range (roughly −20 % to +30 %) → generate
-    the data so SPY ends within about 85-130 (about −35 points). Likely cause: np.random.seed(42)
-    with drift 0.0005 draws a lucky SPY path; lower the SPY drift or choose returns
-    so the index ends in range.'
   - 'Suggestion: a light vertical span behind the lines for one notable period (an
-    earnings season or a market drawdown) would use the event highlight the Notes
-    allow.'
+    earnings season or a drawdown) would use the event highlight the Notes allow.'
+  - 'Suggestion: the x axis runs to an empty ''Jan'' tick past the last trading day
+    in mid-December; limiting the x expansion would close that strip.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, not pure white.
-      Chrome: title "line-stock-comparison · python · letsplot · anyplot.ai" top-left in dark ink, about half the canvas width; y-axis title "Performance (rebased to 100)", x-axis title "Date"; month ticks Jan-Jan and y ticks 80-170 in INK_SOFT, all clearly readable. Subtle grid on both axes; a dark four-sided frame encloses the panel. Legend at right, "Symbol" over AAPL/GOOGL/MSFT/SPY with line samples on an elevated #FFFDF6 box.
-      Data: four thick lines (size 1.5, alpha 0.9) over 252 business days: AAPL #009E73 (first series), GOOGL #C475FD, MSFT #4467A3, SPY #BD8233 in canonical Imprint order. All start at 100 in January; SPY climbs to about 164, GOOGL peaks near 148 in September and ends about 126, AAPL ends about 119, MSFT ends about 92. Dashed grey reference line at 100 behind the series.
+      Chrome: title "line-stock-comparison · python · letsplot · anyplot.ai" top-left in dark ink; y-axis title "Performance (rebased to 100)", x-axis title "Date"; month ticks Jan-Jan and y ticks 85-135 in INK_SOFT, all readable. No panel frame or axis lines; subtle horizontal grid only. Legend at right, "Symbol" over AAPL/GOOGL/MSFT/SPY line samples on an elevated #FFFDF6 box.
+      Data: four lines (size 1.5, alpha 0.9) over 252 business days: AAPL #009E73 (first series), GOOGL #C475FD, MSFT #4467A3, SPY #BD8233. All start at 100; AAPL dips to about 82 and recovers to about 121, MSFT ends highest near 126 after a peak near 137, SPY ends about 113, GOOGL about 111 after a September peak near 136. Dashed grey reference at 100 behind the lines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles in light #F0EFE8, ticks in #B8B7B0, all clearly readable; no dark-on-dark text. Grid subtle; the panel frame is a grey four-sided rectangle. Legend box elevated #242420 with light text.
-      Data: the four line colors are identical to the light render; brand green AAPL clearly visible. Dashed reference line at 100 visible in light grey.
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, all readable; no dark-on-dark text. Grid subtle, y only; no frame. Legend box elevated #242420 with light text.
+      Data: line colors identical to the light render; brand green AAPL clearly visible. Dashed reference at 100 visible in light grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -74,15 +64,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or data; line crossings near the shared
-          base are permitted (C6)
+        comment: No text collisions; line crossings near the shared base are permitted
+          (C6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines size 1.5 suit 252 points x 4 series; legend line samples visible
-          and matching in both themes
+        comment: Lines size 1.5 at alpha 0.9 suit 4 x 252 points; legend line samples
+          visible and matching in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -95,7 +85,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; panel fills the canvas, legend sits next to it; title
+        comment: 3200x1800; panel uses the canvas with the legend beside it; title
           and axis labels proportional
       - id: VQ-06
         name: Axis Labels & Title
@@ -108,26 +98,26 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Full eight-hue Imprint list in canonical order, AAPL #009E73; #FAF8F1
-          / #1A1A17 backgrounds; theme-correct chrome'
+        comment: 'Imprint palette in canonical order, AAPL #009E73; #FAF8F1 / #1A1A17
+          backgrounds; theme-correct chrome'
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: theme tokens, explicit sizes, elevated legend
           box; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 2
         max: 6
         passed: false
-        comment: Four-sided panel frame and a both-axis grid on a line chart fall
-          short of the spine and grid baseline (defect line)
+        comment: Spine and grid rules met (no frame, y-only subtle grid); nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -151,22 +141,22 @@ review:
         max: 4
         passed: true
         comment: Rebased to 100 (C1), index y axis (C2), distinct colors + legend
-          (C3), reference line at 100 (C4), grid; C5 not drawn, optional
+          (C3), dashed reference at 100 (C4), y grid; C5 optional, not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=date, y=rebased; full date range shown; y auto-fitted around 100,
-          not forced to zero
+        comment: x=date, y=rebased; full range shown; y auto-fitted around 100 (about
+          82-137), not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend 'Symbol' with the ticker names
+        comment: Mandated title format; legend 'Symbol' with the four tickers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -174,8 +164,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 series x 252 trading days; out- and under-performers, crossings,
-          series above and below 100
+        comment: 4 series x 252 trading days; leaders change, crossings, series below
+          and above 100
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -184,11 +174,11 @@ review:
         comment: AAPL/GOOGL/MSFT/SPY, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Checked: all series start at 100, single stocks in 82-148 is plausible;
-          SPY ending at about 164 (+64 %) is implausible for an index (defect line)'
+        comment: 'Checked: all series start at 100; SPY ends about 113 (+13 %), single
+          stocks 82-137 over the year: plausible'
     code_quality:
       score: 10
       max: 10
@@ -198,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, column constants, Data block ending in df
+        comment: Flat script with column constants and a Data block ending in df
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -231,7 +221,7 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
+        passed: false
         comment: 'Standard grammar: aes, geom_line, geom_hline, scale_color_manual,
           theme'
       - id: LM-02
@@ -239,12 +229,12 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: layer_tooltips() with .format() and custom .line() rows for the HTML
-          hover
+        comment: layer_tooltips() with .format('^y', '.1f') and custom .line() rows
+          for the HTML hover
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T13:39:45Z'
+  rendered_at: '2026-11-26T13:49:54Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -259,4 +249,6 @@ impl_tags:
   - cumulative-sum
   - time-series
   styling:
+  - minimal-chrome
   - alpha-blending
+  - grid-styling

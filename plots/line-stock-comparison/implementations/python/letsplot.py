@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -55,7 +55,8 @@ dates = pd.date_range("2024-01-01", periods=252, freq="B")
 params = {"AAPL": (0.0008, 0.018), "GOOGL": (0.0006, 0.020), "MSFT": (0.0009, 0.016), "SPY": (0.0005, 0.010)}
 frames = []
 for symbol, (drift, volatility) in params.items():
-    returns = np.random.normal(drift, volatility, len(dates))
+    noise = np.random.normal(0, 1, len(dates))
+    returns = drift + volatility * (noise - noise.mean()) / noise.std()  # one-year return set by the drift
     frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: 100 * np.exp(np.cumsum(returns))}))
 df = pd.concat(frames, ignore_index=True)
 
@@ -73,8 +74,10 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=RULE, size=0.3),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        panel_grid_major_y=element_line(color=RULE, size=0.3),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),

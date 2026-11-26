@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-stock-comparison: Stock Price Comparison Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-05-23
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
@@ -76,8 +76,10 @@ anyplot_theme <- theme_minimal(base_size = 8) +
         legend.box.background = element_blank(),
         legend.text           = element_text(color = INK_SOFT, size = 8),
         legend.title          = element_text(color = INK, size = 10),
-        legend.position       = "right",
-        plot.margin           = margin(12, 70, 12, 12)
+        legend.position       = "top",
+        legend.justification  = "left",
+        legend.direction      = "horizontal",
+        plot.margin           = margin(12, 60, 12, 12)
     )
 
 # Plot
@@ -112,17 +114,17 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
     ) +
     # Styled callout boxes using annotate(geom="label") — distinctively ggplot2
     # SVB label at y=145 clears the stock cluster; color-coded to match the shaded region
-    annotate("label", x = as.Date("2023-03-11"), y = 145,
+    annotate("label", x = as.Date("2023-03-11"), y = 148,
              label = "SVB Collapse", color = "#AE3030",
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
-             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
+             angle = 90, hjust = 1, vjust = 0.4, fontface = "italic") +
     annotate("label", x = ai_surge_date, y = 102,
              label = "NVDA AI Surge", color = IMPRINT[1],
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
              angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
     annotate("label", x = rate_peak_date, y = 102,
              label = "Rates Peak", color = INK_SOFT,
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
              angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
     # clip="off" enables end-of-line labels and off-axis annotations outside the panel
     coord_cartesian(clip = "off") +
