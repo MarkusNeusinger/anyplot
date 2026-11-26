@@ -104,7 +104,7 @@ p <- ggplot() +
     data     = label_cities,
     aes(x = lon + nudge_x, y = lat + nudge_y, label = city, hjust = hjust),
     color    = INK,
-    size     = 2.6,
+    size     = 3,
     fontface = "bold"
   ) +
   scale_fill_gradient(
@@ -124,6 +124,7 @@ p <- ggplot() +
   labs(
     title    = title_str,
     subtitle = "Top 6 destinations labelled · New York leads at 66.6M visitors/yr",
+    caption  = "Basemap: simplified continental outlines (illustrative, no tile provider)",
     x        = "Longitude",
     y        = "Latitude"
   ) +
@@ -138,6 +139,7 @@ p <- ggplot() +
     axis.text         = element_text(color = INK_SOFT,   size = 8),
     plot.title        = element_text(color = INK,        size = title_size, face = "bold"),
     plot.subtitle     = element_text(color = INK_SOFT,   size = 8),
+    plot.caption      = element_text(color = INK_SOFT,   size = 7),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT,   size = 8),
     legend.title      = element_text(color = INK,        size = 9),
