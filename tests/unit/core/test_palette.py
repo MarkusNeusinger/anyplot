@@ -262,6 +262,12 @@ def _contrast(a: str, b: str) -> float:
     return (high + 0.05) / (low + 0.05)
 
 
+def _lightness(color: str) -> float:
+    """CIELAB L* (D65), from the relative luminance, which is CIE Y for sRGB."""
+    y = _luminance(color)
+    return 116 * y ** (1 / 3) - 16 if y > (6 / 29) ** 3 else 903.3 * y
+
+
 def _ramp_at(library: str) -> str:
     """The ``rampAt`` helper as a JavaScript library prompt writes it out, from ``const`` to its closing brace."""
     text = (ROOT / f"prompts/library/{library}.md").read_text(encoding="utf-8")
@@ -277,13 +283,28 @@ class TestContinuousRamps:
         """The owner picked these stops and positions from renders; any change is a new decision."""
         assert sequential_stops("light", "fields") == (
             (0.0, "#66E2B2"),
-            (0.368, "#009E73"),
-            (0.582, "#4467A3"),
-            (1.0, "#002850"),
+            (0.369, "#009E73"),
+            (0.803, "#024582"),
+            (1.0, "#351E45"),
         )
-        assert sequential_stops("dark", "fields") == ((0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF"))
-        assert sequential_stops("light", "marks") == ((0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850"))
-        assert sequential_stops("dark", "marks") == ((0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF"))
+        assert sequential_stops("dark", "fields") == ((0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF"))
+        assert sequential_stops("light", "marks") == ((0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45"))
+        assert sequential_stops("dark", "marks") == ((0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF"))
+
+    @pytest.mark.parametrize(("theme", "use"), RAMPS)
+    def test_stop_positions_are_proportional_to_lightness(self, theme: Theme, use: Use) -> None:
+        """Each stop sits where its CIELAB L* falls between the two ends, so lightness runs linearly along the ramp."""
+        stops = sequential_stops(theme, use)
+        lightness = [_lightness(color) for _, color in stops]
+        for (position, _), value in zip(stops, lightness, strict=True):
+            share = (value - lightness[0]) / (lightness[-1] - lightness[0])
+            assert position == pytest.approx(share, abs=0.002), (theme, use, position, share)
+
+    def test_dark_marks_low_end_keeps_three_to_one_on_a_dark_map(self) -> None:
+        """The lowest value of a thin line stays visible on the elevated shade and on a land fill close to the page."""
+        low = sequential_stops("dark", "marks")[0][1]
+        assert _contrast(low, "#242420") >= 3.0  # the elevated shade, which the style guide gives for land
+        assert _contrast(low, "#2C2C28") >= 3.0  # a land fill about 1.25:1 from the page
 
     def test_defaults_are_light_fields(self) -> None:
         assert sequential_stops() == sequential_stops("light", "fields")
@@ -348,10 +369,10 @@ class TestContinuousRamps:
     def test_ramp_color(self) -> None:
         stops = sequential_stops("light", "marks")
         assert ramp_color(stops, 0.0) == "#009E73"
-        assert ramp_color(stops, 0.338) == "#4467A3"
-        assert ramp_color(stops, 1.0) == "#002850"
+        assert ramp_color(stops, 0.687) == "#024582"
+        assert ramp_color(stops, 1.0) == "#351E45"
         assert ramp_color(stops, -1.0) == "#009E73"  # clamped
-        assert ramp_color(stops, 2.0) == "#002850"
+        assert ramp_color(stops, 2.0) == "#351E45"
         assert ramp_color(((0.0, "#000000"), (1.0, "#FFFFFF")), 0.5) == "#808080"
 
     @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])

@@ -181,12 +181,12 @@ export interface RampStops {
 // (tests/unit/core/test_palette.py holds the copies equal).
 export const SEQ_STOPS: Record<RampUse, Record<RampTheme, RampStops>> = {
   fields: {
-    light: { at: [0, 0.368, 0.582, 1], hex: ['#66E2B2', '#009E73', '#4467A3', '#002850'] },
-    dark: { at: [0, 0.467, 1], hex: ['#00573D', '#009E73', '#CDD9FF'] },
+    light: { at: [0, 0.369, 0.803, 1], hex: ['#66E2B2', '#009E73', '#024582', '#351E45'] },
+    dark: { at: [0, 0.487, 1], hex: ['#404C02', '#009E73', '#CDD9FF'] },
   },
   marks: {
-    light: { at: [0, 0.338, 1], hex: ['#009E73', '#4467A3', '#002850'] },
-    dark: { at: [0, 0.32, 1], hex: ['#007755', '#009E73', '#CDD9FF'] },
+    light: { at: [0, 0.687, 1], hex: ['#009E73', '#024582', '#351E45'] },
+    dark: { at: [0, 0.21, 1], hex: ['#6F7E20', '#009E73', '#CDD9FF'] },
   },
 };
 
@@ -213,12 +213,17 @@ export function rampGradient({ at, hex }: RampStops): string {
   return `linear-gradient(to right, ${stops.join(', ')})`;
 }
 
+/** An inner stop this close to an end has its label lean away from that end's label. */
+const NEAR_END = 0.25;
+
 /**
  * Inline style that puts a stop's label under its stop: the end labels align with the
  * bar's edges so they stay inside it, and an inner label is centred on its colour. Centring
- * leaves the most room between two close inner stops, which a phone-wide bar needs.
+ * leaves the most room between two close inner stops, which a phone-wide bar needs. An inner
+ * stop within a quarter of the bar from an end starts or ends its label at the stop instead,
+ * away from the end's label, which a centred label would overlap on a phone-wide bar.
  */
 export function stopLabelStyle(at: number): { left: string; transform: string } {
-  const shift = at === 0 ? '0%' : at === 1 ? '-100%' : '-50%';
+  const shift = at < NEAR_END ? '0%' : at > 1 - NEAR_END ? '-100%' : '-50%';
   return { left: stopPercent(at), transform: `translateX(${shift})` };
 }
