@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-23
@@ -167,7 +167,7 @@ for idx, (proj_key, title, xlim, ylim) in enumerate(proj_configs):
     ax.set_yticks([])
     ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_title(title, fontsize=8, fontweight="bold", color=INK, pad=4)
+    ax.set_title(title, fontsize=10, fontweight="bold", color=INK, pad=4)
     for spine in ax.spines.values():
         spine.set_edgecolor(INK_SOFT)
         spine.set_linewidth(0.8)
