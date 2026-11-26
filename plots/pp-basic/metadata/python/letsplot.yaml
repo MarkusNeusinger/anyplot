@@ -2,74 +2,62 @@ library: letsplot
 language: python
 specification_id: pp-basic
 created: '2026-03-15T20:18:14Z'
-updated: '2026-06-16T19:28:08Z'
-generated_by: claude-opus
-workflow_run: 27641637404
+updated: '2026-11-26T10:09:06Z'
+generated_by: claude-sonnet
+workflow_run: 45797366062
 issue: 4587
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pp-basic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 82
 review:
   strengths:
-  - 'Textbook P-P plot: empirical CDF (i/(n+1)) on Y vs normal theoretical CDF on
-    X, square coord_fixed canvas, dashed 45-degree reference line — every spec note
-    honored'
-  - 'Sophisticated deviation encoding: points colored by signed deviation via imprint_div
-    (matte-red -> page-bg -> blue, midpoint 0) and sized by absolute deviation, turning
-    a plain diagnostic into a clear QC story'
-  - 'Excellent style-guide adherence: reference line uses the neutral ink anchor,
-    the 95% Kolmogorov confidence band uses the muted anchor as a soft fill, continuous
-    color uses imprint_div with the theme-adaptive midpoint'
-  - 'Strong lets-plot distinctive usage: layer_tooltips with formatted weight/deviation/region
-    lines plus interactive HTML export — features that couldn''t be replicated in
-    static plotnine/ggplot2'
-  - 'Theme chrome is correct and readable in both renders; backgrounds are #FAF8F1
-    / #1A1A17, all text uses theme-adaptive ink tokens'
-  - 'Realistic, neutral data: pharmaceutical tablet-weight QC (target 500mg with occasional
-    overfill skew) checked against a fitted normal — plausible scale and a meaningful
-    mild S-deviation'
+  - 'Textbook P-P construction: sorted observations, empirical CDF at i/(n+1), theoretical
+    CDF from the fitted normal (mean and population SD) — one point per observation
+    at its computed values, on a 0–1 square with coord_fixed(ratio=1)'
+  - Dashed neutral-ink 45° reference line runs corner to corner and flips with the
+    theme (near-black on light, near-white on dark), clearly distinct from the green
+    points
+  - 'Optional confidence envelope is drawn as the Notes allow: a faint muted-anchor
+    ribbon (alpha 0.18) that sits behind the points and never competes with them'
+  - 'Single-series #009E73 fill with a theme-adaptive INK_SOFT outline and alpha 0.75
+    keeps the 200 markers separable where they bunch along the diagonal, in both themes'
+  - 'Correct lets-plot handling of the fixed aspect: the one-panel gggrid with the
+    page color paints the whole 2400×2400 canvas, so no transparent or white strips'
+  - lets-plot-native layer_tooltips give each point its weight and empirical CDF in
+    the HTML view, and the ribbon its name
+  - 'Adaptable structure: column constants with role comments, one Data block ending
+    in df, plot code that derives n, the theoretical-axis label and the band from
+    df'
   weaknesses:
-  - 'Dark render: near-fit points have fill = midpoint = PAGE_BG (#1A1A17) by design,
-    so the smallest/lowest-deviation markers along the diagonal rely almost entirely
-    on their INK_SOFT stroke for visibility — they read faintly. Visible but slightly
-    weak; consider a touch more stroke contrast or a minimum fill lightness for the
-    central band in dark mode.'
-  - 'Visual refinement is good but conventional for the grammar: both-axis grid plus
-    L-shaped axis lines are retained — fine for a scatter, but there is little beyond
-    a well-configured theme_minimal.'
+  - 'SC-04 (both): the grey 95% Kolmogorov band has no key or direct label in the
+    PNG — its meaning appears only in the HTML tooltip, so a reader of the static
+    render cannot tell what the shaded region is → name it where the reader sees it,
+    for example in the subtitle ("shaded: 95% Kolmogorov band"). Likely cause: the
+    band''s name lives only in layer_tooltips().line("95% Kolmogorov band").'
+  - 'Suggestion: lines 55–56 could use scipy.stats.norm.cdf(pp[OBSERVED], mu, sigma)
+    in place of np.vectorize(erf) on hand-built z-scores; the result is identical.'
+  - 'Suggestion: the comment on line 58 calls the band pointwise, but 1.36/√n is the
+    simultaneous Kolmogorov–Smirnov band; the unused ELEVATED_BG token could also
+    go.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), not pure white. Correct.
-      Chrome: bold dark title "pp-basic · python · letsplot · anyplot.ai" with grey subtitle
-        "QC Check: Tablet Weight Distribution vs. Normal Reference (n=200)". Axis titles
-        "Theoretical CDF (Normal)" (x) and "Empirical CDF" (y), tick labels 0–1, all dark and
-        clearly readable. Subtle grey gridlines, both axes. Right-side gradient legend
-        "Deviation (Empirical − Theoretical)". Italic annotation "Max deviation: +0.052" sits in
-        the empty lower-right triangle. All text readable.
-      Data: ~200 circles hugging the dashed black 45° reference line, colored by signed deviation
-        on the imprint_div scale (matte-red below, near-neutral at fit, blue above) and sized by
-        |deviation|. A pale grey 95% Kolmogorov confidence band runs around the diagonal. This is
-        continuous-color data (no categorical first series), so the #009E73-first rule is N/A;
-        the diverging cmap stops are correct.
+      Background: warm off-white #FAF8F1 across the full 2400×2400 square canvas — no white or transparent strips.
+      Chrome: bold near-black title "pp-basic · python · letsplot · anyplot.ai" top-left, grey subtitle "Tablet weights vs. fitted normal reference (n=200)". Axis titles "Theoretical CDF (Normal)" (x) and "Empirical CDF" (y) in dark ink, tick labels 0, 0.2 … 1 in dark grey on both axes. Subtle light-grey major grid on both axes, no minor grid. All text readable.
+      Data: 200 circles in brand green #009E73 (alpha 0.75) with a dark-grey outline, hugging a dashed near-black diagonal from (0,0) to (1,1). A faint grey ribbon (95% Kolmogorov band, ±0.096) runs around the diagonal and is clipped to the unit square at the corners. Points bow slightly above the diagonal around 0.6–0.75 and below it around 0.3–0.45 and 0.9 — a mild S-shape from the overfill skew — while both ends close in on the corners.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), not pure black. Correct.
-      Chrome: title/subtitle now light, axis titles and 0–1 ticks in light grey, gridlines subtle
-        dark-grey, legend frame on an elevated near-black panel, annotation light grey. No
-        dark-on-dark failures — all text readable.
-      Data: identical encoding to the light render — same red/blue diverging colors, same diagonal,
-        same band. The dashed reference line flips to light ink. The only differences are chrome and
-        the diverging midpoint (page background), so near-fit points have near-black fill and depend
-        on their light-grey stroke to stay visible — they read faintly but are still distinguishable.
-      Legibility verdict: PASS (minor: central near-fit markers are low-contrast in dark mode)
+      Background: warm near-black #1A1A17 across the whole canvas.
+      Chrome: title in near-white, subtitle, axis titles and tick labels in light grey — all clearly readable; grid lines are subtle dark grey. No dark-on-dark text.
+      Data: identical #009E73 point fill as in the light render; the point outline flips to light grey, the dashed diagonal flips to near-white, and the band is a lighter-grey translucent ribbon. Brand green reads well on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -77,76 +65,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16, subtitle 11, axis_title
-          12, axis_text 10, legend 10/11); well proportioned, readable in both themes
+        comment: Font sizes set explicitly (title 16, subtitle 11, axis titles 12,
+          ticks 10, the library prompt's values); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; annotation placed in empty lower-right triangle,
-          legend separated
+        comment: No text collisions; points overlap only where observations bunch,
+          separable by outline and alpha
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 200 points with size 2-5, alpha 0.65, stroke 0.7 — adapted to density;
-          central near-fit points slightly weak in dark mode (fill = bg, stroke carries
-          them)
+        comment: 200 points at size 3.5, alpha 0.75 with a theme-adaptive outline
+          — visible and separable in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_div red-blue is CVD-safe; stroke + alpha give definition
+        comment: Single green series on a neutral band and ink diagonal; no color-only
+          distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square coord_fixed canvas (2400x2400, gate passed), balanced margins,
-          legend near plot
+        comment: Square 2400×2400 canvas fully painted via gggrid; the unit square
+          fills most of the canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive: ''Theoretical CDF (Normal)'' / ''Empirical CDF'''
+        comment: '''Theoretical CDF (Normal)'' and ''Empirical CDF'' — descriptive,
+          probabilities need no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses imprint_div (correct diverging stops + theme-adaptive
-          midpoint); backgrounds #FAF8F1/#1A1A17; chrome theme-correct both renders'
+        comment: 'First series #009E73; reference line on the neutral anchor, band
+          on the muted anchor; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'Strong, clearly above defaults: dual deviation encoding (color+size),
-          confidence band, neutral reference line'
+        passed: false
+        comment: The style-guide baseline (Imprint green, theme tokens, explicit sizes,
+          title/subtitle hierarchy), nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: theme_minimal, subtle grid, minor grid removed, generous whitespace
-          — good but conventional
+        passed: false
+        comment: Minor grid removed, subtle major grid — the style guide's grid rules
+          met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear QC narrative: band + color/size deviation + max-deviation
-          annotation guide the eye to the fit quality'
+        passed: false
+        comment: Data displayed with the diagonal and the optional envelope the Notes
+          name; no hierarchy chosen beyond them
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -154,50 +143,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot (cumulative probabilities both axes)
+        comment: Correct P-P plot; basic variant — only the diagonal and the allowed
+          faint envelope, no added channels or annotations
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45° line, axes 0-1, square aspect, empirical CDF i/(n+1), theoretical
-          normal CDF, plus KS band
+        comment: Axes 0–1, 45° line corner to corner, square aspect (coord_fixed),
+          i/(n+1) plotting positions, fitted normal CDF; C1–C4 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical on X, empirical on Y; all data shown
+        comment: Theoretical CDF on x, empirical on y; every point at its computed
+          value; limits 0–1 show all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'pp-basic · python · letsplot · anyplot.ai'; deviation gradient
-          legend labeled
+        passed: false
+        comment: Title format correct; single series needs no legend, but the shaded
+          band has no key or label in the PNG (defect line)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows above/below-diagonal deviation and mild S-shape; deviation
-          is modest
+        comment: Shows the near-diagonal fit with a mild S-shaped departure in the
+          middle range and ends closing in on the corners
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pharmaceutical tablet-weight QC vs normal — real, neutral
+        comment: Pharmaceutical tablet weights (target 500 mg, occasional overfills)
+          checked against a normal reference — real, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weights ~500mg, CDF 0-1, small deviations — all plausible
+        comment: 'Checked: empirical CDF i/(n+1) (line 50), normal CDF from fitted
+          mean and ddof=0 SD (lines 53–56), band half-width 1.36/√200 ≈ 0.096 matches
+          the ~0.1 offset at x=0 in the render'
     code_quality:
       score: 10
       max: 10
@@ -207,7 +201,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Linear head → constants → Data → Plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,51 +213,53 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, math erf/sqrt, numpy, pandas, lets_plot — all used
+        comment: os, math.erf/sqrt, numpy, pandas, lets_plot — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for the encoding richness
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html via ggsave; current API
-    library_features:
-      score: 10
+        comment: Saves plot-{THEME}.png (scale 4) and plot-{THEME}.html with current
+          ggsave API
+    library_mastery:
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Grammar-of-graphics layering, scales, coord_fixed, theme — idiomatic
-          lets-plot
+        passed: false
+        comment: Grammar-of-graphics layering, coord_fixed and the mandated gggrid
+          canvas wrapper — the library prompt's patterns, nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips with formatting + interactive HTML export — not replicable
-          in static plotnine/ggplot2
+        passed: false
+        comment: layer_tooltips with column references (weight and empirical CDF per
+          point, named band) for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T10:05:14Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
+  - manual-ticks
   - hover-tooltips
   - html-export
-  - layer-composition
-  - colorbar
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
   - edge-highlighting
   - grid-styling
