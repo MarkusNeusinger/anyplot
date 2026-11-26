@@ -1,7 +1,7 @@
 """anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 75/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import math
