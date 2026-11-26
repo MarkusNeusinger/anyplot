@@ -37,10 +37,11 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Constants: the standard symmetric three-circle layout
 RADIUS = 1.5
 CENTERS = [(-0.85, 0.50), (0.85, 0.50), (0.00, -1.00)]  # circles A, B, C
-NAME_OFFSETS = [(-1.55, 1.45), (1.55, 1.45), (0.00, -1.85)]  # category name, from each circle's center
+NAME_OFFSETS = [(-1.3, 1.45), (1.3, 1.45), (0.00, -1.85)]  # category name, from each circle's center
 NAME_HJUST = [1.0, 0.0, 0.5]  # aligned away from the diagram's center
 OUTSIDE = "outside"
-MARGIN_X = 1.95  # empty space left and right of the circles
+MARGIN_X = 1.55  # empty space left and right of the circles
+HEADROOM = 1.3  # height above the circles for the kicker and title line
 NAME_ZONE = "name "  # zone prefix of a row that holds a circle's category name
 
 # Columns: set these to your table's column names
@@ -81,7 +82,9 @@ df = pd.DataFrame(
 theta = np.linspace(0, 2 * np.pi, 240)
 centers = np.array(CENTERS)
 half = centers[:, 0].max() + RADIUS + MARGIN_X
-mid_y = (centers[:, 1].min() - RADIUS + centers[:, 1].max() + RADIUS) / 2
+content_top = centers[:, 1].max() + RADIUS + HEADROOM
+content_bottom = min(cy + dy for (_, cy), (_, dy) in zip(CENTERS, NAME_OFFSETS, strict=True)) - 0.2
+mid_y = (content_top + content_bottom) / 2  # centre the whole block, titles included
 xlim = [-half, half]
 ylim = [mid_y - half, mid_y + half]  # square panel: fills the square canvas
 
@@ -132,11 +135,11 @@ if len(outside):
 # Editorial kicker + canonical anyplot.ai title line
 mid = sum(xlim) / 2
 plot += geom_text(
-    x=mid, y=ylim[1] - 0.30, label="Chartgeist 2026", size=9, family="serif", fontface="bold_italic", color=INK
+    x=mid, y=content_top - 0.30, label="Chartgeist 2026", size=9, family="serif", fontface="bold_italic", color=INK
 )
 plot += geom_text(
     x=mid,
-    y=ylim[1] - 0.80,
+    y=content_top - 0.80,
     label="venn-labeled-items · python · letsplot · anyplot.ai",
     size=5,
     family="serif",
