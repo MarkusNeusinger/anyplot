@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -20,7 +20,7 @@ from plotnine import (
     geom_polygon,
     ggplot,
     labs,
-    scale_color_cmap,
+    scale_color_gradientn,
     theme,
     theme_minimal,
 )
@@ -32,17 +32,35 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-PARK_FILL = "#C8E6C9" if THEME == "light" else "#1B3A1F"
+PARK_FILL = "#C8E6C9" if THEME == "light" else "#2E5A33"
 PARK_COLOR = "#4CAF50" if THEME == "light" else "#388E3C"
 LAKE_FILL = "#81D4FA" if THEME == "light" else "#0D3B52"
 LAKE_COLOR = "#0288D1" if THEME == "light" else "#01579B"
+START_FILL = "#DDCC77"
+END_FILL = "#AE3030"
+# Imprint sequential ramp for marks (colored lines on the page)
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+# Constants
+BASE_LAT = 47.82
+BASE_LON = -121.75
+N_POINTS = 200
+
+# Columns
+LON = "Longitude (°)"  # role: x
+LAT = "Latitude (°)"  # role: y
+PROGRESS = "Trail Progress (%)"  # role: color
 
 # Data
 np.random.seed(42)
 
-base_lat = 47.82
-base_lon = -121.75
-n_points = 200
+base_lat = BASE_LAT
+base_lon = BASE_LON
+n_points = N_POINTS
 t = np.linspace(0, 2 * np.pi, n_points)
 
 radius_lat = 0.08 + 0.02 * np.sin(3 * t)
@@ -53,13 +71,14 @@ noise_lon = np.random.normal(0, 0.003, n_points)
 lat = base_lat + radius_lat * np.sin(t) + noise_lat
 lon = base_lon + radius_lon * np.cos(t) + noise_lon
 
-df_trail = pd.DataFrame({"lat": lat, "lon": lon, "sequence": range(n_points)})
-df_trail["lat_smooth"] = df_trail["lat"].rolling(window=3, center=True, min_periods=1).mean()
-df_trail["lon_smooth"] = df_trail["lon"].rolling(window=3, center=True, min_periods=1).mean()
-df_trail["progress"] = df_trail["sequence"] / (n_points - 1) * 100
-
-start_point = df_trail.iloc[[0]].copy()
-end_point = df_trail.iloc[[-1]].copy()
+raw = pd.DataFrame({"lat": lat, "lon": lon})
+df = pd.DataFrame(
+    {
+        LON: raw["lon"].rolling(window=3, center=True, min_periods=1).mean(),
+        LAT: raw["lat"].rolling(window=3, center=True, min_periods=1).mean(),
+        PROGRESS: np.arange(n_points) / (n_points - 1) * 100,
+    }
+)
 
 park_boundary_lon = [
     base_lon - 0.20,
@@ -88,43 +107,27 @@ park_boundary_lat = [
     base_lat - 0.05,
 ]
 df_park = pd.DataFrame(
-    {"lon": park_boundary_lon, "lat": park_boundary_lat, "order": range(len(park_boundary_lon)), "area": "park"}
+    {LON: park_boundary_lon, LAT: park_boundary_lat, "order": range(len(park_boundary_lon)), "area": "park"}
 )
 
 lake_t = np.linspace(0, 2 * np.pi, 20)
 lake_lon = base_lon + 0.03 + 0.025 * np.cos(lake_t)
 lake_lat = base_lat + 0.02 + 0.015 * np.sin(lake_t)
-df_lake = pd.DataFrame({"lon": lake_lon, "lat": lake_lat, "order": range(len(lake_t)), "area": "lake"})
+df_lake = pd.DataFrame({LON: lake_lon, LAT: lake_lat, "order": range(len(lake_t)), "area": "lake"})
 
 # Plot
+start_point = df.iloc[[0]]
+end_point = df.iloc[[-1]]
 plot = (
     ggplot()
-    + geom_polygon(aes(x="lon", y="lat"), data=df_park, fill=PARK_FILL, color=PARK_COLOR, size=0.5, alpha=0.7)
-    + geom_polygon(aes(x="lon", y="lat"), data=df_lake, fill=LAKE_FILL, color=LAKE_COLOR, size=0.4, alpha=0.8)
-    + geom_path(
-        aes(x="lon_smooth", y="lat_smooth", color="progress"), data=df_trail, size=2.5, alpha=0.85, lineend="round"
-    )
-    + geom_point(
-        aes(x="lon_smooth", y="lat_smooth"),
-        data=start_point,
-        color="#2E7D32",
-        fill="#4CAF50",
-        size=5,
-        shape="o",
-        stroke=1.5,
-    )
-    + geom_point(
-        aes(x="lon_smooth", y="lat_smooth"),
-        data=end_point,
-        color="#C62828",
-        fill="#EF5350",
-        size=5,
-        shape="s",
-        stroke=1.5,
-    )
-    + scale_color_cmap(cmap_name="viridis", name="Trail Progress (%)")
+    + geom_polygon(aes(x=LON, y=LAT), data=df_park, fill=PARK_FILL, color=PARK_COLOR, size=0.5, alpha=0.7)
+    + geom_polygon(aes(x=LON, y=LAT), data=df_lake, fill=LAKE_FILL, color=LAKE_COLOR, size=0.4, alpha=0.8)
+    + geom_path(aes(x=LON, y=LAT, color=PROGRESS), data=df, size=2.5, alpha=0.85, lineend="round")
+    + geom_point(aes(x=LON, y=LAT), data=start_point, color=INK, fill=START_FILL, size=9, shape="o", stroke=1)
+    + geom_point(aes(x=LON, y=LAT), data=end_point, color=INK, fill=END_FILL, size=3, shape="s", stroke=1)
+    + scale_color_gradientn(colors=[c for _, c in SEQ_MARKS], values=[p for p, _ in SEQ_MARKS])
     + coord_fixed(ratio=1.3)
-    + labs(title="map-route-path · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
+    + labs(title="map-route-path · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -132,14 +135,14 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
         plot_title=element_text(size=12, color=INK),
         legend_title=element_text(size=8, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_position="right",
     )
 )
