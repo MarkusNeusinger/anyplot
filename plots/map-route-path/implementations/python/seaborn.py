@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-26
 """
 
 import os
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -18,7 +19,15 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — always first series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+# Imprint sequential ramp for marks (stops per theme)
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
 sns.set_theme(
     style="ticks",
@@ -37,11 +46,19 @@ sns.set_theme(
     },
 )
 
-# Data — mountain bike trail GPS track near Crested Butte, Colorado
+# Constants
+N_ARROWS = 4  # direction arrows spread evenly along the route
+
+# Columns: set these to your table's column names
+LON = "Longitude (°)"  # role: lon
+LAT = "Latitude (°)"  # role: lat
+TIME = "Elapsed Time (min)"  # role: timestamp
+ELEV = "Elevation (m)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("track.csv")
+# Mountain bike trail GPS track near Crested Butte, Colorado
 np.random.seed(42)
 n_points = 250
-
-start_lat, start_lon = 38.870, -106.985
 
 lat_steps = np.random.normal(0.0003, 0.0002, n_points)
 lon_steps = np.random.normal(0.0004, 0.0003, n_points)
@@ -52,95 +69,79 @@ lon_steps[80:160] -= 0.00020
 lat_steps[160:] -= 0.00030
 lon_steps[160:] += 0.00010
 
-lats = start_lat + np.cumsum(lat_steps)
-lons = start_lon + np.cumsum(lon_steps)
+elevation = 2820 + np.cumsum(np.random.normal(0.8, 3.5, n_points)) + 120 * np.sin(np.linspace(0, 1.8 * np.pi, n_points))
 
-base_elev = 2820
-elevation = (
-    base_elev + np.cumsum(np.random.normal(0.8, 3.5, n_points)) + 120 * np.sin(np.linspace(0, 1.8 * np.pi, n_points))
+df = pd.DataFrame(
+    {
+        LON: -106.985 + np.cumsum(lon_steps),
+        LAT: 38.870 + np.cumsum(lat_steps),
+        TIME: np.linspace(0, 150, n_points),
+        ELEV: elevation,
+    }
 )
 
-elapsed_min = np.linspace(0, 150, n_points)
-
-df = pd.DataFrame({"lat": lats, "lon": lons, "elapsed_min": elapsed_min, "elevation_m": elevation})
-
-# Figure: route map (top) + elevation profile (bottom)
+# Plot: reads only df and the constants above
 fig, (ax_map, ax_elev) = plt.subplots(
     2, 1, figsize=(8, 4.5), dpi=400, gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG
 )
 fig.subplots_adjust(left=0.08, right=0.90, top=0.93, bottom=0.10, hspace=0.55)
-ax_map.set_facecolor(PAGE_BG)
-ax_elev.set_facecolor(PAGE_BG)
 
-# Connecting path — strong line for clear route continuity
-sns.lineplot(data=df, x="lon", y="lat", color=INK_SOFT, linewidth=2.8, alpha=0.75, ax=ax_map, sort=False, zorder=1)
+# Connecting path in sequence order
+sns.lineplot(data=df, x=LON, y=LAT, color=INK_SOFT, linewidth=2.8, alpha=0.75, ax=ax_map, sort=False, zorder=1)
 
-# Waypoints colored by elapsed time (viridis — perceptually uniform sequential)
-sc = ax_map.scatter(
-    df["lon"], df["lat"], c=df["elapsed_min"], cmap="viridis", s=20, alpha=0.9, zorder=2, edgecolors="none"
+# Waypoints colored by elapsed time
+sc = ax_map.scatter(df[LON], df[LAT], c=df[TIME], cmap=imprint_seq, s=20, alpha=0.9, zorder=2, edgecolors="none")
+
+# Start: brand green circle, ringed in ink so it stands out from the green end of the ramp
+ax_map.scatter(
+    df[LON].iloc[0], df[LAT].iloc[0], c=BRAND, s=300, marker="o", edgecolors=INK, linewidths=2, zorder=5, label="Start"
 )
 
-# Start — Okabe-Ito position 1 (brand green)
+# End: purple square
 ax_map.scatter(
-    df["lon"].iloc[0],
-    df["lat"].iloc[0],
-    c=BRAND,
-    s=300,
-    marker="o",
-    edgecolors=PAGE_BG,
-    linewidths=2,
-    zorder=5,
-    label="Start",
-)
-
-# End — Okabe-Ito position 2 (vermillion) — larger to distinguish from dense viridis cluster
-ax_map.scatter(
-    df["lon"].iloc[-1],
-    df["lat"].iloc[-1],
-    c="#C475FD",
+    df[LON].iloc[-1],
+    df[LAT].iloc[-1],
+    c=IMPRINT_PALETTE[1],
     s=400,
     marker="s",
-    edgecolors=PAGE_BG,
+    edgecolors=INK,
     linewidths=2,
     zorder=5,
     label="End",
 )
 
 # Direction arrows along the path
-for idx in [50, 100, 150, 200]:
+for idx in np.linspace(len(df) * 0.2, len(df) * 0.8, N_ARROWS).astype(int):
     ax_map.annotate(
         "",
-        xy=(df["lon"].iloc[idx + 1], df["lat"].iloc[idx + 1]),
-        xytext=(df["lon"].iloc[idx], df["lat"].iloc[idx]),
-        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+        xy=(df[LON].iloc[idx + 1], df[LAT].iloc[idx + 1]),
+        xytext=(df[LON].iloc[idx], df[LAT].iloc[idx]),
+        arrowprops={"arrowstyle": "->", "color": INK, "lw": 1.5},
         zorder=3,
     )
 
-# Colorbar for elapsed time
 cbar = plt.colorbar(sc, ax=ax_map, pad=0.02, fraction=0.035)
-cbar.set_label("Elapsed Time (min)", fontsize=8, color=INK)
+cbar.set_label(TIME, fontsize=9, color=INK)
 cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-ax_map.set_xlabel("Longitude (°)", fontsize=10, color=INK)
-ax_map.set_ylabel("Latitude (°)", fontsize=10, color=INK)
-ax_map.set_title(
-    "Colorado Mountain Bike Trail  ·  map-route-path · python · seaborn · anyplot.ai",
-    fontsize=11,
-    fontweight="medium",
-    color=INK,
-)
+# Style
+title = "Colorado Mountain Bike Trail  ·  map-route-path · python · seaborn · anyplot.ai"
+ax_map.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK)
+ax_map.set_xlabel(LON, fontsize=10, color=INK)
+ax_map.set_ylabel(LAT, fontsize=10, color=INK)
 ax_map.tick_params(axis="both", labelsize=8)
-ax_map.legend(fontsize=8, loc="upper right", framealpha=0.9)
+ax_map.grid(True, alpha=0.10, linewidth=0.8)
+ax_map.legend(fontsize=8, loc="lower right", framealpha=0.9, markerscale=0.5, labelspacing=1.0, borderpad=0.8)
+ax_map.margins(x=0.06, y=0.12)
 sns.despine(ax=ax_map)
 
-# Elevation profile — seaborn lineplot with fill for area under curve
-sns.lineplot(data=df, x="elapsed_min", y="elevation_m", color=BRAND, linewidth=2.2, ax=ax_elev)
-ax_elev.fill_between(df["elapsed_min"], df["elevation_m"].min() - 5, df["elevation_m"], alpha=0.15, color=BRAND)
-
-ax_elev.set_xlabel("Elapsed Time (min)", fontsize=9, color=INK)
-ax_elev.set_ylabel("Elevation (m)", fontsize=9, color=INK)
-ax_elev.tick_params(axis="both", labelsize=7)
+# Elevation profile
+sns.lineplot(data=df, x=TIME, y=ELEV, color=BRAND, linewidth=2.2, ax=ax_elev)
+ax_elev.fill_between(df[TIME], df[ELEV].min(), df[ELEV], alpha=0.15, color=BRAND)
+ax_elev.set_xlabel(TIME, fontsize=10, color=INK)
+ax_elev.set_ylabel(ELEV, fontsize=10, color=INK)
+ax_elev.tick_params(axis="both", labelsize=8)
 ax_elev.yaxis.grid(True, alpha=0.10, linewidth=0.8)
 sns.despine(ax=ax_elev)
 
