@@ -2,166 +2,175 @@ library: seaborn
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:46:08Z'
-updated: '2026-05-20T17:26:14Z'
+updated: '2026-11-26T09:24:10Z'
 generated_by: claude-sonnet
-workflow_run: 26178149618
+workflow_run: 45790464399
 issue: 3826
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 79
 review:
   strengths:
-  - Sophisticated use of seaborn lineplot with estimator=mean and errorbar=(pi, 95)
-    to display bootstrap-derived 95% prediction interval — distinctive seaborn feature
-  - Full Okabe-Ito palette compliance across 4 series with correct ordering; both
-    renders theme-correct with all chrome tokens applied
-  - Infinite life region shaded via axhspan creates a clear focal point at the endurance
-    limit; reference lines tell the complete material properties story
-  - Canvas correctly sized (figsize=(8,4.5), dpi=400) with subplots_adjust instead
-    of bbox_inches=tight — no canvas drift
-  - Realistic structural steel data with physically meaningful Basquin parameters
-    and lognormal scatter representing multi-specimen variability
+  - Both renders thread theme tokens through every chrome element via sns.set_theme
+    rc; no dark-on-dark text
+  - 'Imprint palette in canonical order: brand green for data and fit, positions 2-4
+    for the three reference lines, separated by dashed vs solid style'
+  - Realistic structural-steel fatigue data with several specimens per stress level
+    and lognormal life scatter
+  - 'Data block follows the adaptable zones: column constants feed data=df, and seaborn
+    titles the axes from them'
   weaknesses:
-  - Design storytelling leaves the three fatigue regions (Low-Cycle Fatigue, High-Cycle
-    Fatigue, Infinite Life) unlabeled — text annotations in the plot area would elevate
-    educational value and visual hierarchy; the spec explicitly describes these three
-    regions
-  - Scatter markers use edgecolor=none while the style guide recommends white or page-background
-    edges for definition when points overlap (visible clustering around 10^4–10^6
-    cycles)
-  - Legend at 8pt is at the lower readability threshold; minor upward adjustment to
-    9pt would improve readability at mobile widths
+  - 'SC-01 (both): a 95 % bootstrap band shades around the fit line, a probability
+    band the basic variant''s single-material scope (C5) excludes → drop the band
+    and draw the single Basquin fit line. Likely cause: sns.lineplot(errorbar=(''pi'',
+    95)) over the N_BOOT bootstrap resamples.'
+  - 'SC-03 (both): stress ticks read 2×10², 3×10², 4×10², 6×10² in scientific notation,
+    so a reader cannot read MPa values off the axis directly → plain values (200,
+    300, 400, 500 MPa). Likely cause: the default LogFormatterSciNotation on the y
+    axis; set a ScalarFormatter or explicit plain ticks.'
+  - 'VQ-05 (both): y tick labels render at the rc default size, visibly larger than
+    the 8 pt x tick labels → the same 8 pt on both axes. Likely cause: ax.tick_params(labelsize=8)
+    applies to major ticks only, and the y labels are minor-tick labels.'
+  - 'VQ-02 (both): the legend box covers the endurance-limit line and the infinite-life
+    shading from 1e3 to about 1.4e4 cycles → place it in empty space clear of the
+    reference lines (the upper right is empty). Likely cause: ax.legend(loc=''lower
+    left'').'
+  - 'DQ-03 (both): the fit is drawn out to 5e7 cycles and down to 150 MPa, predicting
+    finite life below the 200 MPa endurance limit the same chart declares as infinite
+    life → end the fit at the data''s longest life or at the endurance limit. Likely
+    cause: fit_cycles_grid spans 1e3 to 10^7.7.'
+  - 'Suggestion: plain text labels for the low-cycle, high-cycle and infinite-life
+    regions the Notes name would make the three regions readable without the legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "sn-curve-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), ~75% width — fully readable. X-axis label "Number of Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" in dark medium-weight text at 10pt — readable. Tick labels in secondary ink (#4A4A44) at 8pt on log axes — readable. Legend in lower-left with 5 entries in dark text on elevated-light background (#FFFDF6) with secondary-ink border — all entries readable.
-      Data: S-N fit line and scatter in #009E73 (Okabe-Ito position 1, brand green); CI band as subtle green shading. Orange dashed line (Ultimate Strength 450 MPa, #D55E00). Blue dashed line (Yield Strength 350 MPa, #0072B2). Reddish-purple solid line (Endurance Limit 200 MPa, #CC79A7). Subtle pinkish axhspan shading below endurance limit at alpha=0.07.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'sn-curve-basic · python · seaborn · anyplot.ai' in dark ink at about 60 % width; axis titles 'Number of Cycles to Failure (N)' and 'Stress Amplitude (MPa)' dark; x ticks 10^3-10^7 at 8 pt, y ticks 2×10², 3×10², 4×10², 6×10² in a visibly larger size; two-level log grid; legend lower left on #FFFDF6 with 5 entries.
+      Data: about 40 #009E73 points falling from 400 MPa at ~1e4 cycles to ~205 MPa at ~3e6; green fit line with a light green band extended from 1e3 to 5e7 cycles; dashed purple #C475FD Ultimate Strength 450 MPa, dashed blue #4467A3 Yield Strength 350 MPa, thick solid ochre #BD8233 Endurance Limit 200 MPa over light ochre shading below; the legend covers the left end of the endurance line.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light text (#F0EFE8) — fully readable against dark background. Axis labels in light text — readable. Tick labels in light gray (#B8B7B0) — properly adapted, no dark-on-dark failure. Legend shows light text on elevated dark surface (#242420) with secondary-ink border — readable. No dark-on-dark text failures detected anywhere.
-      Data: Colors identical to light render — #009E73 green for fit and scatter, #D55E00 orange for Ultimate Strength, #0072B2 blue for Yield Strength, #CC79A7 reddish-purple for Endurance Limit. Only chrome (background, text, grid) flipped between themes; data colors unchanged as required.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink; tick labels light grey #B8B7B0; legend on #242420 with light text; no dark-on-dark text.
+      Data: categorical colors identical to the light render (green points and fit, purple, blue, ochre reference lines); shading darker ochre tint.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12pt, labels=10pt, ticks=8pt,
-          legend=8pt); both renders fully legible. Minor: legend 8pt at lower threshold
-          for mobile readability.'
+        comment: Title 12 pt, axis titles 10 pt, x tick labels and legend 8 pt set
+          explicitly; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text/data collisions; legend in lower-left below data cluster.
+        comment: Legend box in the lower left sits over the endurance-limit line and
+          the infinite-life shading from 1e3 to about 1.4e4 cycles (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~40 scatter points at s=130, alpha=0.75 — appropriate for density;
-          CI band and reference lines distinct.
+        comment: About 40 sparse points at s=130, alpha 0.75 clearly visible; reference
+          lines and legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe); reference lines differentiated by both
-          color and line style.
+        comment: Imprint colors plus dashed vs solid line styles separate the reference
+          lines; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; subplots_adjust controls margins; nothing cut
-          off; no bbox_inches drift.
+        comment: Canvas gate passed, nothing cut off; y tick labels (minor-tick labels
+          in 2×10² notation) render at the default size, clearly larger than the 8
+          pt x tick labels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (MPa, N); title in correct mandated
-          format.
+        comment: 'Number of Cycles to Failure (N) and Stress Amplitude (MPa): descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order for C2-C4; backgrounds #FAF8F1/#1A1A17
-          correct; both renders theme-correct.'
+        comment: 'First series #009E73, reference lines Imprint positions 2-4 in order;
+          backgrounds #FAF8F1 / #1A1A17; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above-average: seaborn statistical CI band, infinite life region
-          shading, 4 Okabe-Ito colors purposefully assigned. Missing: labeled fatigue
-          region annotations for top tier.'
+        comment: 'Style-guide baseline: theme tokens, Imprint, explicit font sizes;
+          nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Top/right spines removed; dual-level grid (major alpha=0.10, minor
-          alpha=0.04); legend styled with theme tokens. Minor: edgecolor=none on scatter
-          deviates from white-edge recommendation.'
+        comment: Two-level log grid (major alpha 0.10, minor 0.04) chosen for this
+          log-log chart
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Endurance limit emphasized (thick solid + shaded region); reference
-          lines tell material story. Three fatigue regions implied but not explicitly
-          labeled — missing LCF/HCF/Infinite Life text annotations.
+        comment: 'Endurance limit made the focal threshold: thicker solid line over
+          a light infinite-life shading, against dashed strength lines'
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Correct S-N/Wöhler curve: scatter on log-log axes with power-law
-          fit line.'
+        comment: Correct S-N chart, but the 95 % bootstrap band around the fit is
+          a probability band the basic variant excludes (C5, defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log scale, all three reference lines, Basquin fit with CI band,
-          scatter with multi-specimen variability — all present.
+        comment: 'Log-log axes, three named reference lines, Basquin fit through the
+          scatter, multi-specimen scatter: all Notes and C bullets met'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'X: cycles 1e3-5e7, Y: stress amplitude 150-600 MPa, both log-scaled.'
+        comment: Marks at their values on correct axes, but the stress ticks read
+          as 2×10², 3×10², 4×10², 6×10² instead of plain MPa values (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend entries descriptive with numerical
-          values.
+        comment: Title in the mandated format; legend names each reference line with
+          its value
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -169,22 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec aspects: scatter variability, Basquin fit, 95% PI, three
-          reference lines, infinite life shading.'
+        comment: 'Scatter across stress levels from 400 to 205 MPa, fit, three reference
+          lines and infinite-life shading: all aspects shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Structural steel with realistic material constants (450/350/200 MPa);
-          Basquin exponent b=-0.12 physically meaningful; no controversial content.
+        comment: Structural steel fatigue coupons with realistic strength values;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Stress and cycle ranges match real fatigue testing domains for structural
-          steel; lognormal scatter is engineering-realistic.
+        comment: 'Checked: reference lines at 450/350/200 MPa, data 205-400 MPa over
+          7e3-3e6 cycles; the fit is extended to 5e7 cycles down to 150 MPa, predicting
+          finite life below the 200 MPa endurance limit the chart shows (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -194,63 +204,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom flow.
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; bootstrap CI loop is justified complexity; comments explain
-          non-obvious decisions.
+        comment: No fake UI; complexity matches what is drawn
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current seaborn
-          0.13.2 API.
+        comment: Saves plot-{THEME}.png at 3200x1800 without bbox_inches=tight; current
+          seaborn 0.13 API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: sns.set_theme() for global theming; sns.lineplot with estimator=mean
-          and errorbar=(pi, 95) — seaborn's native statistical summarization; axes-level
-          API throughout.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Bootstrap tabular DataFrame fed to seaborn statistical lineplot
-          is seaborn-distinctive. Minor deduction: sns.regplot would be more purely
-          seaborn-idiomatic; manual bootstrap moves some work outside seaborn.'
+        comment: sns.set_theme rc theming, axes-level scatterplot and lineplot reading
+          data=df with the column constants, so seaborn titles the axes from the column
+          names
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: lineplot errorbar=('pi', 95) only serves the band the basic variant
+          excludes, so it earns no credit
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T09:20:55Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - bootstrap-ci
+  - reference-lines
+  - log-scale
+  - region-shading
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - regression
+  - bootstrap
   styling:
   - alpha-blending
   - grid-styling
