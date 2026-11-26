@@ -1,7 +1,7 @@
 # anyplot.ai
 # curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-05-28
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 85/100 | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
@@ -80,9 +80,9 @@ ax = Axis(
 
 # Shaded zones (underfitting / overfitting)
 vspan!(ax, complexity[1], opt_complexity;
-    color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.07))
+    color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.11))
 vspan!(ax, opt_complexity, complexity[end];
-    color = RGBAf(IMPRINT_PALETTE[2].r, IMPRINT_PALETTE[2].g, IMPRINT_PALETTE[2].b, 0.07))
+    color = RGBAf(IMPRINT_PALETTE[2].r, IMPRINT_PALETTE[2].g, IMPRINT_PALETTE[2].b, 0.11))
 
 # Curves
 lines!(ax, complexity, bias_sq;
@@ -122,25 +122,25 @@ lbl_var_x    = 8.5
 lbl_var_y    = (lbl_var_x ^ 1.4) / 22.0
 lbl_tot_x    = 7.5
 lbl_tot_y    = (1.0 / (1.0 + lbl_tot_x) + 0.02) + ((lbl_tot_x ^ 1.4) / 22.0) + 0.15
-lbl_irr_x    = 5.0
+lbl_irr_x    = 1.2
 
 text!(ax, lbl_bias_x, lbl_bias_y + 0.03;
     text = "Bias²",
-    color = IMPRINT_PALETTE[1], fontsize = 12, align = (:center, :bottom), font = :bold)
-text!(ax, lbl_var_x, lbl_var_y + 0.03;
+    color = IMPRINT_PALETTE[1], fontsize = 14, align = (:center, :bottom), font = :bold)
+text!(ax, lbl_var_x, lbl_var_y + 0.09;
     text = "Variance",
-    color = IMPRINT_PALETTE[2], fontsize = 12, align = (:center, :bottom), font = :bold)
-text!(ax, lbl_tot_x, lbl_tot_y + 0.03;
+    color = IMPRINT_PALETTE[2], fontsize = 14, align = (:center, :bottom), font = :bold)
+text!(ax, lbl_tot_x, lbl_tot_y + 0.10;
     text = "Total Error",
-    color = IMPRINT_PALETTE[3], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[3], fontsize = 14, align = (:center, :bottom), font = :bold)
 text!(ax, lbl_irr_x, 0.15 + 0.03;
     text = "Irreducible Error",
-    color = IMPRINT_PALETTE[4], fontsize = 12, align = (:center, :bottom), font = :bold)
+    color = IMPRINT_PALETTE[4], fontsize = 14, align = (:center, :bottom), font = :bold)
 
 # Formula annotation
 text!(ax, complexity[end], irreducible_err[1] + 0.01;
     text = "Total Error = Bias² + Variance + Irreducible Error",
-    color = INK_MUTED, fontsize = 12, align = (:right, :bottom))
+    color = INK_MUTED, fontsize = 14, align = (:right, :bottom))
 
 # Legend
 axislegend(ax;
