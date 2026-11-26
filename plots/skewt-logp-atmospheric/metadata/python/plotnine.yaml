@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:35:09Z'
-updated: '2026-11-26T11:03:28Z'
+updated: '2026-11-26T11:16:17Z'
 generated_by: claude-sonnet
-workflow_run: 45805924326
+workflow_run: 45807198513
 issue: 3802
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,68 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 68
+quality_score: 85
 review:
   strengths:
-  - Shared scale_color_manual + scale_linetype_manual with common breaks give one
-    legend that encodes every family by color and linetype
-  - 'Theme tokens threaded through title, ticks, border and legend: both renders read
-    cleanly'
-  - Imprint palette in canonical order, brand green on the temperature profile
+  - coord_fixed(ratio=SKEW) couples the isotherm skew to the panel aspect, so the
+    isotherms sit at exactly 45° in the render
+  - Inverted log-pressure axis via log10(p) on scale_y_reverse with relabelled breaks;
+    isobars drawn at the same levels
+  - 'Physically computed reference families: dry adiabats from Poisson''s equation,
+    moist adiabats by integrating the saturated lapse rate, mixing ratio lines from
+    the Magnus inversion'
+  - Shared scale_color_manual + scale_linetype_manual with common breaks merge into
+    one legend telling all six line families apart by color and style
+  - Theme tokens threaded through title, ticks, border and legend; both renders read
+    cleanly
   weaknesses:
-  - 'VQ-02 (both): the bold ''Td'' label at 600 hPa sits on the dewpoint trace''s
-    dash → clear of the line by at least a few px. Likely cause: annotate x offset
-    of only -6 data units with size=12 (mm, about 34 pt).'
-  - 'VQ-03 (both): mixing-ratio lines draw solid in the 1000-600 hPa band and their
-    legend swatch is solid while the style is dash-dot, so they read like isotherms
-    → one continuous dash-dot path per line. Likely cause: each curve is cut into
-    25 hPa geom_segment pieces, and each restarts the dash pattern.'
-  - 'VQ-05 (both): an empty band below 100 hPa (about 10 % of the panel) and a blank
-    right fifth of the panel → limits fitted to the sounding and reference lines.
-    Likely cause: y limits p*1.1/p*0.9 and x limit x_max + 20.'
-  - 'SC-01, SC-02, SC-03 (both): the pressure axis is not inverted: 1000 hPa sits
-    at the top and 100 hPa at the bottom, so the whole diagram is upside down → surface
-    (1000 hPa) at the bottom, pressure decreasing upward (C1). Likely cause: scale_y_continuous(trans=''log10'',
-    limits=(high, low)) does not reverse in plotnine; use a reversed log transform
-    (mizani trans_new on -log10) or plot -log10(p) with relabelled breaks.'
-  - 'SC-02 (both): isotherms rise at about 77° from horizontal, not the 45° the Notes
-    ask for (C2) → about 45° (−32°). Likely cause: skew constant 40 per log-decade
-    is too small for the panel''s aspect.'
-  - 'SC-02 (both): no isobars are visible although isobar_df is built → horizontal
-    lines at the standard levels (C1). Likely cause: isobar x starts at skew_transform(T_MIN
-    - 20) ≈ −100, below the x limit, so plotnine drops every row.'
-  - 'SC-03 (both): the dewpoint trace ends at 300 hPa; the 250-100 hPa levels are
-    dropped, and the x axis carries no temperature ticks → all levels inside the axes
-    and temperature values along the bottom edge. Likely cause: dewpoints near −100
-    °C skew below x_min − 10; scale_x_continuous(breaks=[]).'
-  - 'DQ-03 (both): moist adiabats cool only about 0.3 °C per 25 hPa and run almost
-    parallel to the isotherms, where real ones curve from about 3.5 °C/km near the
-    surface toward the dry adiabats aloft → integrate the saturated lapse rate (or
-    use a pseudo-adiabat formula). Likely cause: t_cur -= (5.5 or 6.0) * 0.05 per
-    step.'
-  - 'CQ-01 (code): two helper functions skew_transform and segments, and # Constants
-    lists the sample''s pressure levels (ISOBARS, PRESSURE_BREAKS) → inline the skew
-    expression, no helpers, and derive breaks from df. Likely cause: helper-function
-    structure.'
-  - 'CQ-04 (code): lines 104-150 build every reference curve as per-point geom_segment
-    rows → one long data frame with a curve id and geom_path(aes(group=...)). Likely
-    cause: segment-based drawing instead of grouped paths.'
   - 'Suggestion: wind barbs along the right edge would add the optional wind information.'
+  - 'Suggestion: labelling a few isotherm, dry-adiabat and mixing-ratio values inside
+    the panel would let a reader read temperatures off the skewed lines away from
+    the bottom edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, panel bordered in INK_SOFT
-      Chrome: title 'skewt-logp-atmospheric · python · plotnine · anyplot.ai' at 12 pt', 'Pressure (hPa)' and 'Temperature (°C, skewed 45°)' axis titles, pressure ticks 1000-100 in dark grey, legend 'Lines' box at right; all readable
-      Data: thick green #009E73 solid temperature and lavender #C475FD dashed dewpoint, blue solid isotherms, ochre dashed dry adiabats, red dotted moist adiabats, cyan dash-dot mixing ratios; 1000 hPa is at the TOP (axis not inverted), no isobars, dewpoint ends at 300 hPa, isotherms steep (~77°)
+      Background: warm off-white #FAF8F1 page and panel, panel framed in INK_SOFT
+      Chrome: title 'skewt-logp-atmospheric · python · plotnine · anyplot.ai' centred above the panel; y title 'Pressure (hPa)' with ticks 100-1000 (1000 at the bottom) and grey isobars at each tick; x title 'Temperature at 1000 hPa (°C), isotherms skewed 45°' with ticks -60..40; legend 'Line' below in two rows of three on an elevated box; all text dark and readable
+      Data: thick green #009E73 solid temperature and lavender #C475FD dashed dewpoint; blue solid isotherms at 45°, ochre dashed dry adiabats curving up-left, red dotted moist adiabats near vertical low and bending left aloft, cyan dash-dot mixing ratio lines from 1000 to 600 hPa; dewpoint left of temperature at every level, tropopause kink at 200 hPa
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
-      Chrome: title, axis titles in light ink, ticks and legend text in light grey; legend box on #242420; no dark-on-dark text
-      Data: identical categorical colors and linetypes to the light render; same upside-down orientation and missing isobars
+      Chrome: title and axis titles in light ink, ticks and legend text light grey, border light grey, legend box #242420; no dark-on-dark text
+      Data: identical categorical colors and linetypes to the light render; reference lines dimmer against the dark page but all visible, profiles prominent
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -81,51 +53,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt; all readable
-          in both themes
+        comment: Title 11 pt, axis titles 10 pt, ticks and legend 8 pt, all explicitly
+          set; every text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: The bold 'Td' label sits on the dewpoint trace near 600 hPa (defect
-          line)
+        comment: No text collides with text or data; profiles crossing reference lines
+          is the permitted dense web
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Profiles dominate; mixing-ratio lines render solid in the 1000-600
-          hPa band and the legend swatch is solid while the style is dash-dot (defect
-          line)
+        comment: Profiles at size 1.6 dominate, reference families at 0.55/alpha 0.7
+          stay visible in both themes; legend glyphs override alpha and show each
+          color and linetype
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Color plus linetype dual encoding for all six families
+        comment: Families separated by both color and linetype; no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Empty band below 100 hPa and a blank right fifth of the panel from
-          padded limits (defect line)
+        comment: Square canvas, panel fitted edge to edge with expand=0, legend below;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Pressure (hPa)'' and ''Temperature (°C, skewed 45°)'' with units'
+        comment: '''Pressure (hPa)'' and ''Temperature at 1000 hPa (°C), isotherms
+          skewed 45°'' carry units and explain the skew'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-6 in canonical order, Temperature #009E73, backgrounds
-          #FAF8F1/#1A1A17 correct'
+        comment: 'Imprint in canonical order, temperature #009E73; backgrounds #FAF8F1
+          / #1A1A17; identical data colors in both renders'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -133,53 +107,58 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Style-guide baseline; nothing beyond it
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, Imprint; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Grid off and panel border kept; no refinement beyond the baseline
+        passed: true
+        comment: Isobars drawn exactly at the pressure ticks replace the generic grid,
+          and the panel is fitted to the sounding with zero expansion so the reference
+          web fills the frame
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Thick profiles over thin reference lines; no hierarchy chosen beyond
-          that
+        comment: Data displayed; no hierarchy chosen beyond the profiles-over-reference
+          contrast the spec asks for
     spec_compliance:
-      score: 8
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 'The diagram is drawn upside down: 1000 hPa at the top, 100 hPa at
-          the bottom, so it is not the standard Skew-T orientation (defect line)'
+        comment: Correct Skew-T log-P diagram
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: C1 missed (axis not inverted, isobars absent), C2 missed (isotherms
-          about 77° not 45°); reference families present (defect lines)
+        passed: true
+        comment: Inverted log-pressure axis, 45° isotherms, dry and moist adiabats,
+          mixing ratio lines, solid temperature and dashed dewpoint all present (C1-C4);
+          wind barbs optional
       - id: SC-03
         name: Data Mapping
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Dewpoint above 300 hPa dropped by the x limits; x axis has no temperature
-          ticks at all (defect line)
+        passed: true
+        comment: Every level at its pressure and skewed temperature, dewpoint left
+          of temperature throughout, temperature ticks along the bottom edge, pressure
+          ticks 100-1000
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact; legend labels match the six families
+        comment: Title in the mandated format; one combined color+linetype legend
+          with readable family names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -187,31 +166,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Surface-to-100 hPa sounding with tropopause, all four reference families
+        comment: Shows tropopause inversion, moist lower layer, dry upper troposphere
+          and all four reference families
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible mid-latitude summer sounding
+        comment: Plausible mid-latitude summer radiosonde sounding
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: 'Checked: surface T 25 °C, tropopause near -55 °C at 200 hPa (plausible);
-          moist adiabats cool only about 0.3 °C per 25 hPa and run almost parallel
-          to the isotherms (defect line)'
+        comment: 'Checked: surface 24 °C, about 6.5 °C/km lapse rate, tropopause near
+          200 hPa at about −55 °C; dry adiabats follow theta*(p/1000)^0.286, moist
+          adiabats integrate the saturated lapse rate and bend toward the dry adiabats
+          aloft; spec has no Check values'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two helper functions skew_transform and segments (defect line)
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,47 +207,50 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Every curve exploded into per-point geom_segment rows where geom_path
-          with group draws it (defect line)
+        comment: Long-format frames with a curve id drawn by one geom_path per layer;
+          no avoidable hand-roll
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400) gives 2400x2400
+        comment: Saves plot-{THEME}.png via plot.save, current API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: ggplot grammar with shared color/linetype scales for one legend
+        comment: Grammar-of-graphics long format with group/color/linetype mapped
+          once in the base aes, scale_y_reverse with relabelled log breaks, shared
+          manual scales merging into one legend
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
+        comment: coord_fixed(ratio=SKEW) ties the skew constant to the aspect so the
+          isotherms are exactly 45°; guide_legend(override_aes) restores full-alpha
+          legend glyphs
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
-  rendered_at: '2026-11-26T10:59:29Z'
+  rendered_at: '2026-11-26T11:12:31Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - annotations
   - layer-composition
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
+  - alpha-blending
