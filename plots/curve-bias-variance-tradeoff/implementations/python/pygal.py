@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -132,7 +132,11 @@ optimal_point = [
 ]
 chart.add(f"★ Optimal Point (x={optimal_complexity:.1f})", optimal_point, show_dots=True, dots_size=20, stroke=False)
 
-svg_bytes = chart.render()
+# The Style's stroke_width reaches every path through the `.reactive` class and beats the per-series
+# width inherited from the series group, so the widths are repeated on the paths themselves.
+line_widths = {2: 7, 3: 7, 4: 9, 5: 6, 6: 4}
+width_css = "".join(f".series.serie-{i} .line {{ stroke-width: {w}px !important; }}" for i, w in line_widths.items())
+svg_bytes = chart.render().replace(b"</svg>", f"<style>{width_css}</style></svg>".encode(), 1)
 
 # Direct curve annotations are SVG text elements injected after rendering.
 # Plot-area bounds in pixels for pygal 3200x1800 with legend_at_bottom (measured from the render)
@@ -150,7 +154,7 @@ labels = [
     (VARIANCE, IMPRINT_PALETTE[1], ann_x, float(ann_row[VARIANCE]) + 0.10),
     (BIAS, IMPRINT_PALETTE[0], ann_x, float(ann_row[BIAS]) - 0.15),
     # Irreducible label sits at the middle of the x range, clear of the bias label
-    (IRREDUCIBLE, IMPRINT_PALETTE[3], x_min + 0.41 * (x_max - x_min), float(df[IRREDUCIBLE].iloc[0]) + 0.2),
+    (IRREDUCIBLE, IMPRINT_PALETTE[3], x_min + 0.41 * (x_max - x_min), float(df[IRREDUCIBLE].iloc[0]) + 0.35),
 ]
 text_elements = []
 for text, color, lx, ly in labels:
