@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: heatmap-polar
 created: '2026-05-13T20:01:43Z'
-updated: '2026-11-22T11:31:54Z'
+updated: '2026-11-26T09:27:34Z'
 generated_by: claude-sonnet
-workflow_run: 45016623984
+workflow_run: 45789810776
 issue: 5244
 language_version: 3.14.10
 library_version: 4.11.0
@@ -17,31 +17,32 @@ review:
   strengths:
   - 'Polar heatmap built the grammar way: geom_tile on hour+0.5 centres with coord_polar(theta=''x'')
     closes the cycle at midnight with no seam'
-  - 'Continuous fill on the Imprint sequential ramp (scale_fill_gradient #009E73 ->
-    #4467A3) with a colour bar, correct in both themes'
+  - 'Continuous fill on imprint_seq with the theme''s field stops (sampled through
+    ramp_color into scale_fill_gradientn): low hours recede into the page and the
+    business-hour peak stands out in both themes'
+  - Whole canvas painted the page colour with the one-panel gggrid wrap, so the square
+    render has no transparent strips
   - Cell borders in the page colour stay subordinate to the fills and flip with the
-    theme
-  - Angular breaks and labels computed from the data (every 6 hours), rings labelled
-    Mon..Sun with Mon innermost
-  - Square 2400x2400 canvas with explicit text sizes matching the lets-plot reference;
-    PNG + interactive HTML output
+    theme; rings Mon..Sun with Mon innermost
+  - Angular breaks and labels computed from the data every 6 hours; PNG plus interactive
+    HTML output
   weaknesses:
   - 'Suggestion: place the day labels next to their rings (for example along the 12am
-    spoke) instead of on a detached left axis, so each ring is read without tracing
+    spoke) instead of on the detached left axis, so each ring is read without tracing
     across the canvas.'
   - 'Suggestion: a slightly wider colour bar would give the value scale more presence
     beside the large disc.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 over the whole chart area (the PNG's top and bottom ~120 px rows are transparent padding from the pipeline).
-      Chrome: bold dark-ink title 'Website Traffic · heatmap-polar · python · letsplot · anyplot.ai'; angular labels 12am (top), 6am (right), 12pm (bottom), 6pm (left) in INK_SOFT; radial labels Mon..Sun on the left axis aligned to ring radii; axis titles 'Hour of day' and 'Day of week'; colour bar 'Hourly visits' (200-800) in an elevated box with a soft outline. All readable.
-      Data: 7 concentric rings (Mon innermost) x 24 equal segments, filled on the imprint_seq ramp from brand green #009E73 (night lows) to blue #4467A3 (weekday 9am-5pm peak in the lower half); weekend outer rings show the midday-to-evening band on the left; thin off-white borders; no seam at midnight.
+      Background: warm off-white #FAF8F1 over the whole 2400x2400 canvas (corners verified).
+      Chrome: bold dark-ink title 'Website Traffic · heatmap-polar · python · letsplot · anyplot.ai' (~82% width); angular labels 12am (top), 6am (right), 12pm (bottom), 6pm (left) in INK_SOFT; radial labels Mon..Sun on the left axis at the ring radii; axis titles 'Hour of day' and 'Day of week'; colour bar 'Hourly visits' (200-800) in an elevated box. All readable.
+      Data: 7 concentric rings (Mon innermost) x 24 equal segments on imprint_seq light field stops: mint #66E2B2 for night lows through #009E73 and #4467A3 to navy #002850 at the weekday 9am-5pm peak in the lower half; weekend outer rings show a midday-evening band; thin off-white borders; no seam at midnight.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and labels flip to light ink; legend box #242420 with light text; outer guide circle in soft grey. No dark-on-dark text.
-      Data: identical green-to-blue fills as the light render; cell borders now near-black page colour.
+      Background: warm near-black #1A1A17 over the whole canvas.
+      Chrome: title, axis titles and labels in light ink; legend box #242420 with light text; outer guide circle soft grey. No dark-on-dark text.
+      Data: same layout on the dark field stops of imprint_seq: night lows in dark green #00573D receding into the page, #009E73 mid, peak cells bright pale blue #CDD9FF; borders in the near-black page colour. The ramp flips per theme as the style guide requires.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,49 +54,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 14, axis titles 12, ticks/legend 10 pt at ggsize
-          600 x4) match the lets-plot reference; all text readable in both themes
+        comment: Title 14 pt bold, axis titles 12, ticks/legend 10 at ggsize 600 x4;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; angular labels sit outside the ring, radial labels
-          on the left axis, legend clear of the disc
+        comment: No text collisions; angular labels outside the disc, radial labels
+          on the left, legend clear of the disc
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 168 ring segments clearly visible; page-coloured cell borders
-          separate cells in both themes
+        comment: All 168 segments clearly visible; page-coloured borders separate
+          cells in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green-to-blue ramp, no red-green signal
+        comment: imprint_seq mint->green->blue->navy (light), dark green->green->pale
+          blue (dark); luminance-monotone, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas suits the circular layout; disc well centred,
-          title ~82% of width (expected for the mandated title), nothing clipped
+        comment: Square 2400x2400 canvas, whole canvas painted the page colour via
+          the one-panel gggrid; disc centred, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Hour of day'' / ''Day of week'' axis titles and ''Hourly visits''
-          legend are reader-facing; counts need no unit'
+        comment: '''Hour of day'' / ''Day of week'' and legend ''Hourly visits'' are
+          reader-facing; counts need no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous fill uses imprint_seq (#009E73 -> #4467A3); backgrounds
-          #FAF8F1 / #1A1A17; chrome flips correctly'
+        comment: 'imprint_seq with the theme''s field stops sampled via ramp_color;
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 8
       max: 20
@@ -104,7 +106,7 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: Style-guide baseline (theme tokens, explicit sizes, elevated legend
           box); nothing beyond it
       - id: DE-02
@@ -112,15 +114,15 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: Grid, ticks and axis lines removed and borders in page colour, as
-          the style guide and Notes suggest; nothing beyond
+        comment: Grid, ticks and axis lines removed, borders in page colour as the
+          style guide and Notes suggest; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; the weekday business-hour band reads through the
-          gradient alone, no hierarchy chosen beyond the Notes
+        comment: Data displayed; the business-hour band reads through the ramp alone,
+          no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,23 +139,24 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Cyclic wrap with no seam (C2), Mon innermost with labelled rings
-          (C1), sequential ramp + colour bar (C3), equal-width segments with subordinate
-          borders (C4), 6-hour angular labels
+        comment: C1 seven concentric rings, Mon innermost, each labelled on the radial
+          axis; C2 cycle closes at midnight with no seam, labels every 6 h in cyclic
+          order; C3 sequential ramp with colour bar; C4 equal 15° segments with page-coloured
+          borders subordinate to the fills
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: hour -> angle, day -> ring, visits -> fill; tiles centred at hour+0.5
-          so every cell sits at its category
+        comment: hour -> angle (tile centres at hour+0.5), day -> ring, visits ->
+          fill; colour bar ticks 200-800 readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'Website Traffic · heatmap-polar · python · letsplot · anyplot.ai'
-          matches the format; legend title 'Hourly visits'
+          matches the format; legend 'Hourly visits'
     data_quality:
       score: 15
       max: 15
@@ -163,21 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows weekday 9-17 peak, shoulders, overnight lows and a distinct
-          weekend midday pattern across the full cycle, including the wrap at midnight
+        comment: Weekday 9-17 peak, shoulders, overnight lows, distinct weekend midday-evening
+          band, continuity across midnight
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly website visits by weekday — the spec's own neutral example
+        comment: Hourly website visits by weekday, the spec's own neutral example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visits ~10-950 per hour with plausible weekday/weekend ratios; no
-          Check values in the spec
+        comment: Visits ~10-950 per hour, plausible weekday/weekend ratios; the spec
+          carries no Check values
     code_quality:
       score: 10
       max: 10
@@ -187,7 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script; the only function is the ramp_color helper the library
+          prompt mandates
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,32 +226,30 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Grammar-of-graphics idioms used as the library prompt shows; nothing
-          beyond the mandated pattern
+        passed: false
+        comment: Grammar-of-graphics idioms as the library prompt shows; nothing beyond
+          the mandated pattern
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates (HTML export is the
-          required output)
+        comment: Nothing beyond what the library prompt mandates (HTML export and
+          the gggrid wrap are required)
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
-  rendered_at: '2026-11-22T11:27:58Z'
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T09:23:58Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - colorbar
-  - manual-ticks
-  - html-export
+  - custom-colormap
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap
-  - edge-highlighting
+  - publication-ready
