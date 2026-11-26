@@ -136,7 +136,7 @@ for (i, vals) in enumerate(DATA_BY_CAT)
     y_rain = baseline .- rain_gap .- rand(n) .* rain_spread
     scatter!(ax, vals, y_rain;
         color       = (color, 0.6),
-        markersize  = 6,
+        markersize  = 8,
         strokewidth = 0)
 end
 
