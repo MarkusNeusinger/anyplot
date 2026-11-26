@@ -1,7 +1,7 @@
 """anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 79/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
