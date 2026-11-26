@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-radial: Radial Dendrogram
-Library: letsplot 4.11.0 | Python 3.13.15
-Quality: pending | Created: 2026-08-24
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 75/100 | Updated: 2026-11-26
 """
 
 import os
