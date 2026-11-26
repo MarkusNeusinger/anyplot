@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-30
 """
 
+import math
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -17,12 +19,13 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_raster,
+    gggrid,
     ggplot,
     ggsize,
     guide_colorbar,
     labs,
     layer_tooltips,
-    scale_fill_gradient,
+    scale_fill_gradientn,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -40,6 +43,28 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential ramp for fields (colored cells filling the plot), (position, hex) stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """Hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Column constants
+REAL = "real"  # role: x_min
+IMAG = "imag"  # role: y_min
+ITERATIONS = "iterations"  # role: max_iterations
 
 # Data — Mandelbrot set via smooth (normalized) iteration count
 x_min, x_max = -2.5, 1.0
@@ -68,11 +93,11 @@ for i in range(max_iter):
 interior = iterations >= max_iter
 iterations[interior] = np.nan
 
-df = pd.DataFrame({"real": real_grid.ravel(), "imag": imag_grid.ravel(), "iterations": iterations.ravel()})
+df = pd.DataFrame({REAL: real_grid.ravel(), IMAG: imag_grid.ravel(), ITERATIONS: iterations.ravel()})
 
 # Plot — Imprint sequential colormap (brand-green → blue) on escape-time data
 plot = (
-    ggplot(df, aes(x="real", y="imag", fill="iterations"))
+    ggplot(df, aes(x=REAL, y=IMAG, fill=ITERATIONS))
     + geom_raster(
         tooltips=layer_tooltips()
         .format("@real", ".3f")
@@ -81,20 +106,25 @@ plot = (
         .line("c = @real + @imag·i")
         .line("Iterations: @iterations")
     )
-    + scale_fill_gradient(
-        low="#009E73",
-        high="#4467A3",
+    + scale_fill_gradientn(
+        colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)],
         na_value="#000000",
         name="Iterations",
         guide=guide_colorbar(barwidth=15, barheight=200, nbin=256),
     )
-    + scale_x_continuous(name="Real Axis", breaks=[-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0], expand=[0.01, 0])
-    + scale_y_continuous(name="Imaginary Axis", breaks=[-1.0, -0.5, 0.0, 0.5, 1.0], expand=[0.01, 0])
+    + scale_x_continuous(
+        name="Real Axis", breaks=list(np.arange(math.ceil(real.min() * 2) / 2, real.max() + 1e-9, 0.5)), expand=[0, 0]
+    )
+    + scale_y_continuous(
+        name="Imaginary Axis",
+        breaks=list(np.arange(math.ceil(imag.min() * 2) / 2, imag.max() + 1e-9, 0.5)),
+        expand=[0, 0],
+    )
     + coord_fixed()
     + labs(
-        title="heatmap-mandelbrot · letsplot · anyplot.ai",
+        title="heatmap-mandelbrot · python · letsplot · anyplot.ai",
         subtitle="Escape-time fractal with smooth iteration coloring on the complex plane",
-        caption="z(n+1) = z(n)² + c · max iterations = 100 · interior points in black",
+        caption=f"z(n+1) = z(n)² + c · max iterations = {max_iter} · interior points in black",
     )
     + theme_minimal()
     + theme(
@@ -112,8 +142,10 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=[20, 15, 10, 15],
     )
-    + ggsize(800, 450)
 )
+
+# coord_fixed narrows the plot box and leaves the canvas edges transparent: a one-panel grid paints the page
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save — canonical scale=4 → 3200×1800 px landscape
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
