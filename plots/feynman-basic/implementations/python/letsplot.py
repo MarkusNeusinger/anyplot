@@ -1,7 +1,7 @@
 """anyplot.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-06-03
+Quality: pending | Updated: 2026-06-03
 """
 
 import os
