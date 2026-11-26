@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -19,7 +19,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette — canonical order for categorical series
-IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns
+LAT = "lat"  # role: latitude
+LON = "lon"  # role: longitude
+LABEL = "label"  # role: hover label
+CATEGORY = "category"  # role: color group
 
 # Data - Retail store locations across North America
 np.random.seed(42)
@@ -38,24 +44,20 @@ cities = {
 }
 
 categories = ["Electronics", "Grocery", "Clothing", "Hardware"]
-category_colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
 
 lats, lons, labels, cats = [], [], [], []
 store_id = 1
 
 for city, (lat, lon, count) in cities.items():
     for _ in range(count):
-        lat_jitter = lat + np.random.normal(0, 0.15)
-        lon_jitter = lon + np.random.normal(0, 0.15)
-        category = np.random.choice(categories)
-        lats.append(lat_jitter)
-        lons.append(lon_jitter)
+        lats.append(lat + np.random.normal(0, 0.15))
+        lons.append(lon + np.random.normal(0, 0.15))
+        cats.append(np.random.choice(categories))
         labels.append(f"Store #{store_id} - {city}")
-        cats.append(category)
         store_id += 1
 
-df = pd.DataFrame({"lat": lats, "lon": lons, "label": labels, "category": cats})
-total_stores = len(df)
+df = pd.DataFrame({LAT: lats, LON: lons, LABEL: labels, CATEGORY: cats})
+
 city_counts = {city: count for city, (_, _, count) in cities.items()}
 densest_city = max(city_counts, key=city_counts.get)
 
@@ -64,30 +66,27 @@ map_style = "carto-positron" if THEME == "light" else "carto-darkmatter"
 
 fig = go.Figure()
 
-for category in categories:
-    cat_df = df[df["category"] == category]
+# Clustering runs per trace, so each category forms its own cluster at a city. Giving every
+# category a different cluster size stacks them as concentric rings (first category outermost),
+# so all category colors stay visible; ring size grows with the number of grouped stores.
+for i, (category, rows) in enumerate(df.groupby(CATEGORY, sort=False)):
+    color = IMPRINT_PALETTE[categories.index(category)]
+    ring = 22 + 8 * (len(categories) - 1 - categories.index(category))
     fig.add_trace(
         go.Scattermap(
-            lat=cat_df["lat"],
-            lon=cat_df["lon"],
+            lat=rows[LAT],
+            lon=rows[LON],
             mode="markers",
-            marker={"size": 14, "color": category_colors[category], "opacity": 0.8},
-            text=cat_df["label"],
+            marker={"size": 14, "color": color, "opacity": 0.85},
+            text=rows[LABEL],
             hovertemplate=(
                 "<b>%{text}</b><br>"
                 + f"Category: {category}<br>"
                 + "Lat: %{lat:.4f}<br>Lon: %{lon:.4f}"
                 + "<extra></extra>"
             ),
-            name=category,
-            cluster={
-                "enabled": True,
-                "maxzoom": 10,
-                "size": 40,
-                "step": 1,
-                "color": category_colors[category],
-                "opacity": 0.75,
-            },
+            name=str(category),
+            cluster={"enabled": True, "maxzoom": 10, "step": 1, "size": ring, "color": color, "opacity": 0.8},
         )
     )
 
@@ -100,10 +99,9 @@ fig.update_layout(
         "x": 0.5,
         "xanchor": "center",
     },
-    # lon=-100 shifts viewport ~2° west to keep Boston within the canvas (review feedback)
     map={"style": map_style, "center": {"lat": 39.0, "lon": -100.0}, "zoom": 3.5},
     legend={
-        "title": {"text": f"Store Category  (n={total_stores})", "font": {"size": 12, "color": INK}},
+        "title": {"text": f"Store Category  (n={len(df)})", "font": {"size": 12, "color": INK}},
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
@@ -116,14 +114,14 @@ fig.update_layout(
     margin={"l": 80, "r": 60, "t": 80, "b": 60},
 )
 
-# Data-context annotation: focal point summarising the dataset
+# Data-context annotation, kept above the basemap attribution row
 fig.add_annotation(
     x=0.97,
-    y=0.04,
+    y=0.07,
     xref="paper",
     yref="paper",
     text=(
-        f"<b>{total_stores} retail locations</b> across 10 US cities<br>"
+        f"<b>{len(df)} retail locations</b> across {len(cities)} US cities<br>"
         f"Densest cluster: <b>{densest_city}</b> ({city_counts[densest_city]} stores)"
         "  ·  zoom in to expand clusters"
     ),
