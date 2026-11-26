@@ -361,6 +361,38 @@ class TestReviewFeedbackFormat:
         assert '--spec-file "plots/${SPEC_ID}/specification.md"' in script
 
 
+class TestLastKeptNoteWiring:
+    """The kept attempt's note reaches the generator and never a reviewer (it would anchor the re-score)."""
+
+    def test_only_the_generators_context_asks_for_the_note(self):
+        generator = _code_only(_step("impl-generate.yml", "Extract previous review feedback (regeneration)")["run"])
+        assert "regen_gate.py context" in generator and "--last-kept" in generator
+        review = _code_only(_step("impl-review.yml", "Regen context")["run"])
+        assert 'regen_gate.py" context' in review
+        assert "--omit-scores" in review and "--last-kept" not in review
+
+    def test_no_other_workflow_or_the_retest_harness_asks_for_it(self):
+        for path in WORKFLOWS_DIR.glob("*.yml"):
+            if path.name != "impl-generate.yml":
+                assert "--last-kept" not in path.read_text(encoding="utf-8"), path.name
+        harness = (WORKFLOWS_DIR.parent.parent / "automation" / "scripts" / "review_retest.py").read_text("utf-8")
+        assert '"--omit-scores"' in harness and "--last-kept" not in harness
+
+    def test_the_write_back_reads_the_record_the_gate_step_wrote(self):
+        gate = _step("impl-review.yml", "Regen gate")["run"]
+        assert 'RECORD="$RUNNER_TEMP/anyplot-regen-record.json"' in gate
+        assert 'rm -f "$RECORD"' in gate  # nothing the review session planted stands in
+        writeback = _code_only(_step("impl-review.yml", WRITEBACK_STEP)["run"])
+        assert '--gate-record "$RUNNER_TEMP/anyplot-regen-record.json"' in writeback
+
+    def test_a_carried_review_drops_the_note(self):
+        """A review-free adapt merge carries main's review over; its note was about the replaced file."""
+        writer = _metadata_writer_script()
+        carried = writer[writer.index("data['review']['carried'] = True") :]
+        carried = carried[: carried.index("else:")]
+        assert "data['review'].pop('last_kept', None)" in carried
+
+
 WRITEBACK_STEP = "Write back the re-score (regen keep)"
 
 

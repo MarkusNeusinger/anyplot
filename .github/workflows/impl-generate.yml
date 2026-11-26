@@ -703,11 +703,13 @@ jobs:
           # tagged defect, suggestion or older review), the same ids the regen
           # review refers to in review_regen.json, and the spec's
           # characteristic bullets C1..Cn, so the generator can name the
-          # bullet that makes a weakness obsolete.
+          # bullet that makes a weakness obsolete. --last-kept adds why the
+          # last kept attempt was kept (review.last_kept); only this copy
+          # has it, because the review's copy would anchor the re-score.
           .venv/bin/python3 automation/scripts/regen_gate.py context \
             --metadata "plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml" \
             --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
-            --spec-file "plots/${SPEC_ID}/specification.md" \
+            --spec-file "plots/${SPEC_ID}/specification.md" --last-kept \
             --out-md /tmp/anyplot-prev-review.md \
             --out-weaknesses /tmp/anyplot-prev-weaknesses.json
           echo "::notice::Extracted previous review to /tmp/anyplot-prev-review.md"

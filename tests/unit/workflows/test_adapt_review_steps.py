@@ -901,6 +901,14 @@ class TestCarriedMetadata:
         assert "carried review:" in result.stderr
         assert data == BRANCH_META  # nothing written
 
+    def test_a_kept_attempts_note_does_not_carry_over(self, tmp_path):
+        """The note was about the file this merge replaces, as on every other merge."""
+        last_kept = {"pr": 13000, "code": "regression", "note": "#13000 was kept because the legend moved."}
+        prev = {**PREV_META, "review": {**PREV_REVIEW, "last_kept": last_kept}}
+        result, data, _ = self._write(tmp_path, "94", {"REVIEW_CARRIED": "true"}, prev=prev)
+        assert result.returncode == 0, result.stderr
+        assert data["review"] == {**PREV_REVIEW, "carried": True}
+
     def test_a_predecessor_without_tags_or_review(self, tmp_path):
         prev = {k: v for k, v in PREV_META.items() if k not in ("impl_tags", "review")}
         result, data, _ = self._write(tmp_path, "94", {"REVIEW_CARRIED": "true"}, prev=prev)
