@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -30,9 +30,10 @@ else:
     COAST_COLOR = "rgb(90, 88, 80)"
     COUNTRY_COLOR = "rgb(75, 73, 65)"
 
-# Okabe-Ito blue (position 3) for arcs; green (position 1) for city nodes
-ARC_RGB = "0, 114, 178"
-CITY_COLOR = "#009E73"
+# Imprint palette: blue (position 3) for arcs; brand green (position 1) for city nodes
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ARC_RGB = "68, 103, 163"
+CITY_COLOR = IMPRINT_PALETTE[0]
 
 # Data: Major international trade flows between world ports
 np.random.seed(42)
@@ -65,8 +66,8 @@ label_positions = {
     "Rotterdam": "top left",
     "Hamburg": "top right",
     "New York": "top left",
-    "Los Angeles": "bottom left",
-    "Dubai": "bottom right",
+    "Los Angeles": "bottom right",
+    "Dubai": "top left",
     "Mumbai": "bottom left",
     "Santos": "bottom left",
     "Cape Town": "bottom left",
@@ -223,13 +224,16 @@ fig.update_layout(
         "countrywidth": 0.5,
         "bgcolor": "rgba(0,0,0,0)",
     },
+    autosize=False,
+    width=800,
+    height=450,
     paper_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 20, "t": 80, "b": 40},
+    margin={"l": 20, "r": 20, "t": 60, "b": 40},
     annotations=[
         {
             "text": "Line width proportional to trade volume (millions of tons)",
             "x": 0.5,
-            "y": -0.04,
+            "y": -0.05,
             "xref": "paper",
             "yref": "paper",
             "showarrow": False,
