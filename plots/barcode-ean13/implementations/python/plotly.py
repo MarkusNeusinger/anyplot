@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-21
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -14,170 +14,106 @@ sys.path = [p for p in sys.path if p not in ("", os.path.dirname(os.path.abspath
 import plotly.graph_objects as go
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BAR_COLOR = INK
+# Constants: the EAN-13 standard, true for any code
+L_CODES = ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"]
+G_CODES = ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"]
+R_CODES = ["1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100"]
+# The first digit selects the L/G parity of the six left digits
+PARITY = ["LLLLLL", "LLGLGG", "LLGGLG", "LLGGGL", "LGLLGG", "LGGLLG", "LGGGLL", "LGLGLG", "LGLGGL", "LGGLGL"]
+START_GUARD = "101"
+CENTER_GUARD = "01010"
+END_GUARD = "101"
+QUIET_MODULES = 9  # minimum quiet zone on each side, in modules
 
-# EAN-13 encoding patterns
-L_CODES = {
-    "0": "0001101",
-    "1": "0011001",
-    "2": "0010011",
-    "3": "0111101",
-    "4": "0100011",
-    "5": "0110001",
-    "6": "0101111",
-    "7": "0111011",
-    "8": "0110111",
-    "9": "0001011",
-}
+# Data: replace with your own 12 or 13 digit code (the check digit is added to a 12 digit code)
+EAN_CODE = "4006381333931"  # German product
 
-G_CODES = {
-    "0": "0100111",
-    "1": "0110011",
-    "2": "0011011",
-    "3": "0100001",
-    "4": "0011101",
-    "5": "0111001",
-    "6": "0000101",
-    "7": "0010001",
-    "8": "0001001",
-    "9": "0010111",
-}
-
-R_CODES = {
-    "0": "1110010",
-    "1": "1100110",
-    "2": "1101100",
-    "3": "1000010",
-    "4": "1011100",
-    "5": "1001110",
-    "6": "1010000",
-    "7": "1000100",
-    "8": "1001000",
-    "9": "1110100",
-}
-
-# First digit determines L/G parity pattern for left side
-FIRST_DIGIT_PATTERNS = {
-    "0": "LLLLLL",
-    "1": "LLGLGG",
-    "2": "LLGGLG",
-    "3": "LLGGGL",
-    "4": "LGLLGG",
-    "5": "LGGLLG",
-    "6": "LGGGLL",
-    "7": "LGLGLG",
-    "8": "LGLGGL",
-    "9": "LGGLGL",
-}
-
-# German product EAN-13
-ean_code = "4006381333931"
-
-code = ean_code
+# Plot: encode the code into modules, then draw one rectangle per bar
+code = EAN_CODE
 if len(code) == 12:
-    total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(code))
-    code = code + str((10 - (total % 10)) % 10)
+    weighted = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(code))
+    code += str((10 - weighted % 10) % 10)
 
-first_digit = code[0]
-left_digits = code[1:7]
-right_digits = code[7:13]
+parity = PARITY[int(code[0])]
+left = "".join((L_CODES if p == "L" else G_CODES)[int(d)] for p, d in zip(parity, code[1:7], strict=True))
+right = "".join(R_CODES[int(d)] for d in code[7:])
+pattern = START_GUARD + left + CENTER_GUARD + right + END_GUARD
 
-# Encode to binary
-binary_pattern = "101"
-
-lg_pattern = FIRST_DIGIT_PATTERNS[first_digit]
-for i, digit in enumerate(left_digits):
-    if lg_pattern[i] == "L":
-        binary_pattern += L_CODES[digit]
-    else:
-        binary_pattern += G_CODES[digit]
-
-binary_pattern += "01010"
-
-for digit in right_digits:
-    binary_pattern += R_CODES[digit]
-
-binary_pattern += "101"
-
-# Bar dimensions (in plot units)
-module_width = 3
-bar_height = 200
-guard_height = 220
-quiet_zone = 9 * module_width
-
-# Guard bar positions: start (0-2), center (45-49), end (92-94)
-guard_positions = set(range(0, 3)) | set(range(45, 50)) | set(range(92, 95))
-
-fig = go.Figure()
-
-x_pos = quiet_zone
-for i, bit in enumerate(binary_pattern):
-    if bit == "1":
-        height = guard_height if i in guard_positions else bar_height
-        fig.add_shape(
-            type="rect", x0=x_pos, y0=0, x1=x_pos + module_width, y1=height, fillcolor=BAR_COLOR, line={"width": 0}
-        )
-    x_pos += module_width
-
-total_width = quiet_zone * 2 + len(binary_pattern) * module_width
-
-# Human-readable digits
-digit_y = -35
-font_size = 18
-
-# First digit (outside left guard)
-fig.add_annotation(
-    x=quiet_zone - module_width * 4,
-    y=digit_y,
-    text=code[0],
-    showarrow=False,
-    font={"size": font_size, "family": "monospace", "color": INK},
+# Module index ranges of the three guards
+center_start = len(START_GUARD) + len(left)
+guards = (
+    set(range(len(START_GUARD)))
+    | set(range(center_start, center_start + len(CENTER_GUARD)))
+    | set(range(len(pattern) - len(END_GUARD), len(pattern)))
 )
 
-# Left group: digits 2–7 under left bars
-left_start = quiet_zone + 3 * module_width
-for i, digit in enumerate(code[1:7]):
-    x = left_start + (i + 0.5) * 7 * module_width
-    fig.add_annotation(
-        x=x, y=digit_y, text=digit, showarrow=False, font={"size": font_size, "family": "monospace", "color": INK}
-    )
+module = 3  # width of one module in plot units
+bar_top = 200
+bar_bottom = 0
+guard_bottom = -30  # guard bars reach down between the digit groups
+quiet = QUIET_MODULES * module
+total_width = 2 * quiet + len(pattern) * module
 
-# Right group: digits 8–13 under right bars
-right_start = quiet_zone + 3 * module_width + 42 * module_width + 5 * module_width
-for i, digit in enumerate(code[7:13]):
-    x = right_start + (i + 0.5) * 7 * module_width
-    fig.add_annotation(
-        x=x, y=digit_y, text=digit, showarrow=False, font={"size": font_size, "family": "monospace", "color": INK}
-    )
+fig = go.Figure()
+for i, bit in enumerate(pattern):
+    if bit == "1":
+        x0 = quiet + i * module
+        fig.add_shape(
+            type="rect",
+            x0=x0,
+            x1=x0 + module,
+            y0=guard_bottom if i in guards else bar_bottom,
+            y1=bar_top,
+            fillcolor=INK,
+            line={"width": 0},
+        )
 
-# Segment labels: Country (GS1 prefix), Manufacturer, Product, Check
-segment_y = -65
-x_first = quiet_zone - module_width * 4
-x_country = (x_first + left_start + 0.5 * 7 * module_width + left_start + 1.5 * 7 * module_width) / 3
-x_manuf = left_start + 4.0 * 7 * module_width
-x_product = right_start + 2.5 * 7 * module_width
-x_check = right_start + 5.5 * 7 * module_width
-for x, label in [(x_country, "Country"), (x_manuf, "Manufacturer"), (x_product, "Product"), (x_check, "Check")]:
-    fig.add_annotation(x=x, y=segment_y, text=label, showarrow=False, font={"size": 9, "color": INK_SOFT})
+# Human-readable digits: the first outside the left guard, six under each half
+digit_y = -48
+digit_font = {"size": 22, "family": "monospace", "color": INK}
+digit_width = 7 * module
+left_start = quiet + len(START_GUARD) * module
+right_start = quiet + (center_start + len(CENTER_GUARD)) * module
+first_x = quiet - 4 * module
+digit_xs = (
+    [first_x]
+    + [left_start + (i + 0.5) * digit_width for i in range(6)]
+    + [right_start + (i + 0.5) * digit_width for i in range(6)]
+)
+for x, digit in zip(digit_xs, code, strict=True):
+    fig.add_annotation(x=x, y=digit_y, text=digit, showarrow=False, font=digit_font)
 
+# Segment labels: country prefix, manufacturer, product, check digit
+segment_y = -80
+segments = [
+    ((digit_xs[0] + digit_xs[2]) / 2, "Country"),
+    (left_start + 4.0 * digit_width, "Manufacturer"),
+    (right_start + 2.5 * digit_width, "Product"),
+    (right_start + 5.5 * digit_width, "Check"),
+]
+for x, label in segments:
+    fig.add_annotation(x=x, y=segment_y, text=label, showarrow=False, font={"size": 14, "color": INK_SOFT})
+
+# Style
 fig.update_layout(
     autosize=False,
     title={
         "text": "barcode-ean13 · python · plotly · anyplot.ai",
-        "font": {"size": 16, "color": INK},
+        "font": {"size": 20, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    xaxis={"visible": False, "range": [-20, total_width + 20]},
-    yaxis={"visible": False, "range": [-100, guard_height + 20]},
+    xaxis={"visible": False, "range": [0, total_width]},
+    yaxis={"visible": False, "range": [segment_y - 18, bar_top + 12]},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 40, "r": 40, "t": 60, "b": 30},
     width=800,
     height=450,
 )
