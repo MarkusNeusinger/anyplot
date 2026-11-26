@@ -1,7 +1,7 @@
 """ anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -25,6 +25,7 @@ from lets_plot import (
     labs,
     scale_color_manual,
     scale_shape_manual,
+    scale_size_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -100,15 +101,15 @@ plot = (
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + geom_point(
         data=markers,
-        mapping=aes(x=DATE, y=DRAWDOWN, color=MARKER, shape=MARKER),
-        size=5,
-        stroke=2.0,
+        mapping=aes(x=DATE, y=DRAWDOWN, color=MARKER, shape=MARKER, size=MARKER),
+        stroke=1.5,
         fill=PAGE_BG,
         alpha=0.8,
     )
     + scale_color_manual(name="", values={MAX_LABEL: DRAWDOWN_COLOR, RECOVERY_LABEL: RECOVERY_COLOR})
     + scale_shape_manual(name="", values={MAX_LABEL: 16, RECOVERY_LABEL: 21})
-    + scale_x_datetime()
+    + scale_size_manual(name="", values={MAX_LABEL: 6, RECOVERY_LABEL: 3})
+    + scale_x_datetime(format="%b %Y")
     + labs(x=DATE, y=DRAWDOWN, title="drawdown-basic · python · letsplot · anyplot.ai", caption=caption)
     + theme_minimal()
     + theme(
