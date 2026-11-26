@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-printable: Printable Maze Puzzle
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-22
@@ -22,15 +22,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 CELLS_WIDE = 25
 CELLS_HIGH = 25
 SEED = 42
-KIND_WALL = "wall"
-KIND_MARKER = "marker"
 
 # Columns
 XMIN = "xmin"  # role: extra
 XMAX = "xmax"  # role: extra
 YMIN = "ymin"  # role: extra
 YMAX = "ymax"  # role: extra
-KIND = "kind"  # role: extra
+MARK_X = "x"  # role: extra
+MARK_Y = "y"  # role: extra
 LABEL = "label"  # role: extra
 
 # Data
@@ -64,37 +63,16 @@ while stack:
 maze[0, 1] = 0
 maze[grid_rows - 1, grid_cols - 2] = 0
 
+markers = pd.DataFrame({MARK_X: [1.5, grid_cols - 1.5], MARK_Y: [grid_rows + 0.5, -0.5], LABEL: ["S", "G"]})
 wall_rows, wall_cols = np.nonzero(maze == 1)
-walls = pd.DataFrame(
-    {
-        XMIN: wall_cols,
-        XMAX: wall_cols + 1,
-        YMIN: grid_rows - wall_rows - 1,
-        YMAX: grid_rows - wall_rows,
-        KIND: KIND_WALL,
-        LABEL: "",
-    }
-)
-markers = pd.DataFrame(
-    {
-        XMIN: [1.0, grid_cols - 2.0],
-        XMAX: [2.0, grid_cols - 1.0],
-        YMIN: [grid_rows + 0.0, -1.0],
-        YMAX: [grid_rows + 1.0, 0.0],
-        KIND: KIND_MARKER,
-        LABEL: ["S", "G"],
-    }
-)
-df = pd.concat([walls, markers], ignore_index=True)
+df = pd.DataFrame({XMIN: wall_cols, XMAX: wall_cols + 1, YMIN: grid_rows - wall_rows - 1, YMAX: grid_rows - wall_rows})
 
 # Plot
-wall_df = df[df[KIND] == KIND_WALL]
-marker_df = df[df[KIND] == KIND_MARKER].assign(x=lambda d: (d[XMIN] + d[XMAX]) / 2, y=lambda d: (d[YMIN] + d[YMAX]) / 2)
-margin = 2.0
+margin = 3.0
 plot = (
     ggplot()
-    + geom_rect(aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX), data=wall_df, fill=INK, color=INK, size=0.3)
-    + geom_text(aes(x="x", y="y", label=LABEL), data=marker_df, size=9, fontface="bold", color=INK)
+    + geom_rect(aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX), data=df, fill=INK, color=INK, size=0.3)
+    + geom_text(aes(x=MARK_X, y=MARK_Y, label=LABEL), data=markers, size=9, fontface="bold", color=INK)
     + coord_fixed(
         ratio=1,
         xlim=(df[XMIN].min() - margin, df[XMAX].max() + margin),
@@ -107,8 +85,9 @@ plot = (
         plot_margin=[15, 15, 15, 15],
     )
     + labs(title="maze-printable · python · letsplot · anyplot.ai")
-    + ggsize(600, 600)
 )
+# Fixed aspect leaves transparent strips: a one-panel grid paints the whole canvas
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", scale=4)
