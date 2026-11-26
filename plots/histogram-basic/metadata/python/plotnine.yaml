@@ -2,124 +2,119 @@ library: plotnine
 language: python
 specification_id: histogram-basic
 created: '2025-12-23T00:23:07Z'
-updated: '2026-05-28T07:57:23Z'
+updated: '2026-11-26T18:36:41Z'
 generated_by: claude-sonnet
-workflow_run: 26561068106
+workflow_run: 45876600840
 issue: 654
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Bimodal distribution with two deliberate clusters creates a compelling data story
-    visible immediately
-  - Peak shading regions (annotate rect with alpha=0.08) subtly reinforce the two
-    modes without overwhelming the data
-  - Mean and median reference lines with typed labels show statistical context and
-    their slight divergence hints at skew
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    correctly flip between light and dark'
-  - Clean L-frame (panel border removed, only Y grid) keeps focus on the data
+  - 'Plain one-color histogram exactly as the basic variant asks: 30 contiguous equal-width
+    bins in brand green #009E73 with thin #006B4F edges that keep bin boundaries distinguishable
+    in both themes'
+  - Zero baseline kept with scale_y_continuous(expand=(0, 0, 0.05, 0)) so bars rise
+    from the x-axis with headroom only at the top
+  - Bimodal exam-score sample (two student groups) shows two modes, a trough and thin
+    tails, revealing distribution shape
+  - 'Full theme-token threading: title, axis titles, ticks, grid and axis line flip
+    correctly between #FAF8F1 and #1A1A17'
   weaknesses:
-  - Annotation text (mean/median labels at size=3.8 mm, box text at size=4 mm) is
-    slightly small at mobile scale — consider bumping to size=4.5-5 for the statistical
-    labels
-  - The annotation box blends somewhat into the background at dark theme due to near-identical
-    ELEVATED_BG (#242420) and PAGE_BG (#1A1A17) fills — a slightly stronger border
-    (label_size=0.8) would improve definition
+  - 'Suggestion: x tick breaks every 10 points (10-100) would make bin positions easier
+    to read off than the default 20-point breaks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "histogram-basic · python · plotnine · anyplot.ai" bold dark ink, readable. Y-axis label "Frequency (count)" and X-axis label "Test Score (points)" in dark INK at 10pt, readable. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Subtle Y-axis grid lines (alpha=0.15).
-      Data: Histogram bars in brand green #009E73 with darker #006B4F edges. Two subtle mint-green shaded regions (alpha=0.08) for peak clusters 33-57 and 71-90. Blue solid line (median=57.9) and red dashed line (mean=60.8) clearly visible. Mean/median text annotations in matching colors above bars. Boxed annotation "Bimodal distribution: two student clusters" in upper right.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1 across canvas and panel
+      Chrome: bold dark title 'histogram-basic · python · plotnine · anyplot.ai', axis titles 'Test Score (points)' and 'Frequency (count)' in dark ink, ticks (20-100, 0-40) in INK_SOFT; subtle horizontal grid, L-shaped axis lines; all readable
+      Data: 30 contiguous brand-green #009E73 bars with thin dark-green edges, bimodal outline (peaks near 41-47 and 82), thin tails at 22-27 and 95-99, bars rising from the zero baseline
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title in light near-white (#F0EFE8), readable. Axis labels in INK (#F0EFE8), readable. Tick labels in INK_SOFT (#B8B7B0, light grey), readable. No dark-on-dark text failures detected.
-      Data: Histogram bars remain identical brand green #009E73 — data colors match light render exactly. Mean (red #AE3030) and median (blue #4467A3) lines and labels use same palette colors. Annotation box uses ELEVATED_BG (#242420) fill with INK_SOFT (#B8B7B0) text — visible, slightly tight contrast but adequate.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light #F0EFE8, ticks in light grey #B8B7B0, subtle grid; no dark-on-dark text
+      Data: identical brand-green bars and edges as the light render; bin edges remain visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (8/10/12pt); both themes readable.
-          Minor: annotation text slightly small at mobile scale.'
+        comment: Title 12 pt bold, axis titles 10 pt, ticks 8 pt, all explicit; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars (alpha=0.85), reference lines (size=1.2), and annotations all
-          clearly visible in both themes.
+        comment: '30 opaque brand-green bars with thin #006B4F edges, clearly visible
+          on both surfaces'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; mean/median distinguished by color+linestyle (red
-          dashed vs blue solid).
+        comment: Single hue, strong contrast against both backgrounds; no color-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good layout, balanced margins, nothing
-          cut off.
+        comment: Canvas gate passed (3200x1800); the panel fills the canvas with balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Test Score (points) and Frequency (count) with units.
+        comment: '''Test Score (points)'' and ''Frequency (count)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bars #009E73; mean #AE3030 and median #4467A3 from Imprint palette;
-          correct backgrounds in both themes.'
+        comment: 'Bars #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: peak shading, reference lines, narrative annotation
-          box, intentional hierarchy. Above defaults.'
+        comment: The style-guide baseline (theme tokens, Imprint green, explicit sizes),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Panel border removed; X grid removed; minor grid removed; subtle
-          Y grid; axis lines for clean L-frame.
+        comment: The spine and grid rules met (L-frame, subtle y grid only), nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Bimodal narrative with dual shading, reference lines, annotation.
-          Visual hierarchy guides reader to two clusters.
+        comment: Data displayed plainly; no hierarchy chosen beyond the Notes, as
+          the basic variant asks
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with 30 bins.
+        comment: Plain one-color histogram, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clear bin edges, readable axis labels, Y-axis from zero, appropriate
-          bin count.
+        comment: Contiguous equal-width bins with thin visible edges (C1, C2), zero
+          baseline with expand=(0,0,0.05,0), 30 bins show both modes and tails (C3),
+          one distribution in one color (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Scores on X, frequency count on Y; full 0-100 range visible.
+        comment: Score on x, count on y; y from zero; x fitted to the data; readable
+          ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend for single-series (appropriate).
+        comment: Title matches the mandated format; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -158,22 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution reveals shape, spread, multiple modes, and mean/median
-          divergence.
+        comment: Bimodal sample with uneven neighbours and thin tails shows shape,
+          spread and two modes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores for two student clusters; real-world scenario, neutral
-          topic.
+        comment: Exam scores of 500 students, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 observations, scores 0-100, peaks around 40-45 and 75-80 — plausible
-          exam data.
+        comment: 'Checked: scores clipped to 0-100, peaks near 45 and 80, max bin
+          count ~42 for n=500; plausible'
     code_quality:
       score: 10
       max: 10
@@ -183,60 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> plot -> save.'
+        comment: 'Flat script: imports, tokens, column constant, data block, plot,
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; sys.path manipulation justified by file name
-          collision.
+        comment: Binning left to geom_histogram; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current plotnine API.
+        comment: Saves plot-{THEME}.png with current plotnine API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Grammar of graphics properly applied; geom_histogram with after_stat;
-          annotate() for shapes and text; full theme() chrome.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: annotate(rect) for peak shading; annotate(label) for boxed callout;
-          scale_y_continuous(expand=(0,0,0,0)); after_stat(count).
+        comment: Grammar-of-graphics layering with geom_histogram(bins=30) and theme();
+          standard, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
+  rendered_at: '2026-11-26T18:33:25Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
