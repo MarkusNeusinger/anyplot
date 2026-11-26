@@ -2,148 +2,146 @@ library: bokeh
 language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:30:21Z'
-updated: '2026-05-28T01:11:34Z'
+updated: '2026-11-26T17:04:44Z'
 generated_by: claude-sonnet
-workflow_run: 26547340364
+workflow_run: 45863595478
 issue: 3746
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 79
 review:
   strengths:
-  - 'Brand green #009E73 used correctly for connection arcs (first palette series)'
-  - Line width AND alpha encoding double-encodes passenger volume enhancing perceptibility
-  - Per-airport label offsets (LABEL_OFFSETS dict) thoughtfully reduce European cluster
-    crowding
-  - Theme-adaptive chrome fully implemented — both renders pass legibility with no
-    dark-on-dark failures
-  - Manual legend with three line-width samples clearly explains the visual encoding
-  - Continent polygon base map with low alpha (18%) provides geographic context without
-    overwhelming
-  - HoverTool with route + passenger info uses native Bokeh interactivity idiomatically
-  - ColumnDataSource used consistently throughout — idiomatic Bokeh pattern
-  - 'Canvas gate passed: 3200×1800 landscape format correct with toolbar_location=None'
-  - Fully deterministic data — no random seed required
+  - Line width and alpha both rise with passenger volume, so the busiest corridors
+    read heaviest and darkest
+  - Translucent arcs build visibly busier corridors where routes bundle at LHR, DXB
+    and SIN
+  - HoverTool on the arc renderer with line_policy='interp' shows route and traffic
+    in the HTML
+  - Theme tokens threaded through all chrome; both renders fully legible, data colors
+    identical across themes
+  - Quiet low-alpha base map stays beneath the lines
   weaknesses:
-  - European airport cluster (LHR, CDG, FRA, AMS) label overlap — despite LABEL_OFFSETS,
-    CDG and FRA labels appear to collide in the rendered image due to geographic proximity;
-    consider increasing y_offset for CDG to -30 and FRA to (-22, 0) or reducing airport
-    label font to 18pt in that cluster
-  - Palette position 3 (#4467A3 blue) used for airport markers, skipping position
-    2 (#C475FD lavender) — while geographically intuitive, canonical order prefers
-    sequential assignment; if semantic exception is claimed for blue as navigation,
-    document it
-  - DE-01 aesthetic polish is functional but not distinctive — could benefit from
-    subtle radial glow on arcs or a gradient line color fading from origin to destination
-  - LM-02 underutilizes Bokeh-specific features — linked selections or a color-mapped
-    scatter for passenger intensity would showcase library strengths more
+  - 'VQ-02 (both): the LHR code sits on top of the transatlantic arcs converging into
+    LHR, so line strokes cross the letters → place the LHR label where no arcs enter
+    (e.g. below-left of its dot). Likely cause: LABEL_OFFSETS[''LHR''] = (-65, 8).'
+  - 'SC-03 (both): the trans-Pacific routes LAX-HND, SFO-SIN and LAX-SYD run eastward
+    across the Atlantic, Europe and Africa, roughly twice their real length, because
+    longitudes are interpolated without crossing the antimeridian → draw them across
+    the Pacific (split at ±180° or shift the destination longitude by 360° and wrap).
+    Likely cause: arc_lons = o_lon + (d_lon - o_lon) * t with no antimeridian handling.'
+  - 'SC-02 (both): the arcs are symmetric parabolic offsets in lon/lat space, not
+    great-circle arcs, so long routes such as JFK-LHR and SIN-SYD do not follow geodesic
+    paths (C1) → compute the arc points by spherical interpolation between the endpoints.
+    Likely cause: the perpendicular 4t(1-t) offset in the arc loop.'
+  - 'CQ-04 (code): the width key is hand-built from three multi_line glyphs and four
+    text glyphs at hard-coded data coordinates (lines 544-556) → bokeh''s Legend with
+    LegendItem entries for three sample renderers. Likely cause: manual legend block.'
+  - 'Suggestion: a global projection such as Robinson or Natural Earth instead of
+    plain lon/lat would make the base map read as a world map (the Notes suggest it).'
+  - 'Suggestion: a more detailed coastline base map (e.g. Natural Earth outlines)
+    would replace the coarse hand-drawn continent polygons.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, non-pure-white surface.
-      Chrome: Title "map-connection-lines · python · bokeh · anyplot.ai" in dark ink at upper-left, fully readable. X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" in dark ink, clear. Tick labels in INK_SOFT dark gray, readable.
-      Data: 15 connection arcs in brand green #009E73 with variable line width (5–14px) and alpha (0.5–0.7) encoding passenger volume. Airport markers as blue (#4467A3) circles with white edge. Airport codes in bold dark text (22pt). Continent polygons in light gray with 18% alpha as base map. Manual legend in upper-left shows "Passenger Volume" header with Low/Med/High line-width examples.
-      European cluster note: LHR, CDG, FRA, AMS labels are geographically tight; label offsets partially mitigate overlap but CDG and FRA labels appear crowded/touching in the rendered image.
-      Legibility verdict: PASS overall; minor crowding in European cluster.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'map-connection-lines · python · bokeh · anyplot.ai' in dark ink at top left; 'Longitude (°)' / 'Latitude (°)' axis titles and tick labels in dark gray; subtle grid; all readable.
+      Data: 15 #009E73 arcs of varying width and alpha over grey hand-drawn continent polygons in lon/lat space; 12 blue #4467A3 airport dots with bold codes. European cluster labels separated: LHR left, AMS above, CDG below-left, FRA right; LHR code sits on converging arcs. Trans-Pacific routes (LAX-HND, SFO-SIN, LAX-SYD) cross the Atlantic eastward. Width key 'Passenger Volume' Low/Med/High upper left.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, non-pure-black surface.
-      Chrome: Title in light cream (#F0EFE8), fully readable against dark background. Axis labels and tick labels in light INK_SOFT (#B8B7B0), clear. No dark-on-dark failures observed.
-      Data: Connection arcs remain identical brand green #009E73 — data colors unchanged from light render as required. Airport markers same blue (#4467A3). Airport code labels in light cream text, readable. Continent polygons slightly lighter gray against the dark background, still subtle.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors identical to light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; no dark-on-dark text; grid subtle.
+      Data: same #009E73 arcs and #4467A3 markers as light; continents lighter grey; airport codes and legend text in light cream, readable; low-alpha arcs dimmer but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels readable in both themes. Airport
-          code labels at 22pt readable at full resolution. Minor crowding in European
-          cluster (LHR/CDG/FRA/AMS) reduces from maximum.
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 24pt and airport
+          codes 22pt bold are all explicitly set and read clearly in both themes;
+          INK/INK_SOFT tokens give dark text on light and light text on dark
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: CDG and FRA airport labels in European cluster appear to collide
-          or touch despite per-airport LABEL_OFFSETS adjustment. Route line crossings
-          are inherent and expected.
+        comment: European labels now sit clear of each other (LHR left, AMS above,
+          CDG below-left, FRA right), but the LHR code sits on the converging transatlantic
+          arcs (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 connection arcs clearly visible with appropriate thickness variation.
-          Airport markers (size=18) well-visible. Alpha values 0.5–0.7 handle overlap
-          appropriately.
+        comment: 15 arcs at 5-14 px with alpha 0.5-0.7 and size-18 airport markers
+          with a page-colored outline are clearly visible in both themes; legend line
+          samples match the arcs
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green arcs and blue markers are perceptually distinct. No red-green
-          sole signal. Imprint palette CVD-safe.
+        comment: Green arcs against blue markers and a neutral base map; no red-green
+          signal; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed: 3200x1800 landscape. Legend in upper-left Pacific
-          (clear of all routes). No content clipping. toolbar_location=None correct.
-          min_border_* reservations appropriate.'
+        comment: 3200x1800 canvas (gate passed); the world extent fills the plot area,
+          legend sits in the empty upper-left Pacific, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title matches required format. X: ''Longitude (°)'', Y: ''Latitude
-          (°)'' — descriptive with units.'
+        comment: '''Longitude (°)'' and ''Latitude (°)'' with units; title in the
+          mandated format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Connection arcs use #009E73 (brand green, first series). Airport
-          markers use #4467A3 (palette position 3 — blue, semantically justified for
-          navigation/geographic markers). Both backgrounds correct: #FAF8F1 light
-          / #1A1A17 dark. Data colors identical across themes.'
+        comment: 'Arcs in #009E73 (first Imprint position), markers in Imprint #4467A3
+          as a different mark type; backgrounds #FAF8F1 / #1A1A17; data colors identical
+          across themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Correct palette, theme-adaptive tokens, thoughtful manual legend
-          with thickness samples, per-airport label offsets showing professional attention.
-          Functional but not highly distinctive.
+        comment: 'Style-guide baseline: theme tokens, Imprint colors, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Low-alpha continent fills (18%) as subtle base map. Very subtle grid
-          (alpha=0.1). Round line caps. Clean toolbar-free layout. No bold spines
-          — outline_line_color set to INK_SOFT.
+        passed: false
+        comment: Subtle grid and quiet base map as required; nothing chosen beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Variable line width + alpha double-encodes passenger volume. Direct
-          airport labeling guides the viewer. Legend explains encoding. Route pattern
-          reveals major global air corridors clearly.
+        comment: Alpha rises together with width, so the busiest corridors (JFK-LHR,
+          LHR-DXB, LAX-HND) read darkest and form the focal layer above the thinner
+          routes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -151,30 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geographic connection lines map with parabolic arc approximation
-          of great circle paths.'
+        comment: Origin-destination connection map with curved arcs, endpoint markers
+          and a base map
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Curved arcs, line thickness encoding, location markers at endpoints,
-          continent base map, transparency (alpha 0.5–0.7) — all present.
+        comment: 'Markers, value-encoded width, translucency and a base map are present
+          (C2-C5), but C1 is only partly met: the arcs are symmetric parabolic offsets
+          in lon/lat space, not great-circle arcs (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Longitude on X, Latitude on Y. All 12 airports within display range.
-          15 routes correctly plotted.
+        passed: false
+        comment: Three trans-Pacific routes (LAX-HND, SFO-SIN, LAX-SYD) are drawn
+          the long way eastward across the Atlantic, Europe and Africa because the
+          arcs never cross the antimeridian (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-connection-lines · python · bokeh · anyplot.ai' matches
-          required format. Manual legend explains line-width encoding for passenger
-          volume.
+        comment: Title matches '{spec-id} · python · bokeh · anyplot.ai'; the width
+          key explains the volume encoding
     data_quality:
       score: 15
       max: 15
@@ -184,25 +183,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Global geographic scope, 15 diverse routes, volume encoding through
-          line width and alpha, 12 major hub airports.
+        comment: Hubs, long- and medium-haul routes, bundling at LHR/DXB/SIN and a
+          0.9-4.5 value range show every aspect of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real airport codes (JFK, LHR, CDG, DXB, SIN, HND, SYD, LAX, SFO,
-          ORD, FRA, AMS) with accurate coordinates. Passenger volumes 0.9–4.5M pax/year
-          are plausible for major international routes.
+        comment: Real airport codes with accurate coordinates and plausible annual
+          passenger volumes; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 connections within the 10–100 spec range. Volume range realistic.
-          Global extent appropriate for international flight routes.
+        comment: Coordinates of all 12 airports checked against their real positions;
+          15 connections inside the 10-100 range; 0.9-4.5M pax/year is a sensible
+          scale per route
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -210,69 +209,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — static airport/route data, no random values.
+        comment: Fully deterministic static data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, time, Path, numpy, bokeh.io, bokeh.models, bokeh.plotting,
-          selenium) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Arc calculation loop is clean. LABEL_OFFSETS dict is a good pattern.
-          Title font scaling formula is correct.
+        comment: The width key is hand-built from three multi_line glyphs and four
+          text glyphs at hard-coded data coordinates (lines 544-556) instead of bokeh's
+          Legend/LegendItem (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.9 API.
-          Selenium CDPcmd for exact pixel control.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: ColumnDataSource throughout, multi_line for arc rendering, patches
-          for continent base map, text glyph for labels, HoverTool with renderers
-          list — all idiomatic Bokeh.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: multi_line xs/ys array pattern is distinctively Bokeh. HoverTool
-          with line_policy='interp' for route detection. HTML export as interactive
-          catalog artifact. CDPcmd for exact viewport. Could go further with data-driven
-          interactions.
+        comment: ColumnDataSource, multi_line, patches, scatter and text are standard
+          bokeh usage; the hand-built legend keeps it at the default
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool bound to the arc renderer with line_policy='interp' gives
+          route and traffic on hover in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  rendered_at: '2026-11-26T17:00:41Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
+  - layer-composition
+  - patches
   - annotations
   patterns:
   - columndatasource
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling

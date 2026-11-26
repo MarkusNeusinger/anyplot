@@ -2,128 +2,146 @@ library: seaborn
 language: python
 specification_id: map-connection-lines
 created: '2026-01-21T16:30:46Z'
-updated: '2026-05-28T01:09:42Z'
+updated: '2026-11-26T17:01:29Z'
 generated_by: claude-sonnet
-workflow_run: 26547196189
+workflow_run: 45863152234
 issue: 3746
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - Antimeridian handling correctly splits arcs that cross the ±180° boundary, preventing
-    visual artifacts on Pacific routes
-  - Variable-width Bézier arcs elegantly encode cargo volume with a normalized 1.2–6.2
-    pt range
-  - Storytelling annotation with styled callout box pointing to the busiest shipping
-    lane
-  - 'Full theme adaptation: continent colors, annotation box fill, text colors, and
-    grid all flip correctly between light and dark'
-  - Axis labels include degree units appropriate for geographic coordinates
+  - Antimeridian handling unwraps longitudes and splits the Pacific routes at ±180°,
+    so the transpacific corridor reads as one continuous lane
+  - Line width encodes annual cargo with a normalized 1.2–6.2 pt range and a key that
+    names the min/mid/max values with units
+  - Translucent arcs (alpha 0.55) build up into visibly busier corridors where Rotterdam
+    and Shanghai routes overlap
+  - 'Full theme adaptation: land fill, land edges, label ink and the callout box flip
+    cleanly between light and dark'
+  - Port markers via sns.scatterplot with a page-colored ring keep endpoints distinct
+    from the lines meeting there
   weaknesses:
-  - Annotation fontsize 7.5pt is marginally small; at mobile-scaled sizes the text
-    may be hard to read — consider bumping to 8–8.5pt
-  - East Asia label cluster (Busan/Shanghai/Dubai/Singapore within ~30° longitude)
-    creates slight crowding when multiple thick routes converge in that region
-  - LM-02 inherently limited for geographic maps in seaborn — plot-type constraint,
-    not a code quality issue
+  - 'SC-04 (both): direct city labels sit nearer another port''s marker than their
+    own — "New York" (offset -65, +8 pt) lands beside the Los Angeles dot, "Dubai"
+    beside the Mumbai dot and "Mumbai" beside the Dubai dot, "Shanghai" under the
+    Busan dot → each label adjacent to its own marker on the side away from its neighbour.
+    Likely cause: the label_offsets dict (New York, Mumbai, Shanghai, Dubai entries).'
+  - 'SC-02 (both): the arcs are quadratic Bézier curves with a fixed 13 % northward
+    bow in lon/lat space, not great circles (C1) — Shanghai→Rotterdam peaks near 52°N
+    where the great circle reaches 61.5°N, Busan→Rotterdam near 53°N vs 65°N, Shanghai→Los
+    Angeles near 42°N vs 52°N (about −10° each) → sample the great-circle path (slerp
+    between the two unit vectors) instead of the Bézier control point. Likely cause:
+    curve_height = dist * 0.13 and the Bézier formula.'
+  - 'VQ-03 (both): the cargo legend''s line samples are drawn at alpha 0.7 and widths
+    1.5/3.5/6.0 while the routes use alpha 0.55 and widths 1.2/3.7/6.2 pt, so the
+    key reads darker than the arcs it explains → the same alpha (0.55) and the widths
+    the line_width formula gives for 3.5/8.3/13.2. Likely cause: hard-coded linewidth
+    and alpha in legend_elements.'
+  - 'Suggestion: the hand-drawn six-polygon continents are very coarse (no India,
+    no Japan, Europe and Asia distorted); a Natural Earth coastline would read as
+    a real base map.'
+  - 'Suggestion: Mumbai has a port marker but no route, and the Singapore→Dubai arc
+    runs straight through it, so it reads as connected; give it a route or drop the
+    marker.'
+  - 'Suggestion: the callout arrow tip ends on the "Busan" label; end it on the Pacific
+    arc east of Japan, clear of the label.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "map-connection-lines · python · seaborn · anyplot.ai" at 12pt in dark INK (#1A1A17) — fully readable. Axis labels "Longitude (°)" / "Latitude (°)" at 10pt readable. Tick labels at 8pt readable. City labels 8pt bold dark ink. Annotation box in elevated bg (#FFFDF6) with dark text — readable.
-      Data: Connection arcs in brand green #009E73 with alpha=0.55 and variable widths (1.2–6.2pt). Port markers in blue #4467A3 at s=220 with page-bg edge rings. First series = #009E73 confirmed.
+      Background: warm off-white #FAF8F1, map fills the canvas after tight_layout
+      Chrome: title "map-connection-lines · python · seaborn · anyplot.ai" in dark ink at 12 pt, axis titles Longitude (°) / Latitude (°) at 10 pt, ticks at 8 pt in INK_SOFT, bold dark city labels, cargo legend bottom-left on an elevated frame, callout box top-right — all readable
+      Data: ten translucent #009E73 arcs with widths 1.2–6.2 pt over beige hand-drawn continents with grey edges; eight #4467A3 port markers with off-white rings; Pacific routes split at the antimeridian
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Axis labels and tick labels in #B8B7B0 — readable. City labels in light ink — visible. Annotation box in elevated dark bg (#242420) with light text — readable. No dark-on-dark failures observed.
-      Data: Connection arcs remain #009E73 green — identical to light render. Port markers remain #4467A3 blue — identical to light render. Data colors confirmed unchanged across themes.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks, city labels, legend and callout text all in light ink; no dark-on-dark text; continents a dark olive with light-grey edges
+      Data: arcs #009E73 and markers #4467A3 identical to the light render; marker rings now dark page color
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt all readable. Annotation
-          at 7.5pt marginally small for mobile.
+        comment: 'Title 12 pt, axis labels 10 pt, ticks/legend/city labels 8 pt, annotation
+          8.5 pt: all at or above the style-guide sizes and readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Custom label offsets handle most conflicts. Minor tightness in East
-          Asia cluster where converging routes pass near city labels.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green arcs clearly visible with alpha=0.55. Variable widths encode
-          cargo volume. Blue port markers at s=220 prominent.
+        comment: No text collides with other text; route bundling at hubs is permitted
+          by the spec
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: Arcs and port markers clearly visible; the legend's line samples
+          are drawn at alpha 0.7 and widths 1.5/3.5/6.0 while the routes they explain
+          use alpha 0.55 and 1.2/3.7/6.2 pt (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Two Imprint palette hues (green + blue) — colorblind-safe, no red-green
-          sole signal.
+        comment: Green arcs and blue markers, CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 px). No bbox_inches='tight'. Good whitespace,
-          nothing cut off.
+        comment: plt.tight_layout() fills the 3200x1800 canvas; margins hold title,
+          labels and legend and little else
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) with units. Title follows mandated format.
+        comment: Longitude (°) / Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Connection lines #009E73 (first series). Port markers #4467A3 (semantic
-          blue for maritime). Backgrounds correct for both themes.'
+        comment: 'Routes #009E73 (first Imprint color), ports #4467A3; backgrounds
+          #FAF8F1 / #1A1A17, chrome theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Theme-adaptive continent polygons, variable-width Bezier arcs, styled
-          annotation callout, cargo-volume legend. Simplified outlines functional
-          but not as refined as a geo library.
+        passed: false
+        comment: Style-guide baseline; the hand-drawn continent outlines are crude,
+          nothing typographic beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed. Y-axis grid at alpha=0.12. Land edges softened.
-          Rounded arc cap style.
+        passed: false
+        comment: 'Top/right spines removed, subtle y-grid only: the baseline; city-label
+          placement is not refined (labels sit nearer neighbouring markers)'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Annotation labels busiest shipping lane with cargo. Variable widths
-          create visual hierarchy. Clear focal point on Shanghai-LA-Rotterdam triangle.
+        passed: false
+        comment: A self-chosen focal callout on the busiest lane plus the width hierarchy
+          guide the eye to the Shanghai–LA–Rotterdam corridor
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -131,28 +149,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connection-lines map with curved Bezier arcs between origin-destination
-          pairs.
+        comment: Correct origin-destination connection map on a base map
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Curved arcs, thickness encodes value, location markers, alpha transparency,
-          base map all present.
+        passed: false
+        comment: Markers, width encoding, translucency and base map present; arcs
+          are quadratic Bézier curves with a fixed 13 % northward bow, not great circles
+          (C1, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude/latitude axes, cargo mapped to line width, antimeridian
-          handling correct.
+        comment: Lon/lat axes cover the world, markers at their true coordinates,
+          cargo mapped to width, antimeridian split correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title exactly correct. Legend labels cargo with units.
+        passed: false
+        comment: Title exact, legend explains the width encoding; several direct city
+          labels sit nearer another port's marker than their own (defect line)
     data_quality:
       score: 15
       max: 15
@@ -162,22 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec aspects: variable-weight connection lines, endpoint markers,
-          base map, transparency, curved paths, antimeridian handling.'
+        comment: Varied weights, a hub (Shanghai, Rotterdam), a Pacific antimeridian
+          crossing and overlapping corridors are all exhibited
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world major maritime ports with realistic TEU volumes. Neutral
-          topic.
+        comment: Real container ports and a neutral maritime-trade scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cargo values 3.5-13.2M TEU realistic for top global shipping routes.
-          Coordinates correct.
+        comment: 'Checked port coordinates against the real ports (Shanghai 31.2/121.5,
+          Rotterdam 51.9/4.5, Singapore 1.3/103.8, Jebel Ali 25.0/55.1 etc.): all
+          correct; legend values 3.5/8.3/13.2 match min/mid/max of the data'
     code_quality:
       score: 10
       max: 10
@@ -187,64 +206,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Fully deterministic data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
-          matplotlib.lines.Line2D.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized Bezier computation via numpy broadcasting. Antimeridian
-          split logic clean.
+        comment: Vectorized Bézier evaluation and a compact antimeridian split; no
+          available call replaces them without a new geo dependency
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=400, no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct sns.set_theme() for global theme. sns.scatterplot() with
-          edgecolor for port markers. Appropriate matplotlib delegation for geographic
-          drawing.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Seaborn contributes theme setup and scatter markers. Geographic visualization
-          is matplotlib territory; seaborn-specific features are inherently limited
-          for this plot type.
+        comment: 'sns.set_theme rc block and sns.scatterplot for the ports; geography
+          drawn in plain matplotlib: the default'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing seaborn-specific beyond the mandated theme and one scatterplot
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T16:57:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - bezier-curves
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - normalization
   styling:

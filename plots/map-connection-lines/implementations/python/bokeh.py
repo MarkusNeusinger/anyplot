@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-28
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-26
 """
 
 import os
@@ -448,9 +448,9 @@ airport_lats = [airports[a][0] for a in airport_names]
 # Per-airport label offsets — push European cluster apart to prevent overlap
 LABEL_OFFSETS = {
     "LHR": (-65, 8),  # west of dot; avoids CDG/AMS cluster to the right
-    "AMS": (14, 22),  # above default; AMS is the northernmost hub
-    "CDG": (14, -22),  # below default; CDG is the southernmost hub
-    "FRA": (20, 8),  # slightly further right than default
+    "AMS": (14, -26),  # above-right; AMS is the northernmost hub (positive y_offset moves down)
+    "CDG": (-78, 34),  # below-left; CDG is the southwestern hub
+    "FRA": (20, 20),  # below-right of its dot
 }
 airport_x_offsets = [LABEL_OFFSETS.get(a, (14, 8))[0] for a in airport_names]
 airport_y_offsets = [LABEL_OFFSETS.get(a, (14, 8))[1] for a in airport_names]
