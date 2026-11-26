@@ -1,7 +1,7 @@
 """ anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-22
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_text,
     geom_tile,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -123,8 +124,8 @@ plot = (
     + geom_tile(aes(x="file", y="rank", fill="shade"), data=squares, width=1, height=1, color="#8B7355", size=0.25)
     + scale_fill_manual(values={"light": LIGHT_SQUARE, "dark": DARK_SQUARE}, guide="none")
     + geom_text(aes(x="file", y="rank", label="symbol"), data=placed, size=14)
-    + scale_x_continuous(breaks=ticks, labels=list(FILES))
-    + scale_y_continuous(breaks=ticks, labels=list(RANKS))
+    + scale_x_continuous(breaks=ticks, labels=list(FILES), expand=[0, 0])
+    + scale_y_continuous(breaks=ticks, labels=list(RANKS), expand=[0, 0])
     + coord_fixed(ratio=1)
     + labs(title="chessboard-pieces · python · letsplot · anyplot.ai")
     + theme_void()
@@ -134,10 +135,13 @@ plot = (
         plot_title=element_text(size=12, hjust=0.5, face="bold", color=INK),
         axis_text=element_text(size=9, face="bold", color=INK_SOFT),
         axis_line=element_blank(),
+        panel_border=element_blank(),
         plot_margin=20,
     )
-    + ggsize(600, 600)
 )
+
+# The fixed aspect leaves transparent strips: a one-panel grid paints the whole canvas
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save: ggsave writes into lets-plot-images, so move the files out
 ggsave(plot, f"plot-{THEME}.png", scale=4)
