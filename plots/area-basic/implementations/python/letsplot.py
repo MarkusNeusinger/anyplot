@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -40,7 +40,7 @@ df = pd.DataFrame({DATE: days, VISITORS: visitors})
 # Plot: reads only df and the constants above
 anyplot_chrome = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
-    panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+    panel_background=element_rect(fill=PAGE_BG, size=0),  # noqa: F405
     panel_grid_major_y=element_line(color=GRID, size=0.3),  # noqa: F405
     panel_grid_major_x=element_blank(),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
