@@ -1,13 +1,14 @@
 """ anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-20
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-26
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.patches import Patch
 from scipy import stats
 
@@ -20,30 +21,49 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-BRAND = "#009E73"  # Okabe-Ito pos 1 — main histogram bars
-TAIL_COLOR = "#C475FD"  # Okabe-Ito pos 2 — tail regions
-CURVE_COLOR = "#4467A3"  # Okabe-Ito pos 3 — normal distribution curve
+# Imprint palette: bars, tail regions and normal curve take positions 1 to 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # main histogram bars
+TAIL_COLOR = IMPRINT_PALETTE[1]  # tail regions
+CURVE_COLOR = IMPRINT_PALETTE[2]  # normal distribution curve
 
-# Data — simulate daily stock returns with slight fat tails (t-distribution df=8)
+# Constants
+SIGMA_TAIL = 2  # tails start this many standard deviations from the mean
+N_BINS = 35
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+RETURN = "Daily return (%)"  # role: returns
+
+# Data: replace this block with your own table, for example df = pd.read_csv("returns.csv")
+# Simulated daily stock returns with slight fat tails (t-distribution, df=8), ~1.2% daily vol
 np.random.seed(42)
 n_days = 252
-returns = np.random.standard_t(df=8, size=n_days) * 0.012 + 0.0004  # ~1.2% daily vol
+df = pd.DataFrame(
+    {
+        DATE: pd.bdate_range("2024-01-02", periods=n_days),
+        RETURN: (np.random.standard_t(df=8, size=n_days) * 0.012 + 0.0004) * 100,
+    }
+)
+
+# Plot: reads only df and the constants above
+returns_pct = df[RETURN].dropna().to_numpy()
+n_obs = len(returns_pct)
 
 # Key statistics
-mean_ret = np.mean(returns) * 100
-std_ret = np.std(returns) * 100
-skewness = stats.skew(returns)
-kurtosis = stats.kurtosis(returns)
-returns_pct = returns * 100
+mean_ret = np.mean(returns_pct)
+std_ret = np.std(returns_pct)
+skewness = stats.skew(returns_pct)
+kurtosis = stats.kurtosis(returns_pct)
 
-# Tail thresholds (±2σ) and observation counts
-lower_tail = mean_ret - 2 * std_ret
-upper_tail = mean_ret + 2 * std_ret
+# Tail thresholds and observation counts
+lower_tail = mean_ret - SIGMA_TAIL * std_ret
+upper_tail = mean_ret + SIGMA_TAIL * std_ret
 n_left = int(np.sum(returns_pct < lower_tail))
 n_right = int(np.sum(returns_pct > upper_tail))
 n_tail = n_left + n_right
-tail_pct = n_tail / n_days * 100
-expected_tail_pct = (1 - stats.norm.cdf(2)) * 2 * 100  # ≈ 4.55% beyond ±2σ under normality
+tail_pct = n_tail / n_obs * 100
+expected_tail_pct = (1 - stats.norm.cdf(SIGMA_TAIL)) * 2 * 100  # share beyond the thresholds under normality
 
 # Normal distribution overlay range
 x_lo = returns_pct.min() - 0.5
@@ -51,16 +71,15 @@ x_hi = returns_pct.max() + 0.5
 x_range = np.linspace(x_lo, x_hi, 300)
 normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
 
-# Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Histogram with density normalization
 n, bins, patches = ax.hist(
-    returns_pct, bins=35, density=True, color=BRAND, alpha=0.75, edgecolor=PAGE_BG, linewidth=0.8
+    returns_pct, bins=N_BINS, density=True, color=BRAND, alpha=0.75, edgecolor=PAGE_BG, linewidth=0.8
 )
 
-# Color tail bins with distinct Okabe-Ito highlight
+# Color tail bins with distinct Imprint highlight
 for i, patch in enumerate(patches):
     bin_center = (bins[i] + bins[i + 1]) / 2
     if bin_center < lower_tail or bin_center > upper_tail:
@@ -85,21 +104,10 @@ ax.axvline(mean_ret, color=INK, linewidth=1.8, linestyle="-", alpha=0.8, label=f
 ax.axvline(lower_tail, color=INK_MUTED, linewidth=1.5, linestyle=":", alpha=0.7)
 ax.axvline(upper_tail, color=INK_MUTED, linewidth=1.5, linestyle=":", alpha=0.7)
 
-# Tail annotations with observation counts — fontsize=8 for mobile legibility
-ax.annotate(
-    f"Left tail\n{n_left} obs ({n_left / n_days * 100:.1f}%)",
-    xy=(lower_tail - 0.6, 0.02),
-    fontsize=8,
-    ha="center",
-    color=INK_MUTED,
-)
-ax.annotate(
-    f"Right tail\n{n_right} obs ({n_right / n_days * 100:.1f}%)",
-    xy=(upper_tail + 0.7, 0.02),
-    fontsize=8,
-    ha="center",
-    color=INK_MUTED,
-)
+# Tail annotations with observation counts, placed in axes fractions above the tail bars
+tail_label = {"transform": ax.get_xaxis_transform(), "fontsize": 8, "ha": "center", "va": "bottom", "color": INK_MUTED}
+ax.text((x_lo + lower_tail) / 2, 0.14, f"Left tail\n{n_left} obs ({n_left / n_obs * 100:.1f}%)", **tail_label)
+ax.text((upper_tail + x_hi) / 2, 0.14, f"Right tail\n{n_right} obs ({n_right / n_obs * 100:.1f}%)", **tail_label)
 
 # Statistics text box — includes actual vs expected tail % for fat-tail emphasis
 stats_text = (
@@ -123,7 +131,7 @@ ax.text(
 )
 
 # Style
-ax.set_xlabel("Daily Returns (%)", fontsize=10, color=INK)
+ax.set_xlabel(RETURN, fontsize=10, color=INK)
 ax.set_ylabel("Density", fontsize=10, color=INK)
 ax.set_title(
     "histogram-returns-distribution · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK
