@@ -1,12 +1,13 @@
 """ anyplot.ai
 map-route-path: Route Path Map
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-21
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-26
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -17,34 +18,48 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated hiking trail GPS track (Central Park loop, NYC)
+# Constants
+N_SEGMENTS = 5  # the route is split into this many equal time segments
+
+# Columns: set these to your table's column names
+LON = "Longitude (degrees)"  # role: lon
+LAT = "Latitude (degrees)"  # role: lat
+MINUTES = "Elapsed time (min)"  # role: timestamp
+
+# Data: replace this block with your own table, for example df = pd.read_csv("track.csv")
+# Simulated hiking trail GPS track (Central Park loop, NYC), 100 waypoints over 45 minutes
 np.random.seed(42)
-
 n_points = 100
 t = np.linspace(0, 2 * np.pi, n_points)
-
-# Base path: elongated loop shape
 base_lon = -73.97 + 0.015 * np.sin(t)
 base_lat = 40.77 + 0.025 * np.cos(t) * (1 + 0.3 * np.sin(2 * t))
+df = pd.DataFrame(
+    {
+        LON: base_lon + np.random.normal(0, 0.0005, n_points),
+        LAT: base_lat + np.random.normal(0, 0.0003, n_points),
+        MINUTES: np.linspace(0, 45, n_points),
+    }
+)
 
-# Add small GPS noise for realism
-lon = base_lon + np.random.normal(0, 0.0005, n_points)
-lat = base_lat + np.random.normal(0, 0.0003, n_points)
+# Plot: reads only df and the constants above
+lon = df[LON].to_numpy()
+lat = df[LAT].to_numpy()
+minutes = df[MINUTES].to_numpy()
+n_rows = len(df)
+stamps = [f"{int(m):02d}min" for m in minutes]
 
-# Elapsed-time label for each waypoint (45-minute hike, ~1 point per 27 s)
-total_min = 45
-timestamps = [f"{int(i * total_min / (n_points - 1)):02d}min" for i in range(n_points)]
-
-# Style
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=tuple(IMPRINT_PALETTE),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -53,16 +68,15 @@ custom_style = Style(
     stroke_width=6,
 )
 
-# Chart — XY chart maps longitude/latitude as Cartesian coordinates;
-# truncate_label=-1 prevents pygal from auto-truncating axis tick labels,
-# x_label_rotation=45 gives each label room to render in full
+# XY chart maps longitude/latitude as Cartesian coordinates; tick labels are
+# rounded to three decimals, which is about 100 m and enough for a map reader
 chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
     title="map-route-path · python · pygal · anyplot.ai",
-    x_title="Longitude (degrees)",
-    y_title="Latitude (degrees)",
+    x_title=LON,
+    y_title=LAT,
     show_dots=False,
     stroke_style={"width": 6, "linecap": "round", "linejoin": "round"},
     show_x_guides=True,
@@ -72,47 +86,44 @@ chart = pygal.XY(
     truncate_legend=-1,
     truncate_label=-1,
     x_label_rotation=45,
+    x_value_formatter=lambda v: f"{v:.3f}",
     value_formatter=lambda v: f"Lon {v[0]:.4f}°, Lat {v[1]:.4f}°" if isinstance(v, (tuple, list)) else str(v),
 )
+chart.x_labels = np.linspace(np.nanmin(lon), np.nanmax(lon), 7).tolist()
 
-# Explicit sparse x-axis tick positions — 7 values avoids density-driven truncation
-chart.x_labels = np.linspace(lon.min(), lon.max(), 7).tolist()
-
-# START marker — brand green (Okabe-Ito pos 1), oversized dot for visual prominence
+# START marker: brand green, the larger dot, so the FINISH dot drawn on top stays visible
+# (a closed loop ends where it began)
 chart.add(
     "START",
-    [{"value": (float(lon[0]), float(lat[0])), "label": f"Trail head — {timestamps[0]}"}],
-    dots_size=22,
+    [{"value": (float(lon[0]), float(lat[0])), "label": f"Trail head — {stamps[0]}"}],
+    dots_size=30,
     stroke=False,
     show_dots=True,
 )
 
-# FINISH marker — vermillion (Okabe-Ito pos 2), medium dot clearly smaller than START
+# FINISH marker: a smaller dot in the second palette color
 chart.add(
     "FINISH",
-    [{"value": (float(lon[-1]), float(lat[-1])), "label": f"Trail end — {timestamps[-1]}"}],
-    dots_size=14,
+    [{"value": (float(lon[-1]), float(lat[-1])), "label": f"Trail end — {stamps[-1]}"}],
+    dots_size=13,
     stroke=False,
     show_dots=True,
 )
 
-# Route segments — time-progression color (Okabe-Ito positions 3–7)
-# Stroke width follows a bell curve to suggest pace variation: slower at start/end,
-# peak effort in the middle third of the hike
-n_segments = 5
-segment_size = n_points // n_segments
-seg_labels = ["0–9 min", "9–18 min", "18–27 min", "27–36 min", "36–45 min"]
-seg_widths = [5, 6, 8, 6, 5]
-
-for i in range(n_segments):
-    start_idx = i * segment_size
-    end_idx = min((i + 1) * segment_size + 1, n_points)
+# Route segments: one palette color per time segment; the stroke width follows a bell
+# curve to suggest pace, with the peak effort in the middle of the hike
+bounds = np.linspace(0, n_rows - 1, N_SEGMENTS + 1).round().astype(int)
+for i in range(N_SEGMENTS):
+    start_idx, end_idx = bounds[i], bounds[i + 1]
     segment_data = [
-        {"value": (float(lon[j]), float(lat[j])), "label": f"Waypoint {j + 1} at {timestamps[j]}"}
-        for j in range(start_idx, end_idx)
+        {"value": (float(lon[j]), float(lat[j])), "label": f"Waypoint {j + 1} at {stamps[j]}"}
+        for j in range(start_idx, end_idx + 1)
     ]
+    width = round(5 + 3 * np.sin(np.pi * i / (N_SEGMENTS - 1)))
     chart.add(
-        seg_labels[i], segment_data, stroke_style={"width": seg_widths[i], "linecap": "round", "linejoin": "round"}
+        f"{minutes[start_idx]:.0f}–{minutes[end_idx]:.0f} min",
+        segment_data,
+        stroke_style={"width": width, "linecap": "round", "linejoin": "round"},
     )
 
 # Save

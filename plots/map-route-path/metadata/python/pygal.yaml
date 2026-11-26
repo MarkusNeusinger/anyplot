@@ -2,58 +2,72 @@ library: pygal
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:54:50Z'
-updated: '2026-05-21T06:07:05Z'
+updated: '2026-11-26T12:54:07Z'
 generated_by: claude-sonnet
-workflow_run: 26207677224
+workflow_run: 45823085756
 issue: 3768
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 76
 review:
   strengths:
-  - Variable stroke widths (5/6/8/6/5 px bell curve) create a sophisticated visual
-    suggestion of pace variation — goes beyond basic line drawing
-  - 5 time-segmented route segments with descriptive labels (0-9 min etc.) provide
-    clear temporal narrative
-  - START marker (#009E73, Okabe-Ito pos 1) and FINISH (vermillion, pos 2) follow
-    exact palette order
-  - GPS noise simulation (np.random.normal) makes the route look like real-world GPS
-    track data
-  - 'Proper theme adaptation: correct #FAF8F1 light / #1A1A17 dark backgrounds with
-    full INK token threading'
-  - Interactive HTML export with value_formatter providing coordinate tooltips on
-    hover
+  - 'Clean pygal.XY route: one continuous line through 100 waypoints in sequence order,
+    START and FINISH both visible and told apart by size and color'
+  - 'Theme tokens threaded through Style, including guide_stroke_color, so text and
+    grid read correctly on both #FAF8F1 and #1A1A17'
+  - x_value_formatter rounds longitude ticks to three decimals, keeping the rotated
+    tick labels short
+  - Per-point label dicts and value_formatter give waypoint/time tooltips in the interactive
+    HTML
   weaknesses:
-  - 'FINISH marker (vermillion, dots_size=14) is invisible in both renders — closed-loop
-    trail places start and end at nearly identical coordinates (t=0 and t=2pi converge);
-    START dot (22px) completely covers FINISH. Fix: offset FINISH with a small coordinate
-    nudge (~0.0015 deg lat) or replace with an annotated label/arrow.'
-  - 'Yellow (#F0E442) 36-45 min segment is a thin line on light surface (#FAF8F1)
-    — style guide warns Okabe-Ito position 7 should not be used for thin lines on
-    light backgrounds due to low luminance contrast. Fix: cap to 4 segments (drop
-    position 7) or swap to a stronger color.'
-  - 'X-axis tick labels display 8-decimal coordinate precision (e.g., -73.98630798)
-    — unnecessarily verbose for geographic readability. Fix: format as 3-decimal degrees
-    (e.g., -73.986) for cleaner display.'
+  - 'VQ-01 (both): the y axis shows two tick sizes - 40.79-40.76 at 56 px and 40.75
+    at 44 px - and the x ticks sit at 56 px → one size, 44 px on both axes (-12 px).
+    Likely cause: Style label_font_size=56 while major_label_font_size=44.'
+  - 'VQ-07 (both): the five ordered time segments (0-9 ... 36-45 min) take categorical
+    positions 3-7 (blue, ochre, red, cyan, plum), which hides their order → ordered
+    steps of SEQ_MARKS in time order. Likely cause: colors=IMPRINT_PALETTE cycling
+    through the segment series.'
+  - 'SC-02 (both): no geographic basemap - the route floats on an empty grid, so the
+    C5 property (streets/terrain context, quieter than the route) is missing → draw
+    a quiet basemap under the route (e.g. park outline/street polylines as muted XY
+    series in INK_MUTED). Likely cause: only the route and markers are added.'
+  - 'SC-03 (both): the map ignores the lon/lat aspect - 0.031° of longitude (~2.6
+    km) spans ~1700 px while 0.055° of latitude (~6.1 km) spans ~780 px, so the loop
+    is stretched about 5x east-west → size the plot area so 1° lon = cos(40.77°)≈0.76
+    of 1° lat on screen (e.g. a square canvas with padded x range). Likely cause:
+    pygal.XY fills the landscape canvas with independent axis scales.'
+  - 'SC-03 (both): x ticks sit at non-round, unevenly spaced values (-73.986, -73.981,
+    -73.976, -73.971, -73.965 ...) → round steps of 0.005°. Likely cause: chart.x_labels
+    = np.linspace(min, max, 7).'
+  - 'DQ-03 (both): the loop is ~14 km long but covered in 45 min, ~18.7 km/h, far
+    above a hiking pace of ~4-5 km/h → stretch the time axis to ~3 h or shrink the
+    loop to ~3.5 km. Likely cause: MINUTES = np.linspace(0, 45, n_points) with 0.015°/0.025°
+    loop amplitudes.'
+  - 'CQ-04 (code): the stroke width follows a hard-coded bell curve ''to suggest pace''
+    that encodes no data value and is not visibly distinguishable in either render
+    → one constant stroke width. Likely cause: width = round(5 + 3 * np.sin(...))
+    in the segment loop.'
+  - 'Suggestion: sparse direction arrows along the loop would show which way the trail
+    runs.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "map-route-path · python · pygal · anyplot.ai" readable at top. Axis labels "Longitude (degrees)" and "Latitude (degrees)" clearly readable. X-axis tick labels show 8-decimal precision coordinates (e.g., -73.98630798) rotated 45°, verbose but readable. Legend at bottom with 7 labeled entries in light text — readable.
-      Data: Closed loop route in 5 Okabe-Ito color segments — sky blue (0-9 min, top-right), reddish purple (9-18 min, right), gold (18-27 min, bottom), sky blue (27-36 min, left), yellow (36-45 min, lower-left). START green circle (#009E73) at top-center clearly visible. FINISH vermillion dot invisible (overlapped by START — same coordinates on closed loop). Yellow (#F0E442) thin line has lower luminance contrast on light surface.
-      Legibility verdict: PASS (all text readable; FINISH marker invisible is data/element issue, not text legibility)
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title 'map-route-path · python · pygal · anyplot.ai' dark ink at top; axis titles 'Longitude (degrees)' / 'Latitude (degrees)'; y ticks 40.79-40.76 large and 40.75 visibly smaller; x ticks at 3 decimals rotated 45°; dotted muted grid; legend in three columns at bottom-left (START, FINISH, five time ranges). All readable.
+      Data: closed loop of 100 GPS-like waypoints in five time segments - blue 0-9, ochre 9-18, red 18-27, cyan 27-36, plum 36-45 min; START is a large #009E73 dot at the top centre, FINISH a smaller purple #C475FD dot just left of it. Loop stretched wide east-west; no basemap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title readable in light cream/off-white text. Axis labels and tick labels rendered in light text — clearly readable. No dark-on-dark failures observed. Legend text in light tone, readable.
-      Data: Route colors identical to light render — Okabe-Ito positions 3-7 in same order. START green (#009E73) marker visible. FINISH marker still invisible (same overlap issue). Yellow segment slightly more visible on dark surface. Grid lines very faint on both axes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; grid muted and visible.
+      Data: identical categorical colors and geometry to the light render (route segments read slightly deeper on the dark page); START green and FINISH purple both visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,75 +75,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; X-axis tick labels show 8-decimal
-          coordinate precision which is verbose
+        comment: Font sizes set and readable in both themes; label_font_size=56 vs
+          major_label_font_size=44 makes the y axis show two tick sizes (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: START/FINISH markers overlap at same coordinate (closed loop); all
-          text non-overlapping
+        comment: No text collisions; START and FINISH dots sit side by side on the
+          closed loop and both stay visible
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 'FINISH marker (vermillion, 14px) completely hidden behind START
-          (green, 22px) at same coordinate; yellow #F0E442 thin line has low luminance
-          on light surface'
+        passed: true
+        comment: Route lines clearly visible in both themes; START dot large, FINISH
+          dot smaller but distinct; legend swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe
+        comment: Distinct hues with adequate contrast on both surfaces; no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 correct, canvas gate passed, clean layout, legend at bottom
+        comment: Plot fills the canvas; legend at bottom; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct axis labels with units, title follows required format
+        comment: '''Longitude (degrees)'' / ''Latitude (degrees)'' with units; mandated
+          title'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series START = #009E73, Okabe-Ito order followed, correct
-          background colors'
+        comment: 'Backgrounds and chrome theme-correct, START is #009E73; but the
+          five ordered time segments use categorical positions 3-7 instead of ordered
+          steps of one Imprint ramp (defect line)'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Variable stroke widths (5/6/8/6/5px) bell curve suggesting pace variation
-          is clever; no geographic basemap and invisible FINISH reduce score
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Stroke width variation adds refinement; raw 8-decimal tick labels
-          undermine polish
+        passed: false
+        comment: Spine and grid rules met; dotted grid at pygal default density, nothing
+          chosen beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 5-segment time progression is clear narrative; invisible FINISH breaks
-          journey endpoint story
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the time segments the
+          Notes suggest
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -137,53 +152,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY chart connecting waypoints in sequence as continuous path
+        comment: Correct route-path chart connecting waypoints in sequence
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Sequential connected path, time-progression color, interactive HTML
-          export present; FINISH invisible, no geographic basemap
+        comment: Sequence-connected line, distinct START/FINISH markers, time-segment
+          legend and interactive HTML present; no geographic basemap (C5, defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: X=longitude, Y=latitude, 100 waypoints (within spec range), sequence
-          order maintained
+        passed: false
+        comment: X=lon, Y=lat in order; x ticks at non-round, unevenly spaced values
+          (-73.986, -73.981 ... -73.965) and the east-west extent stretched about
+          5x against north-south distance (defect lines)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, all 7 legend entries present and labeled
+        comment: Mandated title; legend names START, FINISH and each time range in
+          minutes
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Connected route, time segmentation, START/FINISH markers, GPS noise;
-          FINISH invisible reduces demonstration
+        comment: Closed loop with GPS noise, start/end and time progression all exhibited
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Central Park loop NYC — plausible, neutral, GPS noise adds realism
+        comment: Central Park loop, NYC - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 100 waypoints, correct coordinate range, realistic 45-minute hike
-          timing
+        comment: 'Checked: coordinates sit at Central Park (~40.75-40.80 N, -73.955
+          to -73.986); the ~14 km loop in 45 min implies ~18.7 km/h, not a hiking
+          pace (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -203,46 +220,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, Style — all used
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean loop, per-series stroke and dot settings, variable width list
+        comment: Stroke-width bell curve encodes no data value and gives no readable
+          effect (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: pygal.XY for coordinates, Style for theming, truncate_label=-1, per-series
-          stroke=False/show_dots=True
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML export, value_formatter for coordinate tooltip,
-          per-series dots_size and stroke_style override
+        comment: pygal.XY with Style object - the standard pattern, nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-point label dicts and value_formatter give coordinate/time tooltips
+          in the HTML; per-series dots_size and stroke_style overrides
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  rendered_at: '2026-11-26T12:50:30Z'
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
