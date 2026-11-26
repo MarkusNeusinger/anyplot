@@ -1,7 +1,7 @@
 """ anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import base64
@@ -33,6 +33,7 @@ BRAND = IMPRINT_PALETTE[0]
 EVENT_MARKERS = {"earnings": "triangle", "dividend": "circle", "split": "square", "news": "diamond"}
 EVENT_COLORS = {"earnings": 1, "dividend": 2, "split": 3, "news": 4}  # Imprint positions 2-5
 MARKER_CYCLE = ["triangle", "circle", "square", "diamond", "hex", "inverted_triangle"]
+MINOR_SIZE = {"diamond": 30}  # a diamond is narrow, so it needs more size to carry the same weight
 MAJOR_EVENT_TYPES = {"earnings", "split"}  # drawn larger and higher than the minor ones
 
 # Columns: set these to your table's column names
@@ -154,7 +155,7 @@ for i, event in events.iterrows():
         x="x",
         y="y",
         source=flag_source,
-        size=28 if is_major else 22,
+        size=28 if is_major else MINOR_SIZE.get(marker, 22),
         color=color,
         alpha=0.9,
         line_color=PAGE_BG,
@@ -171,8 +172,10 @@ for i, event in events.iterrows():
             text=event[EVENT_LABEL],
             text_font_size="26pt",
             text_color=color,
-            x_offset=22,
-            y_offset=8 if offset_dir > 0 else -40,
+            text_align="right" if event_date > df[DATE].quantile(0.85) else "center",
+            x_offset=14 if event_date > df[DATE].quantile(0.85) else 0,
+            text_baseline="bottom" if offset_dir > 0 else "top",
+            y_offset=26 if offset_dir > 0 else -26,
             text_font_style="bold",
         )
     )
