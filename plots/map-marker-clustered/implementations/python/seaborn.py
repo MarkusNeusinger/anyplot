@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -24,42 +24,58 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — canonical order, 4 categories
-IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
-category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
-category_palette = dict(zip(category_names, IMPRINT, strict=True))
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#AE3030", "#4467A3", "#BD8233", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — business locations across NYC region
+# Columns: set these to your table's column names
+LAT = "Latitude (°)"  # role: lat
+LON = "Longitude (°)"  # role: lon
+CATEGORY = "Business Type"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stores.csv")
 np.random.seed(42)
 n_points = 500
+category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
 
-n_neighborhoods = 8
-neighborhood_centers = np.random.uniform(-0.5, 0.5, (n_neighborhoods, 2))
-points_per_neighborhood = n_points // n_neighborhoods
+# Business hubs on land: Manhattan, Brooklyn, Queens, Bronx, Newark, Jersey City, White Plains, Nassau
+neighborhood_centers = np.array(
+    [
+        [40.75, -73.99],
+        [40.66, -73.95],
+        [40.73, -73.82],
+        [40.85, -73.88],
+        [40.73, -74.17],
+        [40.72, -74.07],
+        [41.03, -73.77],
+        [40.72, -73.60],
+    ]
+)
+points_per_neighborhood = n_points // len(neighborhood_centers)
 
 lats, lons, categories = [], [], []
 for i, center in enumerate(neighborhood_centers):
-    n_pts = points_per_neighborhood + (n_points % n_neighborhoods if i == 0 else 0)
-    lat = np.random.normal(center[0], 0.08, n_pts) + 40.7
-    lon = np.random.normal(center[1], 0.08, n_pts) - 74.0
-    lats.extend(lat)
-    lons.extend(lon)
+    n_pts = points_per_neighborhood + (n_points % len(neighborhood_centers) if i == 0 else 0)
+    lats.extend(np.random.normal(center[0], 0.03, n_pts))
+    lons.extend(np.random.normal(center[1], 0.03, n_pts))
     categories.extend(np.random.choice(category_names, n_pts))
 
-df = pd.DataFrame({"lat": lats, "lon": lons, "category": categories})
+df = pd.DataFrame({LAT: lats, LON: lons, CATEGORY: categories})
+
+# Plot
+category_palette = dict(zip(category_names, IMPRINT_PALETTE, strict=False))
 
 # Apply hierarchical clustering to group nearby markers
-coords = df[["lat", "lon"]].values
-clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.18, linkage="ward")
+coords = df[[LAT, LON]].values
+clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.1, linkage="ward")
 df["cluster"] = clustering.fit_predict(coords)
 
 # Cluster centers, sizes and dominant category
 cluster_stats = (
     df.groupby("cluster")
     .agg(
-        lat_center=("lat", "mean"),
-        lon_center=("lon", "mean"),
-        count=("lat", "size"),
-        dominant_category=("category", lambda x: x.mode().iloc[0]),
+        lat_center=(LAT, "mean"),
+        lon_center=(LON, "mean"),
+        count=(LAT, "size"),
+        dominant_category=(CATEGORY, lambda x: x.mode().iloc[0]),
     )
     .reset_index()
 )
@@ -89,35 +105,79 @@ sns.set_theme(
 )
 
 # Plot
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Geographic context — stylized NYC region water boundaries
-hudson_river = [(-74.05, 40.70), (-74.02, 40.85), (-73.95, 41.00), (-73.90, 41.15)]
-li_sound = [(-73.80, 40.85), (-73.70, 40.95), (-73.55, 41.05)]
-coast = [(-74.20, 40.55), (-74.00, 40.50), (-73.80, 40.58), (-73.60, 40.62)]
-
-for segment in [hudson_river, li_sound, coast]:
-    xs, ys = zip(*segment, strict=True)
-    ax.plot(xs, ys, color="#a8d4e6", linewidth=1.5, alpha=0.4, zorder=0, solid_capstyle="round")
-
-land_fill = "#f5f5dc" if THEME == "light" else "#2a2a20"
-land_patch = mpatches.Polygon(
-    [(-74.45, 40.0), (-74.45, 41.25), (-73.35, 41.25), (-73.35, 40.0)],
-    facecolor=land_fill,
-    edgecolor="none",
-    alpha=0.3,
-    zorder=-1,
-)
-ax.add_patch(land_patch)
+# Basemap — simplified NYC-region land outlines (lon, lat), quieter than the markers
+land_fill = "#ECE8D9" if THEME == "light" else "#24241F"
+land_edge = "#B9B5A5" if THEME == "light" else "#4A4A44"
+land_polygons = [
+    # New Jersey, west of the Hudson
+    [
+        (-74.45, 40.53),
+        (-74.25, 40.52),
+        (-74.20, 40.64),
+        (-74.12, 40.67),
+        (-74.04, 40.70),
+        (-74.02, 40.78),
+        (-73.97, 40.87),
+        (-73.94, 40.98),
+        (-73.93, 41.30),
+        (-74.45, 41.30),
+    ],
+    # Bronx, Westchester and Connecticut shore
+    [
+        (-73.93, 41.30),
+        (-73.89, 41.10),
+        (-73.90, 40.98),
+        (-73.92, 40.88),
+        (-73.93, 40.81),
+        (-73.83, 40.80),
+        (-73.78, 40.82),
+        (-73.72, 40.86),
+        (-73.65, 40.93),
+        (-73.55, 41.00),
+        (-73.45, 41.05),
+        (-73.35, 41.10),
+        (-73.35, 41.30),
+    ],
+    # Manhattan
+    [
+        (-74.015, 40.70),
+        (-73.975, 40.71),
+        (-73.94, 40.79),
+        (-73.93, 40.85),
+        (-73.935, 40.875),
+        (-73.955, 40.85),
+        (-73.975, 40.79),
+        (-74.01, 40.73),
+    ],
+    # Staten Island
+    [(-74.25, 40.50), (-74.05, 40.57), (-74.07, 40.63), (-74.20, 40.64)],
+    # Long Island, with Brooklyn and Queens at its western end
+    [
+        (-74.04, 40.60),
+        (-73.95, 40.575),
+        (-73.75, 40.59),
+        (-73.50, 40.63),
+        (-73.30, 40.67),
+        (-73.35, 40.93),
+        (-73.55, 40.93),
+        (-73.70, 40.87),
+        (-73.78, 40.80),
+        (-73.90, 40.78),
+        (-73.97, 40.70),
+        (-74.02, 40.66),
+    ],
+]
+for outline in land_polygons:
+    ax.add_patch(mpatches.Polygon(outline, facecolor=land_fill, edgecolor=land_edge, linewidth=0.8, zorder=0))
 
 # KDE density contours — seaborn-distinctive statistical overlay showing point density
-sns.kdeplot(data=df, x="lon", y="lat", levels=6, color=INK_MUTED, alpha=0.35, linewidths=0.9, ax=ax, zorder=1)
+sns.kdeplot(data=df, x=LON, y=LAT, levels=6, color=INK_MUTED, alpha=0.2, linewidths=0.9, ax=ax, zorder=1)
 
 # Background layer — individual points at minimal alpha
-sns.scatterplot(
-    data=df, x="lon", y="lat", hue="category", palette=category_palette, s=6, alpha=0.08, ax=ax, legend=False
-)
+sns.scatterplot(data=df, x=LON, y=LAT, hue=CATEGORY, palette=category_palette, s=6, alpha=0.08, ax=ax, legend=False)
 
 # Foreground layer — cluster markers sized by count
 sns.scatterplot(
@@ -127,7 +187,7 @@ sns.scatterplot(
     size="count",
     hue="dominant_category",
     palette=category_palette,
-    sizes=(50, 500),
+    sizes=(50, 250),
     alpha=0.85,
     edgecolor=PAGE_BG,
     linewidth=0.8,
@@ -174,9 +234,39 @@ medium_label = f"{count_p33 + 1} pt" if count_p33 + 1 == count_p66 else f"{count
 large_label = f"{count_p66 + 1}–{count_max} pts" if count_p66 + 1 < count_max else f"{count_max}+ pts"
 
 size_handles = [
-    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=5, alpha=0.7, label=small_label),
-    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=9, alpha=0.7, label=medium_label),
-    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=13, alpha=0.7, label=large_label),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        linestyle="",
+        markerfacecolor=INK_SOFT,
+        markeredgecolor=PAGE_BG,
+        markersize=5,
+        alpha=0.7,
+        label=small_label,
+    ),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        linestyle="",
+        markerfacecolor=INK_SOFT,
+        markeredgecolor=PAGE_BG,
+        markersize=8,
+        alpha=0.7,
+        label=medium_label,
+    ),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        linestyle="",
+        markerfacecolor=INK_SOFT,
+        markeredgecolor=PAGE_BG,
+        markersize=11,
+        alpha=0.7,
+        label=large_label,
+    ),
 ]
 size_legend = ax.legend(
     handles=size_handles,
@@ -199,6 +289,9 @@ ax.set_ylabel("Latitude (°)", fontsize=10, color=INK)
 ax.set_title("map-marker-clustered · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
+ax.set_aspect(1 / np.cos(np.radians(40.8)))
+ax.set_xlim(-74.35, -73.4)
+ax.set_ylim(40.48, 41.15)
 sns.despine(ax=ax, left=False, bottom=False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
@@ -219,4 +312,5 @@ ax.text(
 )
 
 # Save
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
