@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-20
@@ -28,9 +28,13 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GOAL_COLOR = "#009E73"  # Okabe-Ito position 1
+GOAL_COLOR = "#009E73"  # Imprint palette position 1
 
-# Maze parameters
+# Columns of the segment and marker tables
+X, Y, XEND, YEND = "x", "y", "xend", "yend"
+RING, LABEL = "ring", "label"
+
+# Data: maze parameters, DFS generation and wall segments (generated puzzle, no input table)
 np.random.seed(42)
 difficulty = "medium"
 n_rings = {"easy": 5, "medium": 7, "hard": 9}[difficulty]
@@ -148,8 +152,8 @@ for ring in range(n_rings + 1):
 walls_df = pd.DataFrame(segments)
 # Taper stroke weight: outer rings thicker, inner rings thinner — depth illusion
 mid_ring = n_rings // 2
-walls_outer_df = walls_df[walls_df["ring"] >= mid_ring]
-walls_inner_df = walls_df[walls_df["ring"] < mid_ring]
+walls_outer_df = walls_df[walls_df[RING] >= mid_ring]
+walls_inner_df = walls_df[walls_df[RING] < mid_ring]
 
 # Entry gate: short highlighted arc inside the outer boundary at the entry gap
 entry_gate_segs = []
@@ -181,24 +185,25 @@ caption_df = pd.DataFrame(
 plot = (
     ggplot()
     # Outer/mid walls — thicker stroke
-    + geom_segment(data=walls_outer_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.9)
+    + geom_segment(data=walls_outer_df, mapping=aes(x=X, y=Y, xend=XEND, yend=YEND), color=INK, size=0.9)
     # Inner walls — thinner stroke creates depth illusion drawing eye to center
-    + geom_segment(data=walls_inner_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.45)
+    + geom_segment(data=walls_inner_df, mapping=aes(x=X, y=Y, xend=XEND, yend=YEND), color=INK, size=0.45)
     # Entry gate marker: subtle arc at the threshold
-    + geom_segment(data=entry_gate_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=1.4)
+    + geom_segment(data=entry_gate_df, mapping=aes(x=X, y=Y, xend=XEND, yend=YEND), color=INK_SOFT, size=1.4)
     # GOAL bullseye: soft glow ring behind the solid dot
-    + geom_point(data=goal_df, mapping=aes(x="x", y="y"), color=GOAL_COLOR, size=11, alpha=0.18)
-    + geom_point(data=goal_df, mapping=aes(x="x", y="y"), color=GOAL_COLOR, size=5)
+    + geom_point(data=goal_df, mapping=aes(x=X, y=Y), color=GOAL_COLOR, size=11, alpha=0.18)
+    + geom_point(data=goal_df, mapping=aes(x=X, y=Y), color=GOAL_COLOR, size=5)
     + geom_text(
-        data=goal_df, mapping=aes(x="x", y="y", label="label"), color=GOAL_COLOR, size=9, fontweight="bold", nudge_y=0.6
+        data=goal_df, mapping=aes(x=X, y=Y, label=LABEL), color=GOAL_COLOR, size=9, fontweight="bold", nudge_y=0.6
     )
-    + geom_text(data=entry_df, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=9, fontweight="bold")
-    + geom_text(data=caption_df, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=7)
+    + geom_text(data=entry_df, mapping=aes(x=X, y=Y, label=LABEL), color=INK_SOFT, size=9, fontweight="bold")
+    + geom_text(data=caption_df, mapping=aes(x=X, y=Y, label=LABEL), color=INK_SOFT, size=7)
     + coord_fixed(ratio=1)
     + labs(title="maze-circular · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         figure_size=(6, 6),
+        plot_margin_top=0.03,
         plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
