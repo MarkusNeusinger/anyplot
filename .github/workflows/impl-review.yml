@@ -2531,6 +2531,8 @@ jobs:
               prev_review = prev.get('review')
               data['review'] = dict(prev_review) if isinstance(prev_review, dict) else {}
               data['review']['carried'] = True
+              # A kept attempt's note was about the file this merge replaces.
+              data['review'].pop('last_kept', None)
               # impl-generate rewrote the metadata without them.
               if prev.get('impl_tags'):
                   data['impl_tags'] = prev['impl_tags']
@@ -3081,9 +3083,11 @@ jobs:
           git worktree remove --force "$WT" 2>/dev/null || true
           rm -rf "$WT"
           git worktree add -q --detach "$WT" origin/main
+          # The gate record (written after the review session ended) adds why
+          # the gate kept this attempt as review.last_kept, or removes an older note.
           python3 "$TOOL" apply --metadata "$WT/$META_FILE" --prev-review review_prev.json \
             --score "$PREV_RESCORED" --model "$REVIEW_MODEL" --criteria-version "$CRITERIA_VERSION" \
-            --impl "$WT/$IMPL_FILE"
+            --impl "$WT/$IMPL_FILE" --gate-record "$RUNNER_TEMP/anyplot-regen-record.json"
           if git -C "$WT" diff --quiet; then
             set_status unchanged
             exit 0

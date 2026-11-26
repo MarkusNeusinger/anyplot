@@ -406,6 +406,68 @@ class TestApply:
         assert wb.main([*args, "--model", "claude-opus-5", "--impl", str(impl)]) == 0
         assert "nothing changed" in capsys.readouterr().out.splitlines()[-1]
 
+    NOTE = "#11955 was kept because it scored below the live version's re-score on these criteria: CQ-01 2 < 3: x."
+    RECORD = {"v": 1, "pr": 11955, "spec": SPEC, "lib": LIB, "verdict": "keep", "code": "criterion_below"}
+
+    def test_the_gate_records_note_is_stored_with_the_new_review(self):
+        new = wb.apply_review(yaml.safe_load(METADATA_TEXT), _prev_review(), 80, gate_record=self._note_record())
+        assert new["review"]["last_kept"] == {"pr": 11955, "code": "criterion_below", "note": self.NOTE}
+
+    def _note_record(self, note: str | None = None, **overrides: Any) -> dict[str, Any]:
+        return {**self.RECORD, "keep_note": self.NOTE if note is None else note, **overrides}
+
+    def test_a_newer_note_replaces_the_older_one(self):
+        old = yaml.safe_load(METADATA_TEXT)
+        old["review"]["last_kept"] = {"pr": 11000, "code": "regression", "note": "#11000 was kept."}
+        new = wb.apply_review(old, _prev_review(), 80, gate_record=self._note_record())
+        assert new["review"]["last_kept"]["pr"] == 11955
+        assert old["review"]["last_kept"]["pr"] == 11000  # the input is not mutated
+
+    @pytest.mark.parametrize(
+        "record",
+        [
+            {**RECORD, "keep_note": ""},
+            {**RECORD, "code": "canvas_failed", "keep_note": ""},
+            # A record without the key (written before it existed) stores no note either.
+            RECORD,
+        ],
+    )
+    def test_a_keep_without_a_note_removes_the_older_one(self, record):
+        old = yaml.safe_load(METADATA_TEXT)
+        old["review"]["last_kept"] = {"pr": 11000, "code": "regression", "note": "#11000 was kept."}
+        new = wb.apply_review(old, _prev_review(), 80, gate_record=record)
+        assert "last_kept" not in new["review"]
+
+    def test_without_a_gate_record_the_note_stays_as_it_is(self):
+        """An older caller of apply changes nothing it does not know about."""
+        old = yaml.safe_load(METADATA_TEXT)
+        old["review"]["last_kept"] = {"pr": 11000, "code": "regression", "note": "#11000 was kept."}
+        assert wb.apply_review(old, _prev_review(), 80)["review"]["last_kept"] == old["review"]["last_kept"]
+
+    def test_cli_reads_the_gate_record(self, tmp_path):
+        meta, prev, record = tmp_path / "meta.yaml", tmp_path / "review_prev.json", tmp_path / "record.json"
+        meta.write_text(METADATA_TEXT, encoding="utf-8")
+        prev.write_text(json.dumps(_prev_review()), encoding="utf-8")
+        record.write_text(json.dumps(self._note_record()), encoding="utf-8")
+        args = ["apply", "--metadata", str(meta), "--prev-review", str(prev), "--score", "80"]
+        assert wb.main([*args, "--gate-record", str(record)]) == 0
+        stored = yaml.safe_load(meta.read_text(encoding="utf-8"))["review"]["last_kept"]
+        assert stored == {"pr": 11955, "code": "criterion_below", "note": self.NOTE}
+        assert wb.metadata_diff_problems(METADATA_TEXT, meta.read_text(encoding="utf-8")) == []
+
+    @pytest.mark.parametrize(
+        "text", ["", "{not json", json.dumps({"v": 1}), json.dumps({**RECORD, "keep_note": "a -- b"})]
+    )
+    def test_cli_refuses_a_gate_record_it_cannot_use(self, tmp_path, text, capsys):
+        meta, prev, record = tmp_path / "meta.yaml", tmp_path / "review_prev.json", tmp_path / "record.json"
+        meta.write_text(METADATA_TEXT, encoding="utf-8")
+        prev.write_text(json.dumps(_prev_review()), encoding="utf-8")
+        record.write_text(text, encoding="utf-8")
+        args = ["apply", "--metadata", str(meta), "--prev-review", str(prev), "--score", "80"]
+        assert wb.main([*args, "--gate-record", str(record)]) == 2
+        assert "gate record" in capsys.readouterr().out
+        assert meta.read_text(encoding="utf-8") == METADATA_TEXT
+
     def test_cli_rejects_a_bad_score(self, tmp_path):
         meta, prev = tmp_path / "meta.yaml", tmp_path / "review_prev.json"
         meta.write_text(METADATA_TEXT, encoding="utf-8")
@@ -636,6 +698,38 @@ class TestVerifyDiff:
             for p in wb.metadata_diff_problems(carried_text, wb.dump_metadata(flipped))
         )
 
+    LAST_KEPT = {"pr": 11955, "code": "regression", "note": "#11955 was kept because the legend moved."}
+
+    def _with_last_kept(self, value: Any) -> str:
+        data = yaml.safe_load(_written_back())
+        data["review"]["last_kept"] = value
+        return wb.dump_metadata(data)
+
+    def test_the_note_may_come_change_or_go(self, tmp_path):
+        """Write-backs with and without the key pass, whatever main holds (runs of the older code are in flight)."""
+        old_with = yaml.safe_load(METADATA_TEXT)
+        old_with["review"]["last_kept"] = {**self.LAST_KEPT, "pr": 11000}
+        for old in (METADATA_TEXT, wb.dump_metadata(old_with)):
+            for new in (_written_back(), self._with_last_kept(self.LAST_KEPT)):
+                assert wb.metadata_diff_problems(old, new) == []
+        repo = _repo(tmp_path)
+        head = _branch(repo, {META: self._with_last_kept(self.LAST_KEPT)})
+        assert wb.verify_diff(repo, "main", head, SPEC, LIB) == []
+
+    @pytest.mark.parametrize(
+        ("value", "problem"),
+        [
+            ("a note", "review.last_kept must be a mapping with pr, code, note"),
+            ({**LAST_KEPT, "extra": 1}, "review.last_kept must be a mapping with pr, code, note"),
+            ({**LAST_KEPT, "code": "merge"}, "review.last_kept.code is not one of KEEP_NOTE_CODES"),
+            ({**LAST_KEPT, "note": "run `rm` now"}, "review.last_kept.note is not one plain line"),
+            ({**LAST_KEPT, "note": ""}, "review.last_kept.note is empty"),
+        ],
+    )
+    def test_a_note_of_another_shape_is_refused(self, value, problem):
+        problems = wb.metadata_diff_problems(METADATA_TEXT, self._with_last_kept(value))
+        assert any(problem in p for p in problems), problems
+
 
 # ---------------------------------------------------------------------------
 # check-pr
@@ -851,6 +945,42 @@ class TestCheckPr:
         gh = FakeGh(comments=[FakeGh.comment(_record(model="n/a", criteria_version="qc-a.aqr-b.sg-c.lib-d"))])
         read = _head_files(review={"criteria_version": "qc-a.aqr-b.sg-c.lib-d"})
         assert _check_pr(gh, read=read).status == "ok"
+
+    NOTE = "#11955 was kept because the review found it worse than the live version here: legend lost."
+    LAST_KEPT = {"pr": KEPT_PR, "code": "regression", "note": NOTE}
+
+    def test_the_note_is_the_records(self):
+        gh = FakeGh(comments=[FakeGh.comment(_record(keep_note=self.NOTE))])
+        assert _check_pr(gh, read=_head_files(review={"last_kept": dict(self.LAST_KEPT)})).status == "ok"
+
+    @pytest.mark.parametrize(
+        ("keep_note", "review"),
+        [
+            # The record has a note, the metadata none, another one, or one of another PR.
+            (NOTE, None),
+            (NOTE, {"last_kept": {**LAST_KEPT, "note": "#11955 was kept."}}),
+            (NOTE, {"last_kept": {**LAST_KEPT, "pr": 11900}}),
+            (NOTE, {"last_kept": {**LAST_KEPT, "code": "criterion_below"}}),
+            # The record has none: the metadata must not carry one, not even an older one.
+            ("", {"last_kept": dict(LAST_KEPT)}),
+            ("", {"last_kept": None}),
+        ],
+    )
+    def test_another_note_fails(self, keep_note, review):
+        gh = FakeGh(comments=[FakeGh.comment(_record(keep_note=keep_note))])
+        result = _check_pr(gh, read=_head_files(review=review))
+        assert result.status == "fail"
+        assert "review.last_kept is not the one its keep_note gives" in result.reason, result.reason
+
+    def test_an_empty_note_needs_no_note(self):
+        gh = FakeGh(comments=[FakeGh.comment(_record(keep_note=""))])
+        assert _check_pr(gh).status == "ok"
+
+    @pytest.mark.parametrize("review", [None, {"last_kept": dict(LAST_KEPT)}])
+    def test_a_record_written_before_the_note_fixes_no_note(self, review):
+        """A run of the older code is in flight: its record has no keep_note, and its write-back keeps main's note."""
+        assert "keep_note" not in _record()
+        assert _check_pr(FakeGh(), read=_head_files(review=review)).status == "ok"
 
     def test_the_metadata_must_carry_an_integer_score(self):
         result = _check_pr(FakeGh(), read=lambda sha, path: yaml.safe_dump({"quality_score": "80"}))

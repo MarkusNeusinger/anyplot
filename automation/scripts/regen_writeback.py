@@ -13,6 +13,12 @@ verdict, review model and rules version — and puts the score into the
 The one exception is ``review.carried``, which a review-free adapt merge sets
 on the review it carries over (impl-review "Update metadata and implementation
 header"): a re-score is a review that ran, so the write-back removes the mark.
+With the new review, the write-back stores why the gate kept the live
+implementation, ``review.last_kept`` (``{pr, code, note}``, from the gate
+record's ``keep_note``), so the pair's next regeneration learns why this one
+failed; a write-back whose record has no note removes an older one. A keep
+that writes nothing back (no re-score, or a follow-up) leaves the stored note
+as it leaves the stored review.
 
 ``main`` takes changes only through a merged pull request, so the write-back
 travels as one:
@@ -22,8 +28,8 @@ travels as one:
   ``review-writeback/{spec}/{library}/{kept PR}`` (label ``review-writeback``,
   ``GITHUB_TOKEN`` only) and dispatches ``impl-merge.yml``.
 - ``impl-merge.yml``'s ``writeback`` job runs ``check-pr`` (the pull request is
-  the bot's, it targets ``main``, and its score, review model and rules version
-  are the ones the kept PR's gate record holds),
+  the bot's, it targets ``main``, and its score, review model, rules version
+  and ``last_kept`` are the ones the kept PR's gate record holds),
   ``verify-diff`` (only the pair's review keys and header number change) and,
   before every merge attempt, ``check-fresh`` (it still targets ``main``, and
   ``main`` did not change the pair's files since the branch was cut), then
@@ -34,7 +40,7 @@ Subcommands::
     regen_writeback.py check --prev-review review_prev.json --regen-json review_regen.json
 
     regen_writeback.py apply --metadata META.yaml --prev-review review_prev.json --score N \\
-        [--model ID] [--criteria-version V] [--impl IMPL_FILE]
+        [--model ID] [--criteria-version V] [--impl IMPL_FILE] [--gate-record RECORD.json]
 
     regen_writeback.py verify-diff --base REF --head REF --spec S --library B \\
         [--language L --ext E] [--repo DIR]
@@ -88,7 +94,10 @@ BOT_LOGIN = "github-actions[bot]"
 # metadata moves.
 REVIEW_FIELDS = ("image_description", "criteria_checklist", "strengths", "weaknesses")
 PROVENANCE_FIELDS = ("model", "criteria_version")
-WRITABLE_REVIEW_KEYS = frozenset(REVIEW_FIELDS + ("verdict",) + PROVENANCE_FIELDS)
+# Why the gate kept the live implementation (regen_gate.last_kept_entry): set,
+# replaced or removed from the gate record by every write-back given one.
+LAST_KEPT_KEY = "last_kept"
+WRITABLE_REVIEW_KEYS = frozenset(REVIEW_FIELDS + ("verdict",) + PROVENANCE_FIELDS + (LAST_KEPT_KEY,))
 # Set on a review that a review-free adapt merge carried over unchanged
 # (impl-review.yml). A write-back may remove it, never add or change it.
 CARRIED_KEY = "carried"
@@ -172,7 +181,12 @@ def dump_metadata(data: Mapping[str, Any]) -> str:
 
 
 def apply_review(
-    data: Mapping[str, Any], prev_review: Mapping[str, Any], score: int, model: str = "", criteria_version: str = ""
+    data: Mapping[str, Any],
+    prev_review: Mapping[str, Any],
+    score: int,
+    model: str = "",
+    criteria_version: str = "",
+    gate_record: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The metadata with the re-score as its stored review.
 
@@ -180,8 +194,12 @@ def apply_review(
     ``review.verdict`` (``KEPT_VERDICT``, whatever the file says); sets
     ``review.model`` and ``review.criteria_version`` or, when the session
     could not resolve one, removes it (as the metadata writer does); removes
-    ``review.carried``, since the re-score is a review that ran. Every other
-    key keeps its value and its place.
+    ``review.carried``, since the re-score is a review that ran. With the
+    kept PR's ``gate_record``, sets ``review.last_kept`` to its note
+    (``regen_gate.last_kept_entry``) or, for a keep without one, removes an
+    older note, which was about an attempt before this one; without it,
+    ``last_kept`` stays as it is. Every other key keeps its value and its
+    place.
     """
     missing = [key for key in REVIEW_FIELDS if key not in prev_review]
     if missing:
@@ -204,8 +222,31 @@ def apply_review(
         else:
             review.pop(key, None)
     review.pop(CARRIED_KEY, None)
+    if gate_record is not None:
+        entry = regen_gate.last_kept_entry(gate_record)
+        if entry is None:
+            review.pop(LAST_KEPT_KEY, None)
+        else:
+            review[LAST_KEPT_KEY] = entry
     out["review"] = review
     return out
+
+
+def load_gate_record(path: Path) -> dict[str, Any]:
+    """The gate record ``decide --record-out`` wrote; a ``WritebackError`` when it is missing or no valid record.
+
+    A record impl-merge's check would drop must not decide what is stored either.
+    """
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise WritebackError(f"gate record {path} unreadable: {regen_gate._one_line(str(exc))[:200]}") from exc
+    if not isinstance(record, dict):
+        raise WritebackError(f"gate record {path} is not a JSON object")
+    errors = regen_gate.validate_record(record)
+    if errors:
+        raise WritebackError(f"gate record {path} is invalid: {'; '.join(errors)[:300]}")
+    return record
 
 
 def cmd_apply(args: argparse.Namespace) -> int:
@@ -220,8 +261,9 @@ def cmd_apply(args: argparse.Namespace) -> int:
     data = yaml.safe_load(original) or {}
     if not isinstance(data, Mapping):
         raise WritebackError(f"{meta} is not a YAML mapping")
+    record = load_gate_record(Path(args.gate_record)) if args.gate_record else None
     changed: list[str] = []
-    text = dump_metadata(apply_review(data, prev_review, score, args.model, args.criteria_version))
+    text = dump_metadata(apply_review(data, prev_review, score, args.model, args.criteria_version, record))
     if text != original:
         meta.write_text(text, encoding="utf-8")
         changed.append(str(meta))
@@ -252,7 +294,11 @@ def _load_yaml(text: str, where: str) -> tuple[dict[str, Any] | None, list[str]]
 
 
 def metadata_diff_problems(old_text: str, new_text: str) -> list[str]:
-    """Parsed-YAML comparison: only ``quality_score`` and the writable review keys may differ."""
+    """Parsed-YAML comparison: only ``quality_score`` and the writable review keys may differ.
+
+    ``review.last_kept`` may come, change or go; when the head has one, it
+    must have the shape ``apply`` writes (``regen_gate.last_kept_problems``).
+    """
     old, problems = _load_yaml(old_text, "the metadata at the merge base")
     new, more = _load_yaml(new_text, "the metadata at the head")
     problems += more
@@ -280,6 +326,8 @@ def metadata_diff_problems(old_text: str, new_text: str) -> list[str]:
             problems.append(
                 f"review key {key!r} changed; a write-back changes {', '.join(sorted(WRITABLE_REVIEW_KEYS))}"
             )
+    if LAST_KEPT_KEY in new_review:
+        problems += regen_gate.last_kept_problems(new_review[LAST_KEPT_KEY])
     return problems
 
 
@@ -485,7 +533,10 @@ def anchor_to_gate_record(
     ``writeback: opened``, a ``prev_rescored`` equal to the metadata's new
     ``quality_score`` and to the header number when the file has a header, and
     the ``model`` and ``criteria_version`` of the metadata's new ``review``
-    (``provenance``; an absent key is the record's ``n/a``).
+    (``provenance``; an absent key is the record's ``n/a``). A record with a
+    ``keep_note`` also fixes the new ``review.last_kept``: exactly the entry
+    ``apply`` builds from it, or none for an empty note. A record written
+    before the key existed fixes nothing there.
     """
     provenance = provenance or {}
     if kept.get("headRefName") != f"implementation/{spec}/{library}":
@@ -524,6 +575,11 @@ def anchor_to_gate_record(
             for key, limit in (("model", 100), ("criteria_version", 200))
         ),
     )
+    if "keep_note" in record:
+        expected = regen_gate.last_kept_entry(record)
+        actual = provenance.get(LAST_KEPT_KEY)
+        same = actual == expected and (expected is not None or LAST_KEPT_KEY not in provenance)
+        checks += ((same, f"the metadata's review.{LAST_KEPT_KEY} is not the one its keep_note gives"),)
     for ok, why in checks:
         if not ok:
             return "fail", f"the gate record on #{kept_pr}: {why}"
@@ -805,6 +861,9 @@ def build_parser() -> argparse.ArgumentParser:
     app.add_argument("--model", default="", help="resolved model id of the review session (empty removes the key)")
     app.add_argument("--criteria-version", default="", help="rules version of the session (empty removes the key)")
     app.add_argument("--impl", default="", help="the implementation file whose Quality header gets the score")
+    app.add_argument(
+        "--gate-record", default="", help="the kept PR's gate record (decide --record-out): sets or removes last_kept"
+    )
     app.set_defaults(func=cmd_apply)
 
     ver = sub.add_parser("verify-diff", help="Only the pair's review keys, quality_score and header number change")

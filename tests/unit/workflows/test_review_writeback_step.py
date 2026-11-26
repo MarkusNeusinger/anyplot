@@ -104,6 +104,13 @@ PREV_REVIEW = {
     "verdict": "REJECTED",
 }
 REGEN = {"prev_rescored": 80, "prev_checklist": PREV_CHECKLIST}
+NOTE = (
+    "#11955 was kept because the review found it worse than the live version here: "
+    "Legend moved inside the plot area (upper right). Keep these as the live version has them."
+)
+# What the gate step left in $RUNNER_TEMP: a keep record with its note.
+RECORD = {"v": 1, "pr": int(KEPT), "spec": SPEC, "lib": LIB, "verdict": "keep", "code": "regression", "keep_note": NOTE}
+LAST_KEPT = {"pr": int(KEPT), "code": "regression", "note": NOTE}
 
 FAKE_GH = """#!/bin/sh
 printf '%s\\n' "$*" >> "$FAKE_GH_LOG"
@@ -171,6 +178,8 @@ class Setup:
         tools.mkdir(parents=True)
         for name in ("regen_writeback.py", "regen_gate.py"):
             shutil.copy(REPO_ROOT / "automation" / "scripts" / name, tools / name)
+        self.record = self.runner_temp / "anyplot-regen-record.json"
+        self.record.write_text(json.dumps(RECORD), encoding="utf-8")
         self.bin = tmp_path / "bin"
         self.bin.mkdir()
         (self.bin / "gh").write_text(FAKE_GH, encoding="utf-8")
@@ -299,6 +308,8 @@ class TestWritebackStep:
         assert stored["review"]["weaknesses"] == PREV_REVIEW["weaknesses"]
         assert stored["updated"] == METADATA["updated"]
         assert stored["review"]["rendered_at"] == "2026-09-28T10:58:01Z"
+        # Why the gate kept the attempt, from the gate record, with the new review.
+        assert stored["review"]["last_kept"] == LAST_KEPT
         assert "#' Quality: 80/100 | Updated: 2026-09-28" in _git(setup.tmp, setup.origin, "show", f"{head}:{IMPL}")
         calls = setup.gh_calls()
         create = next(c for c in calls if c.startswith("pr create"))
@@ -339,6 +350,15 @@ class TestWritebackStep:
         assert setup.remote_branch() == ""
         setup.assert_workspace_untouched()
 
+    def test_a_keep_without_a_rescore_leaves_the_stored_note(self, setup):
+        """A technical keep writes nothing back, so main's note stays with main's review: the live file did not change."""
+        self._store_on_main(setup, {**RECORD, "pr": 11900, "keep_note": NOTE.replace("11955", "11900")})
+        setup.record.write_text(json.dumps({**RECORD, "code": "canvas_failed", "keep_note": ""}), encoding="utf-8")
+        assert setup.run(PREV_RESCORED="n/a", GATE_CODE="canvas_failed").returncode == 0
+        assert setup.status() == "no_rescore"
+        stored = yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"main:{META}"))
+        assert stored["review"]["last_kept"]["pr"] == 11900
+
     def test_invalid(self, setup):
         bad = {**PREV_REVIEW, "criteria_checklist": _checklist_json({**PREV_CHECKLIST, "VQ-02": 5})}
         (setup.ws / "review_prev.json").write_text(json.dumps(bad), encoding="utf-8")
@@ -373,27 +393,71 @@ class TestWritebackStep:
         assert setup.status() == "stale"
 
     def test_unchanged(self, setup):
-        # main already stores exactly this re-score.
-        meta = setup.ws / "applied.yaml"
-        meta.write_text(yaml.safe_dump(METADATA, sort_keys=False), encoding="utf-8")
-        impl = setup.ws / "applied.R"
-        impl.write_text(HEADER, encoding="utf-8")
-        args = ["apply", "--metadata", str(meta), "--prev-review", str(setup.ws / "review_prev.json"), "--score", "80"]
-        assert (
-            wb.main(
-                [*args, "--model", "claude-opus-5", "--criteria-version", "qc-a.aqr-b.sg-c.lib-d", "--impl", str(impl)]
-            )
-            == 0
-        )
-        setup.commit_on_main(META, meta.read_text(encoding="utf-8"))
-        setup.commit_on_main(IMPL, impl.read_text(encoding="utf-8"))
-        meta.unlink()
-        impl.unlink()
+        # main already stores exactly this re-score, and this keep's note.
+        self._store_on_main(setup, RECORD)
         result = setup.run()
         assert result.returncode == 0, result.stderr
         assert setup.status() == "unchanged"
         assert not any(c.startswith("pr create") for c in setup.gh_calls())
         assert setup.remote_branch() == ""
+        setup.assert_workspace_untouched()
+
+    def _store_on_main(self, setup, record: dict[str, Any] | None) -> None:
+        """main already stores this run's re-score, written back with `record`'s note (None: by the older code)."""
+        meta, impl = setup.ws / "applied.yaml", setup.ws / "applied.R"
+        meta.write_text(yaml.safe_dump(METADATA, sort_keys=False), encoding="utf-8")
+        impl.write_text(HEADER, encoding="utf-8")
+        args = ["apply", "--metadata", str(meta), "--prev-review", str(setup.ws / "review_prev.json"), "--score", "80"]
+        args += ["--model", "claude-opus-5", "--criteria-version", "qc-a.aqr-b.sg-c.lib-d", "--impl", str(impl)]
+        if record is not None:
+            stored_record = setup.tmp / "stored-record.json"
+            stored_record.write_text(json.dumps(record), encoding="utf-8")
+            args += ["--gate-record", str(stored_record)]
+        assert wb.main(args) == 0
+        setup.commit_on_main(META, meta.read_text(encoding="utf-8"))
+        setup.commit_on_main(IMPL, impl.read_text(encoding="utf-8"))
+        meta.unlink()
+        impl.unlink()
+
+    def test_a_note_alone_is_not_unchanged(self, setup):
+        """main stores the same re-score, written back before the note existed: the new note still travels."""
+        self._store_on_main(setup, None)
+        result = setup.run()
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert setup.status() == "opened"
+        head = setup.remote_branch()
+        assert _git(setup.tmp, setup.origin, "diff", "--name-only", "main", head).splitlines() == [META]
+        assert wb.verify_diff(setup.origin, "main", head, SPEC, LIB) == []
+        old = yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"main:{META}"))
+        new = yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"{head}:{META}"))
+        assert "last_kept" not in old["review"]
+        assert new["review"].pop("last_kept") == LAST_KEPT
+        assert new == old
+
+    def test_a_write_back_without_a_note_removes_an_older_one(self, setup):
+        """The one keep that has a re-score and no note: a criterion floor the new checklist left uncheckable."""
+        self._store_on_main(setup, {**RECORD, "pr": 11900, "keep_note": NOTE.replace("11955", "11900")})
+        setup.record.write_text(json.dumps({**RECORD, "code": "criterion_below", "keep_note": ""}), encoding="utf-8")
+        result = setup.run(GATE_CODE="criterion_below")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert setup.status() == "opened"
+        head = setup.remote_branch()
+        assert "last_kept" in yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"main:{META}"))["review"]
+        assert "last_kept" not in yaml.safe_load(_git(setup.tmp, setup.origin, "show", f"{head}:{META}"))["review"]
+        assert wb.verify_diff(setup.origin, "main", head, SPEC, LIB) == []
+
+    @pytest.mark.parametrize("record", [None, "{not json", json.dumps({**RECORD, "keep_note": "two  spaces"})])
+    def test_a_missing_or_invalid_gate_record_stores_nothing(self, setup, record):
+        """No record impl-merge could anchor the write-back to: nothing is stored, the status says failed."""
+        if record is None:
+            setup.record.unlink()
+        else:
+            setup.record.write_text(record, encoding="utf-8")
+        result = setup.run()
+        assert result.returncode != 0
+        assert setup.status() == "failed"
+        assert setup.remote_branch() == ""
+        assert not any(c.startswith("pr create") for c in setup.gh_calls())
         setup.assert_workspace_untouched()
 
     def test_a_failed_dispatch_closes_the_pr(self, setup):

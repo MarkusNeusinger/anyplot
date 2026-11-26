@@ -40,7 +40,8 @@ Regen gate (stdlib, plus PyYAML for `context`): `context` writes the previous
 review with stable weakness ids `W1..Wn` (used by `impl-generate.yml` and
 `impl-review.yml`), `decide` turns the review's `review_regen.json` into
 `merge` or `keep` with a reason code and, with `--record-out`, a gate record
-(scores, counts, codes, provenance — no model-written text); `marker` turns
+(scores, counts, codes, provenance — no model-written text except a keep
+record's `keep_note`, below); `marker` turns
 that record into the `<!-- regen-gate-record:v1 … -->` line both PR comments
 carry, and `parse_record_markers` reads back only records that pass
 `validate_record` (version 1, a known verdict, a code from `REASON_CODES`).
@@ -56,6 +57,19 @@ new review's defect lines (`review_weaknesses.json` beside `review_regen.json`)
 and records `defect_lines` and `follow_up_trigger`, plus `follow_up_of` and
 `follow_up_kind` with `--follow-up-of`/`--follow-up-kind`; `retry-note` prints
 a retry follow-up's regression note (see `regen_follow_up.py`).
+
+Every keep record also carries `keep_note`: why the gate kept the live
+implementation, one plain line from the record, the gate's regressions and the
+new review's checklist comments (`keep_note`, a pure function, so a stored pair
+artifact gives the same note again), and empty for a code outside
+`KEEP_NOTE_CODES`. It is the one string in the record that is no plain token;
+`note_problem` checks it, and `decide` drops a note that would fail rather than
+lose the record. `regen_writeback.py apply --gate-record` stores it as
+`review.last_kept` (`last_kept_entry`), and `context --last-kept`, which
+`impl-generate.yml` alone passes and argparse refuses next to `--omit-scores`,
+renders it as a fenced `## Last kept attempt` section (`render_last_kept`; a
+malformed entry gives none). See
+[The keep note](../../docs/workflows/overview.md#the-keep-note).
 
 `weakness_class` reads a stored weakness as a `defect` line
 (`<ID>[, <ID>] (<light|dark|both|code>): …`), a `suggestion`
@@ -198,17 +212,22 @@ implementation, written by the review as `review_prev.json` (step 8b of
 - `apply` — writes the score, the five review fields, `review.model`, and
   `review.criteria_version` into the metadata with the metadata writer's YAML
   settings (an empty provenance value removes the key), and with `--impl` the
-  score into the `Quality: N/100` header, and removes `review.carried`.
-  Nothing else changes.
+  score into the `Quality: N/100` header, and removes `review.carried`. With
+  `--gate-record` (the kept PR's record) it sets `review.last_kept` to the
+  record's keep note, or removes an older one when the record has none; a
+  missing or invalid record fails the write-back. Nothing else changes.
 - `verify-diff` — against the merge base: only the pair's metadata (as parsed
   YAML, `quality_score` and those review keys) and its header number change;
-  `review.carried` may only be removed.
+  `review.carried` may only be removed, and `review.last_kept` may come,
+  change, or go, in the shape `apply` writes.
 - `check-pr` — the PR is an open `review-writeback/{spec}/{library}/{kept PR}`
   PR with the `review-writeback` label by `app/github-actions` (otherwise a
   no-op), and its score equals the `prev_rescored` of the first gate record
   `github-actions[bot]` posted on the kept PR after the write-back PR opened
   (keep, same pair, `writeback: opened`, the same number in the header, and
-  the record's `model` and `criteria_version` in the metadata's `review`). It
+  the record's `model` and `criteria_version` in the metadata's `review`; for a
+  record with a `keep_note`, the `review.last_kept` it gives, or none for an
+  empty note; a record written before the key existed fixes none). It
   waits up to `--wait` seconds for that record, because `impl-review.yml`
   dispatches the merge before it closes the kept PR.
 - `check-fresh` — `main` still holds the merge base's blobs of the pair's two
