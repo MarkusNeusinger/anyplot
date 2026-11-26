@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-26
@@ -54,31 +54,33 @@ MISSED_COLOR = IMPRINT_PALETTE[4]
 # Court visual tokens (domain element — warm hardwood tone, theme-variant)
 COURT_COLOR = "#E8DCC8" if THEME == "light" else "#2A2318"
 LINE_COLOR = "#5A5048" if THEME == "light" else "#8A7E72"
-ANNOTATION_BG = "rgba(232,220,200,0.85)" if THEME == "light" else "rgba(42,35,24,0.88)"
 
 # Constants: NBA half-court, in feet from the basket center
 COURT_HALF_WIDTH = 25  # 50 ft wide
 COURT_DEPTH = 47  # baseline to half-court line
 THREE_PT_RADIUS = 23.75  # three-point arc at the top
 CORNER_THREE_X = 22  # corner three-point sidelines
-CORNER_THREE_TOP = 14  # where the corner sidelines meet the arc
+BASELINE_Y = -5.25  # the rim sits 5.25 ft in front of the baseline; the basket is the origin
+BACKBOARD_Y = -1.25  # backboard 4 ft in front of the baseline
 PAINT_HALF_WIDTH = 8  # 16 ft wide key
-FREE_THROW_Y = 15  # free-throw line distance from the baseline reference
+FREE_THROW_Y = 13.75  # free-throw line, 15 ft from the backboard
 FREE_THROW_RADIUS = 6
 RESTRICTED_RADIUS = 4
-RIM_Y = 1.25
-BACKBOARD_Y = -0.5
+RIM_Y = 0.0
+THETA_CORNER = np.arccos(CORNER_THREE_X / THREE_PT_RADIUS)  # angle where the corner sidelines meet the arc
+ARC_JOIN_Y = THREE_PT_RADIUS * np.sin(THETA_CORNER)
 PAINT_ZONE_RADIUS = 8  # shots closer than this to the basket count as "Paint"
 ZONE_ORDER = ["Paint", "Mid-Range", "Above Break 3", "Corner 3"]
 ZONE_LABELS = {"Paint": "Paint", "Mid-Range": "Mid-Range", "Above Break 3": "3PT", "Corner 3": "Corner 3"}
 ZONE_LABEL_POS = {
-    "Paint": (17.5, 3.5),
-    "Mid-Range": (-20.0, 15.0),
-    "Above Break 3": (0.0, 31.0),
-    "Corner 3": (-21.0, 2.5),
+    "Paint": (0.0, -3.1),  # behind the backboard, inside the paint radius, where no shot lands
+    "Mid-Range": (-13.0, 17.5),
+    "Above Break 3": (0.0, 36.2),
+    "Corner 3": (-21.0, -3.1),
 }
 FREE_THROW_TYPE, THREE_POINTER_TYPE = "free-throw", "3-pointer"  # the spec's shot_type categories
 MADE_SIZE, MISSED_SIZE = 3.0, 2.5
+SHOT_ALPHA = 0.7
 CIRCLE_SHAPE, CROSS_SHAPE = 21, 4
 
 # Columns: set these to your table's column names
@@ -112,16 +114,16 @@ shot_y = np.concatenate(
         np.random.uniform(0, 12, 20),  # left corner 3
         np.random.uniform(0, 12, 20),  # right corner 3
         np.random.uniform(24, 34, 50),  # deep 3
-        np.random.normal(15, 0.3, 10),  # free throws
+        np.random.normal(FREE_THROW_Y, 0.3, 10),  # free throws
     ]
 )
 shot_x = np.clip(shot_x, -25, 25)
 shot_y = np.clip(shot_y, 0, 40)
 
 shot_dist = np.sqrt(shot_x**2 + shot_y**2)
-corner_three = (np.abs(shot_x) > 21) & (shot_y < 14)
-three = (shot_dist > 23.75) | corner_three
-free_throw = (np.abs(shot_x) < 1) & (np.abs(shot_y - 15) < 1)
+corner_three = (np.abs(shot_x) > CORNER_THREE_X - 1) & (shot_y < ARC_JOIN_Y)
+three = (shot_dist > THREE_PT_RADIUS) | corner_three
+free_throw = (np.abs(shot_x) < 1) & (np.abs(shot_y - FREE_THROW_Y) < 1)
 shot_kind = np.where(free_throw, "free-throw", np.where(three, "3-pointer", "2-pointer"))
 
 base_pct = np.where(shot_kind == "free-throw", 0.78, np.where(shot_kind == "2-pointer", 0.50, 0.35))
@@ -138,7 +140,7 @@ fg_percent = n_made / n_shots * 100
 
 # Zone of each shot, derived from position and shot type
 dist = np.hypot(df[X], df[Y])
-is_corner = (df[X].abs() > CORNER_THREE_X - 1) & (df[Y] < CORNER_THREE_TOP)
+is_corner = (df[X].abs() > CORNER_THREE_X - 1) & (df[Y] < ARC_JOIN_Y)
 is_free_throw = df[SHOT_TYPE] == FREE_THROW_TYPE
 zone = np.full(n_shots, "Mid-Range", dtype=object)
 zone[(dist < PAINT_ZONE_RADIUS).to_numpy()] = "Paint"
@@ -180,9 +182,8 @@ for z in ZONE_ORDER:
 zone_annotations = pd.DataFrame(zone_rows)
 
 # Court geometry
-# The arc runs from the right corner sideline over the top to the left one
-theta_corner = np.arccos(CORNER_THREE_X / THREE_PT_RADIUS)
-theta_three = np.linspace(theta_corner, np.pi - theta_corner, 100)
+# The arc runs from the right corner sideline over the top to the left one, centred on the rim
+theta_three = np.linspace(THETA_CORNER, np.pi - THETA_CORNER, 100)
 three_arc = pd.DataFrame({X: THREE_PT_RADIUS * np.cos(theta_three), Y: THREE_PT_RADIUS * np.sin(theta_three)})
 theta_upper = np.linspace(0, np.pi, 60)
 ft_arc = pd.DataFrame(
@@ -199,38 +200,47 @@ restricted = pd.DataFrame(
 
 XMIN, YMIN, XMAX, YMAX = "xmin", "ymin", "xmax", "ymax"
 XEND, YEND = "xend", "yend"
-PAD_X, PAD_BOTTOM, PAD_TOP = 3, 10, 2
+COURT_TOP = BASELINE_Y + COURT_DEPTH
+PAD_X, PAD_BOTTOM, PAD_TOP = 1, 5.25, 0.75  # the band below the baseline holds the legend
 page_rect = pd.DataFrame(
     {
         XMIN: [-COURT_HALF_WIDTH - PAD_X],
-        YMIN: [-PAD_BOTTOM],
+        YMIN: [BASELINE_Y - PAD_BOTTOM],
         XMAX: [COURT_HALF_WIDTH + PAD_X],
-        YMAX: [COURT_DEPTH + PAD_TOP],
+        YMAX: [COURT_TOP + PAD_TOP],
     }
 )
-court_rect = pd.DataFrame({XMIN: [-COURT_HALF_WIDTH], YMIN: [-2], XMAX: [COURT_HALF_WIDTH], YMAX: [COURT_DEPTH]})
-paint_rect = pd.DataFrame({XMIN: [-PAINT_HALF_WIDTH], YMIN: [0], XMAX: [PAINT_HALF_WIDTH], YMAX: [19]})
-arc_join_y = THREE_PT_RADIUS * np.sin(theta_corner)  # where the arc meets the corner sidelines
+court_rect = pd.DataFrame({XMIN: [-COURT_HALF_WIDTH], YMIN: [BASELINE_Y], XMAX: [COURT_HALF_WIDTH], YMAX: [COURT_TOP]})
+paint_rect = pd.DataFrame(
+    {XMIN: [-PAINT_HALF_WIDTH], YMIN: [BASELINE_Y], XMAX: [PAINT_HALF_WIDTH], YMAX: [FREE_THROW_Y]}
+)
 corner_lines = pd.DataFrame(
     {
         X: [-CORNER_THREE_X, CORNER_THREE_X],
-        Y: [0, 0],
+        Y: [BASELINE_Y, BASELINE_Y],
         XEND: [-CORNER_THREE_X, CORNER_THREE_X],
-        YEND: [arc_join_y, arc_join_y],
+        YEND: [ARC_JOIN_Y, ARC_JOIN_Y],
     }
 )
-backboard = pd.DataFrame({X: [-3], Y: [BACKBOARD_Y], XEND: [3], YEND: [BACKBOARD_Y]})
+backboard = pd.DataFrame({X: [-3], Y: [BACKBOARD_Y], XEND: [3], YEND: [BACKBOARD_Y]})  # 6 ft wide
 rim = pd.DataFrame({X: [0], Y: [RIM_Y]})
 
-# Manual legend below the court
-legend_y = -6.5
+# Manual legend below the court: made, missed and the density contours of made shots
+legend_y = BASELINE_Y - 2.9
 legend_marks = pd.DataFrame(
-    {X: [-16.0, 7.0], Y: [legend_y, legend_y], COLOR: [MADE_COLOR, MISSED_COLOR], SHAPE: [CIRCLE_SHAPE, CROSS_SHAPE]}
+    {
+        X: [-23.0, -8.5],
+        Y: [legend_y, legend_y],
+        COLOR: [MADE_COLOR, MISSED_COLOR],
+        SHAPE: [CIRCLE_SHAPE, CROSS_SHAPE],
+        SIZE: [MADE_SIZE, MISSED_SIZE],
+    }
 )
+legend_contour = pd.DataFrame({X: [4.5], Y: [legend_y], XEND: [7.5], YEND: [legend_y]})
 legend_text = pd.DataFrame(
-    {X: [-13.5, 9.5], Y: [legend_y, legend_y], LABEL: [f"Made ({n_made})", f"Missed ({n_missed})"]}
+    {X: [-21.5, -7.0, 8.5], Y: [legend_y] * 3, LABEL: [f"Made ({n_made})", f"Missed ({n_missed})", "Made-shot density"]}
 )
-summary = pd.DataFrame({X: [0], Y: [COURT_DEPTH - 3], LABEL: [f"FG: {fg_percent:.1f}%  ·  {n_made}/{n_shots}"]})
+summary = pd.DataFrame({X: [0], Y: [COURT_TOP - 2.2], LABEL: [f"FG: {fg_percent:.1f}%  ·  {n_made}/{n_shots}"]})
 
 # Title — 51 chars, under the 67-char baseline so size 16 fits
 title = "scatter-shot-chart · python · letsplot · anyplot.ai"
@@ -273,29 +283,23 @@ plot = (
     + geom_point(
         data=shots,
         mapping=aes(x=X, y=Y, color=COLOR, fill=COLOR, size=SIZE, shape=SHAPE),
-        stroke=0.3,
-        alpha=0.5,
+        stroke=0.8,
+        alpha=SHOT_ALPHA,
         tooltips=layer_tooltips()
         .line(f"@{RESULT} | @{SHOT_TYPE}")
         .line(f"Zone: @{ZONE}")
         .line(f"Position: @{POSITION}"),
     )
     # Zone FG% annotations — positioned in sparse court areas to minimize overlap
-    + geom_text(
-        data=zone_annotations,
-        mapping=aes(x=X, y=Y, label=LABEL),
-        size=10,
-        color=INK,
-        fontface="bold",
-        label_padding=0.4,
-        fill=ANNOTATION_BG,
-        label_size=0,
-    )
+    + geom_text(data=zone_annotations, mapping=aes(x=X, y=Y, label=LABEL), size=3.8, color=INK, fontface="bold")
     # Overall FG% summary
-    + geom_text(data=summary, mapping=aes(x=X, y=Y, label=LABEL), size=13, color=INK, fontface="bold")
+    + geom_text(data=summary, mapping=aes(x=X, y=Y, label=LABEL), size=5, color=INK, fontface="bold")
     # Legend markers and labels
-    + geom_point(aes(x=X, y=Y, color=COLOR, fill=COLOR, shape=SHAPE), data=legend_marks, size=5, stroke=0.5)
-    + geom_text(data=legend_text, mapping=aes(x=X, y=Y, label=LABEL), size=12, color=INK_SOFT, hjust=0)
+    + geom_point(
+        aes(x=X, y=Y, color=COLOR, fill=COLOR, shape=SHAPE, size=SIZE), data=legend_marks, stroke=0.8, alpha=SHOT_ALPHA
+    )
+    + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND), data=legend_contour, color=MADE_COLOR, alpha=0.6, size=0.9)
+    + geom_text(data=legend_text, mapping=aes(x=X, y=Y, label=LABEL), size=4, color=INK_SOFT, hjust=0)
     + scale_color_identity()
     + scale_fill_identity()
     + scale_size_identity()
@@ -303,13 +307,13 @@ plot = (
     + scale_alpha_identity()
     + coord_fixed(ratio=1)
     + xlim(-COURT_HALF_WIDTH - PAD_X, COURT_HALF_WIDTH + PAD_X)
-    + ylim(-PAD_BOTTOM, COURT_DEPTH + PAD_TOP)
+    + ylim(BASELINE_Y - PAD_BOTTOM, COURT_TOP + PAD_TOP)
     + labs(title=title)
     + theme_void()
     + theme(
         plot_title=element_text(size=title_size, hjust=0.5, color=INK, face="bold"),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_margin=[30, 15, 10, 15],
+        plot_margin=[12, 6, 4, 6],
     )
     + ggsize(600, 600)
 )
