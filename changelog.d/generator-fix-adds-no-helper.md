@@ -6,4 +6,4 @@
   In the first catalogue batch of 2026-11-26, the regen gate kept 10 of 117
   regenerations only because a new helper function cost the KISS criterion
   (CQ-01) a point, one of them a repair round that had fixed 5 of 6 named
-  defects and gained 12 points.
+  defects and gained 12 points. (#14424)
