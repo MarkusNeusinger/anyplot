@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -237,6 +237,7 @@ plot = (
     + geom_rect(
         aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX, fill=FILL),
         data=df,
+        color="#000000",
         tooltips=layer_tooltips().line(f"@{{{SYMBOL}}}"),
     )
     + scale_fill_identity()
@@ -247,7 +248,10 @@ plot = (
     + xlim(0, total_width)
     + ylim(0, 135)
     + theme_void()
-    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG), panel_background=element_rect(fill=PAGE_BG))
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    )
     + ggsize(800, 450)
 )
 

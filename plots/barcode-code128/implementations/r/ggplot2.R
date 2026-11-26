@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' barcode-code128: Code 128 Barcode
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-05-21
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
@@ -135,7 +135,7 @@ p <- ggplot() +
     ),
     plot.caption     = element_text(
       color  = INK_MUTED,
-      size   = 7,
+      size   = 8,
       hjust  = 0.5,
       margin = margin(t = 6, b = 4)
     ),
