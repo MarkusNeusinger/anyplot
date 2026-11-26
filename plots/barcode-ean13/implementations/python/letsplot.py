@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -100,7 +100,7 @@ raw_code = "4006381333931"
 module_width = 3
 bar_y_min = 35
 bar_y_max = bar_y_min + 80  # 80-unit bar height
-guard_y_max = bar_y_max + 10  # guard bars extend 10 units lower
+guard_y_min = bar_y_min - 10  # guard bars reach 10 units lower, down between the digit groups
 
 # Inline check digit calculation
 digits_12 = raw_code[:12]
@@ -131,7 +131,7 @@ for i in range(6):
     section_labels += [f"Right digit {i + 7}: {right_digits[i]}"] * 7
 section_labels += ["End Guard"] * 3
 
-# Guard bar bit positions (start, center, end) — extend lower than regular bars
+# Guard bar bit positions (start, center, end) — drawn longer, reaching below the regular bars
 guard_positions = set(range(3)) | set(range(45, 50)) | set(range(92, 95))
 
 # Inline bar rectangle generation
@@ -139,13 +139,13 @@ bars = []
 x_pos = 9 * module_width  # quiet zone offset
 for i, bit in enumerate(bars_pattern):
     if bit == "1":
-        y_max = guard_y_max if i in guard_positions else bar_y_max
+        y_min = guard_y_min if i in guard_positions else bar_y_min
         bars.append(
             {
                 XMIN: float(x_pos),
                 XMAX: float(x_pos + module_width),
-                YMIN: float(bar_y_min),
-                YMAX: float(y_max),
+                YMIN: float(y_min),
+                YMAX: float(bar_y_max),
                 SECTION: section_labels[i],
                 POSITION: i,
             }
@@ -162,7 +162,7 @@ left_digit_width = 7 * module_width
 center_guard_start = start_guard_end + 42 * module_width
 right_start = center_guard_start + 5 * module_width
 
-text_y = bar_y_min - 15
+text_y = bar_y_min - 22
 digit_labels = [{X: quiet_zone - 5 * module_width, Y: text_y, LABEL: full_code[0]}]
 for i, d in enumerate(full_code[1:7]):
     digit_labels.append({X: start_guard_end + (i + 0.5) * left_digit_width, Y: text_y, LABEL: d})
@@ -171,7 +171,7 @@ for i, d in enumerate(full_code[7:13]):
 df_digits = pd.DataFrame(digit_labels)
 
 title_str = "barcode-ean13 · python · letsplot · anyplot.ai"
-df_title = pd.DataFrame({X: [total_width / 2], Y: [guard_y_max + 25], LABEL: [title_str]})
+df_title = pd.DataFrame({X: [total_width / 2], Y: [bar_y_max + 35], LABEL: [title_str]})
 
 # Plot
 plot = (
@@ -187,7 +187,7 @@ plot = (
     + geom_text(aes(x=X, y=Y, label=LABEL), data=df_digits, size=16, family="monospace", color=INK)
     + geom_text(aes(x=X, y=Y, label=LABEL), data=df_title, size=15, color=INK_SOFT)
     + xlim(0, total_width)
-    + ylim(0, guard_y_max + 45)
+    + ylim(0, bar_y_max + 55)
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
