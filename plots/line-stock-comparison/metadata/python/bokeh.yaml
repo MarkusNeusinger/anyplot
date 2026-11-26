@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:22:33Z'
-updated: '2026-11-26T13:56:08Z'
+updated: '2026-11-26T14:04:50Z'
 generated_by: claude-sonnet
-workflow_run: 45832607436
+workflow_run: 45834150118
 issue: 3748
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
   - Rebasing computed from the data (price / first price * 100 via groupby transform),
@@ -26,29 +26,29 @@ review:
     legend, in the HTML artifact
   - Horizontal legend in the 'above' slot keeps the plot area free of chrome
   weaknesses:
-  - 'SC-01 (both): a shaded 85-115 ''normal return'' envelope sits behind the lines;
-    the spec asks for no such band (its only allowed shading is an event or period
-    span) → remove the band. Likely cause: the Band layout built from BAND = 15.'
-  - 'Suggestion: the x range runs to March 2025 while the data ends in December 2024,
-    leaving the Jan-Mar 2025 ticks over empty space; a tighter right padding just
-    wide enough for the end labels would use the canvas better.'
-  - 'Suggestion: a few dated event annotations (earnings, index rebalancing) as vertical
-    spans, which the Notes allow, would add context.'
+  - 'VQ-06 (both): the y-axis title ''Rebased price (start = 100)'' names the axis
+    as a price, while C2 asks for an index or change from the start → e.g. ''Performance
+    index (start = 100)''. Likely cause: y_axis_label=f"Rebased price (start = {BASE})".'
+  - 'Suggestion: the x range runs to March 2025 while the data ends in December 2024;
+    a right padding just wide enough for the end labels would drop the Jan-Mar 2025
+    ticks over empty space.'
+  - 'Suggestion: a few dated event spans (earnings, index rebalancing), which the
+    Notes allow, would add context.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: bold dark title 'line-stock-comparison · python · bokeh · anyplot.ai' top-left (~56% width); horizontal legend above the plot at right (AAPL, GOOGL, MSFT, SPY) on an elevated fill without border; italic axis titles 'Date' and 'Rebased price (start = 100)'; dark-grey ticks Jan 2024 to Mar 2025 and 80-140; faint y-grid; L-shaped axis frame. All readable.
-      Data: AAPL #009E73 (thin), GOOGL #C475FD (thick, ends 144), MSFT #4467A3 (thick, ends 89), SPY #BD8233 (thin, ends 118); all start at 100 on 2 Jan 2024. Dashed dark reference line at 100; a faint grey band from 85 to 115 behind the lines; bold colored end labels 'GOOGL 144', 'SPY 118', 'AAPL 113', 'MSFT 89' to the right of the data.
+      Chrome: bold dark title 'line-stock-comparison · python · bokeh · anyplot.ai' top-left; horizontal legend above the plot at right (AAPL, GOOGL, MSFT, SPY) on an elevated fill without border; italic axis titles 'Date' and 'Rebased price (start = 100)'; dark-grey ticks Jan 2024 to Mar 2025 and 80-140; faint y-grid; L-shaped axis frame. All readable.
+      Data: AAPL #009E73 (thin), GOOGL #C475FD (thick, ends 144), MSFT #4467A3 (thick, ends 89), SPY #BD8233 (thin, ends 118); all start at 100 on 2 Jan 2024. Dashed dark reference line at 100; no shading behind the lines; bold colored end labels 'GOOGL 144', 'SPY 118', 'AAPL 113', 'MSFT 89' right of the data.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
       Chrome: title and axis titles in light ink, ticks in light grey, faint y-grid, legend on #242420 fill with light-grey labels. No dark-on-dark text.
-      Data: line and end-label colors identical to the light render; brand green AAPL clearly visible; reference line light grey dashed; the 85-115 band is a slightly lighter panel.
+      Data: line and end-label colors identical to the light render; brand green AAPL clearly visible; reference line light grey dashed.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,15 +63,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text collides; the end labels are spread apart where SPY and AAPL
-          end close together
+        comment: No text collides; end labels spread apart where SPY (118) and AAPL
+          (113) end close together
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four lines at 4-7 px read clearly on the 3200x1800 canvas; legend
-          line samples match the lines in both themes
+        comment: Four lines at 4-7 px read clearly on 3200x1800 for ~252 points per
+          series; legend line samples match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -83,15 +83,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); the plot fills the canvas, nothing
+        comment: Canvas gate passed (3200x1800); the plot uses the canvas, nothing
           cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: '''Date'' and ''Rebased price (start = 100)'' name the index and
-          its base'
+        passed: false
+        comment: Axis title 'Rebased price (start = 100)' names a price rather than
+          an index or change from the start (defect line, C2)
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -109,47 +109,47 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Beyond baseline: bold colored end-of-series labels carrying the
-          final index value form a second typographic tier tied to the lines'
+        comment: 'Beyond baseline: bold colored end-of-series labels with the final
+          index value form a second typographic tier tied to the lines'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: 'Beyond baseline: y-grid only chosen for a time series, end labels
-          aligned in one column right of the data'
+        comment: 'Beyond baseline: end labels aligned in one column right of the data,
+          legend moved to the ''above'' slot on an elevated fill'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
         comment: 'Own focal choice: best and worst performers drawn at 7 px vs 4 px,
-          plus final values at the line ends, so the winner and loser read at once'
+          plus final values at the line ends, so winner and loser read at once'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Correct multi-line rebased comparison, but a shaded +/-15 'normal'
-          envelope around 100 is an unrequested band (defect line)
+        passed: true
+        comment: Correct multi-line rebased comparison with a reference line at 100;
+          no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'Rebased to 100, distinct colors, legend, y in rebased values, reference
-          line at 100, grid: all Notes and C1-C4 met'
+          line at 100, y-grid: all Notes and C1, C3, C4 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Dates on x, rebased values on y; y axis fitted to the data (80-147),
-          not forced to zero; marks at their values
+          not forced to zero; lines at their values
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -166,8 +166,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Outperformer, underperformer below 100, benchmark and a mid series;
-          crossings near the start and a widening spread
+        comment: Outperformer (GOOGL 144), underperformer below 100 (MSFT 89), benchmark
+          SPY and a mid series; crossings near the start and a widening spread
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,8 +181,8 @@ review:
         max: 4
         passed: true
         comment: 'Checked: every series is exactly 100 on 2024-01-02 (price / first
-          price * 100 computed in code); final values 89-144 are plausible one-year
-          returns'
+          price * 100 computed via groupby transform); final values 89-144 are plausible
+          one-year returns'
     code_quality:
       score: 10
       max: 10
@@ -218,7 +218,7 @@ review:
         passed: true
         comment: Writes plot-{THEME}.html and plot-{THEME}.png; current bokeh 3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,37 +226,36 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: ColumnDataSource per group, add_layout for Span, Band, Label and
-          Legend, Range1d on a datetime axis; legend placed in the 'above' layout
-          slot
+        comment: ColumnDataSource per group, add_layout for Span, Label and Legend,
+          Range1d on a datetime axis, legend in the 'above' layout slot
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: HoverTool in vline mode with a datetime formatter, legend click_policy='hide'
-          for toggling series in the HTML
+        comment: HoverTool in vline mode with a datetime formatter and legend click_policy='hide'
+          in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
-  rendered_at: '2026-11-26T13:52:49Z'
+  rendered_at: '2026-11-26T14:01:34Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   - columndatasource
-  - groupby-aggregation
   dataprep:
   - normalization
-  - cumulative-sum
   - time-series
+  - cumulative-sum
   styling:
-  - alpha-blending
+  - linewidth
   - grid-styling
+  - alpha-blending
