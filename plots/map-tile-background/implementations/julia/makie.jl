@@ -26,23 +26,6 @@ const ANYPLOT_SEQ = THEME == "light" ?
 const TILE_URL    = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 const TILE_CREDIT = "© OpenStreetMap contributors"
 
-function theme_tile(c)
-    THEME == "light" && return c
-    lum = 0.299f0 * red(c) + 0.587f0 * green(c) + 0.114f0 * blue(c)
-    g = 0.07f0 + 0.30f0 * (1f0 - lum)
-    return RGBA{Float32}(g, g, g * 1.04f0, 1f0)
-end
-
-# Web Mercator helpers (EPSG:3857 slippy-map tile convention)
-lat_to_merc(lat)     = log(tan(lat * π / 180) + 1 / cos(lat * π / 180))
-merc_to_lat(m)       = atan(sinh(m)) * 180 / π
-lon_to_tx(lon, z)    = clamp(floor(Int, (lon + 180) / 360 * (1 << z)), 0, (1 << z) - 1)
-lat_to_ty(lat, z)    = clamp(floor(Int, (π - lat_to_merc(lat)) / (2π) * (1 << z)), 0, (1 << z) - 1)
-tx_lon_west(tx, z)   = tx / (1 << z) * 360 - 180
-tx_lon_east(tx, z)   = (tx + 1) / (1 << z) * 360 - 180
-ty_merc_north(ty, z) = π * (1 - 2 * ty / (1 << z))
-ty_merc_south(ty, z) = π * (1 - 2 * (ty + 1) / (1 << z))
-
 # City data: major tourist destinations with annual visitor counts (millions)
 const city_names = [
     "Paris", "London", "New York", "Tokyo", "Barcelona",
@@ -70,7 +53,7 @@ const visitors = Float64[
 ]
 
 # Convert latitudes to Mercator Y for correct Web Mercator projection
-y_merc       = lat_to_merc.(lats)
+y_merc       = log.(tan.(lats .* π ./ 180) .+ 1 ./ cos.(lats .* π ./ 180))
 v_min        = minimum(visitors)
 v_max        = maximum(visitors)
 v_norm       = (visitors .- v_min) ./ (v_max - v_min)
@@ -83,17 +66,19 @@ ax_lon_min   = minimum(lons)   - lon_pad
 ax_lon_max   = maximum(lons)   + lon_pad
 ax_merc_min  = minimum(y_merc) - merc_pad
 ax_merc_max  = maximum(y_merc) + merc_pad
-pad_lat_north = merc_to_lat(ax_merc_max)
-pad_lat_south = merc_to_lat(ax_merc_min)
+pad_lat_north = atan(sinh(ax_merc_max)) * 180 / π
+pad_lat_south = atan(sinh(ax_merc_min)) * 180 / π
 
 # Tile grid parameters
 const ZOOM    = 3
 const TILE_PX = 256
 
-tx_min = lon_to_tx(ax_lon_min, ZOOM)
-tx_max = lon_to_tx(ax_lon_max, ZOOM)
-ty_min = lat_to_ty(pad_lat_north, ZOOM)   # north edge → smaller tile y index
-ty_max = lat_to_ty(pad_lat_south, ZOOM)   # south edge → larger tile y index
+n_zoom = 1 << ZOOM   # tiles per axis (EPSG:3857 slippy-map convention)
+tx_min = clamp(floor(Int, (ax_lon_min + 180) / 360 * n_zoom), 0, n_zoom - 1)
+tx_max = clamp(floor(Int, (ax_lon_max + 180) / 360 * n_zoom), 0, n_zoom - 1)
+# north edge → smaller tile y index, south edge → larger
+ty_min = clamp(floor(Int, (π - log(tan(pad_lat_north * π / 180) + 1 / cos(pad_lat_north * π / 180))) / (2π) * n_zoom), 0, n_zoom - 1)
+ty_max = clamp(floor(Int, (π - log(tan(pad_lat_south * π / 180) + 1 / cos(pad_lat_south * π / 180))) / (2π) * n_zoom), 0, n_zoom - 1)
 
 n_tx = tx_max - tx_min + 1
 n_ty = ty_max - ty_min + 1
@@ -114,7 +99,13 @@ mktempdir() do tmpdir
                     "anyplot.ai static visualization; contact@anyplot.ai"])
             tile_mat = PNGFiles.load(fpath)   # size = (height, width) = [row, col] = [y, x]
             # Transpose to [x, y] layout expected by the stitched array
-            tile_t = permutedims(theme_tile.(RGBA{Float32}.(tile_mat)), (2, 1))
+            tile_rgba = RGBA{Float32}.(tile_mat)
+            if THEME == "dark"   # invert lightness into dark greys
+                lum = 0.299f0 .* red.(tile_rgba) .+ 0.587f0 .* green.(tile_rgba) .+ 0.114f0 .* blue.(tile_rgba)
+                g = 0.07f0 .+ 0.30f0 .* (1f0 .- lum)
+                tile_rgba = RGBA{Float32}.(g, g, g .* 1.04f0, 1f0)
+            end
+            tile_t = permutedims(tile_rgba, (2, 1))
             stitched[ix*TILE_PX+1:(ix+1)*TILE_PX, iy*TILE_PX+1:(iy+1)*TILE_PX] = tile_t
         catch e
             @warn "Tile ($tx, $ty) unavailable" exception = e
@@ -123,17 +114,17 @@ mktempdir() do tmpdir
 end
 
 # Geographic bounds of the full stitched raster
-img_lon_west   = tx_lon_west(tx_min, ZOOM)
-img_lon_east   = tx_lon_east(tx_max, ZOOM)
-img_merc_north = ty_merc_north(ty_min, ZOOM)
-img_merc_south = ty_merc_south(ty_max, ZOOM)
+img_lon_west   = tx_min / n_zoom * 360 - 180
+img_lon_east   = (tx_max + 1) / n_zoom * 360 - 180
+img_merc_north = π * (1 - 2 * ty_min / n_zoom)
+img_merc_south = π * (1 - 2 * (ty_max + 1) / n_zoom)
 
 # Flip y so index 1 maps to the south (Makie image! convention: y increases upward)
 img_makie = reverse(stitched, dims = 2)
 
 # Latitude tick marks in Mercator Y with degree labels
 lat_ticks_deg = filter(l -> pad_lat_south < l < pad_lat_north, [-30.0, 0.0, 30.0, 60.0])
-lat_tick_merc = lat_to_merc.(lat_ticks_deg)
+lat_tick_merc = log.(tan.(lat_ticks_deg .* π ./ 180) .+ 1 ./ cos.(lat_ticks_deg .* π ./ 180))
 lat_tick_strs = [l >= 0 ? "$(round(Int, l))°N" : "$(round(Int, -l))°S" for l in lat_ticks_deg]
 
 lon_ticks_deg = filter(l -> ax_lon_min < l < ax_lon_max, [-60.0, 0.0, 60.0, 120.0])
@@ -194,8 +185,8 @@ for i in top8
         text     = city_names[i],
         fontsize = 11,
         color    = INK,
-        offset   = (8, 5),
-        align    = (:left, :bottom),
+        offset   = city_names[i] == "London" ? (-8, 5) : (8, 5),   # London's label goes west, clear of Amsterdam
+        align    = (city_names[i] == "London" ? :right : :left, :bottom),
     )
 end
 
