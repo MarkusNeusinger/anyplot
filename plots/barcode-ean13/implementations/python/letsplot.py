@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -18,7 +18,6 @@ from lets_plot import (
     ggsave,
     ggsize,
     layer_tooltips,
-    scale_fill_identity,
     theme,
     theme_void,
     xlim,
@@ -85,6 +84,17 @@ FIRST_DIGIT_PATTERNS = {
     "9": "LGGLGL",
 }
 
+# Columns
+XMIN = "xmin"  # role: extra
+XMAX = "xmax"  # role: extra
+YMIN = "ymin"  # role: extra
+YMAX = "ymax"  # role: extra
+SECTION = "section"  # role: extra
+POSITION = "position"  # role: extra
+X = "x"  # role: extra
+Y = "y"  # role: extra
+LABEL = "label"  # role: extra
+
 # Data — German product EAN-13 (4006381333931)
 raw_code = "4006381333931"
 module_width = 3
@@ -132,13 +142,12 @@ for i, bit in enumerate(bars_pattern):
         y_max = guard_y_max if i in guard_positions else bar_y_max
         bars.append(
             {
-                "xmin": float(x_pos),
-                "xmax": float(x_pos + module_width),
-                "ymin": float(bar_y_min),
-                "ymax": float(y_max),
-                "fill": BAR_COLOR,
-                "section": section_labels[i],
-                "position": i,
+                XMIN: float(x_pos),
+                XMAX: float(x_pos + module_width),
+                YMIN: float(bar_y_min),
+                YMAX: float(y_max),
+                SECTION: section_labels[i],
+                POSITION: i,
             }
         )
     x_pos += module_width
@@ -154,29 +163,31 @@ center_guard_start = start_guard_end + 42 * module_width
 right_start = center_guard_start + 5 * module_width
 
 text_y = bar_y_min - 15
-digit_labels = [{"x": quiet_zone - 5 * module_width, "y": text_y, "label": full_code[0]}]
+digit_labels = [{X: quiet_zone - 5 * module_width, Y: text_y, LABEL: full_code[0]}]
 for i, d in enumerate(full_code[1:7]):
-    digit_labels.append({"x": start_guard_end + (i + 0.5) * left_digit_width, "y": text_y, "label": d})
+    digit_labels.append({X: start_guard_end + (i + 0.5) * left_digit_width, Y: text_y, LABEL: d})
 for i, d in enumerate(full_code[7:13]):
-    digit_labels.append({"x": right_start + (i + 0.5) * left_digit_width, "y": text_y, "label": d})
+    digit_labels.append({X: right_start + (i + 0.5) * left_digit_width, Y: text_y, LABEL: d})
 df_digits = pd.DataFrame(digit_labels)
 
 title_str = "barcode-ean13 · python · letsplot · anyplot.ai"
-df_title = pd.DataFrame({"x": [total_width / 2], "y": [guard_y_max + 25], "label": [title_str]})
+df_title = pd.DataFrame({X: [total_width / 2], Y: [guard_y_max + 25], LABEL: [title_str]})
 
 # Plot
 plot = (
     ggplot()
     + geom_rect(
-        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),
+        aes(xmin=XMIN, xmax=XMAX, ymin=YMIN, ymax=YMAX),
         data=df_bars,
-        tooltips=layer_tooltips().line("@section").line("Module @position"),
+        fill=BAR_COLOR,
+        color=BAR_COLOR,
+        size=0,
+        tooltips=layer_tooltips().line(f"@{SECTION}").line(f"Module @{POSITION}"),
     )
-    + scale_fill_identity()
-    + geom_text(aes(x="x", y="y", label="label"), data=df_digits, size=16, family="monospace", color=INK)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=15, color=INK_SOFT)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_digits, size=16, family="monospace", color=INK)
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=df_title, size=15, color=INK_SOFT)
     + xlim(0, total_width)
-    + ylim(-20, guard_y_max + 45)
+    + ylim(0, guard_y_max + 45)
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
