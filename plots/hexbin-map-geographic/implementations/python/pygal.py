@@ -1,14 +1,13 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-27
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import math
 import os
 import re
 import sys
-from collections import defaultdict
 
 
 # Fix module name conflict (this file is named pygal.py)
@@ -18,6 +17,7 @@ if _cwd:
 
 import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -31,117 +31,151 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint_seq: #009E73 → #4467A3 (5 evenly-spaced stops, low → high density)
-seq_stops = ("#009E73", "#11907F", "#22838B", "#337597", "#4467A3")
-n_density_bins = 5
+# Imprint palette (categorical, canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — NYC taxi pickup locations (Manhattan)
-np.random.seed(42)
-n_points = 5000
-lat_min, lat_max = 40.70, 40.82
-lon_min, lon_max = -74.02, -73.93
+# imprint_seq, fields (hexagon cells fill the map): stops low -> high density
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-c1_lat = np.random.normal(40.758, 0.015, n_points // 3)
-c1_lon = np.random.normal(-73.985, 0.01, n_points // 3)
-c1_vals = np.random.exponential(25, n_points // 3)
 
-c2_lat = np.random.normal(40.710, 0.012, n_points // 3)
-c2_lon = np.random.normal(-74.010, 0.008, n_points // 3)
-c2_vals = np.random.exponential(35, n_points // 3)
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in zip(stops[:-1], stops[1:], strict=True) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
 
-c3_lat = np.random.normal(40.775, 0.018, n_points // 3)
-c3_lon = np.random.normal(-73.960, 0.012, n_points // 3)
-c3_vals = np.random.exponential(20, n_points // 3)
 
-lat = np.clip(np.concatenate([c1_lat, c2_lat, c3_lat]), lat_min, lat_max)
-lon = np.clip(np.concatenate([c1_lon, c2_lon, c3_lon]), lon_min, lon_max)
-values = np.concatenate([c1_vals, c2_vals, c3_vals])
-
-# Hexagonal binning with count and fare aggregation
-gridsize = 25
-x_arr = np.asarray(lon)
-y_arr = np.asarray(lat)
-x_min_v, x_max_v = x_arr.min(), x_arr.max()
-y_min_v = y_arr.min()
-hex_width = (x_max_v - x_min_v) / gridsize
-hex_height = hex_width * np.sqrt(3) / 2
-
-bins = defaultdict(lambda: {"count": 0, "sum": 0.0})
-for xi, yi, vi in zip(x_arr, y_arr, values, strict=True):
-    col = (xi - x_min_v) / hex_width
-    row_offset = (int(col) % 2) * 0.5
-    row = (yi - y_min_v) / hex_height - row_offset
-    col_idx = int(round(col))
-    row_idx = int(round(row))
-    bins[(col_idx, row_idx)]["count"] += 1
-    bins[(col_idx, row_idx)]["sum"] += vi
-
-hex_data = []
-for (col_idx, row_idx), data in bins.items():
-    cx = x_min_v + col_idx * hex_width
-    row_offset = (col_idx % 2) * 0.5
-    cy = y_min_v + (row_idx + row_offset) * hex_height
-    count = data["count"]
-    total = data["sum"]
-    mean = total / count if count > 0 else 0
-    hex_data.append({"lon": cx, "lat": cy, "count": count, "sum": total, "mean": mean})
-
-counts = np.array([h["count"] for h in hex_data])
-
-# Percentile-based bin edges for balanced distribution
-bin_edges = np.percentile(counts, [0, 20, 40, 60, 80, 100])
-for i in range(1, len(bin_edges)):
-    if bin_edges[i] <= bin_edges[i - 1]:
-        bin_edges[i] = bin_edges[i - 1] + 1
-
-# Shortened labels to prevent legend truncation
-bin_labels = [
-    f"Low ({int(bin_edges[0])}–{int(bin_edges[1])})",
-    f"Med-Low ({int(bin_edges[1])}–{int(bin_edges[2])})",
-    f"Medium ({int(bin_edges[2])}–{int(bin_edges[3])})",
-    f"Med-High ({int(bin_edges[3])}–{int(bin_edges[4])})",
-    f"High ({int(bin_edges[4])}+)",
+# Constants
+N_BINS = 5  # density classes in the color legend
+GRID_COLUMNS = 22  # hexagon columns across the map: detail vs. aggregation
+# Coarse outline of California: coast, Oregon border, Nevada border, Colorado River, Mexico border
+CALIFORNIA_OUTLINE = [
+    (-124.21, 41.99),
+    (-120.00, 42.00),
+    (-120.00, 39.00),
+    (-114.63, 35.00),
+    (-114.57, 34.80),
+    (-114.14, 34.30),
+    (-114.43, 34.08),
+    (-114.53, 33.93),
+    (-114.50, 33.50),
+    (-114.72, 33.40),
+    (-114.70, 33.03),
+    (-114.72, 32.72),
+    (-117.12, 32.53),
+    (-117.25, 32.75),
+    (-117.28, 33.00),
+    (-117.40, 33.20),
+    (-117.70, 33.45),
+    (-118.10, 33.75),
+    (-118.42, 33.73),
+    (-118.50, 34.03),
+    (-118.80, 34.02),
+    (-119.20, 34.15),
+    (-119.70, 34.40),
+    (-120.47, 34.45),
+    (-120.65, 34.60),
+    (-120.65, 35.15),
+    (-120.90, 35.45),
+    (-121.30, 35.70),
+    (-121.90, 36.30),
+    (-121.95, 36.60),
+    (-121.80, 36.80),
+    (-122.00, 36.95),
+    (-122.40, 37.20),
+    (-122.50, 37.50),
+    (-122.50, 37.80),
+    (-122.95, 38.00),
+    (-123.00, 38.30),
+    (-123.70, 38.90),
+    (-123.80, 39.50),
+    (-123.85, 40.00),
+    (-124.40, 40.45),
+    (-124.10, 41.00),
+    (-124.15, 41.70),
+    (-124.21, 41.99),
 ]
 
-# Geographic outlines (Manhattan island + waterways)
-manhattan_outline = [
-    (-74.020, 40.700),
-    (-74.010, 40.705),
-    (-74.000, 40.710),
-    (-73.975, 40.725),
-    (-73.970, 40.750),
-    (-73.965, 40.775),
-    (-73.940, 40.800),
-    (-73.930, 40.815),
-    (-73.935, 40.820),
-    (-73.943, 40.830),
-    (-73.950, 40.822),
-    (-73.970, 40.810),
-    (-73.990, 40.770),
-    (-74.010, 40.740),
-    (-74.015, 40.720),
-    (-74.020, 40.700),
+# Columns: set these to your table's column names
+LAT = "Latitude (°)"  # role: lat
+LON = "Longitude (°)"  # role: lon
+FRP = "Fire radiative power (MW)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("detections.csv")
+# Satellite wildfire hotspot detections in California around five fire-prone regions
+rng = np.random.default_rng(42)
+regions = [  # (lat, lon, lat spread, lon spread, share of detections, mean power in MW)
+    (39.80, -121.40, 0.22, 0.20, 0.26, 28.0),  # Butte / Plumas foothills
+    (41.30, -122.90, 0.25, 0.28, 0.20, 22.0),  # Klamath / Siskiyou
+    (36.00, -118.60, 0.30, 0.22, 0.20, 18.0),  # Southern Sierra
+    (34.35, -118.60, 0.14, 0.30, 0.20, 35.0),  # Los Angeles / Ventura mountains
+    (38.90, -122.70, 0.22, 0.18, 0.14, 15.0),  # Mendocino / Lake
 ]
-hudson_river = [
-    (-74.035, 40.690),
-    (-74.025, 40.705),
-    (-74.018, 40.720),
-    (-74.015, 40.750),
-    (-74.005, 40.780),
-    (-73.985, 40.810),
-    (-73.970, 40.835),
-]
-east_river = [
-    (-73.935, 40.695),
-    (-73.940, 40.720),
-    (-73.945, 40.755),
-    (-73.925, 40.785),
-    (-73.915, 40.810),
-    (-73.920, 40.835),
-]
+n_detections = 6000
+lat_parts, lon_parts, frp_parts = [], [], []
+for r_lat, r_lon, s_lat, s_lon, share, mean_frp in regions:
+    n_part = int(n_detections * share)
+    lat_parts.append(rng.normal(r_lat, s_lat, n_part))
+    lon_parts.append(rng.normal(r_lon, s_lon, n_part))
+    frp_parts.append(rng.exponential(mean_frp, n_part))
+df = pd.DataFrame(
+    {LAT: np.concatenate(lat_parts), LON: np.concatenate(lon_parts), FRP: np.concatenate(frp_parts)}
+).round(4)
+
+# Plot: everything below derives from df
+df = df.dropna(subset=[LAT, LON])  # a detection without a position cannot be binned
+lat_mid = float(df[LAT].mean())
+x_scale = math.cos(math.radians(max(-80.0, min(80.0, lat_mid))))  # lon degrees -> equal-distance map units
+
+# Hexagonal binning in map units (flat-top, axial coordinates, cube rounding)
+mx = (df[LON].to_numpy() - df[LON].mean()) * x_scale
+my = df[LAT].to_numpy() - lat_mid
+hex_r = max(mx.max() - mx.min(), my.max() - my.min()) / GRID_COLUMNS / 1.5
+qf = (2.0 / 3.0 * mx) / hex_r
+rf = (-1.0 / 3.0 * mx + math.sqrt(3.0) / 3.0 * my) / hex_r
+q, r, s = np.round(qf), np.round(rf), np.round(-qf - rf)
+dq, dr, ds = np.abs(q - qf), np.abs(r - rf), np.abs(s - (-qf - rf))
+q = np.where((dq > dr) & (dq > ds), -r - s, q)
+r = np.where((dq <= dr) | (dq <= ds), np.where(dr > ds, -q - s, r), r)
+
+cells = (
+    df.assign(q=q.astype(int), r=r.astype(int))
+    .groupby(["q", "r"])
+    .agg(count=(FRP, "size"), total=(FRP, "sum"), mean=(FRP, "mean"))
+    .reset_index()
+)
+cx_map = hex_r * 1.5 * cells["q"].to_numpy()
+cy_map = hex_r * math.sqrt(3.0) * (cells["r"].to_numpy() + cells["q"].to_numpy() / 2.0)
+cells["lon"] = cx_map / x_scale + df[LON].mean()
+cells["lat"] = cy_map + lat_mid
+
+# Density classes from quantiles of the cell counts
+inner_edges = np.unique(np.percentile(cells["count"], np.linspace(0, 100, N_BINS + 1)[1:-1]))
+cells["bin"] = np.searchsorted(inner_edges, cells["count"].to_numpy(), side="right")
+cells = cells.sort_values("bin", kind="stable").reset_index(drop=True)
+bin_ids = sorted(cells["bin"].unique())
+
+# Geographic extent (with a small margin) and an equal-distance data aspect
+lon_lo, lon_hi = (
+    min(df[LON].min(), min(p[0] for p in CALIFORNIA_OUTLINE)),
+    max(df[LON].max(), max(p[0] for p in CALIFORNIA_OUTLINE)),
+)
+lat_lo, lat_hi = (
+    min(df[LAT].min(), min(p[1] for p in CALIFORNIA_OUTLINE)),
+    max(df[LAT].max(), max(p[1] for p in CALIFORNIA_OUTLINE)),
+)
+pad_lon, pad_lat = 0.03 * (lon_hi - lon_lo), 0.03 * (lat_hi - lat_lo)
+lon_lo, lon_hi, lat_lo, lat_hi = lon_lo - pad_lon, lon_hi + pad_lon, lat_lo - pad_lat, lat_hi + pad_lat
 
 title = "hexbin-map-geographic · python · pygal · anyplot.ai"
-
+colors = (INK_MUTED,) + tuple(ramp_color(SEQ_FIELDS, b / max(N_BINS - 1, 1)) for b in bin_ids)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -149,98 +183,95 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     guide_stroke_color="transparent",
-    colors=(INK_MUTED, INK_MUTED, INK_MUTED) + seq_stops,
-    opacity=0.85,
+    major_guide_stroke_color="transparent",
+    colors=colors,
+    opacity=0.78,
     opacity_hover=0.95,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=2.5,
 )
 
-chart = pygal.XY(
-    width=3200,
-    height=1800,
-    style=custom_style,
-    title=title,
-    x_title="Longitude (°)",
-    y_title="Latitude (°)",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=5,
-    legend_box_size=28,
-    stroke=False,
-    dots_size=30,
-    show_x_guides=False,
-    show_y_guides=False,
-    explicit_size=True,
-    print_values=False,
-    xrange=(lon_min - 0.015, lon_max + 0.015),
-    range=(lat_min - 0.008, lat_max + 0.008),
-)
 
-# Geographic boundaries (excluded from legend via None label)
-chart.add(None, manhattan_outline, stroke=True, dots_size=0, show_dots=False, fill=False, stroke_width=4)
-chart.add(None, hudson_river, stroke=True, dots_size=0, show_dots=False, fill=False, stroke_width=3)
-chart.add(None, east_river, stroke=True, dots_size=0, show_dots=False, fill=False, stroke_width=3)
-
-# Density bins with size encoding (larger hexagons = more pickups)
-series_data = [[] for _ in range(n_density_bins)]
-for h in hex_data:
-    hx, hy = h["lon"], h["lat"]
-    count = h["count"]
-    total = h["sum"]
-    mean = h["mean"]
-    bin_idx = 0
-    for i in range(1, n_density_bins):
-        if count >= bin_edges[i]:
-            bin_idx = i
-    tooltip = f"Count: {count} | Fares: ${total:.0f} total, ${mean:.2f} avg | ({hy:.4f}°N, {abs(hx):.4f}°W)"
-    series_data[bin_idx].append({"value": (float(hx), float(hy)), "label": tooltip})
-
-dot_sizes = [26, 34, 44, 54, 66]
-for i in range(n_density_bins):
-    if not series_data[i]:
-        series_data[i].append({"value": (-99, 0), "label": "No data"})
-    chart.add(bin_labels[i], series_data[i], dots_size=dot_sizes[i])
+def build_chart(xr, yr):
+    """Render the XY chart: the outline first, then one dot series per density class."""
+    chart = pygal.XY(
+        width=2400,
+        height=2400,
+        style=custom_style,
+        title=title,
+        x_title=LON,
+        y_title=LAT,
+        show_legend=True,
+        legend_at_bottom=True,
+        legend_at_bottom_columns=N_BINS,
+        legend_box_size=30,
+        stroke=False,
+        dots_size=10,
+        show_x_guides=False,
+        show_y_guides=False,
+        explicit_size=True,
+        print_values=False,
+        xrange=xr,
+        range=yr,
+    )
+    chart.add(None, CALIFORNIA_OUTLINE, stroke=True, show_dots=False, fill=False, stroke_width=5)
+    for b in bin_ids:
+        part = cells[cells["bin"] == b]
+        lo, hi = int(part["count"].min()), int(part["count"].max())
+        label = f"count {lo}" if lo == hi else f"count {lo}–{hi}"
+        points = [
+            {
+                "value": (float(c.lon), float(c.lat)),
+                "label": f"Detections: {c.count} | FRP sum {c.total:.0f} MW, mean {c.mean:.1f} MW"
+                f" | ({c.lat:.2f}°N, {abs(c.lon):.2f}°W)",
+            }
+            for c in part.itertuples()
+        ]
+        chart.add(label, points)
+    return chart.render().decode("utf-8")
 
 
-def circles_to_hexagons(svg_text):
-    """Post-process SVG: replace circular dot markers with flat-top hexagonal polygons."""
+def fit_axes(svg_text):
+    """Fit pixel = offset + scale * data for both axes from the dots, in series order."""
+    dots = re.findall(r'<circle\b[^>]*\bcx="([^"]+)"[^>]*\bcy="([^"]+)"', svg_text)
+    assert len(dots) == len(cells), f"{len(dots)} dots for {len(cells)} cells"
+    px = np.array([[float(a), float(b)] for a, b in dots])
+    sx, ox = np.polyfit(cells["lon"].to_numpy(), px[:, 0], 1)
+    sy, oy = np.polyfit(cells["lat"].to_numpy(), px[:, 1], 1)
+    return sx, ox, sy, oy
+
+
+def circles_to_hexagons(svg_text, sx, ox, sy, oy):
+    """Replace each dot marker with the cell's true hexagon, drawn in data space and mapped to pixels."""
+    corners = [(hex_r * math.cos(math.radians(60 * k)), hex_r * math.sin(math.radians(60 * k))) for k in range(6)]
+    cell_iter = iter(cells.itertuples())
 
     def replace_one(m):
-        tag = m.group(0)
-        cx_m = re.search(r'\bcx="([^"]+)"', tag)
-        cy_m = re.search(r'\bcy="([^"]+)"', tag)
-        r_m = re.search(r'\br="([^"]+)"', tag)
-        if not (cx_m and cy_m and r_m):
-            return tag
-        cx = float(cx_m.group(1))
-        cy = float(cy_m.group(1))
-        r = float(r_m.group(1))
-        # Flat-top hexagon: vertex angles 30°, 90°, 150°, 210°, 270°, 330°
-        pts = " ".join(
-            f"{cx + r * math.cos(math.radians(60 * k + 30)):.2f},{cy + r * math.sin(math.radians(60 * k + 30)):.2f}"
-            for k in range(6)
+        c = next(cell_iter)
+        pts = " ".join(f"{ox + sx * (c.lon + dx / x_scale):.2f},{oy + sy * (c.lat + dy):.2f}" for dx, dy in corners)
+        tag = re.sub(r'\s(cx|cy|r)="[^"]*"', "", m.group(0))
+        return tag.replace(
+            "<circle", f'<polygon points="{pts}" stroke="{PAGE_BG}" stroke-width="3" style="fill-opacity:0.8"', 1
         )
-        poly = tag.replace("<circle", "<polygon", 1)
-        poly = re.sub(r'\bcx="[^"]*"\s*', "", poly)
-        poly = re.sub(r'\bcy="[^"]*"\s*', "", poly)
-        poly = re.sub(r'\br="[^"]*"', f'points="{pts}"', poly)
-        return poly
 
     return re.sub(r"<circle\b[^>]*/>", replace_one, svg_text)
 
 
-# Render SVG, convert circle markers to hexagonal polygons, then produce PNG
-svg_bytes = chart.render()
-svg_str = svg_bytes.decode("utf-8")
-modified_svg = circles_to_hexagons(svg_str)
-modified_bytes = modified_svg.encode("utf-8")
+# First pass measures the plot area; the second sets the axis ranges so one degree of
+# latitude and the same map distance in longitude span equal pixel lengths
+probe = build_chart((lon_lo, lon_hi), (lat_lo, lat_hi))
+sx, ox, sy, oy = fit_axes(probe)
+width_px, height_px = abs(sx) * (lon_hi - lon_lo), abs(sy) * (lat_hi - lat_lo)
+px_per_map_unit = min(width_px / ((lon_hi - lon_lo) * x_scale), height_px / (lat_hi - lat_lo))
+lon_span, lat_span = width_px / (px_per_map_unit * x_scale), height_px / px_per_map_unit
+lon_c, lat_c = (lon_lo + lon_hi) / 2, (lat_lo + lat_hi) / 2
+svg = build_chart((lon_c - lon_span / 2, lon_c + lon_span / 2), (lat_c - lat_span / 2, lat_c + lat_span / 2))
+svg = circles_to_hexagons(svg, *fit_axes(svg))
 
-cairosvg.svg2png(bytestring=modified_bytes, write_to=f"plot-{THEME}.png")
-
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(modified_bytes)
+    f.write(svg.encode("utf-8"))

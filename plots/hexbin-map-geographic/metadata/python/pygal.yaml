@@ -2,12 +2,12 @@ library: pygal
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:17:05Z'
-updated: '2026-05-27T14:02:38Z'
+updated: '2026-11-26T15:49:46Z'
 generated_by: claude-sonnet
-workflow_run: 26513744161
+workflow_run: 45850884210
 issue: 3767
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-light.html
@@ -15,125 +15,118 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 quality_score: 84
 review:
   strengths:
-  - Creative SVG post-processing converts pygal circle markers to flat-top hexagonal
-    polygons, achieving a true hexagonal appearance without native hexbin support
-  - Dual encoding with both color (imprint_seq gradient) and size variation communicates
-    density at two perceptual channels simultaneously
-  - Realistic NYC taxi pickup data with geographically accurate clusters around Times
-    Square, Lower Manhattan, and Midtown East
-  - 'Full aggregation coverage: count, sum, and mean are calculated per bin and exposed
-    in interactive HTML tooltips'
-  - Both light and dark renders are theme-correct with proper background colors and
-    readable text throughout
-  - Geographic context via Manhattan outline and river boundaries grounded in correct
-    coordinate data
+  - 'True data-space hexagons: pygal''s circle markers are replaced by flat-top hexagons
+    computed from the bin geometry, tiling a regular grid with shared edges'
+  - Equal-distance aspect correction (cos of mean latitude) keeps both California's
+    shape and the hexagons undistorted
+  - imprint_seq fields stops per theme, sampled with ramp_color, with page-colored
+    cell borders; the outline shows through the 0.8-opacity cells
+  - Legend names the statistic and the observed count range of each class
+  - Tooltips carry count, FRP sum, FRP mean and coordinates per cell in the HTML output
+  - Realistic wildfire-hotspot scenario around five real California fire regions
   weaknesses:
-  - Geographic context is simplified hard-coded polygon coordinates rather than real
-    coastlines or street data — acceptable for pygal but limits spatial accuracy
-  - Hexagonal bins overlap in dense central areas due to size encoding, creating visual
-    noise that makes individual bin boundaries hard to trace
-  - One helper function (circles_to_hexagons) breaks pure KISS flat structure, though
-    it is technically justified by the SVG transformation requirement
-  - Design sophistication stays at the creative-utilitarian level rather than publication-ready
-    polish — geographic outline is minimal, no annotation callouts for key hotspots
+  - 'CQ-01 (code): three helper functions besides the mandated ramp_color — build_chart
+    (lines 199–235, called twice at 266 and 272), fit_axes (238) and circles_to_hexagons
+    (248) — plus a probe render to measure the plot area break the flat Imports →
+    Data → Plot → Save flow → inline the chart build once and the SVG rewrite as top-level
+    statements. Likely cause: the two-pass equal-aspect fit wrapped in functions.'
+  - 'Suggestion: a faint outline of the neighbouring states or the Pacific coast beyond
+    California would give the cells that spill past the border more geographic context.'
+  - 'Suggestion: the legend sits close to the bottom edge; a little more bottom margin
+    would let it breathe.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "hexbin-map-geographic · python · pygal · anyplot.ai" is dark text, clearly readable at top. X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" are dark and readable. Tick labels (latitude ~40.70–40.82, longitude ~-74.03 to -73.92) are dark and legible. Legend at bottom shows 5 density bins with small swatches and labels (Low, Med-Low, Medium, Med-High, High) in dark text.
-      Data: Hexagonal shapes (achieved via SVG post-processing of pygal circle markers) rendered in a sequential gradient from #009E73 (green, low density) through teal/mid-teal to #4467A3 (blue, high density). Three size tiers are visible: small hexagons in the periphery (low density), progressively larger hexagons toward the dense center. Geographic Manhattan outline and river lines are rendered in a muted grey color. Three distinct density cluster zones are visible corresponding to Times Square, Lower Manhattan, and Midtown East.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No "light on light" failures.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas
+      Chrome: title 'hexbin-map-geographic · python · pygal · anyplot.ai' in dark ink at top; y-axis 'Latitude (°)' ticks 33–42, x-axis 'Longitude (°)' ticks -126 to -113; legend at bottom 'count 1–2', 'count 3–9', 'count 11–32', 'count 38–122', 'count 130–496'; all readable
+      Data: a thin grey California outline (coast, Oregon and Nevada borders, Colorado River, Mexico border) with about 75 flat-top hexagons in three groups (north coast/Klamath, Butte–Mendocino, Southern Sierra to LA mountains); fills run pale mint → brand green → blue → navy; cells separated by page-colored borders; the outline shows faintly through cells near LA
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct theme surface, not pure black
-      Chrome: Title, axis labels, and tick labels are rendered in light-colored text, clearly readable against the dark background. Legend text at bottom is light and legible. No dark-on-dark failures detected anywhere in the render.
-      Data: Data colors are identical to the light render — same green (#009E73) through teal to blue (#4467A3) sequential gradient with matching size encoding. Geographic outlines appear in the theme-adapted muted color. The density clusters are clearly distinguishable on the dark surface.
-      Legibility verdict: PASS — all text is clearly readable against the near-black background. Data colors are identical to the light render confirming only chrome flipped between themes.
+      Background: warm near-black #1A1A17
+      Chrome: title, ticks, axis titles and legend in light ink, all readable; no dark-on-dark text
+      Data: same grid and outline (light grey); the continuous ramp uses the dark fields stops (deep green → brand green → pale blue), so the densest cells are pale blue and the sparse ones recede into the page, as intended for a ramp
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, axis=56, major=44, legend=44).
-          Both themes readable. Minor deduction: legend entries small at mobile widths.'
+        comment: All font sizes set explicitly (title 66, labels/ticks/legend 44);
+          title, ticks, axis titles and legend read cleanly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Data hexagons overlap in dense areas but this
-          is expected for density visualization; text and data elements are spatially
-          separated.
+        comment: No text collisions; hexagons tile with shared edges and do not overlap
+          each other
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hexagonal shapes clearly visible at all 5 density levels. Size encoding
-          effective. Minor visual noise in dense center where overlapping bins reduce
-          clarity.
+        comment: Cells clearly visible at every class in both themes; legend swatches
+          match the cell fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 to #4467A3) is CVD-safe. Good luminance difference
-          across the 5 density levels.'
+        comment: Ordered lightness ramp (pale mint to navy / deep green to pale blue)
+          separates the five classes without relying on hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, canvas gate passed. Good canvas utilization,
-          geographic data fills the plotting area well.
+        comment: Square 2400x2400 canvas, equal-distance aspect keeps California's
+          shape; map, axes and legend fit with nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Longitude (°)'', Y: ''Latitude (°)'' — both descriptive with
-          units.'
+        comment: Longitude (°) and Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Sequential data uses imprint_seq stops (#009E73 → #4467A3). Geographic
-          boundaries use INK_MUTED (semantic muted anchor — appropriate). Background
-          #FAF8F1/#1A1A17. Both renders theme-correct.'
+        comment: 'imprint_seq with the fields stops per theme (SEQ_FIELDS) sampled
+          via ramp_color; outline in INK_MUTED; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: creative SVG hexagon hack + dual encoding (color+size)
-          + meaningful geographic context. Not publication-ready level but clearly
-          thoughtful design.'
+        comment: 'Style-guide baseline: monospace hierarchy, theme tokens; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid removed, opacity 0.85, muted geographic outlines, clean legend.
-          Above default but pygal framework constraints limit full refinement.
+        comment: Page-colored 3 px hexagon borders separate cells cleanly and gridlines
+          dropped in favour of the map outline; equal-distance aspect correction for
+          cos(lat)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Dual encoding (color+size) creates clear visual hierarchy. Dense
-          taxi hotspots visually prominent. Geographic context grounds spatial interpretation.
-          Viewer immediately identifies high-density zones.
+        comment: Data displayed; the dark cores emerge from the ramp, no further hierarchy
+          chosen
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,60 +134,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexagonal binning map achieved via creative SVG post-processing.
-          Visual result correctly shows geographic density with hexagonal cells.
+        comment: 'Hexagonal binning map: regular flat-top hex grid over a geographic
+          outline'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Hexagonal bins, sequential color gradient, size encoding, opacity,
-          hover tooltips, multiple aggregation methods (count/sum/mean), color legend
-          all present. Geographic context is simplified hard-coded outline rather
-          than real coastlines.
+        comment: Configurable hex size (GRID_COLUMNS), count/sum/mean per cell in
+          tooltips, sequential ramp with legend naming count, base map outline, translucent
+          cells (outline shows through), hover tooltips; C1-C4 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude correct. Color=density (sequential gradient).
-          Size=density reinforcement.
+        comment: x = longitude, y = latitude; cells centred at their bin centres;
+          axes fitted to the state with a small margin
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''hexbin-map-geographic · python · pygal · anyplot.ai'' —
-          exact required format. Legend: 5 density bins with count ranges (Low 1-2,
-          Med-Low 2-4, Medium 4-7, Med-High 7-13, High 13+).'
+        comment: Title in the mandated format; legend entries 'count 1–2' … 'count
+          130–496' name the statistic and the observed ranges
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows hexagonal binning, multiple density levels, geographic context,
-          size variation, multiple aggregation types. Minor: continuous colormap discretized
-          into 5 bins.'
+        comment: 'Dense cores, pale fringes, gaps between regions: all aspects of
+          a hexbin map shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NYC taxi pickup locations — highly realistic domain. Three geographically
-          accurate cluster centers (Times Square ~40.758°N/-73.985°W, Lower Manhattan
-          ~40.710°N/-74.010°W, Midtown East ~40.775°N/-73.960°W).
+        comment: Satellite wildfire detections with fire radiative power around five
+          real fire-prone California regions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Manhattan coordinate range correct (lat 40.70-40.82, lon -74.02 to
-          -73.93). 5000 points appropriate for hexbin visualization. Exponential fare
-          distribution realistic for taxi data.
+        comment: 'Checked: region centres (Butte/Plumas 39.8°N 121.4°W, Klamath 41.3°N
+          122.9°W, Southern Sierra 36.0°N 118.6°W, LA mountains 34.35°N 118.6°W) lie
+          in those regions; FRP exponential means 15–35 MW plausible per detection;
+          6000 detections in spec range'
     code_quality:
       score: 9
       max: 10
@@ -204,37 +194,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: 'One helper function (circles_to_hexagons) present but technically
-          justified for the SVG post-processing requirement. Main flow is flat: imports
-          → data → binning → chart → render → post-process → save.'
+        comment: Three helper functions besides the mandated ramp_color (build_chart,
+          fit_axes, circles_to_hexagons) and a two-pass probe render (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, os, re, sys, defaultdict, cairosvg, numpy,
-          pygal, Style.'
+        comment: All imports used (math, os, re, sys, cairosvg, numpy, pandas, pygal,
+          Style)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable. sys.path manipulation necessary due to file naming
-          conflict with pygal library. No fake interactivity.
+        comment: Hex binning written out with cube rounding, but no available call
+          bins into hexagons (matplotlib hexbin is a plotting call); no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -242,29 +231,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct chart type (pygal.XY), proper Style object, per-series dots_size,
-          legend_at_bottom with columns, xrange/range for axis limits. Above default
-          of 3.
+        comment: pygal.XY with a Style object, per-point dict values with label for
+          rich tooltips, a None-titled series kept out of the legend, xrange/range
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: SVG post-processing to convert circles to hexagons is a distinctive
-          and creative pygal technique. None label to exclude geographic boundaries
-          from legend is a clever library feature. Interactive HTML output with per-point
-          tooltips leverages pygal's interactivity. Well above default of 1.
+        comment: Post-processes pygal's native SVG output (circle markers to true
+          data-space hexagons) — leverages pygal's SVG-first rendering
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  rendered_at: '2026-11-26T15:44:41Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
+  - patches
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - custom-colormap
+  - edge-highlighting
