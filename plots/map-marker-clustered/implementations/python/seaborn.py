@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -145,7 +145,7 @@ for _, row in cluster_stats.iterrows():
             va="center",
             fontsize=8,
             fontweight="bold",
-            color="white",
+            color="#1A1A17" if row["dominant_category"] == category_names[1] else "white",
             zorder=10,
         )
 
@@ -174,9 +174,9 @@ medium_label = f"{count_p33 + 1} pt" if count_p33 + 1 == count_p66 else f"{count
 large_label = f"{count_p66 + 1}–{count_max} pts" if count_p66 + 1 < count_max else f"{count_max}+ pts"
 
 size_handles = [
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=5, alpha=0.7, label=small_label),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=9, alpha=0.7, label=medium_label),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=13, alpha=0.7, label=large_label),
+    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=5, alpha=0.7, label=small_label),
+    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=9, alpha=0.7, label=medium_label),
+    Line2D([0], [0], marker="o", linestyle="", markerfacecolor=INK_SOFT, markersize=13, alpha=0.7, label=large_label),
 ]
 size_legend = ax.legend(
     handles=size_handles,
