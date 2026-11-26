@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-26
@@ -92,7 +92,13 @@ routes = pd.DataFrame(
 
 cargo_min = routes["cargo_mteu"].min()
 cargo_max = routes["cargo_mteu"].max()
-routes["line_width"] = 1.2 + (routes["cargo_mteu"] - cargo_min) / (cargo_max - cargo_min) * 5.0
+
+
+def width_of(cargo):
+    return 1.2 + (cargo - cargo_min) / (cargo_max - cargo_min) * 5.0
+
+
+routes["line_width"] = width_of(routes["cargo_mteu"])
 
 # Continent polygons (lon, lat) — simplified outlines for geographic context
 land_polygons = [
@@ -209,27 +215,34 @@ for lons, lats in land_polygons:
 n_points = 80
 t = np.linspace(0, 1, n_points)
 
+arcs = {}
 for _, row in routes.iterrows():
     lon1, lat1 = row["origin_lon"], row["origin_lat"]
     lon2, lat2 = row["dest_lon"], row["dest_lat"]
 
-    # Unwrap lon2 so the curve takes the shorter path (handles Pacific crossing)
-    diff = lon2 - lon1
-    if diff > 180:
-        lon2 -= 360
-    elif diff < -180:
-        lon2 += 360
-
-    mid_lon = (lon1 + lon2) / 2
-    mid_lat = (lat1 + lat2) / 2
-    dist = np.sqrt((lon2 - lon1) ** 2 + (lat2 - lat1) ** 2)
-    curve_height = dist * 0.13
-
-    lons = (1 - t) ** 2 * lon1 + 2 * (1 - t) * t * mid_lon + t**2 * lon2
-    lats = (1 - t) ** 2 * lat1 + 2 * (1 - t) * t * (mid_lat + curve_height) + t**2 * lat2
+    # Great-circle path: spherical interpolation between the two unit vectors
+    p1 = np.array(
+        [
+            np.cos(np.radians(lat1)) * np.cos(np.radians(lon1)),
+            np.cos(np.radians(lat1)) * np.sin(np.radians(lon1)),
+            np.sin(np.radians(lat1)),
+        ]
+    )
+    p2 = np.array(
+        [
+            np.cos(np.radians(lat2)) * np.cos(np.radians(lon2)),
+            np.cos(np.radians(lat2)) * np.sin(np.radians(lon2)),
+            np.sin(np.radians(lat2)),
+        ]
+    )
+    omega = np.arccos(np.clip(p1 @ p2, -1, 1))
+    pts = (np.sin((1 - t) * omega)[:, None] * p1 + np.sin(t * omega)[:, None] * p2) / np.sin(omega)
+    lons = np.degrees(np.arctan2(pts[:, 1], pts[:, 0]))
+    lats = np.degrees(np.arcsin(np.clip(pts[:, 2], -1, 1)))
+    arcs[(row["origin"], row["dest"])] = (lons, lats)
 
     # Wrap to [-180, 180] and split at antimeridian discontinuities
-    lons_w = ((lons + 180) % 360) - 180
+    lons_w = lons
     breaks = np.where(np.abs(np.diff(lons_w)) > 90)[0] + 1
     starts = np.concatenate([[0], breaks])
     ends = np.concatenate([breaks, [n_points]])
@@ -261,24 +274,25 @@ sns.scatterplot(
 )
 
 # City labels with custom offsets to avoid overlap
-label_offsets = {
-    "Shanghai": (8, -16),  # below dot to separate from Busan label
-    "Los Angeles": (-72, -16),
-    "Rotterdam": (-68, 8),
-    "Singapore": (8, -16),
-    "Busan": (8, 8),
-    "Dubai": (8, 8),
-    "New York": (-65, 8),
-    "Mumbai": (-55, -16),
+label_offsets = {  # (dx, dy in points, horizontal alignment) — each label sits beside its own marker
+    "Shanghai": (-9, -13, "right"),
+    "Los Angeles": (10, -14, "left"),
+    "Rotterdam": (-11, 8, "right"),
+    "Singapore": (10, -14, "left"),
+    "Busan": (9, 6, "left"),
+    "Dubai": (-9, 8, "right"),
+    "New York": (-11, 8, "right"),
+    "Mumbai": (9, -14, "left"),
 }
 
 for _, row in ports.iterrows():
-    dx, dy = label_offsets.get(row["city"], (8, 8))
+    dx, dy, ha = label_offsets.get(row["city"], (8, 8, "left"))
     ax.annotate(
         row["city"],
         xy=(row["lon"], row["lat"]),
         xytext=(dx, dy),
         textcoords="offset points",
+        ha=ha,
         fontsize=8,
         fontweight="bold",
         color=INK,
@@ -286,10 +300,13 @@ for _, row in ports.iterrows():
     )
 
 # Storytelling annotation: highlight world's busiest shipping lane
-# Arc point at t≈0.2 for Shanghai→LA route (east of Japan, ~146°E 37°N)
+# Arc point at t≈0.3 of the busiest route, east of Japan
+busiest = routes.loc[routes["cargo_mteu"].idxmax()]
+arc_lons, arc_lats = arcs[(busiest["origin"], busiest["dest"])]
+tip = int(0.3 * n_points)
 ax.annotate(
     "World's busiest lane\nShanghai → Los Angeles: 13.2M TEU",
-    xy=(146, 37),
+    xy=(arc_lons[tip], arc_lats[tip]),
     xytext=(138, 66),
     textcoords="data",
     fontsize=8.5,
@@ -320,9 +337,9 @@ ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 min_vol, max_vol = routes["cargo_mteu"].min(), routes["cargo_mteu"].max()
 mid_vol = (min_vol + max_vol) / 2
 legend_elements = [
-    Line2D([0], [0], color=BRAND, linewidth=1.5, alpha=0.7, label=f"{min_vol:.1f}M TEU"),
-    Line2D([0], [0], color=BRAND, linewidth=3.5, alpha=0.7, label=f"{mid_vol:.1f}M TEU"),
-    Line2D([0], [0], color=BRAND, linewidth=6.0, alpha=0.7, label=f"{max_vol:.1f}M TEU"),
+    Line2D([0], [0], color=BRAND, linewidth=width_of(min_vol), alpha=0.55, label=f"{min_vol:.1f}M TEU"),
+    Line2D([0], [0], color=BRAND, linewidth=width_of(mid_vol), alpha=0.55, label=f"{mid_vol:.1f}M TEU"),
+    Line2D([0], [0], color=BRAND, linewidth=width_of(max_vol), alpha=0.55, label=f"{max_vol:.1f}M TEU"),
 ]
 ax.legend(
     handles=legend_elements,
