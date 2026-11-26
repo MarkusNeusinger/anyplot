@@ -1,7 +1,7 @@
 """anyplot.ai
 roc-curve: ROC Curve with AUC
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-21
+Quality: pending | Updated: 2026-11-21
 """
 
 import os
