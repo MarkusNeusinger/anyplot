@@ -16,35 +16,34 @@ quality_score: 84
 review:
   strengths:
   - Arc lengths follow the segment lengths (120 to 50 Mb) with even gaps, so the outer
-    ring reads as a real chromosome layout in natural Chr1–Chr8 order
-  - Ribbon widths share one angle-per-unit scale at both anchors (unit derived from
-    the busiest segment), so every ribbon is equally wide at both ends and proportional
-    to its rearrangement count
+    ring reads as a chromosome layout in natural Chr1-Chr8 order
+  - Ribbon widths share one angle-per-unit scale at both anchors, so every ribbon
+    is equally wide at both ends and proportional to its rearrangement count
   - Two inner expression tracks sit on faint full-height bands that show each track's
     scale, aligned to the segment spans and kept clear of the ribbon field; a caption
     names the track order and the ribbon encoding
   - One Imprint colour per segment used consistently for ring, track bars and outgoing
     ribbons; ribbons at alpha 0.5 stay distinguishable where they cross in both themes
-  - Built entirely from lets-plot's grammar (geom_polygon layers grouped by polygon
-    id, coord_fixed, scale_fill_manual) with theme tokens threaded through every chrome
-    element; exports both PNG and interactive HTML
+  - Built from lets-plot's grammar (geom_polygon layers grouped by polygon id, coord_fixed,
+    scale_fill_manual) with theme tokens threaded through every chrome element; exports
+    PNG and interactive HTML
   weaknesses:
-  - 'Suggestion: the fill legend repeats the direct Chr1–Chr8 ring labels; dropping
+  - 'Suggestion: the fill legend repeats the direct Chr1-Chr8 ring labels; dropping
     it (legend_position=''none'') would give the circle more of the square canvas.'
   - 'Suggestion: lets-plot tooltips on the ribbon and track polygons (layer_tooltips
     with the link count or expression value) would make exact values readable in the
     HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 over the whole canvas, 2400x2400.
-      Chrome: bold title "circos-basic · python · letsplot · anyplot.ai" top-left (~65% width); bold dark segment labels Chr1–Chr8 outside the ring; right-hand legend Chr1–Chr8 in INK_SOFT; two-line caption at the bottom right naming the inner tracks (liver, then brain) and the ribbon encoding. All text dark and readable.
-      Data: outer ring of eight arcs with gaps, sized by length (Chr1 longest), coloured in Imprint order starting with #009E73; two inner tracks of radial bars in segment colours on faint grey bands; translucent ribbons of varying width cross the interior between segments, anchored inside the innermost track. No text overlap, nothing clipped.
+      Background: warm off-white #FAF8F1 over the whole 2400x2400 canvas.
+      Chrome: bold title "circos-basic · python · letsplot · anyplot.ai" top-left (~65% width); bold dark segment labels Chr1-Chr8 outside the ring; right-hand legend Chr1-Chr8 in INK_SOFT; two-line right-aligned caption at the bottom naming the inner tracks (liver, then brain) and the ribbon encoding. All text dark and readable.
+      Data: outer ring of eight arcs separated by gaps, sized by length (Chr1 longest, Chr8 shortest), coloured in Imprint order starting with #009E73; two inner tracks of radial bars in segment colours on faint grey bands; ten translucent ribbons of varying width cross the interior between segments, anchored inside the innermost track. No text overlap, nothing clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
       Chrome: title and segment labels in light ink, legend text and caption in light grey INK_SOFT; no dark-on-dark text. Track bands render as subtle dark-grey bands.
-      Data: identical segment, track and ribbon colours to the light render; ribbons blend darker over the near-black surface but stay visible and distinguishable where they cross; brand green Chr1 reads clearly.
+      Data: segment, track and ribbon colours identical to the light render; ribbons blend darker over the near-black surface but stay visible and distinguishable where they cross; brand green Chr1 reads clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,49 +55,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16 pt, labels bold, legend and caption explicit sizes; all
-          readable in both themes
+        comment: Title 16 pt bold, segment labels bold, legend 10 pt and caption 11
+          pt set explicitly; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ribbon overlap is permitted by the spec and handled
-          with alpha
+        comment: No text collisions; ribbon overlap is permitted by the spec (C6)
+          and handled with alpha 0.5 and page-coloured outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ring, track bars and ribbons all visible in both themes; legend swatches
+        comment: Ring, track bars and ribbons visible in both themes; legend swatches
           match the ring fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, segments also labelled directly
+        comment: Imprint palette, and every segment is also labelled directly, so
+          colour is not the only cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400, circle fills the canvas with legend at right; nothing
-          clipped
+        comment: 2400x2400 square; the circle fills most of the canvas with the legend
+          at right and the caption below; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design; caption names tracks and ribbon encoding in reader
-          text
+        comment: No axes by design; the caption names both tracks and the ribbon encoding
+          in reader text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Eight Imprint positions in canonical order, first #009E73; backgrounds
-          #FAF8F1 / #1A1A17'
+          #FAF8F1 / #1A1A17; colours identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -108,15 +108,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold direct segment labels set a clear hierarchy over the soft legend
-          and caption
+        comment: Bold direct segment labels set a clear hierarchy over the soft INK_SOFT
+          legend and caption
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Faint full-height bands behind the track bars give each track a visible
-          scale; page-coloured outlines separate polygons
+        comment: Faint full-height bands behind each track bar show the track's scale;
+          page-coloured outlines separate ring, bars and ribbons
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -132,21 +132,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Circos: segment ring, inner tracks, ribbons; no unasked layers'
+        comment: 'Circos: segment ring, two inner tracks, ribbons; no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gaps, proportional ribbons, distinct colours, two concentric tracks
-          explained by caption — all characteristic bullets met
+        comment: Gaps, proportional ribbons, one colour per segment, two concentric
+          tracks explained by the caption; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Arc lengths from segment sizes, ribbon width from value at both ends,
-          bar heights from track values
+        comment: Arc lengths from segment sizes, ribbon width from value on one angle-per-unit
+          scale at both ends, bar heights from track values
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -169,15 +169,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Neutral genomic rearrangement scenario with plausible chromosome
-          lengths
+        comment: Neutral genomic rearrangement scenario with chromosome names, lengths
+          in Mb and tissue expression
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lengths 50–120 Mb, counts 8–25, expression 0.38–0.93; no Check values
-          in the spec
+        comment: Lengths 50-120 Mb, counts 8-25, expression 0.38-0.93; the spec has
+          no Check values
     code_quality:
       score: 10
       max: 10
@@ -205,8 +205,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Chord geometry is hand-built because lets-plot has no chord geom;
-          no replaceable algorithm
+        comment: Chord geometry is built by hand because lets-plot has no chord geom;
+          no algorithm an available call computes
       - id: CQ-05
         name: Output & API
         score: 1
@@ -221,9 +221,9 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Grammar of graphics with grouped geom_polygon layers and theme tokens;
-          default level
+        passed: false
+        comment: Grammar of graphics with grouped geom_polygon layers, coord_fixed
+          and scale_fill_manual; default level
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -232,7 +232,7 @@ review:
         comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
   rendered_at: '2026-11-09T09:58:25Z'
 impl_tags:
   dependencies: []
