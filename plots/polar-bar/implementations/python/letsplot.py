@@ -1,12 +1,11 @@
 """ anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-21
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
 
-import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
@@ -17,6 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_bar,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -53,7 +53,7 @@ df = pd.DataFrame(
 plot = (
     ggplot(df, aes(x=DIRECTION, y=FREQUENCY, fill=DIRECTION))
     + geom_bar(stat="identity", color=PAGE_BG, size=0.5, alpha=0.9, width=0.95)
-    + coord_polar(start=-np.pi / df[DIRECTION].nunique())
+    + coord_polar()
     + scale_fill_manual(values=IMPRINT_PALETTE)
     + scale_y_continuous(limits=[0, None], expand=[0, 0.5])
     + labs(title="polar-bar · python · letsplot · anyplot.ai", x="", y="Frequency (%)")
@@ -70,6 +70,8 @@ plot = (
     )
     + ggsize(600, 600)
 )
+# coord_polar fixes the aspect; a one-panel grid paints the whole canvas with the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save as PNG and HTML (theme-suffixed)
 ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
