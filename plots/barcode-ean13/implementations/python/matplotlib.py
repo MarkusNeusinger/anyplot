@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
