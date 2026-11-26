@@ -51,12 +51,12 @@ const airport_lons = Float64[
     114.2,   8.6,
 ]
 
-# Connections: (origin_idx, dest_idx, annual_passengers_millions)
+# Connections: (origin_idx, dest_idx, annual_passengers_millions, both directions)
 const connections = [
-    (1, 2, 12.5), (1, 3,  8.3), (1, 9,  6.1), (1, 4,  5.2),
-    (2, 8,  9.8), (2, 7,  5.7), (3, 9,  7.2), (3, 4,  4.1),
-    (9, 4,  6.8), (4, 5,  4.8), (4, 6,  3.4), (5, 9,  5.3),
-    (5, 8,  4.2), (7, 2,  5.7), (10, 2, 3.9),
+    (1, 2, 3.4), (1, 3, 2.0), (1, 9, 1.0), (1, 4, 1.4),
+    (2, 8, 3.0), (2, 7, 1.9), (3, 9, 0.9), (3, 4, 1.1),
+    (9, 4, 2.0), (4, 5, 1.2), (4, 6, 1.5), (5, 9, 2.4),
+    (5, 8, 1.0), (7, 3, 1.2), (10, 2, 1.6),
 ]
 
 const volumes = Float64[c[3] for c in connections]
@@ -144,7 +144,16 @@ ax = Axis(
 
 # Base map: simplified continent fills (drawn first, behind all other elements)
 for pts in CONTINENTS
-    poly!(ax, pts; color = LAND_FILL, strokecolor = COAST_COLOR, strokewidth = 0.6)
+    poly!(ax, pts; color = LAND_FILL, strokewidth = 0)
+    ring = vcat(pts, pts[1:1])
+    outline = Point2f[]
+    for k in eachindex(ring)
+        if k > 1 && ring[k][1] == 30 && ring[k-1][1] == 30   # shared Europe/Asia edge: no coastline
+            push!(outline, Point2f(NaN, NaN))
+        end
+        push!(outline, ring[k])
+    end
+    lines!(ax, outline; color = COAST_COLOR, linewidth = 0.6)
 end
 
 # Graticule: reference grid lines for geographic context
@@ -188,7 +197,7 @@ for (oi, di, volume) in connections
     arc_color = RGBAf(red(base_c), green(base_c), blue(base_c), 0.60f0)  # spec: 0.3-0.6
     lines!(ax, arc_lons, arc_lats;
         color     = arc_color,
-        linewidth = 1.0 + 3.5 * nv,
+        linewidth = 2.0 + 3.0 * nv,
     )
 end
 
@@ -202,16 +211,16 @@ scatter!(ax, airport_lons, airport_lats;
 
 # Airport labels with manual offsets to minimise overlap in dense clusters
 const label_offsets = [
-    (-5.0,  4.0),   # London
+    (-6.5,  4.0),   # London
     (-7.0, -5.5),   # New York
     ( 4.0,  3.5),   # Dubai
     ( 5.0, -5.5),   # Singapore
     ( 5.0,  3.5),   # Tokyo
     ( 5.0, -5.5),   # Sydney
-    ( 4.0,  3.5),   # Paris
+    (-6.0, -4.5),   # Paris
     (-7.0, -5.5),   # Los Angeles
     ( 5.0,  3.5),   # Hong Kong
-    ( 4.0, -5.5),   # Frankfurt
+    ( 7.0,  4.0),   # Frankfurt
 ]
 
 for (i, name) in enumerate(airport_names)
