@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-volume: Stock Candlestick Chart with Volume
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-21
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -70,6 +70,7 @@ date_breaks = list(range(0, len(df), 10))
 date_labels = [df[DATE].iloc[i].strftime("%b %d") for i in date_breaks]
 x_axis_title = f"{DATE} ({df[DATE].iloc[0].year})"
 
+x_limits = [-1, len(df)]
 vol_min, vol_max = df[VOLUME].min(), df[VOLUME].max()
 vol_breaks = [int(vol_min), int((vol_min + vol_max) / 2), int(vol_max)]
 vol_labels = [f"{v / 1_000_000:.1f}M" for v in vol_breaks]
@@ -95,7 +96,7 @@ candle_plot = (
     + geom_segment(aes(x=POSITION, xend=POSITION, y=LOW, yend=HIGH, color=DIRECTION), size=0.75)
     + geom_segment(aes(x=POSITION, xend=POSITION, y=OPEN, yend=CLOSE, color=DIRECTION), size=3.0)
     + scale_color_manual(values=direction_colors, name=DIRECTION)
-    + scale_x_continuous(breaks=date_breaks, labels=date_labels)
+    + scale_x_continuous(breaks=date_breaks, labels=date_labels, limits=x_limits, expand=[0, 0])
     + labs(title="Stock Trading · candlestick-volume · python · letsplot · anyplot.ai", y="Price ($)", x="")
     + anyplot_theme
     + theme(
@@ -113,15 +114,19 @@ volume_plot = (
     ggplot(plot_df)
     + geom_bar(aes(x=POSITION, y=VOLUME, fill=DIRECTION), stat="identity", width=0.8, color=PAGE_BG, size=0)
     + scale_fill_manual(values=direction_colors, name=DIRECTION)
-    + scale_x_continuous(breaks=date_breaks, labels=date_labels)
+    + scale_x_continuous(breaks=date_breaks, labels=date_labels, limits=x_limits, expand=[0, 0])
     + scale_y_continuous(breaks=vol_breaks, labels=vol_labels)
     + labs(x=x_axis_title, y=VOLUME)
     + anyplot_theme
-    + theme(legend_position="none", plot_margin=[1, 10, 5, 5])
+    + theme(legend_position="none", plot_margin=[1, 10, 5, 8])
     + ggsize(800, 135)
 )
 
-combined = gggrid([candle_plot, volume_plot], ncol=1, heights=[0.7, 0.3], hspace=0, vspace=0) + ggsize(800, 450)
+combined = (
+    gggrid([candle_plot, volume_plot], ncol=1, heights=[0.7, 0.3], hspace=0, vspace=0)
+    + ggsize(800, 450)
+    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+)
 
 # Save outputs
 ggsave(combined, f"plot-{THEME}.png", scale=4, path=".")

@@ -2,62 +2,65 @@ library: letsplot
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:15:56Z'
-updated: '2026-06-16T19:46:21Z'
-generated_by: claude-opus
-workflow_run: 27643076719
+updated: '2026-11-26T08:36:03Z'
+generated_by: claude-sonnet
+workflow_run: 45783210453
 issue: 992
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - 'Correct packed-bubble execution: custom force-directed collision-resolution loop
-    packs 15 circles with no overlap, and circle area (not radius) encodes value via
-    radii = sqrt(value/pi) — the most important perceptual rule for this chart type.'
-  - 'Idiomatic lets-plot: shape=21 with fill+stroke, scale_size_identity + size_unit=''x''
-    for true data-unit circle sizing, coord_fixed, theme_void, and interactive layer_tooltips
-    — distinctive high-level grammar usage.'
-  - 'Imprint palette in canonical order (Tech=#009E73 brand green, Business=#C475FD,
-    Operations=#4467A3); page backgrounds correct (#FAF8F1 light / #1A1A17 dark) with
-    only chrome flipping between renders.'
-  - 'Clear data storytelling: subtitle ''Tech departments dominate'' plus group clustering
-    and the largest bubble (Engineering $85M) give an obvious focal point; in-bubble
-    labels show name+value for large circles and fall back to tooltips for small ones.'
-  - 'Clean KISS script: seeded (np.random.seed(42)), linear, no functions/classes,
-    all imports used, saves both plot-{theme}.png and .html.'
+  - Circle area encodes the value (radius = sqrt(value/pi) * 3.5) and size_unit='x'
+    with scale_size_identity draws the diameters in data units, so a value twice as
+    large is twice the area
+  - 'Whole square canvas painted in the page color in both themes via the one-panel
+    gggrid, with Imprint colors in canonical order (Tech #009E73 first) and theme-correct
+    chrome'
+  - Three-tier in-bubble labelling (name + value for large circles, name only for
+    medium, none for the smallest) keeps labels inside circles large enough to hold
+    them
+  - 'Subtitle claim computed from the data (Tech: 8 of 15 teams, 58 % of the budget)
+    instead of typed in'
+  - layer_tooltips gives department, budget and division on hover in the HTML output
   weaknesses:
-  - Force packing is slightly loose/asymmetric — visible gaps between several circles
-    and the cluster leans left-of-center, leaving uneven empty margins in the square
-    canvas. Tightening collision spacing or adding a centering pass would improve
-    canvas fill.
-  - Three small circles (Legal $22M, QA $28M, plus Security/Design/Analytics show
-    name only) carry no in-bubble value label; values are reachable only via tooltip,
-    which is acceptable per spec but reduces at-a-glance completeness in the static
-    PNG.
-  - 'In-bubble text is a fixed dark #1A1A17 on all fills in both themes — readable
-    on the bright green/lavender/blue fills, but contrast on the green fill is only
-    moderate; a touch more weight or a subtle halo would harden legibility at 400px
-    mobile scale.'
-  image_description: "Light render (plot-light.png):\n  Background: warm off-white\
-    \ (#FAF8F1), correct — not pure white.\n  Chrome: title \"Department Budget Allocation\
-    \ · bubble-packed · python · letsplot · anyplot.ai\" in dark ink, fully visible\
-    \ and not clipped; gray subtitle \"Tech departments dominate — 8 of 15 teams control\
-    \ 58% of total budget\" centered below; framed bottom legend \"Division: Tech\
-    \ / Business / Operations\" with dark text. All readable.\n  Data: 15 packed circles,\
-    \ no overlap. Tech=#009E73 green, Business=#C475FD lavender, Operations=#4467A3\
-    \ blue. Circles stroked with page-bg color for clean separation. In-bubble bold\
-    \ dark labels (Engineering $85M, R&D $72M, Product $68M, Marketing $62M, etc.).\
-    \ First series Tech is #009E73. \n  Legibility verdict: PASS\n\nDark render (plot-dark.png):\n\
-    \  Background: warm near-black (#1A1A17), correct — not pure black.\n  Chrome:\
-    \ title in light ink (#F0EFE8) fully visible, no dark-on-dark; subtitle in soft\
-    \ gray readable; legend frame with light text readable. No clipping at any edge.\n\
-    \  Data: identical circle colors and positions to light render — only chrome flipped.\
-    \ Bubbles are bright, so the fixed dark in-bubble labels remain readable on green/lavender/blue\
-    \ fills. First series Tech still #009E73.\n  Legibility verdict: PASS"
+  - 'SC-02 (both): the Business division is not one cluster: Marketing sits left of
+    IT and Sales at the upper right, with R&D and IT between them, so the grouping
+    does not show related circles together (C4) → both Business circles packed side
+    by side in one cluster. Likely cause: the group pull (0.025 toward the centroid,
+    first 1200 steps only) is too weak against collisions, and random r_init 3-20
+    lets Tech circles land between the two.'
+  - 'SC-02 (both): no visible spacing between the groups: Operations circles touch
+    Analytics and Product, Marketing touches IT, at a gap of about 11 px → a gap between
+    groups several times the within-group gap (about 3-4 layout units instead of 1.0).
+    Likely cause: OTHER_GROUP_GAP = 1.0.'
+  - 'SC-02 (both): neighbouring circles cross by a few pixels: the page-colored ring
+    of one bubble bites into its neighbour (R&D''s bottom under IT, IT''s right side
+    under QA, Ops under Finance, HR under the Legal circle) (C2) → circles that touch
+    without crossing. Likely cause: the 1.5 stroke is drawn outside the layout radius,
+    so min_dist = r_i + r_j + 0.25 is smaller than the drawn radii.'
+  - 'VQ-01 (dark): bold #1A1A17 labels on the Operations blue fill (Finance, Ops,
+    Support, HR) reach about 2.8:1 on the dark render (3.6:1 light) and read dim →
+    label color following the fill, light text on the blue (at least 4.5:1). Likely
+    cause: geom_text color fixed to "#1A1A17" for every fill.'
+  - 'Suggestion: the two unlabeled small circles (Legal, QA) could carry a short name
+    where it fits, so every department is identifiable without the tooltip.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 over the whole 2400x2400 canvas, no unpainted strips.
+      Chrome: title "Department Budget Allocation · bubble-packed · python · letsplot · anyplot.ai" in dark ink near the top (about 90 % of the width, not clipped), grey subtitle "Tech departments dominate — 8 of 15 teams control 58% of total budget", framed bottom legend "Division: Tech / Business / Operations" on the elevated surface. No axes or grid. All readable.
+      Data: 15 packed bubbles with page-colored rings: Tech #009E73 green (8, a central-right cluster incl. Engineering $85M, R&D $72M, Product $68M), Business #C475FD lavender (Marketing left of IT, Sales upper right - split apart), Operations #4467A3 blue (lower-left cluster). Bold dark labels with name + value in large circles, name only in medium ones, none in Legal and QA. Neighbouring rings bite slightly into adjacent bubbles. First series is #009E73.
+      Legibility verdict: PASS (dark labels on the blue fill are the weakest, about 3.6:1)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 over the whole canvas.
+      Chrome: title in light ink, subtitle in soft grey, legend with light text on #242420 with a light frame; no dark-on-dark chrome.
+      Data: same positions and the same Imprint categorical colors as light (fills slightly darker through alpha 0.92 over the dark page); rings now dark. Dark labels stay readable on green and lavender but read dim on the Operations blue (about 2.8:1).
+      Legibility verdict: PASS (in-bubble labels on blue weak, see VQ-01)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,49 +71,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome readable in both themes; fixed dark in-bubble text only
-          moderate contrast on green fill
+        comment: All sizes set explicitly (title 14 pt scaled for the long prefix,
+          subtitle 11, legend 12/11, in-bubble 5 mm bold); fixed dark labels on the
+          Operations blue fill reach only 2.8:1 in the dark render (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Circles packed with no overlap; no text collisions
+        comment: No text collides with other text; every bubble stays distinguishable
+          by its page-colored ring
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 prominent bubbles, sizes clearly differentiated
+        comment: 15 large bubbles, clearly visible in both themes; legend swatches
+          filled and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, good contrast
+        comment: Green / lavender / blue differ in lightness and hue; CVD-safe, labels
+          name each bubble
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square, gate passed; slightly loose/left-leaning packing
-          but fills canvas
+        comment: 2400x2400, gate passed; cluster fills the square, title near top,
+          legend close below; corners empty as C6 permits
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void appropriate for packed bubble; title descriptive with
-          $M units
+        comment: N/A for axes (theme_void, packed layout); title and legend descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Tech=#009E73 leads, canonical Imprint order, correct backgrounds
-          both themes
+        comment: 'Imprint in canonical order, Tech #009E73 first; whole canvas painted
+          #FAF8F1 / #1A1A17 via the one-panel gggrid; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,23 +124,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom force packing, stroke-on-bg separation, alpha; packing a touch
-          loose
+        comment: Title/subtitle hierarchy in INK vs INK_SOFT and a three-tier in-bubble
+          labelling scheme (name+value, name, none) by share of the maximum
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: theme_void, no spines, framed legend, generous whitespace
+        comment: Page-colored rings separate touching bubbles; abbreviations (Ops,
+          Support) keep labels inside circles
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtitle insight + group clustering + size hierarchy create clear
-          focal point
+        comment: Subtitle claim computed from the data (Tech 8 of 15, 58%) gives a
+          focal point; split Business cluster weakens the group story
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -142,26 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart
+        comment: Packed bubble chart with grouping as the Notes allow
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Area sizing, force packing, group clustering, color, labels, tooltips
+        passed: false
+        comment: Area scaling (C1), color legend (C3), labels only in large circles
+          (C5) met; Business split into two places and no visible gap between groups
+          (C4), neighbouring rings bite into each other (C2) (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Size=value (area), color=division group
+        comment: Layout-positioned type (exempt); radius = sqrt(value/pi)*3.5 so area
+          is proportional to value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with descriptive prefix; legend labels match
-          divisions
+        comment: Descriptive prefix + mandated title; legend 'Division' with Tech/Business/Operations
     data_quality:
       score: 15
       max: 15
@@ -171,19 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 items across 3 groups, varied sizes
+        comment: 15 items across 3 groups of different size, values 22-85 give clear
+          size variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budgets — plausible and neutral
+        comment: Department budgets with real department names, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $22M-$85M sensible for department budgets
+        comment: 'Checked: subtitle numbers fall out of the data (Tech 415 of 720
+          = 57.6% -> 58%, 8 of 15); $22M-$85M plausible per department'
     code_quality:
       score: 10
       max: 10
@@ -193,7 +204,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,51 +216,55 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported names used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Circle packing is written out but no available package computes it;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png + .html
-    library_features:
-      score: 9
+        comment: Saves plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot grammar, shape 21, scale_size_identity, size_unit='x', coord_fixed
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive tooltips, data-unit circle sizing, HTML export
+        comment: aes mapping with column constants, shape 21 fill+stroke, scale_size_identity,
+          coord_fixed, theme_void, guide_legend(nrow=1)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: size_unit='x' sizes circles in data units; layer_tooltips with title
+          and lines for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T08:31:07Z'
 impl_tags:
   dependencies: []
   techniques:
-  - force-directed-layout
-  - circle-packing
-  - tooltips
-  - bubble-sizing-by-area
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - physics-simulation
-  dataprep:
-  - collision-resolution
-  - area-scaling
+  - groupby-aggregation
+  dataprep: []
   styling:
-  - publication-ready
-  - theme-adaptive
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
