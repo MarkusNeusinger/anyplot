@@ -2,46 +2,50 @@ library: letsplot
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:54:41Z'
-updated: '2026-05-05T18:21:49Z'
-generated_by: claude-haiku
-workflow_run: 25393739716
+updated: '2026-11-26T11:33:32Z'
+generated_by: claude-sonnet
+workflow_run: 45810579503
 issue: 998
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): all text legible in both themes, distinct colors,
-    ideal proportions'
-  - 'Flawless Spec Adherence: data correctly summed to 100%, legend accurate, title
-    format correct'
-  - 'Clean Code: direct reproducible implementation, clear data-generation loop, no
-    unnecessary abstraction'
-  - 'Theme Mastery: environment-variable-driven switching works flawlessly, identical
-    data colors across renders, proper INK token usage'
-  - 'Professional Polish: percentage labels enhance usability, generous spacing improves
-    readability, grid layout intuitive'
+  - Cumulative-edge rounding (edges.diff) gives whole squares that always fill the
+    100-square grid, robust to any shares
+  - Fixed-aspect waffle wrapped in a one-panel gggrid at the canonical 800x450 canvas
+    painted in the page color in both themes
+  - Legend labels carry the percentages and follow the data order through an ordered
+    Categorical
+  - Theme tokens threaded through title, legend title, legend text and legend fill;
+    identical Imprint data colors in both renders
+  - Interactive HTML export with lets-plot's native tile tooltips
   weaknesses:
-  - 'Design Excellence minor: could elevate aesthetics with additional refinement
-    (custom font weights, subtle grid accents)'
-  - 'Library Features minor: implementation solid but doesn''t showcase advanced letsplot
-    features (not required by spec)'
+  - 'DE-02 (both): a four-sided box frame in INK_SOFT encloses the waffle grid where
+    nothing requires it, short of the style guide''s ''remove spines / no box frames''
+    baseline → no frame (the grid needs no enclosure). Likely cause: the panel/plot
+    border lets-plot draws by default; set panel_border=element_blank() (and plot_background
+    color=PAGE_BG on the inner plot) in anyplot_theme.'
+  - 'Suggestion: a slightly larger legend (14 pt entries) would balance the large
+    square grid.'
+  - 'Suggestion: placing the legend closer to the grid would tighten the right side
+    of the canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface as specified
-      Chrome: Title "waffle-basic · letsplot · anyplot.ai" centered at top in dark INK color; legend on right with category labels and percentages; all text fully readable against light background
-      Data: 10×10 grid with green (#009E73, 45 squares), orange (#D55E00, 28 squares), blue (#0072B2, 18 squares), pink (#CC79A7, 9 squares) in proper order
-      Legibility verdict: PASS - all text and data elements clearly visible with strong contrast
+      Background: warm off-white #FAF8F1, painted edge to edge on the 3200x1800 canvas
+      Chrome: title 'waffle-basic · python · letsplot · anyplot.ai' centered in dark ink; legend 'Preference' on an elevated #FFFDF6 box at right with 'Very Likely (45%)', 'Likely (28%)', 'Neutral (18%)', 'Unlikely (9%)'; a thin grey box frame encloses the grid; all text readable
+      Data: 10x10 grid of equal squares with even gaps, filled row by row from the top: 45 green #009E73, 28 purple #C475FD, 18 blue #4467A3, 9 ochre #BD8233
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface as specified (not pure black)
-      Chrome: Title in light INK color (#F0EFE8) fully readable against dark background; legend text in INK_SOFT (#B8B7B0) with adequate contrast; no dark-on-dark failures
-      Data: Identical colors to light render (green, orange, blue, pink in matching grid positions) confirming theme-agnostic data representation
-      Legibility verdict: PASS - all text fully readable, no theme-adaptation failures, brand green visible and harmonious
+      Background: warm near-black #1A1A17, painted edge to edge
+      Chrome: title in light ink, legend title light, legend entries in soft grey on the #242420 legend box; frame in muted grey; no dark-on-dark text
+      Data: identical square colors and layout to the light render; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,65 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable in both themes
+        comment: Title 16 pt, legend title 14 pt, legend text 12 pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly separated; legend well-positioned
+        comment: No text collisions; legend sits clear of the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 100 squares distinctly visible; adequate spacing
+        comment: 100 squares large and distinct with even gaps; legend swatches match
+          the tiles in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-4; CVD-safe
+        comment: Green, purple, blue and ochre are well separated, no red-green pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate; well-proportioned
+        comment: Canonical 3200x1800 canvas painted edge to edge; square grid fills
+          the height, legend near the grid
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; axes appropriately omitted
+        comment: N/A axes (waffle has none, correctly removed); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; follows Okabe-Ito; backgrounds correct'
+        comment: 'First category #009E73, Imprint order; #FAF8F1 / #1A1A17 backgrounds;
+          identical data colors in both renders'
     design_excellence:
-      score: 15
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Clean design with percentage labels; intentional spacing
+        comment: The style-guide baseline (explicit sizes, theme tokens, Imprint),
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: Spines removed; generous whitespace
+        passed: false
+        comment: A four-sided box frame encloses the grid where nothing requires it
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy; intuitive proportion counting
+        comment: Data displayed in Notes order; no hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 10×10 waffle chart
+        comment: Correct single 10x10 waffle, no added layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors; legend with percentages; sum=100
+        comment: 10x10 grid, distinct colors, legend with percentages, whole squares
+          (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly distributed
+        comment: 45/28/18/9 squares, contiguous row-major blocks, filling the grid
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels match spec
+        comment: Title 'waffle-basic · python · letsplot · anyplot.ai'; legend 'Preference'
+          with 'Very Likely (45%)' etc.
     data_quality:
       score: 15
       max: 15
@@ -148,19 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all waffle aspects
+        comment: Blocks of different sizes, blocks ending mid-row, full grid
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Voting preference survey; realistic values
+        comment: Likelihood-to-vote survey with neutral Likert labels; plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10×10 grid standard; whole percentages
+        comment: Shares sum to 100; checked counts 45/28/18/9 against the grid by
+          counting rows
     code_quality:
       score: 10
       max: 10
@@ -170,55 +183,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct data generation; no unnecessary functions
+        comment: Imports -> tokens -> column constants -> data -> plot -> save; no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded values; deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only essential imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; idiomatic
+        comment: Cumulative-edge rounding in two lines; vectorized grid build
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output file naming
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot syntax correct; geom_tile ideal; theme system effective
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Theme-adaptive implementation strong; could showcase more advanced
-          features
+        comment: ggplot grammar with geom_tile + coord_fixed + gggrid wrapper as the
+          library prompt mandates; nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T11:30:24Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - cumulative-sum
+  - normalization
   styling:
   - minimal-chrome

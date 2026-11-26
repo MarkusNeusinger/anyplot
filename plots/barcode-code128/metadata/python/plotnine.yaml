@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: barcode-code128
 created: '2026-05-21T01:07:26Z'
-updated: '2026-05-21T01:30:05Z'
+updated: '2026-11-26T11:32:58Z'
 generated_by: claude-sonnet
-workflow_run: 26198511436
+workflow_run: 45810730293
 issue: 3809
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,86 +15,79 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Implements the full Code 128B symbol table and encoding algorithm natively, with
-    no external barcode library dependency — impressive engineering for a data-viz
-    script
-  - 'Correct barcode structure: quiet zones, start B pattern, Mod-103 check digit,
-    stop pattern — spec-accurate'
-  - Design choice to keep label card white regardless of theme is correct for scan
-    reliability, and the green brand header adds visual identity without compromising
-    the barcode
+  - Encodes Code 128B from the symbol table with a computed Mod-103 check digit; bar
+    widths follow the module runs exactly
+  - Quiet zones, start, check and stop patterns all present; solid black bars on a
+    white tile that stays white in both themes
+  - Card text uses a fixed dark ink on the white card, so it reads equally in both
+    themes
+  - 'Idiomatic plotnine layering: separate data frames per geom_rect layer with theme_void
+    and zero-expand scales'
   weaknesses:
-  - 'Metadata annotation at y=0.10 uses INK_SOFT token (#B8B7B0 in dark mode — light
-    gray) on the always-white label card background, yielding ~2.2:1 contrast in dark
-    render. Fix: use hardcoded ''#4A4A44'' for any text inside the white card area
-    across both themes, since the card is always white.'
-  - 'Separator segment annotate(''segment'', ..., colour=INK_SOFT) has the same issue
-    in dark mode — #B8B7B0 on white is nearly invisible. Fix: use ''#4A4A44'' for
-    this separator regardless of theme.'
-  - Metadata font size=6 is very small for a 3200 px canvas — increase to size=7.
+  - 'Suggestion: a slightly heavier weight for the human-readable content line would
+    set it apart from the metadata line below.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct themed surface
-      Chrome: Title "Specimen Label · barcode-code128 · python · plotnine · anyplot.ai" in dark #1A1A17, clearly readable. No axis labels or ticks (theme_void). Green #009E73 accent header strip with white "CODE 128 · SUBSET B" text. "SPECIMEN-2024-B047" in large dark monospace. Metadata "Code 128B · 18 characters · Mod-103 check digit" in muted gray #4A4A44.
-      Data: Black barcode bars on white label card — high contrast. All bars and spaces clearly visible.
+      Background: warm off-white #FAF8F1 around a white label card that spans the width.
+      Chrome: title 'Specimen Label · barcode-code128 · python · plotnine · anyplot.ai' in dark ink, fully visible with top margin; green #009E73 header band with white 'CODE 128 · SUBSET B'; 'SPECIMEN-2024-B047' in dark monospace below the bars; metadata 'Code 128B · 18 characters · Mod-103 check digit' in #4A4A44.
+      Data: solid near-black bars of equal height on white with blank quiet zones left and right.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct themed surface
-      Chrome: Title in light #F0EFE8 on dark background — clearly readable. Label card interior remains white (intentional for scan reliability). Green accent header and white "CODE 128 · SUBSET B" text identical to light render. "SPECIMEN-2024-B047" uses hardcoded #1A1A17 on white card — readable. Metadata annotation uses INK_SOFT (#B8B7B0 in dark mode — light gray) on white card background — ~2.2:1 contrast ratio, noticeably reduced. Separator segment also uses INK_SOFT, nearly invisible on white in dark mode.
-      Data: Barcode bars identical to light render (black on white card — data colors unchanged).
-      Legibility verdict: PARTIAL FAIL — metadata text and separator are low-contrast (#B8B7B0 on #FFFFFF) in dark mode render.
+      Background: warm near-black #1A1A17 around the same white card.
+      Chrome: title in light ink, fully readable; header band and all card text identical to the light render (dark ink on white), no dark-on-dark or light-on-light.
+      Data: bars identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Metadata text uses INK_SOFT (#B8B7B0 in dark) on white card — ~2.2:1
-          contrast. Font size=6 is also small for 3200px canvas.
+        passed: true
+        comment: 'Title (12 pt), header, content (size 9) and metadata (size 7, #4A4A44
+          on the always-white card) all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No text collisions; human-readable text sits clear below the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars are high-contrast and clearly visible in both renders.
+        comment: Solid black bars on white, every module visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black bars on white background maximizes contrast; no red-green encoding.
+        comment: Maximum contrast black/white; no color-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Quiet zones present, card layout
-          well-proportioned.
+        comment: Canvas 3200x1800; title has breathing room above the card; card fills
+          the canvas width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; human-readable text below barcode per spec.
-          No axes needed.
+        comment: N/A for axes (theme_void, permitted by C6); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1/#1A1A17 correct; #009E73 used for accent header
-          strip.'
+        comment: '#FAF8F1 / #1A1A17 surfaces; #009E73 header accent; white tile permitted
+          in dark theme'
     design_excellence:
       score: 11
       max: 20
@@ -103,23 +96,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above-default design: green brand-color header strip, monospace
-          font, deliberate white card for scan reliability.'
+        passed: false
+        comment: Specimen-label card with Imprint-green header band and monospace
+          type hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: theme_void removes all unnecessary chrome; separator line adds structure;
-          generous whitespace.
+        passed: false
+        comment: Deliberate card proportions, thin separator under the header, generous
+          quiet zones and whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: 'Clear top-to-bottom hierarchy: header context → barcode → human-readable
-          content → metadata.'
+        passed: false
+        comment: 'Top-to-bottom label reading order: symbology header, symbol, human-readable
+          content, encoding metadata'
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode; implements full Code 128B symbol table
-          from scratch.
+        comment: Code 128 barcode drawn from its module pattern
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones, start pattern, stop pattern, Mod-103 check digit, human-readable
-          text, high-contrast black on white, subset B.
+        comment: Quiet zones (10 modules), Start B, data, Mod-103 check, stop pattern,
+          human-readable text below, black on white — C1–C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Binary string correctly decoded into bar widths; bars rendered as
-          geom_rect.
+        comment: Bar widths are run lengths of the encoded module string, whole modules
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Specimen Label · barcode-code128 · python · plotnine ·
-          anyplot.ai''. No legend needed.'
+        comment: '''Specimen Label · barcode-code128 · python · plotnine · anyplot.ai'';
+          no legend needed'
     data_quality:
       score: 15
       max: 15
@@ -161,21 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full Code 128B implementation: symbol table, start/stop patterns,
-          check digit, bar rendering, quiet zones.'
+        comment: Start, data, check, stop and quiet zones all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SPECIMEN-2024-B047 is a plausible and neutral healthcare/lab specimen
-          label.
+        comment: Lab specimen ID SPECIMEN-2024-B047, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 18 characters, well within the recommended 48-character limit.
+        comment: 18 characters within the 48-char guidance; checked Start B=11010010000,
+          stop=1100011101011, check digit computed (not placed) via Mod-103
     code_quality:
       score: 10
       max: 10
@@ -185,51 +175,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic encoding; same input always produces identical output.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Run-length loop for bar grouping is clear and efficient; no fake
-          UI elements.
+        comment: No barcode package installed, so the symbol table is needed; check
+          digit in one expression
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Proper plotnine grammar: geom_rect for bars, annotate for text,
-          theme_void + theme for styling, scale_x/y_continuous for axis control.'
+        passed: false
+        comment: Per-layer data= frames with geom_rect aes mapping, annotate for text/segment,
+          scale expand=(0,0), theme_void + theme overrides
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Demonstrates plotnine layer composition with multiple geom_rect +
-          annotate layers. Uses theme_void appropriately for non-standard plot.
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
+  rendered_at: '2026-11-26T11:29:43Z'
 impl_tags:
   dependencies: []
   techniques:
