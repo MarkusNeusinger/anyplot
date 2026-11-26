@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-21
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
