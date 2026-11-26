@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: letsplot 4.11.0 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-07-01
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_segment,
+    gggrid,
     ggplot,
     ggsize,
     labs,
@@ -41,41 +42,51 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Imprint palette — 3 community hues (positions 1–3)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per community in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: 50-node social network with 3 communities
+# Columns: set these to your table's column names
+SOURCE = "Source"  # role: edges
+TARGET = "Target"  # role: extra
+WEIGHT = "Weight"  # role: weight
+SOURCE_TEAM = "Source team"  # role: extra
+TARGET_TEAM = "Target team"  # role: extra
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("friendships.csv")
+# 50-node social network with 3 communities; one row per friendship
 np.random.seed(42)
 community_sizes = [18, 17, 15]
 community_names = ["Engineering", "Marketing", "Sales"]
-nodes = []
-node_id = 0
-for comm_idx, size in enumerate(community_sizes):
-    for _ in range(size):
-        nodes.append({"id": node_id, "community": comm_idx, "community_name": community_names[comm_idx]})
-        node_id += 1
-
-# Intra-community edges (dense within each community)
-edges = []
-ranges = [(0, 18), (18, 35), (35, 50)]
-for start, end in ranges:
+team_of = [name for name, size in zip(community_names, community_sizes, strict=True) for _ in range(size)]
+bounds = np.cumsum([0, *community_sizes])
+rows = []
+for start, end in zip(bounds[:-1], bounds[1:], strict=True):
     for i in range(start, end):
         for j in range(i + 1, end):
             if np.random.random() < 0.3:
-                weight = np.random.uniform(0.5, 1.0)
-                edges.append((i, j, weight))
+                rows.append((i, j, np.random.uniform(0.5, 1.0)))
+for src, tgt in [(0, 18), (5, 20), (10, 25), (18, 35), (22, 40), (30, 45), (8, 38), (15, 48)]:
+    rows.append((src, tgt, np.random.uniform(0.2, 0.5)))
+df = pd.DataFrame(rows, columns=[SOURCE, TARGET, WEIGHT])
+df[SOURCE_TEAM] = [team_of[i] for i in df[SOURCE]]
+df[TARGET_TEAM] = [team_of[i] for i in df[TARGET]]
 
-# Inter-community bridge edges (lighter weights)
-bridges = [(0, 18), (5, 20), (10, 25), (18, 35), (22, 40), (30, 45), (8, 38), (15, 48)]
-for src, tgt in bridges:
-    edges.append((src, tgt, np.random.uniform(0.2, 0.5)))
+# Plot
+# Nodes come from the edge list, in id order
+ids = np.unique(df[[SOURCE, TARGET]].to_numpy())
+n = len(ids)
+index = {node: i for i, node in enumerate(ids)}
+src = df[SOURCE].map(index).to_numpy()
+tgt = df[TARGET].map(index).to_numpy()
+team_by_node = {
+    **dict(zip(df[SOURCE], df[SOURCE_TEAM], strict=True)),
+    **dict(zip(df[TARGET], df[TARGET_TEAM], strict=True)),
+}
 
 # Force-directed layout (Fruchterman-Reingold)
-n = len(nodes)
 positions = np.random.rand(n, 2) * 2 - 1
 k = 0.5
 iterations = 200
-
 for iteration in range(iterations):
     displacement = np.zeros((n, 2))
     for i in range(n):
@@ -85,12 +96,12 @@ for iteration in range(iterations):
             repulsive = (k * k / dist) * (diff / dist)
             displacement[i] += repulsive
             displacement[j] -= repulsive
-    for src, tgt, _ in edges:
-        diff = positions[src] - positions[tgt]
+    for a, b in zip(src, tgt, strict=True):
+        diff = positions[a] - positions[b]
         dist = max(np.linalg.norm(diff), 0.01)
         attractive = (dist * dist / k) * (diff / dist)
-        displacement[src] -= attractive
-        displacement[tgt] += attractive
+        displacement[a] -= attractive
+        displacement[b] += attractive
     temperature = 1 - iteration / iterations
     for i in range(n):
         disp_norm = np.linalg.norm(displacement[i])
@@ -101,64 +112,59 @@ for iteration in range(iterations):
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
 positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.9 + 0.05
-pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
-# Node degrees
-degrees = {node["id"]: 0 for node in nodes}
-for src, tgt, _ in edges:
-    degrees[src] += 1
-    degrees[tgt] += 1
+# Plot frames: derived columns are named once here
+X, Y, X_END, Y_END = "x", "y", "x_end", "y_end"
+EDGE_SIZE, EDGE_ALPHA, NODE_SIZE, CONNECTIONS = "edge_size", "edge_alpha", "node_size", "Connections"
+TEAM = "Team"
 
-# Edge DataFrame — weight drives thickness and opacity
-edges_df = pd.DataFrame(
+edges = pd.DataFrame(
     {
-        "x": [pos[src][0] for src, tgt, _ in edges],
-        "y": [pos[src][1] for src, tgt, _ in edges],
-        "xend": [pos[tgt][0] for src, tgt, _ in edges],
-        "yend": [pos[tgt][1] for src, tgt, _ in edges],
-        "weight": [w for _, _, w in edges],
-        "edge_size": [0.3 + w * 0.9 for _, _, w in edges],
-        "edge_alpha": [0.15 + w * 0.35 for _, _, w in edges],
+        X: positions[src, 0],
+        Y: positions[src, 1],
+        X_END: positions[tgt, 0],
+        Y_END: positions[tgt, 1],
+        EDGE_SIZE: 0.3 + df[WEIGHT].to_numpy() * 0.9,
+        EDGE_ALPHA: 0.15 + df[WEIGHT].to_numpy() * 0.35,
+    }
+)
+degrees = np.bincount(np.concatenate([src, tgt]), minlength=n)
+nodes = pd.DataFrame(
+    {
+        X: positions[:, 0],
+        Y: positions[:, 1],
+        TEAM: [team_by_node[node] for node in ids],
+        CONNECTIONS: degrees,
+        NODE_SIZE: 4 + degrees * 0.9,
     }
 )
 
-# Node DataFrame — size scales with degree centrality
-nodes_df = pd.DataFrame(
-    {
-        "x": [pos[node["id"]][0] for node in nodes],
-        "y": [pos[node["id"]][1] for node in nodes],
-        "Team": [node["community_name"] for node in nodes],
-        "Connections": [degrees[node["id"]] for node in nodes],
-        "size": [7 + degrees[node["id"]] * 1.2 for node in nodes],
-    }
-)
-
-# Title — len("network-force-directed · python · letsplot · anyplot.ai") = 55 < 67, no scaling
+# Title: len("network-force-directed · python · letsplot · anyplot.ai") = 55 < 67, no scaling
 TITLE = "network-force-directed · python · letsplot · anyplot.ai"
 title_size = 16
 
-# Plot
+pad = 0.05
 plot = (
     ggplot()
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend", size="edge_size", alpha="edge_alpha"),
-        data=edges_df,
+        aes(x=X, y=Y, xend=X_END, yend=Y_END, size=EDGE_SIZE, alpha=EDGE_ALPHA),
+        data=edges,
         color=EDGE_COLOR,
         tooltips="none",
     )
     + geom_point(
-        aes(x="x", y="y", color="Team", size="size"),
-        data=nodes_df,
+        aes(x=X, y=Y, color=TEAM, size=NODE_SIZE),
+        data=nodes,
         stroke=1.0,
         alpha=0.92,
-        tooltips=layer_tooltips().line("Team: @Team").line("Connections: @Connections"),
+        tooltips=layer_tooltips().line(f"{TEAM}: @{TEAM}").line(f"{CONNECTIONS}: @{CONNECTIONS}"),
     )
-    + scale_color_manual(values=IMPRINT, name="Team")
+    + scale_color_manual(values=IMPRINT_PALETTE, name=TEAM)
     + scale_size_identity(guide="none")
     + scale_alpha_identity(guide="none")
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-0.05, 1.05))
-    + scale_y_continuous(limits=(-0.05, 1.05))
+    + scale_x_continuous(limits=(nodes[X].min() - pad, nodes[X].max() + pad))
+    + scale_y_continuous(limits=(nodes[Y].min() - pad, nodes[Y].max() + pad))
     + labs(title=TITLE)
     + ggsize(600, 600)
     + theme(
@@ -178,6 +184,9 @@ plot = (
     )
 )
 
-# Save — ggsize(600, 600) × scale=4 → 2400 × 2400 px
+# The fixed aspect leaves canvas strips transparent: a one-panel grid paints the whole page
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
+# Save: ggsize(600, 600) x scale=4 -> 2400 x 2400 px
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
