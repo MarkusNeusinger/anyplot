@@ -1,7 +1,7 @@
 """ anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-20
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 73/100 | Updated: 2026-11-26
 """
 
 import os
@@ -22,12 +22,20 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ACCENT = "#009E73"  # Okabe-Ito position 1
 
-# Maze parameters — outer rings have more sectors than inner rings
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ACCENT = IMPRINT_PALETTE[0]
+
+# Data: replace these parameters to change the maze (rings, seed, sectors in the innermost ring)
+SEED = 42
 NUM_RINGS = 7
-SECTORS = [42, 36, 30, 24, 18, 12, 6]
+INNER_SECTORS = 6
+
+# Plot: reads only the parameters above
+np.random.seed(SEED)
+# Outer rings have more sectors than inner rings
+SECTORS = [INNER_SECTORS * (NUM_RINGS - r) for r in range(NUM_RINGS)]
 
 # Wall arrays: radial_walls[r][s] = wall clockwise from sector s in ring r
 #              ring_walls[r][s]   = wall between ring r and ring r+1 at sector s
@@ -173,7 +181,7 @@ fig.add_trace(
         y=sol_y,
         mode="lines",
         name="Show Solution",
-        line={"color": "#C475FD", "width": 4, "dash": "dot"},
+        line={"color": IMPRINT_PALETTE[1], "width": 4, "dash": "dot"},
         opacity=0.85,
         visible="legendonly",
     )
@@ -209,26 +217,27 @@ entry_angle = 0.5 * 2 * np.pi / SECTORS[0]
 fig.add_annotation(
     x=OUTER_R * np.cos(entry_angle),
     y=OUTER_R * np.sin(entry_angle),
-    ax=(OUTER_R + 1.5) * np.cos(entry_angle),
-    ay=(OUTER_R + 1.5) * np.sin(entry_angle),
+    ax=(OUTER_R + 1.2) * np.cos(entry_angle),
+    ay=(OUTER_R + 1.2) * np.sin(entry_angle),
     xref="x",
     yref="y",
     axref="x",
     ayref="y",
     showarrow=True,
     arrowhead=2,
-    arrowsize=2,
+    arrowsize=1.2,
     arrowwidth=3,
     arrowcolor=ACCENT,
 )
 fig.add_annotation(
-    x=(OUTER_R + 2.8) * np.cos(entry_angle),
-    y=(OUTER_R + 2.8) * np.sin(entry_angle),
+    x=(OUTER_R + 1.6) * np.cos(entry_angle),
+    y=(OUTER_R + 1.6) * np.sin(entry_angle),
     text="START",
+    xanchor="left",
     showarrow=False,
     xref="x",
     yref="y",
-    font={"size": 22, "color": ACCENT, "family": "Arial Black"},
+    font={"size": 20, "color": ACCENT, "family": "Arial, Helvetica, sans-serif"},
 )
 fig.add_annotation(
     x=0.0,
@@ -237,7 +246,7 @@ fig.add_annotation(
     showarrow=False,
     xref="x",
     yref="y",
-    font={"size": 22, "color": ACCENT, "family": "Arial Black"},
+    font={"size": 20, "color": ACCENT, "family": "Arial, Helvetica, sans-serif"},
 )
 
 # Layout
@@ -254,9 +263,9 @@ fig.update_layout(
         "showticklabels": False,
         "scaleanchor": "y",
         "scaleratio": 1,
-        "range": [-(OUTER_R + 4.0), OUTER_R + 4.0],
+        "range": [-(OUTER_R + 4.5), OUTER_R + 4.5],
     },
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-(OUTER_R + 4.0), OUTER_R + 4.0]},
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-(OUTER_R + 4.5), OUTER_R + 4.5]},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     showlegend=True,
@@ -264,7 +273,7 @@ fig.update_layout(
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "font": {"color": INK_SOFT, "size": 10},
+        "font": {"color": INK_SOFT, "size": 12},
         "x": 0.02,
         "y": 0.98,
         "xanchor": "left",
