@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:47Z'
-updated: '2026-11-26T11:45:44Z'
+updated: '2026-11-26T11:51:24Z'
 generated_by: claude-sonnet
-workflow_run: 45812659222
+workflow_run: 45813657252
 issue: 3808
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,43 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - Correct EAN-13 encoding from L/G/R tables and the first-digit parity pattern;
-    check digit auto-calculated to 1 for 400638133393
-  - Guard patterns (start 101, center 01010, end 101) drawn longer than the digit
-    bars and clearly recognizable
-  - 1 data unit = 1 module coordinate system makes every bar and space a whole number
-    of modules, with 9-module quiet zones on both sides
-  - Theme tokens (PAGE_BG, INK, INK_SOFT) threaded through every element; both renders
-    fully readable
-  - Anatomy row (Country / Manufacturer / Product / Check) and grouped caption explain
-    the code structure
+  - Correct EAN-13 construction from L/G/R tables with first-digit parity; check digit
+    computed from the 12-digit input
+  - Guard bars drawn longer and the digit row placed in the band between digit-bar
+    bottoms and guard bottoms, so the guards reach down between the digit groups
+  - Theme tokens threaded through every element; bars, digits and labels read cleanly
+    in both themes
+  - Data-unit layout (1 unit = 1 module) keeps every bar at a whole-module width and
+    the 9-module quiet zones exact
   weaknesses:
-  - 'SC-02 (both): the human-readable digit row sits wholly below the guard bars (digit
-    tops at y=6.5, guard bottoms at y=7.0, digit-bar bottoms at y=10.0), so the guards
-    do not reach down between the digit groups as C4 asks → raise the digit row into
-    the band between the digit-bar bottoms and the guard bottoms (digit top about
-    y=9.7, +3.2 units) and keep the guards ending below the digit baselines. Likely
-    cause: digit_y = start_y - 0.5.'
-  - 'CQ-04 (code): lines 117–158 write three near-identical ax.text blocks for the
-    first digit, the left group and the right group (~45 lines) → one loop over a
-    list of (x, digit) positions with a shared text-kwargs dict (~8 lines). Likely
-    cause: duplicated logic per digit group.'
   - 'Suggestion: merge adjacent ''1'' modules into single Rectangles (or use ax.broken_barh)
-    so each bar is one shape.'
+    so each bar is one shape rather than one patch per module.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, not pure white.
-      Chrome: Title "barcode-ean13 · python · matplotlib · anyplot.ai" in near-black at 12 pt, centered; grouped caption "4 006381 333931" in monospace INK_SOFT below it; 13 bold monospace digits below the bars with the first digit "4" left of the start guard; anatomy labels "Country (1–3)", "Manufacturer (4–8)", "Product (9–12)", "Check (13)" in INK_SOFT at 9 pt. All readable.
-      Data: Near-black #1A1A17 bars on the page; start, center and end guards drawn longer than the digit bars; 9-module quiet zones left and right; no axes, ticks or grid (permitted). Digit row sits wholly below the guard bottoms.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'barcode-ean13 · python · matplotlib · anyplot.ai' centered top in dark ink; grey monospace caption '4 006381 333931' beneath it; grey anatomy labels 'Country (1–3)', 'Manufacturer (4–8)', 'Product (9–12)', 'Check (13)' along the bottom. All readable.
+      Data: near-black EAN-13 bars with start, center and end guards extended below the digit bars; bold monospace digits 4 | 006381 | 333931 sit in the band beneath the digit bars, between the guards, with '4' left of the start guard; quiet zones blank on both sides. Monochrome, no axes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, not pure black.
-      Chrome: Title, digits in light #F0EFE8; caption and anatomy labels in INK_SOFT #B8B7B0; no dark-on-dark text anywhere.
-      Data: Bars flip to light #F0EFE8 (monochrome ink token, no categorical colors involved); identical geometry to the light render, strong contrast with the spaces.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, caption and anatomy labels in light grey; no dark-on-dark text.
+      Data: same layout with off-white #F0EFE8 bars and digits on the dark page; structure identical to the light render (monochrome, no categorical palette).
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,14 +48,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, digits 10 pt bold monospace, grouped caption and anatomy
-          labels 9 pt; all at or above reference and readable in both themes
+        comment: Title 12 pt, bold monospace digits 10 pt, caption and anatomy labels
+          9 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with bars or other text
+        comment: No text collides with bars or other text; digits sit cleanly in the
+          gaps between guard bars
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -85,14 +74,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas (gate passed); symbol fills the width with 9-module
-          quiet zones; nothing cut off
+        comment: 3200x1800 canvas; symbol fills the width with 9-module quiet zones;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (axis off, permitted); title and readable section labels
+        comment: N/A for axes (axis off, permitted by C6); mandated title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -101,7 +90,7 @@ review:
         comment: 'Monochrome INK bars; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct
           in both renders'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -109,23 +98,23 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: 'Style-guide baseline: monospace bold digits, INK/INK_SOFT hierarchy;
+        comment: 'Style-guide baseline: monospace bold digits with INK/INK_SOFT hierarchy;
           nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
-        passed: true
+        passed: false
         comment: Clean axis-off presentation; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Self-chosen anatomy row (Country / Manufacturer / Product / Check)
-          and grouped caption guide the reader through the code structure
+        passed: false
+        comment: 'Default: the anatomy row is an unrequested annotation layer and
+          earns no storytelling credit'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,19 +125,18 @@ review:
         comment: Correct EAN-13 symbol
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Quiet zones, three guards, whole-module widths, digits with the
-          first outside the left guard all present (C1, C2, C3, C5); C4 missed in
-          part: guards are longer but the digit row sits wholly below them, so they
-          do not reach down between the digit groups (defect line)'
+        passed: true
+        comment: 'All C1–C5 met: three guards, whole-module widths, digits below with
+          first outside left guard, guards reaching down between the digit groups,
+          quiet zones'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each bit drawn at its module position; widths follow from L/G/R tables
+        comment: Each module drawn at its position; widths follow from the L/G/R tables
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -164,24 +152,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: First digit 4 drives an LGLLGG parity mix, so both L and G sets appear,
-          plus R set
+        comment: First digit 4 drives an LGLLGG parity mix, so L, G and R sets all
+          appear
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real German GS1 code from the spec example, neutral
+        comment: Real German product code from the spec example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: check digit computed from 12 digits = 1 (matches 4006381333931);
-          pattern length 95 modules; left digits 0,0,6,3,8,1 against L/G tables and
-          center 01010 verified'
+        comment: 'Checked: weighted sum of 400638133393 = 89 so check digit = 1, matching
+          4006381333931 under the bars; 95 modules; left parity LGLLGG for first digit
+          4'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -204,16 +192,16 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Three near-identical ax.text blocks for the digit row (defect line)
+        passed: true
+        comment: Digit row drawn by one loop over (x, digit) positions; appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches=tight
+        comment: Saves plot-{THEME}.png at dpi=400, current API
     library_mastery:
       score: 4
       max: 10
@@ -233,7 +221,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
-  rendered_at: '2026-11-26T11:41:58Z'
+  rendered_at: '2026-11-26T11:48:41Z'
 impl_tags:
   dependencies: []
   techniques:
