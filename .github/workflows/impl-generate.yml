@@ -586,7 +586,7 @@ jobs:
           python-version: '3.14'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
 
       - name: Install system dependencies
         run: |
@@ -943,7 +943,7 @@ jobs:
         if: steps.inputs.outputs.source_ref == ''
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8  # v1
+        uses: anthropics/claude-code-action@c84e279f859e2591391e95bd309286eb111c345f  # v1
         with:
           anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
           claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
@@ -1028,7 +1028,7 @@ jobs:
         if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == '' && steps.claude_cost.outputs.stopped != 'true'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8  # v1
+        uses: anthropics/claude-code-action@c84e279f859e2591391e95bd309286eb111c345f  # v1
         with:
           anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
           claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
