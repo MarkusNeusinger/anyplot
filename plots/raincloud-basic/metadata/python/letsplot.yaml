@@ -2,154 +2,130 @@ library: letsplot
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:23:48Z'
-updated: '2026-05-26T23:40:25Z'
-generated_by: claude-opus
-workflow_run: 26480316626
+updated: '2026-11-26T15:14:53Z'
+generated_by: claude-sonnet
+workflow_run: 45846127397
 issue: 1876
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/letsplot/plot-dark.html
-quality_score: 94
+quality_score: 86
 review:
   strengths:
-  - 'Correct raincloud anatomy: half-violin clouds nudged above each baseline (show_half=1),
-    boxplot centered on the category baseline, and jittered rain points below — the
-    spec''s cloud-up / box-on-line / rain-down metaphor is preserved cleanly for all
-    three conditions.'
-  - 'Idiomatic lets-plot composition: layered geom_violin / geom_boxplot / geom_jitter
-    combined via position_nudge for layer offset, scale_y_discrete with explicit limits
-    to control category order, and scale_*_manual driven by a typed palette dict.'
-  - Theme-adaptive chrome wired through tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
-    RULE) so both light (#FAF8F1) and dark (#1A1A17) renders are fully legible — no
-    dark-on-dark or light-on-light failures, no pure black/white backgrounds.
-  - 'Canonical Imprint palette in canonical order: Control = #009E73 (brand green,
-    first series), Treatment A = #C475FD lavender, Treatment B = #4467A3 blue. Data
-    colors are identical across light and dark — only chrome flips.'
-  - 'Strong data storytelling: italic-gray annotations with arrows highlight Treatment
-    B''s bimodal cluster structure and Treatment A''s ~70 ms speed advantage, surfacing
-    exactly the kind of insight a raincloud is meant to reveal.'
-  - 'Arrow routing fix from attempt 1 has landed: arrowheads no longer terminate inside
-    the violin cloud fills — they now resolve outside the violin silhouettes, addressing
-    the prior VQ-02 deduction.'
-  - x-axis line removed (axis_line_x=element_blank) so the subtle vertical grid alone
-    anchors the x-scale, picking up the DE-02 refinement called out in attempt 1.
-  - Canvas exact at 3200×1800 (ggsize(800,450) + scale=4); canvas dimension gate not
-    triggered. Reproducible (np.random.seed(42)), no functions/classes, only-used
-    imports, saves both plot-{THEME}.png and plot-{THEME}.html.
+  - Correct raincloud anatomy with lets-plot's native half violin (geom_violin(show_half=1))
+    nudged above each baseline, box centered on it and rain below via per-layer position_nudge
+  - 'Strict basic scope: only cloud, box and rain, no callouts or reference lines'
+  - Imprint palette in canonical order, identical across themes; theme tokens make
+    both renders fully legible
+  - Bimodal Treatment B demonstrates exactly what the cloud and rain reveal beyond
+    the box
+  - Axis limits derived from the data and axis titles from the column constants
   weaknesses:
-  - 'DE-01: Title at plot_title size=16 looks slightly compact relative to the wide
-    landscape canvas — the mandated title fills only ~30–35% of the plot width instead
-    of the 50–70% sweet spot. Either nudge plot_title size up a couple of points or
-    align it more deliberately (hjust) to give it more visual weight without overflowing.'
-  - 'DE-02: Boxplot interior in the dark render appears noticeably lighter than the
-    intended ELEVATED_BG (#242420) — it reads almost cream/light-gray against the
-    warm near-black background, which is visually striking but does not match the
-    dark-mode chrome token actually requested in the code. Worth verifying that the
-    explicit geom_boxplot(fill=ELEVATED_BG, ...) override is winning over the aes(fill=''condition'')
-    mapping; if lets-plot is leaking the categorical fill through alpha=0.95, an explicit
-    override via fill=ELEVATED_BG together with dropping the fill aesthetic on the
-    boxplot layer (or using fill=None on aes for this geom) would lock the box interior
-    to the elevated dark token.'
-  - 'DE-03: A small touch that would tighten the storytelling further — the ''Two
-    distinct response clusters'' annotation uses two arrowheads to point at the bimodal
-    peaks, but the arrows land in the rain area below the baseline rather than at
-    the cloud peaks themselves; nudging the segment endpoints up to land just outside
-    the top edge of each violin peak would make the bimodality call-out unambiguous.'
+  - 'SC-03 (both): Treatment B''s cloud is cut off with a vertical edge at the x-limit
+    200, where its density is still clearly above zero → lower limit about 30 ms further
+    out so the whole tail shows (≈ −30 ms). Likely cause: x_low = floor(min/50)*50
+    − 50 with geom_violin(trim=False), whose KDE tail extends further than one 50
+    ms step.'
+  - 'Suggestion: a subtle tooltip spec on the rain layer would make individual reaction
+    times readable in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — matches the anyplot light surface, not pure white.
-      Chrome: title "raincloud-basic · python · letsplot · anyplot.ai" in bold dark ink at the top of the canvas. Y-axis category labels (Control, Treatment A, Treatment B) in bold dark ink; x-axis title "Reaction Time (ms)" and y-axis title "Experimental Condition" in dark gray; x-tick labels 200, 250, …, 700 in dark gray. Subtle vertical major grid lines, axis lines and ticks hidden.
-      Data: three half-violin clouds rise above each category baseline in canonical anyplot colors — Control = #009E73 brand green, Treatment A = #C475FD lavender, Treatment B = #4467A3 blue. Boxplots with light/cream ELEVATED_BG fill sit on the baselines, showing median + quartile markers. Color-matched jittered rain points (alpha ~0.5) fall below each baseline. Italic gray annotations with thin arrows highlight Treatment A's faster mean and Treatment B's two response clusters.
-      Legibility verdict: PASS — all title, axis title, tick, category, and annotation text is clearly readable against the off-white background; no light-on-light failures.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "raincloud-basic · python · letsplot · anyplot.ai"; bold dark category labels Control / Treatment A / Treatment B; axis titles "Reaction Time (ms)" and "Experimental Condition" in dark ink; dark-gray x ticks 200-700; subtle vertical gridlines only. All readable.
+      Data: three half-violin clouds rising above their baselines in #009E73 (Control), #C475FD (Treatment A), #4467A3 (Treatment B, bimodal); cream-filled boxes with dark outline and median on each baseline; translucent color-matched rain points in a narrow band below. Treatment B's cloud tail ends with a vertical cut at x=200.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — matches the anyplot dark surface, not pure black.
-      Chrome: title and axis titles render in light INK (#F0EFE8) and are fully readable; tick labels render in light INK_SOFT and are legible against the dark surface. Vertical grid lines are subtle light rule lines (RULE token). Axis lines/ticks hidden as in light render.
-      Data: data colors are IDENTICAL to the light render (Control = brand green #009E73, Treatment A = lavender, Treatment B = blue) — only chrome flipped. Italic annotations and arrow segments switch to light INK_SOFT — no dark-on-dark text failures detected. Brand green reads cleanly against the dark surface. One minor observation: the boxplot interior fills appear lighter than the intended dark ELEVATED_BG (#242420) token would suggest, reading closer to a cream/light-gray rather than a near-black box — visually striking and high-contrast but worth verifying the explicit fill override is winning over the categorical fill mapping.
-      Legibility verdict: PASS — every text element (title, axis titles, ticks, category labels, italic annotations) is readable against the near-black background; no dark-on-dark text.
+      Background: warm near-black #1A1A17.
+      Chrome: title, category labels and axis titles in light ink, ticks in light gray, faint gridlines. No dark-on-dark text.
+      Data: same three categorical colors as light; boxes switch to the dark elevated fill with light outlines; rain identical in color. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; sizes explicitly set via theme().
+        comment: Title 18 pt bold, axis titles 12 pt, ticks 10 pt, bold 12 pt category
+          labels; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Arrows now resolve outside violin silhouettes — attempt-1 piercing
-          issue addressed.
+        comment: No text collisions; rain bands sit just under their boxes without
+          hiding points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Jitter alpha=0.5 + size=4 well-tuned for ~80 points/category; violins
-          at alpha=0.7 read clearly.
+        comment: Rain points size 4 with alpha 0.5 and a thin outline suit 80 points
+          per group; clouds and boxes clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue trio is CVD-safe and high-contrast.
+        comment: Green, lavender and blue are CVD-distinguishable; categories are
+          also labelled on the y axis
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200×1800; canvas gate not triggered. No overflow.
+        comment: Drawing fills the landscape canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction Time (ms)'' with units; ''Experimental Condition'' descriptive.'
+        comment: Axis titles 'Reaction Time (ms)' and 'Experimental Condition' with
+          unit, taken from the column constants
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; canonical anyplot order; chrome theme-correct
-          on both renders.'
+        comment: 'Imprint canonical order #009E73, #C475FD, #4467A3; backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Polished raincloud composition with custom palette and thoughtful
-          tokenized chrome. Title sits a touch compact on the wide canvas; otherwise
-          refined.
+        comment: 'Beyond baseline: bold INK category labels against INK_SOFT ticks
+          create a clear label hierarchy; boxes filled with the elevated surface token
+          so the median reads on top of the cloud'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines and ticks blanked, subtle vertical-only grid, x-axis line
-          removed per attempt-1 feedback. Dark-mode boxplot interior appears lighter
-          than the intended ELEVATED_BG token suggests.
+        comment: 'Grid density chosen for this chart: only value-axis gridlines, categorical
+          gridlines and all ticks removed, leaving the baseline to the whisker line'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Italic-gray annotations highlight Treatment A's faster mean and Treatment
-          B's bimodal cluster — strong insight delivery. Arrowheads for the bimodal
-          call-out land in the rain area rather than the violin peaks.
+        comment: 'Data choice beyond the Notes: Treatment B is a bimodal mixture whose
+          box hides the two clusters the cloud and rain reveal, the raincloud''s core
+          argument'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -157,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct raincloud — half-violin cloud + boxplot + jittered rain.
+        comment: 'Correct raincloud: half violin + box + rain only, no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half-violin via show_half=1, moderate jitter (height=0.05), alpha=0.5
-          on rain, median+quartiles in boxplot.
+        comment: 'Horizontal orientation, cloud above, box on baseline, rain below,
+          jitter 0.05, alpha 0.5, median and quartiles: all Notes and C1-C5 bullets
+          met'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Horizontal orientation: categories on y-axis, values on x-axis;
-          cloud above / box on baseline / rain below via position_nudge.'
+        passed: false
+        comment: Treatment B's cloud tail is cut off with a vertical edge at the x-limit
+          200 (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'raincloud-basic · python · letsplot · anyplot.ai';
-          legend hidden (redundant with y-axis encoding).
+        comment: Title in the mandated format; legend hidden as the y axis names every
+          category
     data_quality:
       score: 15
       max: 15
@@ -188,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Treatment B's intentional bimodal mixture (np.concatenate of two
-          normals) showcases the raincloud's distinctive value — exactly the case
-          where box plots hide structure.
+        comment: Shows unimodal, skewed and bimodal groups, demonstrating everything
+          a raincloud reveals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time experiment with Control / Treatment A / Treatment B
-          — neutral, plausible.
+        comment: Reaction times for control and two treatments, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Roughly 250–650 ms range is realistic for human reaction-time experiments.
+        comment: About 250-620 ms is realistic for choice reaction times; spec has
+          no Check values
     code_quality:
       score: 10
       max: 10
@@ -213,61 +189,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes — straight-line script.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Explicit named imports from lets_plot; all used.
+        comment: All named imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for a layered raincloud.
+        comment: Concise, limits derived from the data, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave to plot-{THEME}.png + plot-{THEME}.html. No bare plot.png.
-    library_features:
-      score: 9
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+    library_mastery:
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot grammar with layered geoms, position_nudge, scale_*_manual,
-          scale_y_discrete(limits=...), tokenized element_* theme — fully idiomatic
-          lets-plot.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: show_half=1 (half-violin), position_nudge per layer (raincloud offset
-          trick), ggsave HTML export — distinctly lets-plot. Could lean further into
-          interactivity (e.g. tooltips) but reads as a proper lets-plot artifact.
+        comment: Idiomatic grammar layering with per-layer position_nudge, scale_y_discrete(limits=...)
+          for order, column constants mapped directly
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: geom_violin(show_half=1) is lets-plot's native half-violin; HTML
+          export with native tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T15:11:28Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
-  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
   - minimal-chrome
+  - grid-styling
