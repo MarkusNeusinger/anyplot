@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -31,15 +31,15 @@ IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#9
 np.random.seed(42)
 
 cities = [
-    (40.7128, -74.0060, "New York", "retail"),
-    (34.0522, -118.2437, "Los Angeles", "retail"),
+    (41.2, -74.25, "New York", "retail"),
+    (33.8, -118.0, "Los Angeles", "retail"),
     (41.8781, -87.6298, "Chicago", "food"),
-    (29.7604, -95.3698, "Houston", "food"),
-    (33.4484, -112.0740, "Phoenix", "services"),
+    (29.95, -95.45, "Houston", "food"),
+    (33.4484, -111.2, "Phoenix", "services"),
     (39.7392, -104.9903, "Denver", "services"),
-    (47.6062, -122.3321, "Seattle", "retail"),
-    (25.7617, -80.1918, "Miami", "food"),
-    (42.3601, -71.0589, "Boston", "retail"),
+    (47.5, -122.3, "Seattle", "retail"),
+    (26.6, -80.6, "Miami", "food"),
+    (42.35, -71.45, "Boston", "retail"),
     (38.9072, -77.0369, "Washington DC", "services"),
 ]
 
@@ -47,16 +47,16 @@ n_points = 500
 lats, lons, store_labels, cats = [], [], [], []
 for i in range(n_points):
     city = cities[i % len(cities)]
-    # Tighter noise (std=0.8) + clamp to CONUS bounds keeps all points within the US basemap
-    lats.append(float(np.clip(city[0] + np.random.normal(0, 0.8), 24.0, 49.0)))
-    lons.append(float(np.clip(city[1] + np.random.normal(0, 0.8), -125.0, -66.0)))
+    # Metro centres sit slightly inland with tight noise (std=0.3), so every store lands on the map's land area
+    lats.append(float(np.clip(city[0] + np.random.normal(0, 0.3), 24.0, 49.0)))
+    lons.append(float(np.clip(city[1] + np.random.normal(0, 0.3), -125.0, -66.0)))
     store_labels.append(f"Store {i + 1}")
     cats.append(city[3])
 
 df = pd.DataFrame({"lat": lats, "lon": lons, "label": store_labels, "category": cats})
 
 # Grid-based clustering — no external geo-dependencies
-grid_size = 2.5  # degrees
+grid_size = 3  # degrees
 df["lat_bin"] = (df["lat"] / grid_size).round() * grid_size
 df["lon_bin"] = (df["lon"] / grid_size).round() * grid_size
 
@@ -77,31 +77,22 @@ cluster_summary["marker_size"] = np.log1p(cluster_summary["count"]) * 150 + 100
 cluster_centers = cluster_summary[["lat_bin", "lon_bin", "lat", "lon"]].rename(columns={"lat": "clat", "lon": "clon"})
 df_linked = df.merge(cluster_centers, on=["lat_bin", "lon_bin"])
 
-lines_rows = []
-for idx, row in df_linked.iterrows():
-    link_id = f"lk{idx}"
-    lines_rows.append(
-        {
-            "lon": row["clon"],
-            "lat": row["clat"],
-            "lat_bin": row["lat_bin"],
-            "lon_bin": row["lon_bin"],
-            "link_id": link_id,
-        }
-    )
-    lines_rows.append(
-        {"lon": row["lon"], "lat": row["lat"], "lat_bin": row["lat_bin"], "lon_bin": row["lon_bin"], "link_id": link_id}
-    )
+df_linked["link_id"] = "lk" + df_linked.index.astype(str)
+keys = ["lat_bin", "lon_bin", "link_id"]
+centroid_rows = df_linked[keys + ["clon", "clat"]].rename(columns={"clon": "lon", "clat": "lat"})
+member_rows = df_linked[keys + ["lon", "lat"]]
+df_lines = pd.concat([centroid_rows, member_rows], ignore_index=True)
 
-df_lines = pd.DataFrame(lines_rows)
+# Zoom: a slider in the HTML scales the shared projection, so clusters can be inspected up close
+BASE_SCALE = 700  # albersUsa scale that fits the lower 48 and the insets into 800 x 450
+zoom = alt.param(name="zoom", value=1, bind=alt.binding_range(min=1, max=4, step=0.1, name="Zoom "))
+PROJ = {"type": "albersUsa", "scale": alt.expr(f"{BASE_SCALE} * zoom"), "translate": [400, 181]}
 
 # US states basemap (Vega CDN)
 us_10m_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
 states = alt.topo_feature(us_10m_url, "states")
 
-background = (
-    alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.5).project(type="albersUsa")
-)
+background = alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.5).project(**PROJ)
 
 category_colors = alt.Scale(domain=["retail", "food", "services"], range=[IMPRINT[0], IMPRINT[1], IMPRINT[2]])
 
@@ -114,7 +105,7 @@ spider_lines = (
     .mark_line(strokeWidth=0.8, opacity=0.5, color=INK_SOFT)
     .encode(longitude="lon:Q", latitude="lat:Q", detail="link_id:N")
     .transform_filter(cluster_hover)
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 # Individual member points revealed when their parent cluster is hovered
@@ -133,7 +124,7 @@ hover_points = (
         ],
     )
     .transform_filter(cluster_hover)
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 clusters = (
@@ -142,7 +133,7 @@ clusters = (
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
-        size=alt.Size("marker_size:Q", scale=alt.Scale(range=[40, 500]), legend=None),
+        size=alt.Size("marker_size:Q", scale=alt.Scale(range=[40, 320]), legend=None),
         color=alt.Color("dominant_category:N", scale=category_colors, title="Category"),
         tooltip=[
             alt.Tooltip("count:Q", title="Locations"),
@@ -151,8 +142,8 @@ clusters = (
             alt.Tooltip("lon:Q", title="Longitude", format=".2f"),
         ],
     )
-    .add_params(cluster_hover)
-    .project(type="albersUsa")
+    .add_params(cluster_hover, zoom)
+    .project(**PROJ)
 )
 
 # Count labels — near-white text is readable on all Imprint palette marker colors
@@ -160,7 +151,7 @@ count_labels = (
     alt.Chart(cluster_summary[cluster_summary["count"] > 1])
     .mark_text(fontSize=10, fontWeight="bold", color="#FFFDF6")
     .encode(longitude="lon:Q", latitude="lat:Q", text="count:Q")
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 TITLE = "map-marker-clustered · python · altair · anyplot.ai"
@@ -175,7 +166,7 @@ chart = (
         background=PAGE_BG,
         title=alt.Title(
             text=TITLE,
-            subtitle="500 US store locations · hover cluster to reveal members via spider lines (size = count)",
+            subtitle="500 US store locations · hover a cluster to reveal its members, use the zoom slider (size = count)",
             fontSize=16,
             subtitleFontSize=12,
             color=INK,
