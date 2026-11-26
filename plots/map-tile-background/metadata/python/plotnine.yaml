@@ -12,39 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 68
 review:
   strengths:
-  - 'Full theme-adaptive implementation: backgrounds, text, terrain colors, and label
-    fills all respond correctly to ANYPLOT_THEME in both renders'
-  - Clever use of plotnine grammar-of-graphics primitives (geom_rect + geom_polygon)
-    to approximate a tile-style map within a library with no native map support
-  - Dual encoding (color=category, size=visitors) with correct Imprint palette assignment;
-    brand green correctly assigned to first alphabetical category
-  - Clean code with no functions/classes, proper seed, all imports used, correct output
-    API
+  - Theme tokens threaded through title, ticks, legend text and label boxes in both
+    themes
+  - 'Dual encoding (colour = category in canonical Imprint order with #009E73 first,
+    size = visitors) with named legends'
+  - Landmark coordinates are real SF positions and coord_fixed keeps a geographic
+    aspect
   weaknesses:
-  - 8 categories pushes the Imprint palette to its limit (style guide requires redundant
-    marker-shape encoding at n=7-8); add shape=category to aes() and scale_shape_manual()
-    to improve CVD accessibility
-  - Attribution text at size=2.5mm is very small and will be unreadable at mobile
-    widths; increase to 3.0-3.5mm
-  - Smallest data points (visitors~500, geom_point size=2 ggplot units) barely visible
-    in dense central cluster; raise scale_size_continuous range from (2,10) to (3,12)
-  - Union Square label nudge_x=0.025 lands very close to right coord boundary (lon=-122.38
-    vs lon_max=-122.36); reduce to nudge_x=0.01 or nudge downward to give breathing
-    room
+  - 'SC-01, SC-02 (both): the background is a 10x8 grid of flat beige/blue rectangles,
+    not street, terrain or satellite imagery from a tile provider, and the tiles stop
+    short of the panel frame (C1) → draw real tile imagery covering the whole map
+    area (e.g. fetched tiles placed with a raster layer); if plotnine cannot do this
+    natively, the spec is not feasible here. Likely cause: geom_rect tile simulation.'
+  - 'SC-02, VQ-01 (both): the attribution text is about 3 pt and cannot be read at
+    full size, and names no tile provider (C4) → readable provider attribution at
+    about 8 pt (+5 pt), e.g. ''© OpenStreetMap contributors''. Likely cause: annotate(''text'',
+    size=2.5) and its label string.'
+  - 'VQ-01 (both): the three landmark label boxes use text at about 5 pt, below the
+    8 pt tick labels → about 8 pt (+3 pt). Likely cause: geom_label size=3.5.'
+  - 'VQ-03, SC-04 (dark): the size-legend circles are black on the #242420 legend
+    panel and nearly vanish, so the visitor-size encoding cannot be read → draw them
+    in INK_SOFT. Likely cause: no guides(size=guide_legend(override_aes={''color'':
+    INK_SOFT})).'
+  - 'SC-03 (both): the name labels are nudged 0.012–0.035° from their markers: ''Union
+    Square'' floats 0.025° east over empty tiles and ''Fisherman''s Wharf'' sits beside
+    the Golden Gate Bridge marker → anchor each label at its own marker. Likely cause:
+    label_positions nudge_x/nudge_y.'
+  - 'DQ-01, DQ-02 (both): the water tiles and the coastline polygon contradict each
+    other and SF''s geography (Golden Gate Bridge and Alcatraz sit inside the land
+    outline, the Bay is a block of rectangles) → geography that matches the real coastline.
+    Likely cause: hand-typed coast_coords and the is_water rule.'
+  - 'Suggestion: an L-shaped axis line instead of the full panel border would follow
+    the library prompt''s chrome mapping.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background
-      Chrome: Title "map-tile-background · python · plotnine · anyplot.ai" bold dark text, readable; axis labels "Longitude (°)" and "Latitude (°)" in dark INK color; tick labels in INK_SOFT; legend text readable
-      Data: Simulated tile grid (beige land, light-blue water), brown coastline polygon, 15 landmark circles color-coded by 8 Imprint palette categories with size proportional to visitor count; first category "Cultural" correctly gets brand green #009E73; box labels on top-3 landmarks
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 page; panel framed by an INK_SOFT border, simulated tile grid in beige (land) and pale blue (water) with thin grey tile seams
+      Chrome: bold title 'map-tile-background · python · plotnine · anyplot.ai' centred, Longitude (°) / Latitude (°) axis titles, tick labels -122.50…-122.40 and 37.775…37.825, Visitors (K/yr) size legend and Category legend in a framed elevated panel; all readable
+      Data: 15 SF landmark circles coloured by 8 categories (Cultural #009E73 first), sized by visitors; brown coastline polygon; three boxed name labels in very small text; 'Simulated tiles · SF landmarks' text bottom-right at a barely legible ~3 pt
+      Legibility verdict: FAIL (attribution unreadably small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface — correct anyplot dark theme background
-      Chrome: Title and all labels flip to light tones (#F0EFE8 / #B8B7B0); legend boxes use elevated dark bg #242420; landmark label boxes use dark fill with light text; no dark-on-dark failures observed
-      Data: Colors are identical to light render — all 8 Imprint palette data colors unchanged; terrain colors flip to dark brownish land and deep navy water
+      Background: warm near-black #1A1A17 page; tiles flip to dark brown land and navy water
+      Chrome: title, axis titles, ticks and legend text in light tones, legend panel #242420, size-legend circles black, nearly invisible on #242420; no dark-on-dark text, but the size-legend glyphs are dark-on-dark
+      Data: marker colours identical to the light render; label boxes on dark fill with light text
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,132 +66,130 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes; attribution text at 2.5mm size
-          very small for mobile
+        comment: Landmark label text and the attribution are drawn tiny (attribution
+          ~3 pt), the attribution unreadable at full size (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels reasonably separated; some data point overlap in dense central
-          cluster inherent to data
+        comment: No text collides with text or markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Size range appropriate; smallest points (Coit Tower 500K/yr) barely
-          visible in cluster
+        comment: Size-legend circles are black and nearly vanish on the dark legend
+          background (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette used throughout
+        comment: Imprint palette, size as second channel; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed; Union Square label sits tight against right
-          coord boundary
+        comment: 3200x1800, map fills the panel, legends right; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct, Longitude/Latitude with degree units
+        comment: Longitude (°) / Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green to first alphabetical category; all 8 palette slots in
-          canonical order; correct backgrounds
+        comment: 'Cultural (first alphabetical) gets #009E73, canonical order, correct
+          page backgrounds in both themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Multiple geom layers, dual encoding, theme-adaptive terrain colors,
-          attribution note
+        passed: false
+        comment: Style-guide baseline; no typographic decisions beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Grid removed (appropriate for maps), panel border retained as map
-          frame, theme-adaptive chrome
+        passed: false
+        comment: 'Grid removed and a frame kept: the baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Size foregrounds high-traffic landmarks; labels guide viewer to top-3;
-          geographic cluster pattern visible
+        passed: false
+        comment: Size encoding and top-3 labels, but the labels point away from their
+          markers
     spec_compliance:
-      score: 13
+      score: 8
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Map with tile-style background implemented using geom_rect simulation
-          (best feasible in plotnine without extensions)
+        comment: 'A flat two-colour rectangle grid stands in for a tile map: related
+          but different form (defect line)'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: lat/lon, size encoding, labels, tile background, attribution present;
-          multiple providers and clustering absent (static library limitation)
+        passed: false
+        comment: 'C1 missed (no tile imagery), C4 missed: attribution unreadable and
+          names no provider (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Longitude X, Latitude Y, color=category, size=visitors, coord_fixed
-          for geographic aspect
+        comment: Markers at their lat/lon, but labels nudged away (Union Square label
+          0.025° east over empty tiles, Fisherman's Wharf label beside the Golden
+          Gate marker) (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; category and size legends labeled correctly
+        comment: 'Dark render: size legend unreadable because its glyphs are black
+          on #242420 (defect line)'
     data_quality:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Demonstrates lat/lon scatter, continuous size, categorical color,
-          bounding, text labels, attribution
+        comment: 'The tile layer shows no geographic feature a reader can recognise:
+          water and land tiles contradict the coastline (defect line)'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'SF landmark visitor data: real-world plausible, geographically accurate,
-          politically neutral'
+        comment: SF landmarks plausible, but the drawn geography is wrong for SF (Golden
+          Gate Bridge and Alcatraz inland) (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 landmarks at realistic coordinates; visitor counts 500K-15M/yr
-          plausible for SF attractions
+        comment: Coordinates checked against SF landmarks; visitor counts 500K-15M/yr
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -188,51 +199,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural flow
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Deterministic hard-coded data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used; sys/os workaround for naming conflict
-          is legitimate
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI elements
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', ...) correct
+        comment: plot.save(f'plot-{THEME}.png'), current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Grammar-of-graphics layer composition, proper scale_* functions,
-          coord_fixed, annotate(), multiple geoms with different data= frames
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_rect for tiles, geom_polygon for coastline, coord_fixed(ratio=1.06)
-          for geographic projection — creative use of primitives
+        comment: 'Layered grammar with per-layer data=, scale_*_manual, coord_fixed:
+          default idiomatic usage'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
 impl_tags:
   dependencies: []
   techniques:
