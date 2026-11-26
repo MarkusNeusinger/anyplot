@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -56,8 +56,8 @@ label_offsets = {
     "Pantheon": (16, -22, "left"),
     "Roman Forum": (-14, -12, "right"),
     "Spanish Steps": (14, 6, "left"),
-    "Piazza Navona": (-16, 12, "right"),
-    "Castel Sant'Angelo": (0, 28, "center"),
+    "Piazza Navona": (-18, 38, "left"),
+    "Castel Sant'Angelo": (0, 46, "center"),
     "Villa Borghese": (14, 6, "left"),
     "Trastevere": (0, -16, "center"),
     "Campo de' Fiori": (-12, -14, "right"),
@@ -71,8 +71,8 @@ visitors = np.array([v[2] for v in locations.values()])
 # Bounding box with padding
 lat_min = lats.min() - 0.015
 lat_max = lats.max() + 0.015
-lon_min = lons.min() - 0.025
-lon_max = lons.max() + 0.025
+lon_min = lons.min() - 0.04
+lon_max = lons.max() + 0.04
 
 # Theme-adaptive tile provider
 zoom = 14
@@ -116,7 +116,7 @@ title_fontsize = max(8, round(12 * 67 / len(title)))
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.imshow(np.array(stitched), extent=[nw_lon, se_lon, se_lat, nw_lat], aspect="auto", zorder=0)
+ax.imshow(np.array(stitched), extent=[nw_lon, se_lon, se_lat, nw_lat], zorder=0)
 
 # Scatter: size and color both encode daily visitor count
 sizes = 60 + (visitors - visitors.min()) / (visitors.max() - visitors.min()) * 290
@@ -160,6 +160,8 @@ cbar.outline.set_edgecolor(INK_SOFT)
 # Axis limits and labels
 ax.set_xlim(lon_min, lon_max)
 ax.set_ylim(lat_min, lat_max)
+# Equal ground scale: one degree of longitude is cos(latitude) as long as one of latitude
+ax.set_aspect(1 / math.cos(math.radians(lats.mean())))
 ax.set_xlabel("Longitude", fontsize=10, color=INK)
 ax.set_ylabel("Latitude", fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
