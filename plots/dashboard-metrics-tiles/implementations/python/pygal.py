@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -16,7 +16,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
 from io import BytesIO
 
 import cairosvg
-import numpy as np
+import pandas as pd
 import pygal
 from PIL import Image, ImageDraw, ImageFont
 from pygal.style import Style
@@ -29,70 +29,54 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Semantic status colors (Okabe-Ito positions)
-STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}  # imprint semantic anchors
-CHANGE_POSITIVE = "#009E73"
-CHANGE_NEGATIVE = "#AE3030"  # imprint red — negative change
-SPARKLINE_COLOR = "#4467A3"  # Okabe-Ito position 3
+# Imprint palette: first position is the brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-metrics = [
+# Constants
+STATUS_COLORS = {"good": "#009E73", "warning": "#DDCC77", "critical": "#AE3030"}  # Imprint semantic anchors
+CHANGE_POSITIVE = IMPRINT_PALETTE[0]  # favorable change
+CHANGE_NEGATIVE = IMPRINT_PALETTE[4]  # unfavorable change
+SPARKLINE_COLOR = IMPRINT_PALETTE[2]
+GRID_COLS = 3
+
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: metric_name
+VALUE = "Current value"  # role: current_value
+HISTORY = "History"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+UNIT = "Unit"  # role: extra
+LOWER_IS_BETTER = "Lower is better"  # role: extra
+
+# Data: replace this block with your own table, one row per tile, for example df = pd.read_csv("metrics.csv")
+df = pd.DataFrame(
     {
-        "name": "CPU Usage",
-        "value": 45,
-        "unit": "%",
-        "change": -5.2,
-        "status": "good",
-        "history": [52, 48, 55, 51, 47, 50, 48, 45, 46, 44, 45],
-        "lower_is_better": True,
-    },
-    {
-        "name": "Memory",
-        "value": 72,
-        "unit": "%",
-        "change": 8.3,
-        "status": "warning",
-        "history": [65, 66, 68, 67, 70, 69, 71, 70, 72, 71, 72],
-        "lower_is_better": True,
-    },
-    {
-        "name": "Response Time",
-        "value": 120,
-        "unit": "ms",
-        "change": -15.0,
-        "status": "good",
-        "history": [145, 142, 138, 135, 130, 128, 125, 122, 121, 120, 120],
-        "lower_is_better": True,
-    },
-    {
-        "name": "Error Rate",
-        "value": 2.1,
-        "unit": "%",
-        "change": 45.0,
-        "status": "critical",
-        "history": [1.2, 1.4, 1.3, 1.5, 1.6, 1.8, 1.9, 2.0, 2.0, 2.1, 2.1],
-        "lower_is_better": True,
-    },
-    {
-        "name": "Throughput",
-        "value": 1250,
-        "unit": "req/s",
-        "change": 12.5,
-        "status": "good",
-        "history": [1100, 1120, 1150, 1180, 1200, 1210, 1220, 1230, 1240, 1245, 1250],
-        "lower_is_better": False,
-    },
-    {
-        "name": "Active Users",
-        "value": 3420,
-        "unit": "",
-        "change": 5.8,
-        "status": "good",
-        "history": [3200, 3220, 3280, 3310, 3350, 3380, 3390, 3400, 3410, 3415, 3420],
-        "lower_is_better": False,
-    },
-]
+        METRIC: ["CPU Usage", "Memory", "Response Time", "Error Rate", "Throughput", "Active Users"],
+        VALUE: [45, 72, 120, 2.1, 1250, 3420],
+        UNIT: ["%", "%", "ms", "%", "req/s", ""],
+        CHANGE: [-5.2, 8.3, -15.0, 45.0, 12.5, 5.8],
+        STATUS: ["good", "warning", "good", "critical", "good", "good"],
+        HISTORY: [
+            (52, 48, 55, 51, 47, 50, 48, 45, 46, 44, 45),
+            (65, 66, 68, 67, 70, 69, 71, 70, 72, 71, 72),
+            (145, 142, 138, 135, 130, 128, 125, 122, 121, 120, 120),
+            (1.2, 1.4, 1.3, 1.5, 1.6, 1.8, 1.9, 2.0, 2.0, 2.1, 2.1),
+            (1100, 1120, 1150, 1180, 1200, 1210, 1220, 1230, 1240, 1245, 1250),
+            (3200, 3220, 3280, 3310, 3350, 3380, 3390, 3400, 3410, 3415, 3420),
+        ],
+        LOWER_IS_BETTER: [True, True, True, True, False, False],
+    }
+)
+
+
+# Plot: reads only df and the constants above
+# Sparkline values: a missing or non-numeric point stays missing (pygal skips None)
+def sparkline_values(history):
+    series = pd.to_numeric(
+        pd.Series(history if isinstance(history, (list, tuple)) else [], dtype=object), errors="coerce"
+    )
+    return [None if pd.isna(v) else float(v) for v in series]
+
 
 # Canvas layout (3200x1800 landscape — hard contract)
 CANVAS_WIDTH = 3200
@@ -100,8 +84,7 @@ CANVAS_HEIGHT = 1800
 TITLE_HEIGHT = 120
 MARGIN = 30
 GAP = 30
-GRID_COLS = 3
-GRID_ROWS = 2
+GRID_ROWS = -(-len(df) // GRID_COLS)
 
 grid_width = CANVAS_WIDTH - 2 * MARGIN
 grid_height = CANVAS_HEIGHT - TITLE_HEIGHT - 2 * MARGIN
@@ -111,7 +94,7 @@ tile_height = (grid_height - (GRID_ROWS - 1) * GAP) // GRID_ROWS
 TILE_PADDING = 40
 STATUS_BAR_H = 10
 SPARKLINE_W = tile_width - 2 * TILE_PADDING
-SPARKLINE_H = 340
+SPARKLINE_H = 290
 
 # Pygal sparkline style (transparent background)
 sparkline_style = Style(
@@ -130,7 +113,7 @@ try:
     value_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
     name_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 46)
     change_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
-    trend_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+    trend_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 44)
 except OSError:
     title_font = ImageFont.load_default()
     value_font = ImageFont.load_default()
@@ -149,7 +132,7 @@ title_w = bbox[2] - bbox[0]
 draw.text(((CANVAS_WIDTH - title_w) // 2, 32), title_text, fill=INK, font=title_font)
 
 # Metric tiles — 3x2 grid
-for idx, metric in enumerate(metrics):
+for idx, metric in enumerate(df.to_dict("records")):
     row = idx // GRID_COLS
     col = idx % GRID_COLS
     tx = MARGIN + col * (tile_width + GAP)
@@ -159,28 +142,28 @@ for idx, metric in enumerate(metrics):
     draw.rounded_rectangle([tx, ty, tx + tile_width, ty + tile_height], radius=18, fill=ELEVATED_BG)
 
     # Coloured status bar at top of tile
-    draw.rectangle([tx, ty, tx + tile_width, ty + STATUS_BAR_H], fill=STATUS_COLORS[metric["status"]])
+    draw.rectangle([tx, ty, tx + tile_width, ty + STATUS_BAR_H], fill=STATUS_COLORS.get(metric[STATUS], INK_SOFT))
 
     # Metric name
     cy = ty + STATUS_BAR_H + TILE_PADDING
-    draw.text((tx + TILE_PADDING, cy), metric["name"], fill=INK_SOFT, font=name_font)
+    draw.text((tx + TILE_PADDING, cy), metric[METRIC], fill=INK_SOFT, font=name_font)
     cy += 65
 
     # Current value with unit
-    value_text = f"{metric['value']:,}{metric['unit']}"
+    value_text = f"{metric[VALUE]:,g}{metric[UNIT]}"
     draw.text((tx + TILE_PADDING, cy), value_text, fill=INK, font=value_font)
     cy += 130
 
     # Change indicator (arrow + percentage)
-    change = metric["change"]
-    favorable = (change < 0) if metric["lower_is_better"] else (change > 0)
+    change = metric[CHANGE]
+    favorable = (change < 0) if metric[LOWER_IS_BETTER] else (change > 0)
     change_color = CHANGE_POSITIVE if favorable else CHANGE_NEGATIVE
     arrow = "▲" if change > 0 else "▼"
     draw.text((tx + TILE_PADDING, cy), f"{arrow} {abs(change):.1f}%", fill=change_color, font=change_font)
 
     # Separator + trend label above sparkline to fill the vertical gap
     sp_y = ty + tile_height - SPARKLINE_H - TILE_PADDING
-    rule_y = sp_y - 52
+    rule_y = sp_y - 105
     draw.line([(tx + TILE_PADDING, rule_y), (tx + tile_width - TILE_PADDING, rule_y)], fill=INK_SOFT, width=2)
     draw.text((tx + TILE_PADDING, rule_y + 10), "7-day trend", fill=INK_SOFT, font=trend_font)
 
@@ -200,7 +183,7 @@ for idx, metric in enumerate(metrics):
         fill=True,
         stroke_style={"width": 5, "linecap": "round", "linejoin": "round"},
     )
-    sp_chart.add("", metric["history"])
+    sp_chart.add("", sparkline_values(metric[HISTORY]))
     sp_svg = sp_chart.render()
     sp_png = cairosvg.svg2png(bytestring=sp_svg, output_width=SPARKLINE_W, output_height=SPARKLINE_H)
     sp_img = Image.open(BytesIO(sp_png)).convert("RGBA")
@@ -230,7 +213,7 @@ html_parts = [
         .metric-value {{ color: {INK}; font-size: 38px; font-weight: bold; margin-bottom: 8px; }}
         .metric-change {{ font-size: 16px; font-weight: 600; margin-bottom: 12px; }}
         .change-pos {{ color: #009E73; }}
-        .change-neg {{ color: #C475FD; }}
+        .change-neg {{ color: #AE3030; }}
         .trend-separator {{ border: none; border-top: 1px solid {INK_SOFT}; margin: 0 0 6px; }}
         .trend-label {{ font-size: 12px; color: {INK_SOFT}; margin-bottom: 6px; }}
         .sparkline {{ width: 100%; height: 70px; overflow: hidden; }}
@@ -245,9 +228,9 @@ html_parts = [
 """
 ]
 
-for metric in metrics:
-    change = metric["change"]
-    favorable = (change < 0) if metric["lower_is_better"] else (change > 0)
+for metric in df.to_dict("records"):
+    change = metric[CHANGE]
+    favorable = (change < 0) if metric[LOWER_IS_BETTER] else (change > 0)
     change_class = "change-pos" if favorable else "change-neg"
     arrow = "▲" if change > 0 else "▼"
 
@@ -264,14 +247,14 @@ for metric in metrics:
         margin=2,
         fill=True,
     )
-    mini.add("", metric["history"])
+    mini.add("", sparkline_values(metric[HISTORY]))
     sp_svg = mini.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
 
     html_parts.append(
         f"""        <div class="tile">
-            <div class="status-bar" style="background:{STATUS_COLORS[metric["status"]]}"></div>
-            <div class="metric-name">{metric["name"]}</div>
-            <div class="metric-value">{metric["value"]:,}{metric["unit"]}</div>
+            <div class="status-bar" style="background:{STATUS_COLORS.get(metric[STATUS], INK_SOFT)}"></div>
+            <div class="metric-name">{metric[METRIC]}</div>
+            <div class="metric-value">{metric[VALUE]:,g}{metric[UNIT]}</div>
             <div class="metric-change {change_class}">{arrow} {abs(change):.1f}%</div>
             <hr class="trend-separator">
             <div class="trend-label">7-day trend</div>
