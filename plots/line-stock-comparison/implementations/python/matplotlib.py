@@ -40,7 +40,7 @@ stocks = {
     "AAPL": {"start": 185, "drift": 0.0008, "vol": 0.018},
     "GOOGL": {"start": 140, "drift": 0.0006, "vol": 0.020},
     "MSFT": {"start": 375, "drift": 0.0007, "vol": 0.016},
-    "SPY": {"start": 475, "drift": 0.0004, "vol": 0.010},
+    "SPY": {"start": 475, "drift": 0.0, "vol": 0.006},
 }
 frames = []
 for name, params in stocks.items():
