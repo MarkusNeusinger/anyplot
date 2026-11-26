@@ -1,7 +1,7 @@
 """ anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-05
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-26
 """
 
 import os
@@ -15,6 +15,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_tile,
+    gggrid,
     ggplot,
     ggsize,
     labs,
@@ -34,59 +35,58 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series ALWAYS #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-
-# Data - Survey results on voting preferences (values sum to 100%)
-categories = ["Very Likely", "Likely", "Neutral", "Unlikely"]
-values = [45, 28, 18, 9]  # Percentages
-
-# Build 10x10 waffle grid (100 squares, each = 1%)
-grid_data = []
-square_idx = 0
-
-for cat, val in zip(categories, values, strict=True):
-    for _ in range(val):
-        row = 9 - (square_idx // 10)
-        col = square_idx % 10
-        grid_data.append({"x": col, "y": row, "category": cat})
-        square_idx += 1
-
-df = pd.DataFrame(grid_data)
-df["category"] = pd.Categorical(df["category"], categories=categories, ordered=True)
-
-# Create legend labels with percentages
-legend_labels = {cat: f"{cat} ({val}%)" for cat, val in zip(categories, values, strict=True)}
-df["legend_label"] = df["category"].map(legend_labels)
-df["legend_label"] = pd.Categorical(
-    df["legend_label"], categories=[legend_labels[cat] for cat in categories], ordered=True
-)
+# Imprint palette (first series ALWAYS #009E73)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Theme-adaptive custom theme
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    plot_title=element_text(size=24, color=INK, hjust=0.5),
+    plot_title=element_text(size=16, color=INK, hjust=0.5),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
-    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=14, color=INK),
+    legend_text=element_text(size=12, color=INK_SOFT),
     axis_title=element_blank(),
     axis_text=element_blank(),
     axis_line=element_blank(),
 )
 
+# Columns
+PREFERENCE = "Preference"  # role: category
+PERCENT = "Percent"  # role: value
+
+# Data - Survey results on voting preferences (shares sum to 100%)
+df = pd.DataFrame({PREFERENCE: ["Very Likely", "Likely", "Neutral", "Unlikely"], PERCENT: [45, 28, 18, 9]})
+
 # Plot
+GRID_SIDE = 10  # 10x10 grid, each square = 1% of the whole
+# Whole squares per category: cumulative shares rounded to square edges, so the blocks always fill the grid
+edges = (df[PERCENT].fillna(0).cumsum() / df[PERCENT].sum() * GRID_SIDE**2).round().astype(int)
+counts = edges.diff().fillna(edges).astype(int)
+legend_labels = [f"{name} ({pct:g}%)" for name, pct in zip(df[PREFERENCE], df[PERCENT], strict=True)]
+position = pd.Series(range(GRID_SIDE**2))
+squares = pd.DataFrame(
+    {
+        "col": position % GRID_SIDE,
+        "row": GRID_SIDE - 1 - position // GRID_SIDE,
+        PREFERENCE: pd.Categorical(
+            pd.Series(legend_labels).repeat(counts).reset_index(drop=True), categories=legend_labels, ordered=True
+        ),
+    }
+)
 plot = (
-    ggplot(df, aes(x="x", y="y", fill="legend_label"))
+    ggplot(squares, aes(x="col", y="row", fill=PREFERENCE))
     + geom_tile(width=0.88, height=0.88, size=0)
     + coord_fixed(ratio=1)
-    + scale_fill_manual(values=IMPRINT)
-    + labs(title="waffle-basic · letsplot · anyplot.ai", fill="Preference")
+    + scale_fill_manual(values=IMPRINT_PALETTE)
+    + labs(title="waffle-basic · python · letsplot · anyplot.ai", fill=PREFERENCE)
     + theme_void()
     + anyplot_theme
-    + ggsize(1600, 900)
 )
 
+# One-panel grid paints the whole canvas with the page color
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+
 # Save outputs
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
