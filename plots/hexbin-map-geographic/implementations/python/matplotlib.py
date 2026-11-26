@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Polygon
+from matplotlib.path import Path
 
 
 # Theme tokens
@@ -103,6 +104,7 @@ LAND = [
         (-74.04, 40.61),
     ],
 ]
+LAND_PATHS = [Path(outline) for outline in LAND]
 LANDMARKS = [("Manhattan", -73.985, 40.758), ("Brooklyn", -73.960, 40.680), ("Queens", -73.850, 40.730)]
 
 # Columns: set these to your table's column names
@@ -115,20 +117,20 @@ FARE = "Trip fare ($)"  # role: value
 np.random.seed(42)
 n_points = 5000
 
-lat_manhattan = np.random.normal(40.758, 0.030, 2500)
-lon_manhattan = np.random.normal(-73.985, 0.015, 2500)
-lat_brooklyn = np.random.normal(40.680, 0.040, 1500)
-lon_brooklyn = np.random.normal(-73.960, 0.030, 1500)
-lat_queens = np.random.normal(40.730, 0.030, 1000)
-lon_queens = np.random.normal(-73.850, 0.040, 1000)
+# Pickups start on land: draw extra candidates per cluster and keep the first n that fall inside a land outline
+clusters = [  # (center lon, center lat, spread lon, spread lat, trips)
+    (-73.985, 40.758, 0.015, 0.030, 2500),
+    (-73.960, 40.680, 0.030, 0.040, 1500),
+    (-73.850, 40.730, 0.040, 0.030, 1000),
+]
+lons, lats = [], []
+for lon_c, lat_c, lon_sd, lat_sd, n_trips in clusters:
+    cand = np.column_stack([np.random.normal(lon_c, lon_sd, n_trips * 4), np.random.normal(lat_c, lat_sd, n_trips * 4)])
+    on_land = np.any([path.contains_points(cand) for path in LAND_PATHS], axis=0)
+    lons.append(cand[on_land][:n_trips, 0])
+    lats.append(cand[on_land][:n_trips, 1])
 
-df = pd.DataFrame(
-    {
-        LON: np.concatenate([lon_manhattan, lon_brooklyn, lon_queens]),
-        LAT: np.concatenate([lat_manhattan, lat_brooklyn, lat_queens]),
-        FARE: np.random.exponential(15, n_points) + 5,
-    }
-)
+df = pd.DataFrame({LON: np.concatenate(lons), LAT: np.concatenate(lats), FARE: np.random.exponential(15, n_points) + 5})
 
 # Plot — landscape 3200 × 1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -147,7 +149,7 @@ hb = ax.hexbin(
     extent=EXTENT,
     reduce_C_function=np.mean,
     cmap=imprint_seq,
-    alpha=0.85,
+    alpha=0.65,
     edgecolors=INK_MUTED,
     linewidths=0.3,
     mincnt=1,
@@ -171,9 +173,7 @@ ax.set_xlabel(LON, fontsize=10, color=INK)
 ax.set_ylabel(LAT, fontsize=10, color=INK)
 
 title = "hexbin-map-geographic · python · matplotlib · anyplot.ai"
-n = len(title)
-title_fs = max(8, round(12 * 67 / n)) if n > 67 else 12
-ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK, pad=10)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
 
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.grid(True, alpha=0.12, linestyle="--", color=INK, zorder=1, linewidth=0.5)
@@ -188,14 +188,14 @@ for name, x, y in LANDMARKS:
         xy=(x, y),
         xytext=(25, 19),
         textcoords="offset points",
-        fontsize=9,
+        fontsize=8,
         fontweight="bold",
         color=INK,
         ha="left",
         bbox={
-            "boxstyle": "round,pad=0.3",
+            "boxstyle": "round,pad=0.2",
             "facecolor": ELEVATED_BG,
-            "alpha": 0.88,
+            "alpha": 0.6,
             "edgecolor": INK_SOFT,
             "linewidth": 0.5,
         },
