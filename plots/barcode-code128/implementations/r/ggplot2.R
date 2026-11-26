@@ -135,7 +135,7 @@ p <- ggplot() +
     ),
     plot.caption     = element_text(
       color  = INK_MUTED,
-      size   = 7,
+      size   = 8,
       hjust  = 0.5,
       margin = margin(t = 6, b = 4)
     ),
