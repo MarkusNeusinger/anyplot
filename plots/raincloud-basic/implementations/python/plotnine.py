@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-26
@@ -82,7 +82,7 @@ plot = (
     + scale_fill_manual(values=IMPRINT_PALETTE, limits=groups)
     + scale_color_manual(values=IMPRINT_PALETTE, limits=groups)
     # First group on top after coord_flip; room above the top cloud
-    + scale_x_discrete(limits=groups[::-1], expand=(0, 0.6, 0, 0.75))
+    + scale_x_discrete(limits=groups[::-1], expand=(0, 0.35, 0, 0.6))
     + scale_y_continuous(expand=(0.03, 0, 0.03, 0))
     + coord_flip()
     + labs(title="raincloud-basic · python · plotnine · anyplot.ai")
