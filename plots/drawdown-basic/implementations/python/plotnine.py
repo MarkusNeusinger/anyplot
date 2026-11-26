@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 drawdown-basic: Drawdown Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: pending | Updated: 2026-05-23
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
