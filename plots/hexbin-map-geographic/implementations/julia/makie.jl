@@ -1,7 +1,7 @@
 # anyplot.ai
 # hexbin-map-geographic: Hexagonal Binning Map
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-05-27
+# Quality: pending | Created: 2026-05-27
 
 using CairoMakie
 using Colors
