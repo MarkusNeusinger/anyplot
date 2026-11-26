@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 79/100 | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -34,12 +34,12 @@ airports = [
     ("London", 51.4700, -0.4543, 4, 6),
     ("Tokyo", 35.5494, 139.7798, -4, 4),
     ("Dubai", 25.2532, 55.3657, 4, 4),
-    ("Singapore", 1.3644, 103.9915, 4, -8),
+    ("Singapore", 1.3644, 103.9915, -4, -8),
     ("Sydney", -33.9399, 151.1753, 4, 4),
     ("São Paulo", -23.4356, -46.4731, 4, 4),
     ("Los Angeles", 33.9416, -118.4085, -4, 4),
     ("Paris", 49.0097, 2.5479, 4, -10),
-    ("Hong Kong", 22.3080, 113.9185, -4, -8),
+    ("Hong Kong", 22.3080, 113.9185, 4, -8),
 ]
 
 connections = [
@@ -331,7 +331,8 @@ legend_elements = [
         [0],
         [0],
         marker="o",
-        color="w",
+        color="none",
+        linestyle="none",
         markerfacecolor=AIRPORT_COLOR,
         markeredgecolor=PAGE_BG,
         markeredgewidth=0.8,
