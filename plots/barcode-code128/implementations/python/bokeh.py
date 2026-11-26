@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
