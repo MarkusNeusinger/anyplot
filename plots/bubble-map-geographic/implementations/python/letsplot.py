@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_polygon,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -384,6 +385,9 @@ plot = (
         legend_position="right",
     )
 )
+
+# The fixed aspect leaves the canvas edges transparent; a one-panel grid paints them in the page color
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
