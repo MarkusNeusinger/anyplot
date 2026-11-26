@@ -12,38 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/letsplot/plot-dark.html
-quality_score: 74
+quality_score: 70
 review:
   strengths:
-  - 'Barb geometry correct: upwind staffs, pennants/full/half barbs on one side adding
-    up to the speed'
+  - 'Barb geometry correct: upwind staffs, pennants, full and half barbs on one side
+    adding up to the speed'
   - Subtitle key decodes the notation, which the spec allows
   - Calm stations drawn as empty open rings without a staff
-  - Theme tokens applied throughout; both renders readable
+  - Theme tokens applied to chrome; both renders readable
   weaknesses:
   - 'VQ-05 (both): the canvas is 4800×2700, not one of the canonical 3200×1800 / 2400×2400
     sizes, and coord_fixed leaves transparent bands at both sides → ggsize(800, 450)
-    with scale=4. Likely cause: ggsize(1600, 900) with scale=3.'
+    with scale=4 and the page colour across the full canvas. Likely cause: ggsize(1600,
+    900) with scale=3.'
   - 'SC-01 (both): barbs are coloured by a derived speed category (Light/Moderate/Strong)
     with a ''Wind Speed'' legend, an encoding the -basic spec does not ask for → draw
     every barb in #009E73 and drop the legend. Likely cause: a speed-category colour
-    mapping on the segment layer.'
+    mapping on the barb layers.'
   - 'SC-01 (both): a ''~54 kts (pennant)'' callout floats above the two pennant stations,
     a callout the -basic spec excludes → remove it. Likely cause: a geom_text annotation
     layer.'
   - 'VQ-07 (both): the ordered speed categories use green, amber and vermillion instead
-    of ordered steps of one Imprint ramp → removing the derived colour channel resolves
-    it. Likely cause: a manual colour scale over the categories.'
-  - 'CQ-04 (code): lines 157–159 add a separate geom_polygon layer per pennant in
-    a loop → one geom_polygon over a single pennant DataFrame with aes(group=pennant_id).
-    Likely cause: pennants stored as per-triangle dicts.'
+    of ordered steps of one Imprint ramp, and the side bands are transparent instead
+    of #FAF8F1 / #1A1A17 → removing the derived colour channel and painting the full
+    canvas resolves it. Likely cause: a manual colour scale over the categories and
+    the coord_fixed plot background.'
+  - 'CQ-04 (code): a separate geom_polygon layer is added per pennant in a loop →
+    one geom_polygon over a single pennant DataFrame with aes(group=pennant_id). Likely
+    cause: pennants stored as per-triangle dicts.'
+  - 'DQ-02, DQ-03 (both): the station grid spans 0–140 °E and 0–100 °N, so the top
+    row sits at 100 °N (beyond the 90 °N pole) and a 140°-wide grid is not a plausible
+    surface-station network → place the grid in a real region at a plausible extent
+    (for example 30–60 °N). Likely cause: np.linspace(0, 140, n_x) and np.linspace(0,
+    100, n_y).'
   - 'Suggestion: lets-plot tooltips on the staff layer could show speed and direction
     per station in the HTML output.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 panel; 4800×2700 canvas with transparent side bands
-      Chrome: title 'windbarb-basic · python · letsplot · anyplot.ai' and a subtitle key 'Half barb = 5 kts | full barb = 10 kts | pennant (triangle) = 50 kts'; axis titles with units; dark ticks; subtle grid; 'Wind Speed' legend on the right. All readable
-      Data: 8×6 station grid; barbs coloured by speed category — Light (<15 kts) #009E73, Moderate (15-30 kts) amber, Strong (>30 kts) vermillion; two pennant stations at (80,40)/(100,40); two empty calm rings; a '~54 kts (pennant)' text callout above the pennant stations
+      Background: warm off-white #FAF8F1 panel; 4800x2700 canvas with transparent bands at both sides
+      Chrome: title 'windbarb-basic · python · letsplot · anyplot.ai' plus a subtitle key 'Half barb = 5 kts | full barb = 10 kts | pennant (triangle) = 50 kts'; axis titles with units; dark ticks; subtle grid; 'Wind Speed' legend on the right. All readable
+      Data: 8x6 station grid; barbs coloured by speed category: Light #009E73, Moderate amber, Strong vermillion; two pennant stations at (80,40)/(100,40); two empty calm rings; a '~54 kts (pennant)' text callout above the pennant stations
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -53,7 +61,7 @@ review:
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -61,33 +69,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24, axis 20, ticks 16 at ggsize 1600×900; all text readable
-          in both themes
+        comment: Title 24, axis titles 20, ticks 16 at scale 3; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; barbs well spaced
+        comment: No text collisions; barbs stay clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All barb types and calm rings visible in both themes
+        comment: Staffs at 1.2, feathers countable, pennants filled; calm rings visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/amber/vermillion distinguishable, high contrast
+        comment: Green/amber/vermillion distinguishable under CVD; speed also readable
+          from the feathers
       - id: VQ-05
         name: Layout & Canvas
         score: 0
         max: 4
         passed: false
-        comment: Canvas 4800×2700, not one of the canonical 3200×1800 / 2400×2400
-          sizes; transparent side bands (defect line)
+        comment: Canvas 4800x2700, not a canonical size, with transparent bands at
+          both sides of the fixed-aspect plot (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -96,11 +105,12 @@ review:
         comment: Longitude (°E) / Latitude (°N) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Ordered speed categories coloured green/amber/vermillion instead
-          of ordered steps of one Imprint ramp (defect line)
+        comment: Ordered speed categories in green/amber/vermillion instead of steps
+          of one Imprint ramp; transparent side bands instead of the page colour (defect
+          lines)
     design_excellence:
       score: 8
       max: 20
@@ -110,21 +120,20 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Style-guide baseline; the colour layer is an unasked addition and
-          earns nothing
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
-        passed: true
-        comment: Subtle grid and axis line per the style guide
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Hierarchy comes from an unasked speed-colour channel and a callout,
-          which earn no credit
+        passed: false
+        comment: Hierarchy comes from an unasked colour channel and callout, which
+          earn no credit
     spec_compliance:
       score: 13
       max: 15
@@ -133,7 +142,7 @@ review:
         name: Plot Type
         score: 3
         max: 5
-        passed: false
+        passed: true
         comment: Barb plot with a derived speed-category colour channel and a '~54
           kts (pennant)' callout on a -basic spec (defect lines)
       - id: SC-02
@@ -141,14 +150,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Upwind staffs, 5/10/50 notation on one side, empty calm rings, notation
-          key in subtitle
+        comment: Upwind staffs, 5/10/50 notation on one side, empty calm rings without
+          a staff, notation key in the subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Staffs anchored at station positions
+        comment: Staffs anchored at each station's x/y; axes cover all barbs
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -156,7 +165,7 @@ review:
         passed: true
         comment: Title format correct; legend labels readable
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -167,17 +176,19 @@ review:
         comment: Calm, half, full and pennant barbs all shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Neutral surface-station wind field
+        comment: Generic grid spanning 0-140 °E × 0-100 °N rather than a plausible
+          station network (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 'Checked: 54 kt stations show one pennant + half barb; calm stations
-          ring only'
+        comment: 'Checked: 54 kt stations (u=45, v=30) draw one pennant + one half
+          barb; calm 0.7 kt stations draw no staff. Latitudes reach 100 °N, beyond
+          the pole (defect line)'
     code_quality:
       score: 9
       max: 10
@@ -187,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,8 +215,8 @@ review:
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: One geom_polygon layer added per pennant in a loop (defect line)
+        passed: true
+        comment: One geom_polygon layer appended per pennant in a loop (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
@@ -226,11 +237,11 @@ review:
         name: Distinctive Features
         score: 1
         max: 5
-        passed: true
+        passed: false
         comment: Nothing beyond the mandated HTML export
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
 impl_tags:
   dependencies: []
   techniques:
