@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-marker-clustered: Clustered Marker Map
 # Library: makie 0.24.16 | Julia 1.13.4
-# Quality: 83/100 | Updated: 2026-11-26
+# Quality: pending | Updated: 2026-11-26
 
 using CairoMakie
 using Colors
