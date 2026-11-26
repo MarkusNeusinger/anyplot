@@ -34,43 +34,29 @@ CODE128 <- c(
   "2331112"  # stop symbol (index 108 in R / code value 106+stop)
 )
 
-# --- Encode a string using Code 128 Subset B --------------------------------
-# Returns vector of pattern strings (data + check + stop)
-encode_code128b <- function(text) {
-  chars     <- strsplit(text, "")[[1]]
-  code_vals <- vapply(chars, function(ch) utf8ToInt(ch) - 32L, integer(1L))
-  start_val <- 104L  # Start B
-  check_val <- (start_val + sum(seq_along(code_vals) * code_vals)) %% 103L
-  all_vals  <- c(start_val, code_vals, check_val)
-  c(CODE128[all_vals + 1L], CODE128[107L])  # patterns + stop (stop is at index 107)
-}
-
-# --- Build rectangle data frame from encoded patterns -----------------------
-patterns_to_df <- function(patterns, quiet_modules = 10L) {
-  x    <- quiet_modules
-  rows <- list()
-  for (pat in patterns) {
-    widths <- as.integer(strsplit(pat, "")[[1]])
-    for (i in seq_along(widths)) {
-      if (i %% 2L == 1L) {  # odd index = bar (black)
-        rows[[length(rows) + 1L]] <- c(x, x + widths[i])
-      }
-      x <- x + widths[i]
-    }
-  }
-  total_w <- x + quiet_modules
-  mat <- do.call(rbind, rows)
-  df  <- data.frame(xmin = mat[, 1], xmax = mat[, 2], ymin = 0, ymax = 1)
-  list(df = df, total_w = total_w)
-}
-
 # --- Data -------------------------------------------------------------------
-set.seed(42)
-label_text <- "SPEC-LAB-2024-X789"
-patterns   <- encode_code128b(label_text)
-barcode    <- patterns_to_df(patterns)
-bar_df     <- barcode$df
-total_w    <- barcode$total_w
+label_text    <- "SPEC-LAB-2024-X789"
+quiet_modules <- 10L
+
+# Subset B: Start B (104), values ord(ch) - 32, mod-103 check character, stop
+code_vals <- utf8ToInt(label_text) - 32L
+start_val <- 104L
+check_val <- (start_val + sum(seq_along(code_vals) * code_vals)) %% 103L
+patterns  <- c(CODE128[c(start_val, code_vals, check_val) + 1L], CODE128[107L])
+
+# Module widths of every pattern; odd positions are bars, even are spaces
+widths  <- unlist(lapply(strsplit(patterns, ""), as.integer))
+# Each pattern has an even digit count except the 7-digit stop, which also
+# starts with a bar, so bar/space parity is restarted per pattern
+is_bar  <- unlist(lapply(strsplit(patterns, ""), function(p) rep_len(c(TRUE, FALSE), length(p))))
+edges   <- quiet_modules + cumsum(widths)
+bar_df  <- data.frame(
+  xmin = (edges - widths)[is_bar],
+  xmax = edges[is_bar],
+  ymin = 0,
+  ymax = 1
+)
+total_w <- max(edges) + quiet_modules
 
 # White barcode background (always white for scan reliability)
 bg_rect <- data.frame(xmin = 0, xmax = total_w, ymin = 0, ymax = 1)
