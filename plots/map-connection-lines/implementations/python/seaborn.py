@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
@@ -292,7 +292,7 @@ ax.annotate(
     xy=(146, 37),
     xytext=(138, 66),
     textcoords="data",
-    fontsize=7.5,
+    fontsize=8.5,
     color=INK,
     ha="center",
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.8, "shrinkA": 3, "shrinkB": 4},
@@ -335,4 +335,5 @@ ax.legend(
 )
 
 # Save
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
