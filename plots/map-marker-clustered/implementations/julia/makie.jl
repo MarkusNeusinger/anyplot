@@ -26,11 +26,12 @@ const WATER_LABEL  = THEME == "light" ? RGBAf(0.25f0, 0.45f0, 0.65f0, 0.65f0) : 
 const IMPRINT = [
     colorant"#009E73",
     colorant"#C475FD",
-    colorant"#AE3030",
     colorant"#4467A3",
-    colorant"#99B314",
-    colorant"#954477",
     colorant"#BD8233",
+    colorant"#AE3030",
+    colorant"#2ABCCD",
+    colorant"#954477",
+    colorant"#99B314",
 ]
 
 # Data: specialty venues (coffee shops, bakeries, tea houses) across lower Manhattan, NYC
@@ -102,8 +103,8 @@ ax = Axis(
     ylabel            = "Latitude",
     xlabelsize        = 14,
     ylabelsize        = 14,
-    xticklabelsize    = 11,
-    yticklabelsize    = 11,
+    xticklabelsize    = 12,
+    yticklabelsize    = 12,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
     xticklabelcolor   = INK_SOFT,
@@ -139,13 +140,13 @@ poly!(ax, Rect2f(-73.978f0, 40.702f0, 0.015f0, 0.058f0); color = WATER_COLOR, st
 text!(ax, -74.012f0, 40.728f0;
     text = "Hudson\nRiver",
     align = (:center, :center),
-    fontsize = 9,
+    fontsize = 12,
     color = WATER_LABEL,
 )
 text!(ax, -73.970f0, 40.728f0;
     text = "East\nRiver",
     align = (:center, :center),
-    fontsize = 9,
+    fontsize = 12,
     color = WATER_LABEL,
 )
 
@@ -155,7 +156,7 @@ for (i, cat_name) in enumerate(CAT_NAMES)
     isempty(idx) && continue
     scatter!(ax, lons[idx], lats[idx];
         color       = IMPRINT[i],
-        markersize  = 15,
+        markersize  = 18,
         strokewidth = 1.5,
         strokecolor = PAGE_BG,
         label       = cat_name,
@@ -175,7 +176,7 @@ for (clat, clon, npts, dom_cat) in cluster_rows
         text     = string(npts),
         align    = (:center, :center),
         fontsize = 14,
-        color    = colorant"#FFFFFF",
+        color    = dom_cat == 2 ? colorant"#1A1A17" : colorant"#FFFFFF",
     )
 end
 
