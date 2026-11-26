@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-28
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -25,16 +26,17 @@ C_VAR = "#C475FD"  # position 2 lavender — increasing / overfitting direction
 C_TOTAL = "#AE3030"  # position 5 matte red — semantic: error / loss
 C_IRRED = INK_MUTED  # adaptive muted — baseline / noise floor
 
-# Data — theoretical curves
-complexity = np.linspace(0.5, 10, 100)
-bias_squared = 2.5 / (1 + 0.5 * complexity)
-variance = 0.05 * complexity**1.5
-irreducible_error = np.full_like(complexity, 0.3)
-total_error = bias_squared + variance + irreducible_error
+# Constants
+FONT_ON_PLOT = 9
 
-optimal_idx = np.argmin(total_error)
-optimal_complexity = complexity[optimal_idx]
-optimal_error = total_error[optimal_idx]
+# Column constants
+COMPLEXITY = "Model Complexity"  # role: model_complexity
+BIAS = "Bias²"  # role: bias_squared
+VARIANCE = "Variance"  # role: variance
+IRREDUCIBLE = "Irreducible Error"  # role: irreducible_error
+TOTAL = "Total Error"  # role: total_error
+CURVE = "Curve"  # long-form key for hue / style / size
+ERROR = "Prediction Error"  # long-form value column
 
 # Seaborn theme
 sns.set_theme(
@@ -54,56 +56,103 @@ sns.set_theme(
     },
 )
 
+# Data — theoretical curves, one column per curve
+complexity = np.linspace(0.5, 10, 100)
+bias_squared = 2.5 / (1 + 0.5 * complexity)
+variance = 0.05 * complexity**1.5
+irreducible_error = np.full_like(complexity, 0.3)
+df = pd.DataFrame(
+    {
+        COMPLEXITY: complexity,
+        BIAS: bias_squared,
+        VARIANCE: variance,
+        IRREDUCIBLE: irreducible_error,
+        TOTAL: bias_squared + variance + irreducible_error,
+    }
+)
+
 # Plot
+curves = [BIAS, VARIANCE, IRREDUCIBLE, TOTAL]
+long = df.melt(id_vars=COMPLEXITY, value_vars=curves, var_name=CURVE, value_name=ERROR)
+wide = df.set_index(COMPLEXITY)
+optimal_complexity = wide[TOTAL].idxmin()
+optimal_error = wide[TOTAL].min()
+x_min, x_max = df[COMPLEXITY].min(), df[COMPLEXITY].max()
+y_max = long[ERROR].max() * 1.62
+n_curves = len(curves)
+
+
+def at(name, frac):
+    """Return (x, curve value) at a fraction of the complexity range."""
+    x = x_min + frac * (x_max - x_min)
+    return x, np.interp(x, wide.index, wide[name])
+
+
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
-fig.set_facecolor(PAGE_BG)
-ax.set_facecolor(PAGE_BG)
 
 # Shaded underfitting / overfitting zones (behind curves)
-ax.axvspan(0.5, optimal_complexity, alpha=0.07, color=C_BIAS, zorder=0)
-ax.axvspan(optimal_complexity, 10, alpha=0.07, color=C_VAR, zorder=0)
+ax.axvspan(x_min, optimal_complexity, alpha=0.07, color=C_BIAS, zorder=0)
+ax.axvspan(optimal_complexity, x_max, alpha=0.07, color=C_VAR, zorder=0)
 
-# Main curves via seaborn lineplot
-sns.lineplot(x=complexity, y=bias_squared, color=C_BIAS, linewidth=2.5, label="Bias²", ax=ax)
-sns.lineplot(x=complexity, y=variance, color=C_VAR, linewidth=2.5, label="Variance", ax=ax)
+# All four curves in one call: hue, dash style and line width all keyed on the curve
 sns.lineplot(
-    x=complexity, y=irreducible_error, color=C_IRRED, linewidth=2.0, linestyle="--", label="Irreducible Error", ax=ax
+    data=long,
+    x=COMPLEXITY,
+    y=ERROR,
+    hue=CURVE,
+    style=CURVE,
+    size=CURVE,
+    hue_order=curves,
+    palette=dict(zip(curves, [C_BIAS, C_VAR, C_IRRED, C_TOTAL], strict=True)),
+    dashes=dict(zip(curves, ["", "", (4, 2), ""], strict=True)),
+    sizes=dict(zip(curves, [2.5, 2.5, 2.0, 3.5], strict=True)),
+    errorbar=None,
+    ax=ax,
 )
-sns.lineplot(x=complexity, y=total_error, color=C_TOTAL, linewidth=3.5, label="Total Error", ax=ax)
 
 # Optimal complexity marker
 ax.axvline(x=optimal_complexity, color=C_BIAS, linestyle=":", linewidth=1.8, alpha=0.7, zorder=2)
 ax.scatter([optimal_complexity], [optimal_error], s=80, color=C_BIAS, zorder=6, edgecolor=PAGE_BG, linewidth=1.5)
 
 # Direct curve annotations
-ax.annotate("Bias²", xy=(1.4, bias_squared[9] + 0.13), fontsize=8, color=C_BIAS, fontweight="bold")
-ax.annotate("Variance", xy=(8.2, variance[80] + 0.13), fontsize=8, color=C_VAR, fontweight="bold")
-ax.annotate("Total Error", xy=(7.3, total_error[70] + 0.18), fontsize=8, color=C_TOTAL, fontweight="bold")
-ax.annotate("Irreducible\nError", xy=(1.8, 0.40), fontsize=7, color=C_IRRED, fontweight="bold")
+kw = {"fontsize": FONT_ON_PLOT, "fontweight": "bold"}
+for name, frac, lift, color in [
+    (BIAS, 0.095, 0.13, C_BIAS),
+    (VARIANCE, 0.79, 0.3, C_VAR),
+    (TOTAL, 0.685, 0.3, C_TOTAL),
+]:
+    x, y = at(name, frac)
+    ax.annotate(name, xy=(x, y + lift), color=color, **kw)
+x, y = at(IRREDUCIBLE, 0.137)
+ax.annotate("Irreducible\nError", xy=(x, y + 0.1), color=C_IRRED, **kw)
 
 # Zone labels
-ax.text(2.1, 2.75, "Underfitting\n(High Bias)", fontsize=7, ha="center", color=C_BIAS, alpha=0.8, fontweight="bold")
-ax.text(7.8, 2.75, "Overfitting\n(High Variance)", fontsize=7, ha="center", color=C_VAR, alpha=0.8, fontweight="bold")
+zone_y = y_max * 0.72
+ax.text(
+    x_min + 0.168 * (x_max - x_min), zone_y, "Underfitting\n(High Bias)", ha="center", color=C_BIAS, alpha=0.9, **kw
+)
+ax.text(
+    x_min + 0.768 * (x_max - x_min), zone_y, "Overfitting\n(High Variance)", ha="center", color=C_VAR, alpha=0.9, **kw
+)
 
 # Optimal complexity annotation
 ax.annotate(
     "Optimal\nComplexity",
     xy=(optimal_complexity, optimal_error),
     xytext=(optimal_complexity + 1.0, optimal_error + 0.5),
-    fontsize=7,
     ha="left",
     color=C_BIAS,
-    fontweight="bold",
     arrowprops={"arrowstyle": "->", "color": C_BIAS, "lw": 1.5},
+    **kw,
 )
 
 # Formula box — bottom-right to avoid legend overlap
 ax.text(
     0.99,
     0.03,
-    r"Total Error = Bias² + Variance + $\epsilon$",
+    r"Total Error = Bias² + Variance + Irreducible Error ($\epsilon$)",
     transform=ax.transAxes,
-    fontsize=7,
+    fontsize=FONT_ON_PLOT,
     verticalalignment="bottom",
     horizontalalignment="right",
     bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
@@ -117,25 +166,23 @@ ratio = 67 / n if n > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
-ax.set_xlabel("Model Complexity", fontsize=10, color=INK)
-ax.set_ylabel("Prediction Error", fontsize=10, color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_xlabel(COMPLEXITY, fontsize=10, color=INK)
+ax.set_ylabel(ERROR, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=9, colors=INK_SOFT)
 
-ax.set_xlim(0.5, 10)
-ax.set_ylim(0, 3.8)
-ax.set_xticks([1, 3, 5, 7, 9])
+ax.set_xlim(x_min, x_max)
+ax.set_ylim(0, y_max)
+ax.set_xticks(np.linspace(x_min, x_max, 11)[1:10:2])
 ax.set_xticklabels(["Low", "", "Medium", "", "High"])
 
 # Subtle y-axis grid
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-# Spines — L-shaped frame
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for sp in ("left", "bottom"):
-    ax.spines[sp].set_color(INK_SOFT)
+# L-shaped frame
+sns.despine(ax=ax)
 
-# Legend — top center, 4 columns
-ax.legend(loc="upper center", fontsize=8, ncol=4, framealpha=0.9, bbox_to_anchor=(0.5, 0.99))
+# Legend — top center, one column per curve
+ax.legend(title=None, loc="upper center", fontsize=9, ncol=n_curves, framealpha=0.9, bbox_to_anchor=(0.5, 0.99))
 
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
