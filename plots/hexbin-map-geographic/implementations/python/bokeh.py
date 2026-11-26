@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-27
@@ -14,11 +14,13 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if p != "" and os.path.abspath(p) != _script_dir]
 
 import time
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper, WMTSTileSource
 from bokeh.plotting import figure
 from bokeh.transform import transform
 from bokeh.util.hex import hexbin
@@ -33,7 +35,35 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data — simulated NYC taxi pickup GPS coordinates
+
+# Imprint sequential ramp stops (fields: colored cells fill the plot)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Constants
+HEX_SIZE = 650  # hexagon size in Web Mercator meters: detail against aggregation
+COUNT_LABEL = "Pickup Count"  # the statistic drawn per cell
+
+# Columns: set these to your table's column names
+LON = "Longitude"  # role: lon
+LAT = "Latitude"  # role: lat
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pickups.csv")
+# Simulated NYC taxi pickup GPS coordinates around five hot spots
 np.random.seed(42)
 n_points = 8000
 
@@ -52,46 +82,45 @@ for cx, cy in cluster_centers:
     lon_list.extend(np.random.normal(cx, 0.018, n))
     lat_list.extend(np.random.normal(cy, 0.014, n))
 
-lon = np.array(lon_list)
-lat = np.array(lat_list)
+df = pd.DataFrame({LON: lon_list, LAT: lat_list})
 
+# Plot
 # Web Mercator projection (EPSG:3857)
 K = 6378137.0
-merc_x = lon * (K * np.pi / 180.0)
-merc_y = np.log(np.tan((90.0 + lat) * np.pi / 360.0)) * K
+merc_x = df[LON].to_numpy() * (K * np.pi / 180.0)
+merc_y = np.log(np.tan((90.0 + df[LAT].to_numpy()) * np.pi / 360.0)) * K
 
-# Hexagonal binning (size in Web Mercator meters)
-hex_size = 650
-bins = hexbin(merc_x, merc_y, hex_size)
+# Hexagonal binning
+bins = hexbin(merc_x, merc_y, HEX_SIZE)
 source = ColumnDataSource(data={"q": np.array(bins.q), "r": np.array(bins.r), "counts": np.array(bins.counts)})
 
-# imprint_seq colormap: #009E73 (green) → #4467A3 (blue), 256 stops
-c0 = np.array([0x00, 0x9E, 0x73])
-c1 = np.array([0x44, 0x67, 0xA3])
-t_vals = np.linspace(0, 1, 256)
-rgb_ramp = np.round(c0 + np.outer(t_vals, c1 - c0)).astype(int)
-imprint_seq = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in rgb_ramp]
-
+# Imprint sequential ramp (fields stops: colored cells fill the plot), sampled at 256 even steps
+imprint_seq = [ramp_color(SEQ_FIELDS, k / 255) for k in range(256)]
 mapper = LinearColorMapper(palette=imprint_seq, low=float(bins.counts.min()), high=float(bins.counts.max()))
 
-# Map viewport with padding
-pad = 4000
+# Map viewport with padding of a few hexagons
+pad = 6 * HEX_SIZE
 x_range = (float(merc_x.min()) - pad, float(merc_x.max()) + pad)
 y_range = (float(merc_y.min()) - pad, float(merc_y.max()) + pad)
 
-# Title — 51 chars, under 67 baseline, no scaling needed
+# Title
 title = "hexbin-map-geographic · python · bokeh · anyplot.ai"
 
 # Tile layer for geographic context
-tile_provider = "CartoDB Dark Matter" if THEME == "dark" else "CartoDB Positron"
+tile_provider = WMTSTileSource(
+    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/"
+    + ("World_Dark_Gray_Base" if THEME == "dark" else "World_Light_Gray_Base")
+    + "/MapServer/tile/{Z}/{Y}/{X}",
+    attribution="Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS",
+)
 
 # Figure — 3200×1800 landscape, toolbar disabled for exact PNG dimensions
 p = figure(
     width=3200,
     height=1800,
     title=title,
-    x_axis_label="Longitude",
-    y_axis_label="Latitude",
+    x_axis_label=LON,
+    y_axis_label=LAT,
     x_axis_type="mercator",
     y_axis_type="mercator",
     x_range=x_range,
@@ -108,7 +137,7 @@ p.add_tile(tile_provider)
 
 # Hex tiles
 p.hex_tile(
-    q="q", r="r", size=hex_size, fill_color=transform("counts", mapper), line_color=None, alpha=0.78, source=source
+    q="q", r="r", size=HEX_SIZE, fill_color=transform("counts", mapper), line_color=None, alpha=0.78, source=source
 )
 
 # Hover tooltip
@@ -119,7 +148,7 @@ p.add_tools(hover)
 color_bar = ColorBar(
     color_mapper=mapper,
     location=(0, 0),
-    title="Pickup Count",
+    title=COUNT_LABEL,
     title_text_font_size="34pt",
     title_text_font_style="bold",
     title_text_color=INK,
@@ -127,6 +156,7 @@ color_bar = ColorBar(
     major_label_text_color=INK_SOFT,
     width=60,
     padding=30,
+    background_fill_color=PAGE_BG,
     margin=40,
 )
 p.add_layout(color_bar, "right")
@@ -183,6 +213,9 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(5)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
