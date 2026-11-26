@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -210,7 +210,7 @@ def build_bezier_curves(route_list):
             lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
             lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
             curves.append({"value": (lon, lat), "label": label})
-        curves.append({"value": (None, None)})
+        curves.append((0, None))
     return curves
 
 
@@ -224,6 +224,7 @@ chart.add(
     build_bezier_curves(low_routes),
     stroke=True,
     show_dots=False,
+    allow_interruptions=True,
     stroke_style={"width": 3, "linecap": "round", "opacity": 0.55},
 )
 chart.add(
@@ -231,6 +232,7 @@ chart.add(
     build_bezier_curves(medium_routes),
     stroke=True,
     show_dots=False,
+    allow_interruptions=True,
     stroke_style={"width": 5, "linecap": "round", "opacity": 0.60},
 )
 chart.add(
@@ -238,6 +240,7 @@ chart.add(
     build_bezier_curves(high_routes),
     stroke=True,
     show_dots=False,
+    allow_interruptions=True,
     stroke_style={"width": 8, "linecap": "round", "opacity": 0.65},
 )
 
@@ -253,9 +256,16 @@ coastline_points = []
 for coastline in coastlines:
     for lon, lat in coastline:
         coastline_points.append({"value": (lon, lat), "label": "Coastline"})
-    coastline_points.append({"value": (None, None)})
+    coastline_points.append((0, None))
 
-chart.add("Coastlines", coastline_points, stroke=True, show_dots=False, stroke_style={"width": 2, "opacity": 0.25})
+chart.add(
+    "Coastlines",
+    coastline_points,
+    stroke=True,
+    show_dots=False,
+    allow_interruptions=True,
+    stroke_style={"width": 2, "opacity": 0.25},
+)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
