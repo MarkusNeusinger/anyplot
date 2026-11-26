@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -23,6 +24,19 @@ sns.set_theme(
     style="white",
     rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "axes.edgecolor": INK_SOFT, "text.color": INK},
 )
+
+TILE = "#FAF8F1"  # light tile behind the symbol in both themes
+BAR = "#1A1A17"
+# Imprint palette in canonical order for Start, Data, Check, Stop
+PART_COLORS = {"Start": "#009E73", "Data": "#C475FD", "Check": "#4467A3", "Stop": "#BD8233"}
+
+
+def label_color(fill):
+    """Pick white or near-black text, whichever contrasts more with the fill."""
+    lin = [(c / 255) ** 2.2 for c in (int(fill[i : i + 2], 16) for i in (1, 3, 5))]
+    lum = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+    return "white" if 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.06 else BAR
+
 
 # Code 128 encoding tables (subset B — full printable ASCII)
 CODE128_B_PATTERNS = {
@@ -123,104 +137,6 @@ CODE128_B_PATTERNS = {
     "~": "10001011110",
 }
 
-CODE128_VALUES = {
-    " ": 0,
-    "!": 1,
-    '"': 2,
-    "#": 3,
-    "$": 4,
-    "%": 5,
-    "&": 6,
-    "'": 7,
-    "(": 8,
-    ")": 9,
-    "*": 10,
-    "+": 11,
-    ",": 12,
-    "-": 13,
-    ".": 14,
-    "/": 15,
-    "0": 16,
-    "1": 17,
-    "2": 18,
-    "3": 19,
-    "4": 20,
-    "5": 21,
-    "6": 22,
-    "7": 23,
-    "8": 24,
-    "9": 25,
-    ":": 26,
-    ";": 27,
-    "<": 28,
-    "=": 29,
-    ">": 30,
-    "?": 31,
-    "@": 32,
-    "A": 33,
-    "B": 34,
-    "C": 35,
-    "D": 36,
-    "E": 37,
-    "F": 38,
-    "G": 39,
-    "H": 40,
-    "I": 41,
-    "J": 42,
-    "K": 43,
-    "L": 44,
-    "M": 45,
-    "N": 46,
-    "O": 47,
-    "P": 48,
-    "Q": 49,
-    "R": 50,
-    "S": 51,
-    "T": 52,
-    "U": 53,
-    "V": 54,
-    "W": 55,
-    "X": 56,
-    "Y": 57,
-    "Z": 58,
-    "[": 59,
-    "\\": 60,
-    "]": 61,
-    "^": 62,
-    "_": 63,
-    "`": 64,
-    "a": 65,
-    "b": 66,
-    "c": 67,
-    "d": 68,
-    "e": 69,
-    "f": 70,
-    "g": 71,
-    "h": 72,
-    "i": 73,
-    "j": 74,
-    "k": 75,
-    "l": 76,
-    "m": 77,
-    "n": 78,
-    "o": 79,
-    "p": 80,
-    "q": 81,
-    "r": 82,
-    "s": 83,
-    "t": 84,
-    "u": 85,
-    "v": 86,
-    "w": 87,
-    "x": 88,
-    "y": 89,
-    "z": 90,
-    "{": 91,
-    "|": 92,
-    "}": 93,
-    "~": 94,
-}
-
 # Patterns for check digit values 95–105 (no ASCII mapping)
 CHECK_PATTERNS = [
     "11110101000",
@@ -240,53 +156,43 @@ START_B = "11010010000"
 STOP = "1100011101011"
 QUIET = "0" * 10
 
+# Column names
+PART = "part"  # role: extra
+PATTERN = "pattern"  # role: content
+VALUE = "value"  # role: extra
+
 # Data
 content = "LAB-7731-B204"  # hospital specimen tube ID
 
-# Encode using Code 128 subset B with modulo-103 check digit
-barcode_binary = START_B
-checksum = 104
-for i, char in enumerate(content):
-    barcode_binary += CODE128_B_PATTERNS[char]
-    checksum += CODE128_VALUES[char] * (i + 1)
+# Code 128 subset B: the value of a character is ord(char) - 32; values 95-105 have no ASCII character
+pattern_by_value = [CODE128_B_PATTERNS[chr(32 + v)] for v in range(95)] + CHECK_PATTERNS
+data_values = [ord(char) - 32 for char in content]
+check_value = (104 + sum(v * (i + 1) for i, v in enumerate(data_values))) % 103  # modulo-103 check character
 
-check_value = checksum % 103
-if check_value < 95:
-    for char, val in CODE128_VALUES.items():
-        if val == check_value:
-            barcode_binary += CODE128_B_PATTERNS[char]
-            break
-else:
-    barcode_binary += CHECK_PATTERNS[check_value - 95]
+rows = [("Start", 104, START_B)]
+rows += [("Data", v, pattern_by_value[v]) for v in data_values]
+rows += [("Check", check_value, pattern_by_value[check_value]), ("Stop", 106, STOP)]
+df = pd.DataFrame(rows, columns=[PART, VALUE, PATTERN])
 
-barcode_binary += STOP
-barcode_with_quiet = QUIET + barcode_binary + QUIET
-
-# Plot: zone boundaries, barcode matrix and annotation strip all derive from the encoded string
-# Zone boundary positions (column indices)
+# Plot: zone boundaries, barcode matrix and annotation strip all derive from df
+barcode_with_quiet = QUIET + "".join(df[PATTERN]) + QUIET
 n_cols = len(barcode_with_quiet)
-q = len(QUIET)  # 10
-s = len(START_B)  # 11
-d = len(content) * 11  # 176
-ck = 11  # check digit symbol
-st = len(STOP)  # 13
+q = len(QUIET)
+widths = df.groupby(PART, sort=False)[PATTERN].apply(lambda p: p.str.len().sum())
+edges = q + np.concatenate([[0], widths.cumsum().to_numpy()])
+labels = {"Data": f"Data · {len(content)} chars"}
 
-zone_defs = [
-    (0, q, INK_SOFT, 0.20, ""),
-    (q, q + s, "#009E73", 0.85, "Start"),
-    (q + s, q + s + d, "#4467A3", 0.80, f"Data · {len(content)} chars"),
-    (q + s + d, q + s + d + ck, "#C475FD", 0.85, "Check"),
-    (q + s + d + ck, q + s + d + ck + st, "#BD8233", 0.85, "Stop"),
-    (n_cols - q, n_cols, INK_SOFT, 0.20, ""),
-]
+zone_defs = [(0, q, INK_SOFT, 0.20, "")]
+for (part, color), x0, x1 in zip(PART_COLORS.items(), edges[:-1], edges[1:], strict=True):
+    zone_defs.append((x0, x1, color, 1.0, labels.get(part, part)))
+zone_defs.append((n_cols - q, n_cols, INK_SOFT, 0.20, ""))
 
 # Build 2D barcode matrix
 barcode_array = np.array([[int(bit) for bit in barcode_with_quiet]])
 barcode_data = np.repeat(barcode_array, 40, axis=0)
 
-# Seaborn-native two-color blend palette as colormap
-cmap = sns.blend_palette([PAGE_BG, INK], n_colors=256, as_cmap=True)
-
+# Black bars on a light tile in both themes (the standard symbol), built as a seaborn blend palette
+cmap = sns.blend_palette([TILE, BAR], n_colors=256, as_cmap=True)
 # Layout: barcode panel + zone annotation strip
 fig, (ax, ax_ann) = plt.subplots(
     2, 1, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, gridspec_kw={"height_ratios": [6, 1], "hspace": 0.03}
@@ -313,7 +219,7 @@ for x0, x1, color, alpha, label in zone_defs:
             ha="center",
             va="center",
             fontsize=7,
-            color="white",
+            color=label_color(color) if alpha == 1.0 else "white",
             fontweight="bold",
             linespacing=1.3,
         )
