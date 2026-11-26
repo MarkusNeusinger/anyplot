@@ -2,135 +2,130 @@ library: seaborn
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T08:28:01Z'
-updated: '2026-05-26T23:10:47Z'
-generated_by: claude-opus
-workflow_run: 26479777673
+updated: '2026-11-26T14:56:49Z'
+generated_by: claude-sonnet
+workflow_run: 45843066019
 issue: 1876
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 87
 review:
   strengths:
-  - 'All three weaknesses from Attempt 1 addressed: bw_adjust=0.6 makes Treatment
-    B''s bimodal cloud silhouette readable; annotation fontsize bumped 7→9 so callouts
-    survive the 800/1200 px catalog resizes; bimodality arrow re-anchored at the valley
-    between modes'
-  - Raincloud metaphor unambiguous in both renders — cloud rises above each category
-    baseline, outlined box sits exactly on the baseline, jittered rain falls below
-    the baseline, exactly as the spec mandates
-  - 'Imprint palette applied correctly (Control = #009E73 first, then C475FD / 4467A3);
-    data colors identical light↔dark, only chrome flips between themes'
-  - Theme tokens threaded through to annotation bbox, marker edgecolor, box-plot stroke,
-    grid, tick labels — no dark-on-dark or light-on-light anywhere; both renders pass
-    the legibility check
-  - Treatment B's bimodality is now the narrative payoff of the plot rather than buried
-    under default KDE smoothing — demonstrates the exact thing rainclouds exist to
-    reveal that a boxplot would hide
-  - Outlined box plot (fill=False, palette colors stroke + whiskers + caps + median
-    in one stroke) avoids the fragile post-hoc artist recoloring most seaborn rainclouds
-    resort to
-  - Canvas dimensions exact at 3200×1800 (gate passed); no bbox_inches='tight'; explicit
-    facecolor on savefig
+  - 'Raincloud metaphor unambiguous in both renders: half-violin cloud rising above
+    each baseline with its flat edge on it, outlined box centered on the baseline,
+    translucent rain in a narrow band below'
+  - 'Data chosen so the Lecture group is bimodal (two student subgroups): its box
+    looks ordinary while cloud and rain reveal the split, the case a raincloud exists
+    for'
+  - boxplot fill=False with medianprops colors box, whiskers, caps and median from
+    the hue palette in one call, with no post-hoc artist recoloring
+  - 'Adaptable structure: column constants with role comments, one Data block, and
+    a Plot block that reads only df and derives the palette slice and y limits from
+    the group count'
+  - Theme tokens threaded through every chrome element; both renders pass the legibility
+    check with identical Imprint data colors
   weaknesses:
-  - Tick labels at 8pt are on the smaller end — a touch larger (9pt) would hold up
-    better at the 400/800 px catalog variants without crowding the canvas
-  - The half-violin clipping relies on ax.collections ordering and direct vertex mutation
-    — works correctly but is fragile if seaborn ever changes its internal collection
-    layout; a more idiomatic seaborn-native approach (e.g. kde-on-y composition) would
-    be more durable
+  - 'Suggestion: in the dark render the clouds keep seaborn''s dark-gray outline,
+    which fades into the #1A1A17 page; an INK_SOFT or palette-colored edge would match
+    the crisp silhouette of the light render.'
+  - 'Suggestion: the half-violin clip relies on ax.collections order and vertex mutation;
+    a short comment naming that dependency would make it easier to maintain.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "raincloud-basic · seaborn · anyplot.ai" centered at top in dark INK at fontsize 12 — readable. Y-axis label "Condition" and x-axis label "Reaction Time (ms)" at fontsize 10 in dark INK — readable. Tick labels at fontsize 8 in INK_SOFT — readable. Top/right spines removed, left/bottom spines in INK_SOFT. Subtle vertical grid lines at low alpha.
-      Data: Three categories on the y-axis top-to-bottom: Treatment B (blue #4467A3), Treatment A (purple #C475FD), Control (green #009E73). First series is #009E73 — correct. For each category, the half-violin "cloud" rises ABOVE the baseline (clipped via path vertex mutation), an outlined box plot sits ON the baseline (fill=False, stroke colored by palette), and jittered strip points fall BELOW the baseline (offset -0.25, alpha 0.55, PAGE_BG edge ring). Treatment B is visibly bimodal — primary peak ~370ms and secondary peak ~480ms with a valley around 420–430ms (bw_adjust=0.6 reveals the second mode). Two rounded annotation boxes at fontsize 9 with ELEVATED_BG fill: "Bimodal distribution revealed by raincloud" anchors at the Treatment B valley; "~59 ms faster than Control" anchors at Treatment A's median.
-      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable from the warm off-white surface.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'raincloud-basic · python · seaborn · anyplot.ai' at 12 pt in dark ink, centered near the top edge; x-axis title 'Exam score (points)' and y-axis title 'Teaching method' at 10 pt; tick labels at 9 pt in INK_SOFT; top and right spines removed; subtle vertical grid at 50-90. All text readable.
+      Data: horizontal raincloud, Lecture (#009E73) at the bottom, Flipped (#C475FD) in the middle, Project-based (#4467A3) at the top. Each half-violin cloud rises above its baseline with a flat edge on it; an outlined palette-stroked box with a heavier median sits on the baseline; jittered rain (alpha 0.55, page-colored edge ring) forms a narrow band below. Lecture is clearly bimodal (peaks near 57 and 80) with a box that hides it; Flipped is broad with one point near 96 beyond its whisker; Project-based is centered near 82. Clouds and rain stay clear of neighbouring groups. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, tick labels all in light INK tokens (#F0EFE8 / #B8B7B0) — clearly readable. Spines and grid in light INK_SOFT at low alpha. Annotation boxes flip to dark ELEVATED_BG #242420 with light text and INK_MUTED arrows.
-      Data: Colors identical to the light render — Control = #009E73 green, Treatment A = #C475FD purple, Treatment B = #4467A3 blue. Only chrome flipped between themes, as required. Brand green #009E73 remains clearly visible against the near-black surface. Treatment B bimodality reads identically to the light render. Rain points' PAGE_BG (#1A1A17) edge ring gives a subtle dark halo on dark that helps the points separate from the cloud surface.
-      Legibility verdict: PASS — no dark-on-dark failures; tick labels, axis labels, title, and annotation text all clearly readable against the warm near-black surface.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and tick labels in light ink tokens (#F0EFE8 / #B8B7B0), all readable; spines and grid light at low alpha; no dark-on-dark text.
+      Data: same three Imprint colors as the light render, only chrome flipped; brand green clearly visible; rain points visible with their dark edge rings; layout identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Annotations bumped 7→9pt hold up at 800/1200 px catalog variants;
-          tick labels at 8pt could ride slightly higher on resized variants but full-size
-          is solid
+        comment: All sizes set explicitly (title 12, axis titles 10, ticks 9 pt);
+          every label readable in both themes, title ~48% of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: The ~59 ms arrow passes through empty space; no actual text/data
-          collisions
+        comment: No text collisions; rain points overlap only where values are dense,
+          which the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=3.5 + alpha=0.55 + PAGE_BG edge ring renders rain crisply at
-          ~80 pts/category in both themes
+        comment: 80 rain points per group at size 3.5, alpha 0.55 with page-colored
+          edge rings; clouds and outlined boxes clearly visible in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; sufficient contrast in both themes
+        comment: Green, purple and blue Imprint hues separate well; groups are also
+          separated by position, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 exact (canvas gate passed); title fits without overflow;
-          balanced axis labels
+        comment: tight_layout fills the 3200x1800 canvas; balanced margins, title
+          near the top edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X axis carries the unit (ms)
+        comment: '''Exam score (points)'' with unit, ''Teaching method'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical anyplot order; theme backgrounds
-          correct; identical data colors across renders'
+        comment: 'First group #009E73, then #C475FD and #4467A3 in canonical Imprint
+          order; backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Outlined-box styling + intentional layering of cloud/box/rain + tightened
-          bw_adjust lets the bimodal cloud silhouette do its narrative work
+        comment: 'Beyond baseline: outlined palette-stroked boxes over filled clouds
+          keep the three layers distinct, heavier median stroke sets the hierarchy
+          inside the box'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines, grid, edge rings, annotation typography all dialed in
+        comment: Value-axis-only grid chosen for the horizontal layout, page-colored
+          edge rings on the rain, y padding balanced around the outer groups
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Bimodality callout now anchors at the valley between modes; ~59 ms
-          callout anchors on Treatment A's median — both narratively crisp
+        comment: 'Data chosen so the Lecture group is bimodal: its box looks ordinary
+          while cloud and rain show two subgroups, the insight a raincloud exists
+          for'
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine raincloud with all three elements (cloud + box + rain)
+        comment: Genuine raincloud with cloud, box and rain only; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation; cloud above / box on / rain below baseline;
-          half-violin clipping; alpha 0.55 and jitter 0.07 within spec bounds; medians
-          shown in box
+        comment: Horizontal orientation (C1); cloud above, box on, rain below each
+          baseline (C2); half violin with flat edge on the baseline, groups clear
+          of each other (C3); jitter 0.07, alpha 0.55 narrow band (C4); no extra layers
+          (C5); median and quartiles in the box
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Reaction Time, y=Condition; all three categories represented
+        comment: x = score, y = method; axis fitted to 44-97 with round ticks every
+          10; rain offset is the layout the spec asks for
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {spec-id} · {library} · anyplot.ai; hue mapping carries
-          the colors and the y-axis is effectively the legend (no redundant legend
-          needed)
+        comment: Title 'raincloud-basic · python · seaborn · anyplot.ai'; colors repeat
+          the y-axis categories, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -172,20 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Treatment B's deliberate bimodality is now visible in the cloud silhouette,
-          demonstrating the exact thing rainclouds exist to reveal that boxplots hide
+        comment: Bimodal, broad and narrow distributions with different centers; points
+          beyond whiskers in Flipped
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time experiment (control vs two treatments) — neutral, plausible
+        comment: 'Exam scores by teaching method (lecture, flipped, project-based):
+          real, neutral education scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300–600 ms range is plausible for the domain
+        comment: 'Checked: scores clipped to 0-100, render shows 44-97 points, 80
+          per group (within 20-300); no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -195,34 +193,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level script, no functions/classes
+        comment: Flat script; column constants, one Data block, Plot block reads only
+          df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vertex-clipping the violin + offset-shifting the strip is the right
-          level of finesse for raincloud composition; no fake interactivity
+        comment: KDE, quartiles and jitter computed by seaborn; only the half-clip
+          and the rain offset are hand-done, which no call provides
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png with explicit facecolor; no bbox_inches='tight'
-    library_features:
-      score: 7
+        comment: plot-{THEME}.png, no bbox_inches='tight', current 0.13 API (hue+legend=False,
+          density_norm, fill=False)
+    library_mastery:
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,21 +230,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct hue=…, legend=False, palette= pattern across violinplot/stripplot/boxplot;
-          fill=False + medianprops carries box styling without post-hoc artist hacks
+        comment: Three axes-level calls on the tidy df with shared order/hue_order;
+          boxplot fill=False + medianprops styles box, whiskers, caps and median from
+          the hue palette without post-hoc artist edits
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Composes three seaborn axes-level functions into one coherent raincloud;
-          the half-violin clipping itself is matplotlib path editing rather than something
-          distinctly seaborn
+        comment: seaborn's violin KDE controls (density_norm='width', bw_adjust=0.6,
+          cut=0) shape the clouds; the half-clip itself is matplotlib path editing
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T14:52:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
   patterns:
   - data-generation
