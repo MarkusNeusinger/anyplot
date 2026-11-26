@@ -85,7 +85,7 @@ if len(code) == 12:
     code += str((10 - (odd_sum + even_sum * 3) % 10) % 10)
 
 pattern = FIRST_DIGIT_PATTERNS[code[0]]
-left = "".join((L_CODES if p == "L" else G_CODES)[d] for p, d in zip(pattern, code[1:7]))
+left = "".join((L_CODES if p == "L" else G_CODES)[d] for p, d in zip(pattern, code[1:7], strict=True))
 right = "".join(R_CODES[d] for d in code[7:13])
 modules = "0" * QUIET_MODULES + START_GUARD + left + CENTER_GUARD + right + END_GUARD + "0" * QUIET_MODULES
 bars = np.array([int(m) for m in modules])
