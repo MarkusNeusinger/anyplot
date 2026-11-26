@@ -1,7 +1,7 @@
 """ anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-Library: letsplot 4.11.0 | Python 3.14.9
-Quality: 81/100 | Updated: 2026-10-31
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -56,20 +56,20 @@ df = pd.DataFrame(
         ("Overhyped", NAME_ZONE + "A", np.nan, np.nan),
         ("Actually Useful", NAME_ZONE + "B", np.nan, np.nan),
         ("Secretly Loved", NAME_ZONE + "C", np.nan, np.nan),
-        ("NFTs", "A", -1.75, 1.05),
-        ("Metaverse", "A", -1.80, 0.55),
-        ("Smart Fridges", "A", -1.70, 0.05),
-        ("Google Maps", "B", 1.75, 1.05),
-        ("Spreadsheets", "B", 1.80, 0.55),
-        ("Calendar Apps", "B", 1.70, 0.05),
-        ("Roller Skating", "C", -0.75, -2.05),
-        ("Soap Operas", "C", 0.75, -2.05),
+        ("NFTs", "A", -1.60, 1.15),
+        ("Metaverse", "A", -1.60, 0.65),
+        ("Smart Fridges", "A", -1.60, 0.25),
+        ("Google Maps", "B", 1.60, 1.15),
+        ("Spreadsheets", "B", 1.60, 0.65),
+        ("Calendar Apps", "B", 1.60, 0.25),
+        ("Roller Skating", "C", 0.00, -1.65),
+        ("Soap Operas", "C", 0.00, -2.10),
         ("ChatGPT", "AB", 0.00, 1.20),
         ("Smartwatches", "AB", 0.00, 0.85),
-        ("Crocs", "AC", -1.05, -0.20),
-        ("Vinyl Records", "AC", -1.00, -0.60),
-        ("Dolly Parton", "BC", 1.05, -0.20),
-        ("Spotify", "BC", 1.00, -0.60),
+        ("Crocs", "AC", -0.95, -0.25),
+        ("Vinyl Records", "AC", -0.80, -0.65),
+        ("Podcasts", "BC", 0.90, -0.25),
+        ("Spotify", "BC", 0.95, -0.65),
         ("Sourdough", "ABC", 0.00, 0.15),
         ("TikTok", "ABC", 0.00, -0.30),
         ("Beige Walls", OUTSIDE, -3.10, -2.50),
@@ -99,10 +99,10 @@ for i, (cx, cy) in enumerate(CENTERS):
     )
 
 # Item labels (serif, INK)
-plot += geom_text(aes(x=X, y=Y, label=LABEL), data=items, size=4.5, family="serif", color=INK)
+plot += geom_text(aes(x=X, y=Y, label=LABEL), data=items, size=5.5, family="serif", color=INK)
 
 # Category names outside each circle, in the circle's color
-for i, name in enumerate(names[LABEL]):
+for i, name in enumerate(names[LABEL].head(len(CENTERS))):
     dx, dy = NAME_OFFSETS[i]
     plot += geom_text(
         x=CENTERS[i][0] + dx,
@@ -135,7 +135,12 @@ plot += geom_text(
     x=mid, y=ylim[1] - 0.30, label="Chartgeist 2026", size=9, family="serif", fontface="bold_italic", color=INK
 )
 plot += geom_text(
-    x=mid, y=ylim[1] - 0.80, label="venn-labeled-items · letsplot · anyplot.ai", size=4, family="serif", color=INK_MUTED
+    x=mid,
+    y=ylim[1] - 0.80,
+    label="venn-labeled-items · python · letsplot · anyplot.ai",
+    size=5,
+    family="serif",
+    color=INK_MUTED,
 )
 
 # Style: gridless editorial background
