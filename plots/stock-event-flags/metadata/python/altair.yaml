@@ -12,140 +12,141 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 76
 review:
   strengths:
-  - 'Perfect Imprint palette usage: price line #009E73, Earnings #C475FD, Dividend
-    #4467A3, News #BD8233, Split #AE3030 — exact canonical order'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with fully theme-adaptive
-    chrome tokens
-  - Redundant shape + color encoding for event types (triangle/diamond/circle/square)
-    — excellent CVD accessibility
-  - Altair-idiomatic layered composition with `detail` channel for line-break connector
-    lines — sophisticated use of Vega-Lite
-  - Alternating above/below flag placement prevents obscuring price data — thoughtful
-    layout decision
-  - All 4 event types present (Earnings, Dividend, News, Split) with 8 events covering
-    the full year
-  - Correct canvas sizing (width=620, height=320, scale_factor=4.0) with PIL padding
-    to exact 3200×1800
-  - 'All font sizes explicitly set: title 16px (scaled), axis labels 12px, ticks 10px,
-    legend 10px, event labels 11px bold'
+  - 'Imprint palette applied exactly: price #009E73, event types at positions 2-5,
+    identical in both themes with theme-correct chrome'
+  - Redundant shape + color encoding for event types, keyed by a legend with matching
+    glyphs
+  - Connectors drawn as one mark_line layer split per event through the detail channel
+  - Tooltips with full event details and .interactive() zoom/pan in the HTML output
   weaknesses:
-  - 'Grid is rendered on both X and Y axes — style guide recommends Y-axis grid only
-    for line charts. Configure per-axis to hide x-axis grid: configure_axis(...) sets
-    globally; use configure_axisX(grid=False) to suppress horizontal gridlines.'
-  - Chart view has an all-around border (`stroke=INK_SOFT`) instead of an L-shaped
-    spine frame — consider configure_view(stroke=None) and configuring axis domain
-    lines for bottom/left only.
-  - 'Event label text uses the event-type palette colors (lavender #C475FD in particular)
-    against the cream background — contrast is readable but borderline WCAG on light
-    theme. Could improve by making labels use INK or INK_SOFT color with the event
-    color applied only to the marker symbol.'
+  - 'VQ-02 (both): the legend title ''Event Type'' and the legend''s triangle and
+    diamond glyphs sit on the legend frame''s left border, and the ''Q4 Beat'' label''s
+    first letter touches the descending price line around 104 in late January → legend
+    content inside its frame with padding, label a few px clear of the line. Likely
+    cause: legend padding/offset left at defaults with a small frame; label dy above
+    a flag whose offset is too small where the price falls steeply.'
+  - 'VQ-05 (both): the chart is drawn smaller than the canvas and padded onto it,
+    leaving an empty band below the ''Date'' title and above the title → fill the
+    canvas with width=800, height=450 and autosize fit. Likely cause: width=620, height=320
+    plus the PIL padding block.'
+  - 'DE-02 (both): grid lines on both axes on a line chart, where the style guide
+    asks for a Y-axis grid only → configure_axisX(grid=False). Likely cause: configure_axis(gridColor=...)
+    applies the grid to both axes.'
+  - 'VQ-01 (dark): the ''$0.25 Div'' and ''$0.28 Div'' labels in #4467A3 at 11 px
+    bold read dim on the #1A1A17 background (about 3:1) → a label color with at least
+    4.5:1 on the dark page, or an INK-colored label beside the colored marker. Likely
+    cause: the text layer''s color channel uses the event-type palette scale for the
+    label text.'
+  - 'SC-02 (both): the Q2 Growth flag (late July) sits on the price line, so the triangle
+    covers the line where it climbs to about 89 just before the dip (C2) → place each
+    flag clear of the price over the dates around it, e.g. offset from the local max/min
+    of a few days rather than the single close. Likely cause: flag_y = close ± a fixed
+    18 % of the range, computed from one day''s close.'
+  - 'SC-03 (both): the y axis runs 70-120 while the price and flags span about 79-105,
+    leaving the 110-120 band and most of 70-78 empty → a domain a little outside the
+    lowest flag and the highest label (about 76-111). Likely cause: y_domain padded
+    by 1.8 x flag_offset on both sides, then niced to round tens.'
+  - 'Suggestion: month tick labels fit horizontally; labelAngle=0 would read easier
+    than the -45° rotation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
-      Chrome: Title "Tech Stock 2024 · stock-event-flags · python · altair · anyplot.ai" in bold dark ink, clearly readable. X-axis label "Date" and Y-axis label "Stock Price ($)" both readable in dark ink. Tick labels (Jan 2024 through Sep 2024) in INK_SOFT color, clearly legible. Legend top-right with elevated #FFFDF6 fill, soft border, shows 4 event types with correct shapes.
-      Data: Price line in #009E73 (brand green) with strokeWidth=2.5 — prominent and clear. Event markers use distinct shapes+colors: triangle-up lavender for Earnings, diamond blue for Dividend, circle ochre for News, square red for Split. Dashed connector lines in INK_SOFT at opacity=0.6 connect each flag to its price level. Event labels (Q4 Beat, $0.25 Div, Product Launch, Q1 Results, $0.28 Div, Partnership, Q2 Growth, 2:1 Split) in bold colored text match their event type. Flags alternate above/below price line.
-      Legibility verdict: PASS — all text readable. Minor note: lavender (#C475FD) event labels have lower contrast on cream background but remain readable due to bold weight.
+      Background: warm off-white #FAF8F1, view framed in INK_SOFT, chart drawn smaller than the canvas with empty bands top and bottom.
+      Chrome: title 'Tech Stock 2024 · stock-event-flags · python · altair · anyplot.ai' bold dark; 'Date' and 'Stock Price ($)' dark; month ticks rotated -45°, y ticks 70-120; grid on both axes; legend 'Event Type' top right on #FFFDF6 with Earnings/Dividend/News/Split, its title and glyphs crowding the frame's left border.
+      Data: green #009E73 price line; 8 flags alternating above/below with grey dashed connectors, purple triangles, blue diamonds, ochre circles, red square, labels in event colors. 'Q4 Beat' touches the price line; the Q2 Growth triangle sits on the line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title in light #F0EFE8 ink, clearly visible. Axis labels and tick labels in light INK_SOFT (#B8B7B0), clearly readable against dark background. Legend has #242420 elevated fill, soft border, all text in light colors. No dark-on-dark issues observed.
-      Data: Price line remains identical #009E73 green — same as light render, correct. Event markers maintain same colors (lavender, blue, ochre, red) — theme-invariant as required. Dashed connectors, labels, and flag positions are identical to light render; only chrome elements (background, text, grid, legend box) have flipped.
-      Legibility verdict: PASS — all text clearly readable against dark background. Data colors identical to light render.
+      Background: warm near-black #1A1A17, legend on #242420.
+      Chrome: all text in light tokens, readable; no dark-on-dark.
+      Data: categorical colors identical to the light render. The Dividend labels in #4467A3 read dim on the dark page but remain legible.
+      Legibility verdict: PASS (Dividend labels dim)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set; title scales with length formula;
-          all text proportionate and readable in both themes. Minor deduction: lavender
-          event labels (#C475FD) have lower WCAG contrast on cream background, though
-          readable due to bold weight.'
+        passed: false
+        comment: 'Sizes set explicitly (title 16, axis titles 12, ticks 10, labels
+          11 bold); everything readable in light. In dark, the two Dividend labels
+          in #4467A3 read dim on #1A1A17 (defect line).'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Alternating above/below flag placement effectively prevents overlap.
-          No text collisions with other text or price line observed in either theme.
+        passed: false
+        comment: '''Q4 Beat'' label touches the price line; the legend title ''Event
+          Type'' and the legend glyphs sit on the legend frame''s left border (defect
+          line).'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line at strokeWidth=2.5 clearly visible. Event markers at size=320
-          well-visible. Connector lines at opacity=0.6 serve secondary role without
-          dominating.
+        comment: 'Price line 2.5 px, flag markers size 320, dashed connectors at 0.6
+          opacity: well sized for 180 days and 8 events.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape+color encoding for all event types — excellent CVD
-          accessibility. 4 distinct shapes (triangle, diamond, circle, square) plus
-          4 distinct Imprint palette colors.
+        comment: Event types carry both shape and color; no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas gate passed. Plot fills approximately 70% of canvas with balanced
-          margins. Legend well-positioned top-right without crowding data area.
+        passed: false
+        comment: 'Chart drawn smaller than the canvas and padded: an empty band below
+          the Date title and above the title, legend frame narrower than its content
+          (defect line).'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date'' for X-axis, ''Stock Price ($)'' with units for Y-axis.
-          Title format correct with optional descriptive prefix.'
+        comment: '''Date'' and ''Stock Price ($)'' with unit.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Price line #009E73 (position 1). Events: Earnings #C475FD (pos 2),
-          Dividend #4467A3 (pos 3), News #BD8233 (pos 4), Split #AE3030 (pos 5). Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Data colors identical across themes. All chrome
-          theme-adaptive.'
+        comment: 'Price #009E73, event types Imprint positions 2-5 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; categorical colors identical across themes;
+          chrome theme-correct.'
     design_excellence:
-      score: 12
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: white/background stroke on markers adds definition,
-          dashed connectors vs solid price line creates visual hierarchy, color-coded
-          labels match event types. However, both-axis grid and all-around view border
-          prevent ''strong design'' threshold.'
+        comment: Style-guide baseline (Imprint palette, theme tokens, explicit sizes);
+          label color tied to event type is the Notes' color encoding, nothing decided
+          beyond it.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 1
         max: 6
-        passed: true
-        comment: Grid opacity 0.15 is admirably subtle, but grid appears on both X
-          and Y axes (style guide recommends Y-only for line charts). View has all-around
-          border instead of L-shaped spines. Legend well-styled with elevated fill.
+        passed: false
+        comment: Grid drawn on both axes on a line chart, against the style guide's
+          Y-only rule (defect line).
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Alternating above/below placement is a genuine storytelling decision
-          that prevents clutter. Color-coded labels reinforce event type identity.
-          Green price line as visual anchor guides the eye. Above default but no deliberate
-          focal point or emphasis on key events.
+        comment: Alternating flag placement is what the Notes ask for; no focal point
+          or emphasis chosen beyond it.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -153,31 +154,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stock chart with flag-style event markers, connector lines
-          from flags to price level, and distinct event type encoding.
+        comment: 'Stock line chart with flag markers and connectors: correct type.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: stock price line, event flags positioned above/below
-          price, vertical dashed connector lines, distinct icons for event types,
-          text labels, tooltips with event details, 4 distinct event type categories.'
+        passed: false
+        comment: Line, flags above/below, dashed connectors, shapes+colors, labels
+          and tooltips present; but the Q2 Growth flag sits on the price line (C2,
+          defect line).
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Date on X-axis (temporal), Stock Price on Y-axis. 180 business days
-          shown (within 60-250 range). 8 events (within 3-15 range).
+        passed: false
+        comment: Date/close mapped correctly, marks at their values; the y axis runs
+          70-120 while price and flags span about 79-105 (defect line).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Tech Stock 2024 · stock-event-flags · python · altair ·
-          anyplot.ai'' — correct format with optional descriptive prefix. Legend shows
-          all 4 event types with correct labels and shapes.'
+        comment: Title format correct; legend 'Event Type' keys all four types with
+          matching shapes and colors.
     data_quality:
       score: 15
       max: 15
@@ -187,25 +186,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: earnings (quarterly, 3x), dividends (2x), news
-          events (2x), stock split (1x). Alternating above/below flag placement demonstrates
-          the full visualization technique.'
+        comment: Four event types, flags both above and below, price rises and falls
+          around events.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic tech company scenario: Q4 earnings beat, quarterly dividends
-          ($0.25, $0.28), product launch, partnership news, 2:1 stock split. Neutral
-          business context.'
+        comment: Neutral tech-company scenario with plausible events (Q4 Beat, $0.25
+          Div, Product Launch, 2:1 Split).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting price ~$100, realistic geometric random walk with daily
-          sigma 1.8% and drift 0.05%. Price range $80-$120 over 9 months is plausible
-          for a tech stock.
+        comment: 'No check values in the spec. Checked: start at $100, daily sigma
+          1.8 %, drift 0.05 % (lines 42-43), range ~$83-$109 over 9 months; quarterly
+          earnings dates late Jan/Apr/Jul consistent with real calendars.'
     code_quality:
       score: 10
       max: 10
@@ -215,59 +212,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Clean top-level script: imports → theme
-          tokens → data → chart layers → combine → save.'
+        comment: 'Flat script: imports, tokens, data, layers, save. No functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (for path fix), altair, numpy, pandas,
-          PIL.Image.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a multi-layer chart. No over-engineering.
-          Connector line break via None rows is clean. sys.path fix is a known Altair
-          workaround.
+        comment: Appropriate complexity; connector rows with NaN breaks are short.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
-          Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current Altair
+          6 API.
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Exemplary Altair idioms: encoding type suffixes (:T/:Q/:N), layer
-          composition with + operator, alt.Scale for shared color/shape scales, alt.Legend/alt.Tooltip,
-          configure_* for global theming, alt.Title object.'
+        comment: Correct layered Altair with shared alt.Scale objects and configure_*
+          theming; the library-mandated pattern, nothing beyond.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Uses `detail` channel for creating line breaks in connector lines
-          without extra DataFrames — distinctively Vega-Lite technique. Chart layering,
-          shape channel for redundant encoding, .interactive() for real zoom/pan,
-          HTML export alongside PNG. Not full 5 as selections/conditions/transforms
-          unused.
+        comment: 'detail channel plus NaN rows splits one mark_line layer into per-event
+          connectors: a Vega-Lite-specific trick (+1).'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
 impl_tags:
   dependencies:
   - pillow
