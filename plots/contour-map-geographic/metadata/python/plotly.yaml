@@ -2,145 +2,143 @@ library: plotly
 language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:53:01Z'
-updated: '2026-05-20T23:35:05Z'
+updated: '2026-11-26T10:44:15Z'
 generated_by: claude-sonnet
-workflow_run: 26194005912
+workflow_run: 45803033298
 issue: 3772
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 78
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (basemap, filled contours,
-    isoline labels, colorbar, meaningful 2°C intervals)'
-  - 'Complete data quality: realistic North Atlantic SST with Gulf Stream effect,
-    appropriate temperature ranges (4–24°C) and 60×60 grid resolution'
-  - 'Correct palette choice: viridis for sequential temperature data, theme-adaptive
-    page background (#FAF8F1/#1A1A17) and chrome tokens applied throughout both renders'
-  - Clean code structure with the necessary sys.path fix and off-screen matplotlib
-    contour extraction pattern well-handled
-  - 'Good data storytelling: Gulf Stream band creates a clear focal point, geographic
-    annotations (Newfoundland, Ireland, Azores) orient the viewer in space'
+  - Filled bands and colorbar use the Imprint SEQ_FIELDS ramp with each theme's own
+    stops; chrome threads INK/INK_SOFT/ELEVATED_BG through both renders
+  - Native Plotly geo basemap (Natural Earth coastlines, borders, land, ocean) themed
+    for light and dark
+  - Meaningful 2 °C contour interval with labels every 4 °C and a colorbar naming
+    the variable and unit
+  - Ring winding normalised by shoelace area so every band fills its interior correctly
+  - Isoline hover templates show each level's value in the HTML output
   weaknesses:
-  - '"Newfoundland" annotation at paper x=0.12 is too close to the geo map left frame
-    boundary — in the light render it partially overlaps the frame. Fix: change x=0.12
-    to x=0.07 and/or increase margin l from 40 to 70, or add showarrow=True to detach
-    it from the frame.'
-  - Left margin l=40 is tighter than the style guide recommendation (l=80) for Plotly
-    landscape charts. Increase to l=60–80 to give annotations more breathing room
-    and improve layout balance.
-  - Isoline width=1 logical pixel (=4px output) is thin for a 3200×1800 geographic
-    map. Increase to width=1.5 for better isoline visibility, especially in the cold
-    northern region where purple viridis bands reduce contrast.
-  - 'Design excellence has room to improve: consider adding a subtle Gulf Stream path
-    callout/annotation to strengthen storytelling, and ensure colorbar placement is
-    as prominent as possible.'
+  - 'VQ-02 (both): isoline value labels (8°C, 12°C, 16°C, 20°C) are centred on their
+    lines, so the 1.5 px line strikes through the text, and the Ireland and Azores
+    annotation boxes sit on isolines → labels clear of the line stroke (a page-colored
+    halo/background on the label text, or the line broken under the label). Likely
+    cause: mode=''text'' traces at the segment midpoint with no background.'
+  - 'SC-02 (both): the opaque filled field covers the coastlines of Ireland, Iberia,
+    the Azores and the Newfoundland shelf, so the basemap is not legible beneath the
+    isolines (characteristic bullets 1 and 4) → keep coastlines visible over the bands
+    (translucent fills, or coastlines drawn above the fills). Likely cause: fully
+    opaque fillcolor from sample_colorscale with coastlines in the geo layer below
+    the traces.'
+  - 'SC-03 (both): the place annotations use paper coordinates and miss their places
+    — ''Azores'' sits near 33°N 20°W (islands at 38°N 28°W, hidden under the field),
+    ''Ireland'' near 49°N (island at 53°N) → label each place at its own lat/lon.
+    Likely cause: layout annotations with xref/yref=''paper'' instead of Scattergeo
+    text at geographic coordinates.'
+  - 'VQ-05 (both): the geo frame spans only about 55 % of the canvas width with wide
+    empty bands left of it and between it and the colorbar, and the 30–60°N field
+    fills only part of the frame → let the map fill the plot area (tighter lon/lat
+    ranges around the data, smaller side gaps). Likely cause: lataxis_range [27, 63]
+    / lonaxis_range [-64, 4] plus the Mercator aspect inside margin l=70, r=120.'
+  - 'Suggestion: a stepped colorbar matching the 2 °C band levels would tie the legend
+    to the filled bands.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) page background — correct.
-      Chrome: Title "North Atlantic SST · contour-map-geographic · python · plotly · anyplot.ai" in dark ink (#1A1A17) fully readable. Colorbar title "Temperature (°C)" and tick labels (5–20°C) readable. Geographic annotations: "Newfoundland" at paper x=0.12 partially overlaps the geo frame left boundary — the last ~4 characters are partially obscured by the frame. "Ireland" on the right is readable. "Azores" at bottom is faint but legible. Isoline labels (8°C, 12°C, 16°C, 20°C) readable.
-      Data: Viridis colormap — deep purple in cold northern waters (~4–8°C), teal/cyan mid-range, yellow-green in warm southern waters (~20–24°C). Filled contour bands cover the North Atlantic. Thin isoline contours (1px logical) overlay the bands. Ocean in light blue (#C5D8E8), land in warm beige (#D8D3BB), coastlines in grey.
-      Legibility verdict: PASS (minor annotation boundary overlap for "Newfoundland" in light render)
+      Background: warm off-white #FAF8F1 page; geo frame with light blue ocean (#C5D8E8) and beige land.
+      Chrome: title 'North Atlantic SST · contour-map-geographic · python · plotly · anyplot.ai' in dark ink, centred, ~65 % width; colorbar 'Temperature (°C)' with ticks 5–20 in INK_SOFT on an elevated box; place labels Newfoundland, Ireland, Azores in dark ink on white boxes — all readable.
+      Data: opaque filled bands from mint (#66E2B2) in the cold north through #009E73 to navy (#002850) in the warm south, dark-grey isolines every 2 °C, labels 8/12/16/20 °C sitting on their lines (line passes through the text). The field rectangle (30–60°N, 60–0°W) covers the coasts of Ireland, Iberia and the Azores; coastlines visible only outside it.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) page background — correct.
-      Chrome: Title in light text (#F0EFE8) fully readable. Colorbar with dark elevated background (#242420) and light tick labels (#B8B7B0) readable. All three geographic annotations ("Newfoundland", "Ireland", "Azores") are visible — in the dark render "Newfoundland" is more clearly readable than in the light render because the dark frame creates less visual conflict. Isoline labels in light ink readable.
-      Data: Viridis fills are identical to the light render — same purple-to-yellow-green progression confirming data colors are unchanged across themes. Ocean in dark navy (#19242E), land in dark khaki (#2A2A25), coastlines in dark grey (#666660). No dark-on-dark failures detected.
+      Background: warm near-black #1A1A17 page; dark navy ocean and dark khaki land.
+      Chrome: title, colorbar title and ticks, and place labels in light ink on #242420 boxes; no dark-on-dark text.
+      Data: same geometry; the continuous ramp uses the dark stops (#00573D → #009E73 → #CDD9FF), isolines in light grey, labels in light ink. Same overlap of labels with lines and same coverage of land by the field as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout (title=16, colorbar=12/10,
-          isolines=9, annotations=10). Readable in both themes. Minor: ''Newfoundland''
-          annotation at x=0.12 sits against geo frame boundary in light render; isoline
-          labels at 9pt are on the small side.'
+        comment: Title 16, colorbar and labels 12, all in theme ink; readable in both
+          renders
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: '''Newfoundland'' annotation at paper x=0.12 partially overlaps the
-          geo map left frame in the light render. No text-data or text-text collisions
-          elsewhere.'
+        comment: Isoline value labels sit directly on their lines with the line striking
+          through the text (8°C, 12°C, 20°C); the Ireland and Azores boxes cover isolines
+          (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Filled viridis contour bands clearly visible. Isolines at width=1
-          logical (4px output) are thin but readable. Colorbar prominent. Minor: isolines
-          slightly thin for the geographic context.'
+        comment: Isolines at 1.5 px logical clearly visible on every band in both
+          themes; colorbar prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe. No red-green dependency.
+        comment: Green-to-navy (light) / green-to-pale-blue (dark) ramp is lightness-monotonic
+          and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed (gate passed). Geo map fills plot area
-          well. Right margin r=120 correctly accommodates colorbar. Left margin l=40
-          is tighter than recommended (l=80), contributing to annotation-frame overlap.
+        comment: Geo frame spans only about the middle 55 % of the width with wide
+          empty margins, and the field fills only part of the frame (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct anyplot format with descriptive prefix. Colorbar
-          labeled 'Temperature (°C)' with units. Geographic map appropriately has
-          no x/y axis labels.
+        comment: Colorbar titled 'Temperature (°C)' with unit; no x/y axes on a map
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis is the correct sequential colormap for continuous temperature
-          data. Page background is #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens
-          correctly theme-adaptive in both renders.'
+        comment: 'Filled bands and colorbar use the Imprint SEQ_FIELDS stops of each
+          theme; page #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Above default (4). Custom geographic color theming (ocean, land,
-          coast colors adapting to light/dark), viridis colormap chosen appropriately,
-          geographic context annotations. Not yet at publication level.
+        comment: Style-guide baseline; theme-adapted basemap colors meet the brief,
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Some refinement: alpha=0.85 on fills, theme-adaptive colorbar border/background,
-          proper geo frame styling. No grid (appropriate for geo). Left margin tightness
-          reduces polish.'
+        passed: false
+        comment: Frame and colorbar box follow the guide; no further refinement of
+          spacing or label placement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good: Gulf Stream warm band creates focal point, temperature gradient
-          immediately legible south-to-north, geographic annotations orient viewer.
-          Isoline labels identify specific temperatures.'
+        passed: false
+        comment: Field displayed with place names; no hierarchy chosen beyond that
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -148,30 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: contour isolines on geographic basemap with Plotly native
-          Mercator projection. Both filled contour bands and isoline contours rendered.'
+        comment: Contour lines with filled bands on a Natural Earth Mercator basemap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: geographic basemap with coastlines/borders,
-          filled contours, isoline contours, contour value labels, viridis colormap,
-          colorbar, meaningful 2°C intervals.'
+        comment: Labels, colorbar, 2 °C levels and filled bands present; but the opaque
+          field hides the coastlines of Ireland, Iberia and the Azores beneath it,
+          so the basemap is not legible under the isolines (C1, C4; defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped to geographic coordinates. Temperature mapped
-          to viridis. 60x60 grid covers North Atlantic 30-60°N, 60-0°W.
+        comment: Isolines at correct lat/lon; place annotations positioned in paper
+          coordinates land away from the places they name (Azores label ~33°N 20°W
+          vs 38°N 28°W; Ireland ~49°N vs 53°N) (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'North Atlantic SST · contour-map-geographic · python · plotly
-          · anyplot.ai' matches required format. Colorbar labeled with units.
+        comment: Title in required format with descriptive prefix; colorbar names
+          variable and unit
     data_quality:
       score: 15
       max: 15
@@ -181,25 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: filled contour bands, isoline contours, value
-          labels, geographic basemap with coastlines and country borders, colorbar,
-          geographic orientation annotations.'
+        comment: Filled bands, isolines, labels, basemap with coastlines and borders,
+          colorbar all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: North Atlantic SST is a real-world, widely studied oceanographic
-          dataset. Gulf Stream effect adds realistic geographic character. Neutral
-          scientific topic.
+        comment: Simulated North Atlantic SST with a Gulf Stream warm tongue — plausible
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 4-24°C realistic for North Atlantic surface waters.
-          2°C contour intervals appropriate. Gulf Stream +3°C anomaly and -0.5°C/degree
-          latitudinal gradient are realistic.
+        comment: 'Checked: 4–24 °C range plausible for 30–60°N SST, 2 °C contour interval,
+          labels every 4 °C read 8/12/16/20 °C off the lines'
     code_quality:
       score: 10
       max: 10
@@ -209,72 +204,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → data generation → off-screen
-          contour extraction → Plotly traces → layout → save. No functions or classes.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: Deterministic analytic field (seed set)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os/sys for path fix, matplotlib/mcolors/plt for
-          off-screen contour extraction, numpy for data, plotly.graph_objects for
-          rendering.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path fix for sibling file collision is necessary and clean. Off-screen
-          matplotlib contour extraction is the correct workaround for Plotly's lack
-          of native geo-contour fills. Winding order correction is well-handled.
+        comment: Off-screen matplotlib contour extraction is the necessary route for
+          geo contours in plotly; winding normalised via shoelace area
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Uses current
-          Plotly API (allsegs, write_image, write_html).
+        comment: Saves plot-{THEME}.png at 3200x1800 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of Plotly''s geo subsystem: go.Scattergeo with fill=''toself'',
-          fig.update_geos() for projection and basemap, Mercator projection. Off-screen
-          matplotlib workaround is the correct community pattern for geo-contour fills.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses genuine Plotly-specific features: Natural Earth geographic
-          basemap (coastlines, borders, land, ocean, lakes), Scattergeo geographic
-          coordinate system, interactive hover tooltips on isolines, HTML export.'
+        comment: Scattergeo + update_geos, sample_colorscale for band colors — standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Hover templates on each isoline report its °C value in the HTML;
+          beyond the baseline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
+  rendered_at: '2026-11-26T10:40:28Z'
 impl_tags:
   dependencies:
   - matplotlib
   techniques:
+  - contour-lines
+  - filled-contours
   - colorbar
   - annotations
+  - geographic-map
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
-  - normalization
+  - contour-extraction
   styling:
   - custom-colormap
-  - alpha-blending
+  - theme-adaptive

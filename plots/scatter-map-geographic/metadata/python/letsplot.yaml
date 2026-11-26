@@ -12,56 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 78
 review:
   strengths:
-  - 'Real-world data: 49 of the world''s largest urban agglomerations, with accurate
-    coordinates and plausible metro populations on every inhabited continent'
-  - 'Imprint palette in canonical order (Asia #009E73 first) with the region order
-    fixed through scale_color_manual(breaks=...), and colors identical in both renders'
-  - Theme tokens threaded through every chrome element; the grid uses the GRID token
-    at 15 % ink, so the basemap and grid stay quieter than the points in both themes
-  - 'Native lets-plot interactivity: layer_tooltips() with a city title and population
-    and region lines in the HTML export'
-  - Clean, flat script with explicit imports, column-name constants and a list comprehension
-    that builds the basemap frame
+  - 'Canonical Imprint order with Asia #009E73 first, identical across themes; theme-correct
+    chrome'
+  - layer_tooltips() shows city, population and region in the HTML export
+  - Separate size and color legends, each titled with its variable
+  - Fully deterministic hard-coded data
   weaknesses:
-  - 'VQ-05 (both): the plot fills only x = 92–3108 of the 3200 px canvas; the 92 px
-    strips at the left and right edges are fully transparent (alpha 0) instead of
-    the page color → paint the full 3200×1800 canvas in PAGE_BG (+92 px each side).
-    Likely cause: coord_fixed(ratio=1.0) over a 360°×140° extent shrinks the plot
-    inside ggsize(800, 450), and lets-plot leaves the rest of the canvas unpainted.'
-  - 'SC-02 (both): the basemap is six hand-typed continent polygons of 9–21 vertices
-    that follow no real coastline or country boundary: the Europe and Asia outlines
-    overlap from Turkey to the Urals, Japan, the British Isles, the Philippines and
-    Indonesia are not drawn, so London, Tokyo, Manila and Jakarta sit on an edge or
-    in open sea, and Sydney lies outside the Oceania outline → a basemap of real coastlines
-    or country boundaries (spec Notes, C1). Likely cause: the continent_outlines list
-    instead of real boundary geometry, such as a Natural Earth GeoDataFrame passed
-    to geom_polygon(map=...) or lets-plot''s geocode_countries().get_boundaries().'
-  - 'Suggestion: a thin page-colored outline on the points, or a slightly lower alpha,
-    would keep the stacked Pearl River Delta cities (Guangzhou, Shenzhen, Hong Kong)
-    distinguishable.'
+  - 'VQ-05 (both): the plot fills only x = 92-3108 of the 3200 px canvas; the 92 px
+    strips at the left and right edges are fully transparent instead of the page color
+    → paint the full canvas in PAGE_BG (+92 px each side). Likely cause: coord_fixed(ratio=1.0)
+    narrows the plot box inside ggsize(800, 450) and lets-plot leaves the rest unpainted;
+    wrap it in a one-panel gggrid carrying PAGE_BG.'
+  - 'SC-02 (both): the basemap is six hand-typed continent polygons of 9-21 vertices
+    that follow no real coastline: Europe and Asia overlap, Japan, the British Isles,
+    the Philippines and Indonesia are missing, Tokyo, London and Manila sit in open
+    sea and Sydney outside the Oceania shape → a basemap of real coastlines or country
+    boundaries (C1). Likely cause: the continent_outlines list instead of Natural
+    Earth geometry.'
+  - 'VQ-03 (dark): the size legend''s circles render dark grey (about #474747) on
+    the #242420 legend box, roughly 1.6:1, and do not match the colored marks → a
+    light neutral key glyph from INK_SOFT (#B8B7B0) or similar. Likely cause: scale_size
+    legend keys left at lets-plot''s default grey; set guides(size=guide_legend(override_aes={''color'':
+    INK_SOFT})).'
+  - 'Suggestion: a thin page-colored point outline or alpha near 0.7 would keep the
+    stacked Pearl River Delta cities easier to tell apart.'
   - 'Suggestion: a Robinson or Natural Earth projection, as the spec Notes name for
-    world maps, would read more like a world map than the plain longitude–latitude
+    world maps, would read more like a world map than the plain longitude-latitude
     grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the plot; 92 px strips at the left and right canvas edges are transparent (alpha 0)
-      Chrome: title "scatter-map-geographic · python · letsplot · anyplot.ai" top left in dark ink; axis titles "Longitude (°)" and "Latitude (°)"; ticks every 50° (x, -150 to 150) and 20° (y, -60 to 80) in INK_SOFT; framed panel with a subtle grid. All text readable, nothing clipped or overlapping
-      Data: 49 cities as circles sized by population (2–9) and colored by region in canonical Imprint order: Asia #009E73, S. America #C475FD, N. America #4467A3, Africa #BD8233, Europe #AE3030, Oceania #2ABCCD; alpha 0.85. Basemap: six coarse continent polygons in #FFFDF6 with thin gray outlines that only roughly resemble the continents (Europe and Asia overlap, Sydney lies outside Oceania)
-      Legend: two boxed legends at the bottom: "Population (M)" with dark gray circles for 10–35, and "Region" with six colored circles in a 3×2 grid
+      Background: #FAF8F1 behind the plot box, but 92 px strips at the left and right canvas edges are fully transparent.
+      Chrome: mandated title top left, 'Longitude (°)' / 'Latitude (°)' axis titles, dark tick labels, subtle grid; Population (M) and Region legend boxes stacked below. All readable.
+      Data: six coarse hand-drawn continent polygons (Europe and Asia overlapping, no Japan, British Isles, Indonesia); 49 cities as alpha circles sized by population, Asia #009E73 first, then purple, blue, ochre, red, cyan. Tokyo, London and Manila sit off the outlines, Sydney outside the Oceania shape.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; the same 92 px transparent strips at the left and right edges
-      Chrome: title, axis titles and ticks in light ink (#F0EFE8 / #B8B7B0), all clearly readable; no dark-on-dark text; legend boxes in #242420
-      Data: identical region colors and sizes to the light render; only chrome flipped. Basemap polygons in #242420 with #6B6A63 outlines, quieter than the points; brand green clearly visible
-      Legend: size-legend circles in gray, dimmer on the dark legend box but visible; region glyphs clear
+      Background: #1A1A17 behind the plot box, same transparent side strips.
+      Chrome: light title, axis titles and ticks; #242420 legend boxes with light text; no dark-on-dark text. Size-legend circles dark grey and dim.
+      Data: same continent polygons in #242420; categorical colors identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -69,35 +64,37 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16, axis titles 12, ticks and legend text 10 as the library
-          prompt sets; all readable in both themes
+        comment: Title 16, axis titles 12, ticks and legend text 10 pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; Asian city clusters overlap as the spec permits
+        comment: No text collisions; overlap among Asian city points is expected (C5)
+          and handled with alpha
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Marker range 2–9 suits 49 points; region and size legend glyphs visible
-          in both themes
+        passed: false
+        comment: 'Marker range 2-9 suits 49 points; the size legend''s grey circles
+          (about #474747) barely separate from the #242420 legend box in the dark
+          render (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Imprint hues at alpha 0.85 stand out on the quiet basemap; region
-          also encoded by position
+          is also carried by position
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: false
-        comment: Transparent 92 px strips at the left and right canvas edges (defect
-          line); otherwise balanced, nothing clipped
+        comment: Fixed-aspect plot leaves 92 px fully transparent strips at the left
+          and right canvas edges (defect line); otherwise balanced, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,8 +106,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, Asia #009E73 first; backgrounds and grid
-          theme-correct'
+        comment: 'Canonical Imprint order with Asia #009E73 first; #FAF8F1 / #1A1A17
+          plot backgrounds, theme-correct chrome'
     design_excellence:
       score: 8
       max: 20
@@ -127,15 +124,15 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: Grid and spine rules met; legends stacked at the bottom with default
-          key boxes; nothing beyond
+        comment: Thin outlines on a near-page fill keep the basemap quiet; spine and
+          grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed by region and size, no focal hierarchy chosen beyond
-          the Notes
+        comment: Data shown by region and size; no focal hierarchy chosen beyond the
+          Notes
     spec_compliance:
       score: 13
       max: 15
@@ -145,21 +142,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Geographic scatter on a basemap
+        comment: Geographic scatter on a basemap, no unasked encodings
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Color and size legends, transparency, tooltips present; the basemap
-          does not show real coastlines or boundaries (C1; defect line)
+        comment: Color and size legends, alpha and tooltips present; the basemap is
+          six hand-typed continent polygons with no real coastlines (C1; defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every point at its lon/lat, nothing moved; all points inside the
-          limits
+        comment: Every city at its lon/lat with no displacement; limits -180..180
+          / -60..80 contain all points
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -175,7 +172,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Color and size encodings, dense clusters and sparse regions all shown
+        comment: Color and size encodings, dense Asian clusters and sparse regions
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -187,8 +185,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: coordinates of Tokyo, Delhi, Sao Paulo, Sydney correct;
-          metro populations in plausible ranges'
+        comment: 'Checked: Tokyo, Sao Paulo, Sydney coordinates correct in the data;
+          populations plausible'
     code_quality:
       score: 10
       max: 10
@@ -204,25 +202,26 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic, hard-coded data and outlines
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Explicit imports, all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise; basemap frame built in one comprehension
+        comment: Outline list long but direct; basemap frame built in one comprehension
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html; current
+          API
     library_mastery:
       score: 5
       max: 10
@@ -232,17 +231,17 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Standard ggplot grammar with layered geoms; default level
+        comment: Standard lets-plot grammar with layered geoms; default level
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
+        passed: true
         comment: layer_tooltips() with title/line formatting for the HTML export,
           beyond what the prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
   rendered_at: '2026-11-22T14:03:24Z'
 impl_tags:
   dependencies: []

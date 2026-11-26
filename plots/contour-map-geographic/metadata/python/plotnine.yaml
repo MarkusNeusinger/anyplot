@@ -2,122 +2,99 @@ library: plotnine
 language: python
 specification_id: contour-map-geographic
 created: '2026-05-20T22:58:22Z'
-updated: '2026-05-20T23:23:16Z'
+updated: '2026-11-26T10:36:53Z'
 generated_by: claude-sonnet
-workflow_run: 26194244708
+workflow_run: 45801618479
 issue: 3772
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: filled raster + labeled isobar lines + geographic coastlines
-    + colorbar all present'
-  - Realistic meteorological scenario (Azores High, Icelandic Low, Baltic High) with
-    factually correct pressure values (990–1031 hPa) and appropriate 4 hPa isobar
-    intervals
-  - BrBG diverging colormap is an excellent data-appropriate choice for pressure —
-    brown/teal immediately signals high/low pressure
-  - Clever use of contourpy for path computation, keeping the implementation pure-plotnine
-    with geom_path instead of falling back to matplotlib contourf
-  - 'Theme-adaptive chrome fully implemented: INK/INK_SOFT/PAGE_BG tokens propagate
-    through title, axis labels, ticks, legend, and geom_label fills — both renders
-    pass legibility check'
-  - geom_label with background fill (fill=PAGE_BG) makes isobar value labels readable
-    over the raster in both themes
-  - Clean flat script structure, np.random.seed(42) ensures determinism, all imports
-    used
+  - Imprint sequential field ramp with the correct per-theme stops through scale_fill_gradientn(values=...)
+  - Isohalines cased (page-colored halo under an ink line) and readable over every
+    part of the ramp in both themes
+  - Isolines computed on a land-masked grid so they stop at the coast; labels every
+    0.5 psu placed along their lines on open water
+  - Plausible Mediterranean salinity field (Atlantic inflow, Rhône/Po/Black Sea freshening,
+    salty Levantine) with a 0.25 psu interval and a unit-bearing colorbar
+  - Flat, deterministic script; contourpy and matplotlib Path do the computation instead
+    of hand-rolled code
   weaknesses:
-  - Isobar contour lines (geom_path size=0.4, alpha=0.65) are notably thin and semi-transparent
-    — at mobile scale they become hard to distinguish from the raster background;
-    increase size to 0.6–0.8 and alpha to 0.80–0.85 for better element visibility
-  - Contour label font size=6 in geom_label is at the lower readable threshold; increase
-    to size=7–8 for better mobile legibility
-  - 'Design Excellence headroom: no spines removed (panel_border retained is correct
-    for a map, but top/right could still be lightened), and geographic outlines are
-    simplified hardcoded approximations that look rough in places — coastline fidelity
-    limits aesthetic sophistication'
-  - 'DE-02: Grid opacity (alpha=0.10 on panel_grid_major) is already quite subtle
-    — no grid-styling issues, but panel_grid_minor is element_blank while minor ticks
-    could add geographic precision context'
+  - 'Suggestion: add a 5°W tick so the western 6° of the map carry a longitude reference.'
+  - 'Suggestion: the 38.5 label grazes the western tip of Crete; a slightly wider
+    land-avoidance box would clear it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "contour-map-geographic · python · plotnine · anyplot.ai" in dark ink at top, clearly readable. "Longitude"/"Latitude" axis labels in dark ink at 10pt, readable. Tick labels (20°W, 10°W, 0°, 10°E … / 40°N, 50°N, 60°N, 70°N) in #4A4A44 at 8pt, readable. Colorbar legend "Pressure (hPa)" with values 1000–1030 on the right, readable.
-      Data: BrBG diverging raster fills the map area — warm browns in the Azores High (SW) and Baltic High (NE), cool teals in the Icelandic Low (NW). Isobar paths (semi-transparent grayish, size=0.4, alpha=0.65) trace isolines at 4 hPa intervals. Geographic outlines (UK, Scandinavia, Iceland) in dark ink (size=0.6) clearly define the continental context. Isobar labels (1000, 1008, 1016, 1024) appear as small labeled boxes with warm off-white fills, readable. First data series is the BrBG continuous colormap — no categorical series present.
-      Legibility verdict: PASS — all text is readable against the light background. No light-on-light failures.
+      Background: warm off-white #FAF8F1 page; land polygons in a beige land fill (#E6E1D0) with INK_SOFT coastlines.
+      Chrome: title "contour-map-geographic · python · plotnine · anyplot.ai" in dark ink, "Longitude (°E)" / "Latitude (°N)" axis titles, degree tick labels (0° … 25°E, 30°N … 45°N), and the "Salinity (psu)" colorbar (36.5–38.5) — all readable. Left and bottom axis lines only, no grid.
+      Data: Mediterranean sea-surface salinity raster on the Imprint sequential field ramp (pale mint in the Alboran/Gulf of Lion → brand green → blue → navy in the Levantine). Isohalines every 0.25 psu as ink lines with a page-colored casing, masked at the coast; closed loops around the Gulf of Lion, Adriatic, Aegean and the Levantine core. Labels 36.5, 37.0, 37.5, 38.0, 38.5 in 8 pt boxes on open water. No categorical series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light #F0EFE8 ink on dark background — clearly readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark) — readable against the near-black background. Colorbar legend text readable in light tones. No dark-on-dark failures detected.
-      Data: BrBG raster colors are visually identical to the light render — same brown highs, same teal lows. Geographic outlines now render in white/light ink, clearly visible on the dark background. Isobar paths remain semi-transparent (white-ish on dark). Isobar labels (1000, 1008, 1016, 1024) render with dark (#1A1A17) fills and light (#F0EFE8) text — correct dark-theme label contrast.
-      Data colors are confirmed identical between light and dark renders. Only chrome (background, text, outlines, label fills) flips between themes.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark failures.
+      Background: warm near-black #1A1A17 page; land in a dark warm grey (#2D2C27) with light grey coastlines.
+      Chrome: title, axis titles, tick labels and colorbar text in light ink — all readable, no dark-on-dark text.
+      Data: same field on the dark-theme sequential stops (deep green → brand green → pale blue), as the continuous ramp should flip; isohalines with dark casing and light line readable over both the deep green and the pale blue ends; labels on dark boxes with light text, readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
-          legend_text=8, geom_label size=6). All text readable in both themes. geom_label
-          size=6 is at the lower threshold — could be slightly small at mobile scale.
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, contour labels 8 pt on
+          boxed page-colored fills; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No significant overlaps. Isobar labels placed at midpoints of longest
-          contour segments with background fills, no collision with coastlines or
-          other text.
+        comment: No text-on-text collisions; contour labels are placed on open water
+          clear of land (38.5 only grazes the tip of Crete, text intact)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Raster and coastlines clearly visible. Isobar paths (size=0.4, alpha=0.65)
-          are noticeably thin and semi-transparent — visible at full resolution but
-          may be marginal at mobile scale.
+        comment: Isohalines carry a page-colored casing under a 0.45 ink line and
+          read on every part of the ramp in both themes; coastline outlines clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG is a CVD-safe diverging colormap. High-contrast geographic outlines
-          (dark on light, light on dark).
+        comment: Single-hue-progression Imprint sequential ramp, lightness-monotone,
+          CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Plot fills the frame well. Colorbar
-          well-positioned on the right. No overflow or clipping.
+        comment: Map fills the panel edge to edge (expand=0), compact colorbar on
+          the right, nothing cut off; 3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. 'Longitude'/'Latitude' axis labels descriptive.
-          Degree notation in tick labels (20°W, 0°, 10°E, 40°N) provides implicit
-          units.
+        comment: Longitude (°E) / Latitude (°N) with units, degree tick labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses BrBG (diverging) — correct for atmospheric
-          pressure data. Backgrounds are #FAF8F1 (light) / #1A1A17 (dark). Chrome
-          is theme-correct in both renders.'
+        comment: 'imprint_seq field stops per theme (mint→green→blue→navy light; deep
+          green→green→pale blue dark); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -125,27 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional weather map feel. BrBG colormap is a well-chosen diverging
-          scale for pressure. Geographic context adds real-world meaning. Above configured
-          defaults but simplified hardcoded coastlines and modest isobar styling limit
-          polish.
+        comment: Cartographic casing on the isohalines (page-colored halo under an
+          ink line) and a theme-token land fill painted over the field give a clear
+          land/sea hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10). Panel border retained (appropriate for
-          a map). Alpha blending on isobars (0.65) gives a nice layered effect. Refined
-          geom_label styling (label_size=0.2, small padding). Good visible refinement.
+        comment: Isohalines masked so they stop at the coast, labels searched along
+          each line for a spot clear of land, grid dropped for the map
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Realistic weather scenario (Azores High, Icelandic Low, Baltic High)
-          tells a clear meteorological story. Diverging colormap with isobar labels
-          guides the reader to understand pressure gradients. Visual hierarchy is
-          clear.
+        comment: The field is displayed; no focal hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -155,30 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled contours (geom_raster) plus labeled isoline contours
-          (geom_path + geom_label) on a geographic basemap (geom_path coastlines).'
+        comment: Contour lines over a geographic basemap with an optional filled field
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: geographic basemap with coastlines, labeled
-          contour lines, filled contours, BrBG colormap, colorbar legend, 4 hPa intervals
-          (spec says 4mb for pressure).'
+        comment: C1 coastline basemap legible beneath the lines; C2 0.25 psu interval;
+          C3 labels every 0.5 psu along their lines; C4 filled field leaves the basemap
+          readable; C5 sequential ramp + colorbar 'Salinity (psu)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y. Full geographic bounds (-30 to 50°E,
-          35 to 75°N) shown. Data range covers the region.
+        comment: Lon on x, lat on y, full grid shown, labels at points on their own
+          lines; colorbar ticks every 0.5 psu
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-map-geographic · python · plotnine · anyplot.ai' matches
-          required format. Legend 'Pressure (hPa)' clearly labeled.
+        comment: Title in mandated format; colorbar titled with variable and unit
     data_quality:
       score: 15
       max: 15
@@ -188,25 +158,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates filled contours AND line contours AND labeled isobars
-          AND geographic coastlines AND both high and low pressure systems.
+        comment: Gradient lines, closed loops around fresh plumes (Gulf of Lion, Adriatic,
+          Aegean) and a salty Levantine core, labelled and unlabelled levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic atmospheric pressure over North Atlantic/Europe. Azores
-          High and Icelandic Low are well-known meteorological features. Neutral,
-          science-based content.
+        comment: Mediterranean sea-surface salinity with Atlantic inflow, Po/Rhône/Black
+          Sea freshening; neutral science context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pressure range ~990–1031 hPa is factually correct for sea-level pressure.
-          80x60 grid within spec bounds (20x20 to 100x100). 4 hPa intervals match
-          the spec recommendation. Gaussian smoothing produces realistic pressure
-          field patterns.
+        comment: 'Read off the colorbar: about 36.4–38.8 psu, matching the real west-to-east
+          range (~36–39 psu); 0.25 psu interval sensible; 100x70 grid within spec
+          range. No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -216,70 +184,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data generation → contour computation → geographic
-          outlines → theme → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic synthetic data.
+        comment: Fully deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, contourpy, plotnine, scipy.ndimage)
-          are used in the script.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Appropriate complexity. contourpy used cleanly for path
-          computation without matplotlib coupling.
+        comment: contourpy computes the isolines and matplotlib Path the land mask;
+          no hand-rolled algorithm, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5.
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Fully idiomatic plotnine: layered ggplot grammar, scale_fill_cmap
-          for continuous, scale_x/y_continuous with custom breaks/labels, coord_cartesian,
-          theme() for all styling. Very correct usage given the challenging spec.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of geom_raster for efficient 2D field rendering, geom_label
-          with theme-adaptive background fills for isobar labels, and contourpy integration
-          to generate geom_path-compatible line segments — a plotnine-specific workaround
-          for a spec that would normally require a basemap library.
+        comment: Layered grammar (geom_raster, geom_path, geom_polygon, geom_label),
+          scale_fill_gradientn, theme(); the mandated baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
+  rendered_at: '2026-11-26T10:32:33Z'
 impl_tags:
   dependencies:
-  - contourpy
   - scipy
+  - contourpy
   techniques:
-  - layer-composition
-  - annotations
   - colorbar
+  - layer-composition
+  - manual-ticks
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
-  - matrix-construction
   dataprep:
-  - gaussian-smoothing
+  - smoothing
   styling:
-  - custom-colormap
+  - publication-ready
   - alpha-blending
