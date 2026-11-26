@@ -113,7 +113,7 @@ for j in 1:4
     text!(ax, N_DAYS + 3, final_val;
         text     = string(round(Int, final_val)),
         color    = IMPRINT[j],
-        fontsize = 11,
+        fontsize = 13,
         align    = (:left, :center),
     )
 end
