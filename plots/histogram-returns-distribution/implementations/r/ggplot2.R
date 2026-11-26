@@ -77,8 +77,8 @@ p <- ggplot(df_hist, aes(x = mid, y = density, fill = tail)) +
     color         = INK,
     fill          = ELEVATED_BG,
     label.padding = unit(0.45, "lines"),
-    label.size    = 0.3,
-    size          = 3.9
+    linewidth     = 0.3,
+    size          = 4.5
   ) +
   scale_x_continuous(labels = function(x) paste0(x, "%")) +
   labs(
