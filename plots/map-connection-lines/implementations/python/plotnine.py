@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -123,8 +123,12 @@ for route_i, (origin, dest, volume) in enumerate(routes):
         arc_lats = np.degrees(np.arctan2(z, np.sqrt(x**2 + y**2)))
         arc_lons = np.degrees(np.arctan2(y, x))
 
+    # Start a new path piece wherever the arc crosses the antimeridian, so no line spans the map
+    piece = np.concatenate([[0], np.cumsum(np.abs(np.diff(arc_lons)) > 180)])
     for step, (lon, lat) in enumerate(zip(arc_lons, arc_lats, strict=True)):
-        flight_paths.append({"route_id": route_i, "step": step, "lon": lon, "lat": lat, "volume": volume})
+        flight_paths.append(
+            {"route_id": f"{route_i}-{piece[step]}", "step": step, "lon": lon, "lat": lat, "volume": volume}
+        )
 
 df_flights = pd.DataFrame(flight_paths)
 
@@ -233,7 +237,7 @@ plot = (
         aes(x="lon", y="lat"), data=df_airports, color=INK_SOFT, fill=BRAND, size=3.5, shape="o", stroke=0.8, alpha=0.95
     )
     + scale_color_gradient(low="#009E73", high="#4467A3", name="Passengers\n(thousands/yr)")
-    + scale_size_continuous(range=(0.5, 2.0), guide=None)
+    + scale_size_continuous(range=(0.8, 2.2), guide=None)
     + coord_cartesian(xlim=(-180, 180), ylim=(-60, 80))
     + labs(title=TITLE, x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
@@ -247,7 +251,8 @@ plot = (
         plot_title=element_text(size=TITLE_SIZE, color=INK, weight="bold"),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
         legend_position="right",
