@@ -1,7 +1,7 @@
 """ anyplot.ai
 raincloud-basic: Basic Raincloud Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-26
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-26
 """
 
 import os
@@ -9,6 +9,7 @@ import re
 
 import cairosvg
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -27,19 +28,30 @@ BOX_FILL = "#FAF8F1" if THEME == "light" else "#2E2E29"
 
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data — reaction times (ms) for three treatment groups
+# Column constants
+GROUP = "Treatment Group"  # role: category
+REACTION = "Reaction Time (ms)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("reaction_times.csv")
 np.random.seed(42)
-data = {
-    "Control": np.random.normal(450, 80, 90),
-    "Treatment A": np.random.normal(380, 60, 90),
-    "Treatment B": np.random.normal(320, 50, 90),
-}
-group_colors = IMPRINT_PALETTE[: len(data)]
+df = pd.DataFrame(
+    {
+        GROUP: np.repeat(["Control", "Treatment A", "Treatment B"], 90),
+        REACTION: np.concatenate(
+            [np.random.normal(450, 80, 90), np.random.normal(380, 60, 90), np.random.normal(320, 50, 90)]
+        ),
+    }
+)
+
+# Plot
+groups = list(dict.fromkeys(df[GROUP]))
+data = {g: df.loc[df[GROUP] == g, REACTION].dropna().to_numpy() for g in groups}
+group_colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(groups))]
 
 # X-axis bounds with small padding
-all_vals = np.concatenate(list(data.values()))
-x_lo = float(np.floor((all_vals.min() - 25) / 50) * 50)
-x_hi = float(np.ceil((all_vals.max() + 25) / 50) * 50)
+x_lo = float(np.floor((df[REACTION].min() - 25) / 50) * 50)
+x_hi = float(np.ceil((df[REACTION].max() + 25) / 50) * 50)
+y_top = float(len(groups) + 1)
 
 # pygal renders one color per series; build the per-series color list so each
 # layer (rain, box outline, median line) matches the group color.
@@ -53,6 +65,8 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=tuple(series_colors),
     title_font_size=66,
     label_font_size=56,
@@ -73,8 +87,8 @@ chart = pygal.XY(
     height=CANVAS_H,
     style=custom_style,
     title="raincloud-basic · python · pygal · anyplot.ai",
-    x_title="Reaction Time (ms)",
-    y_title="Treatment Group",
+    x_title=REACTION,
+    y_title=GROUP,
     show_legend=False,
     stroke=True,
     fill=False,
@@ -82,7 +96,7 @@ chart = pygal.XY(
     show_x_guides=True,
     show_y_guides=False,
     xrange=(x_lo, x_hi),
-    range=(0.0, 4.0),
+    range=(0.0, y_top),
     margin=40,
     margin_left=MARGIN_LEFT,
     margin_right=MARGIN_RIGHT,
@@ -165,13 +179,9 @@ for i, (category, values) in enumerate(data.items()):
         stroke_style={"width": 10},
     )
 
-chart.y_labels = [
-    {"value": 0.0, "label": ""},
-    {"value": 1.0, "label": "Control"},
-    {"value": 2.0, "label": "Treatment A"},
-    {"value": 3.0, "label": "Treatment B"},
-    {"value": 4.0, "label": ""},
-]
+chart.y_labels = [{"value": 0.0, "label": ""}]
+chart.y_labels += [{"value": float(i + 1), "label": str(g)} for i, g in enumerate(groups)]
+chart.y_labels.append({"value": y_top, "label": ""})
 
 # Render base SVG
 base_svg = chart.render().decode("utf-8")
@@ -193,7 +203,7 @@ plot_w, plot_h = float(plot_rect.group(1)), float(plot_rect.group(2))
 # Data → plot-local SVG pixel mapping (SVG y is inverted relative to data y)
 x_scale = plot_w / (x_hi - x_lo)
 x_offset = -x_lo * x_scale
-y_data_lo, y_data_hi = 0.0, 4.0
+y_data_lo, y_data_hi = 0.0, y_top
 y_scale = -plot_h / (y_data_hi - y_data_lo)
 y_offset = -y_data_hi * y_scale
 
