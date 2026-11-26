@@ -2,156 +2,128 @@ library: bokeh
 language: python
 specification_id: raincloud-basic
 created: '2025-12-25T07:24:12Z'
-updated: '2026-05-26T23:25:48Z'
-generated_by: claude-opus
-workflow_run: 26480188374
+updated: '2026-11-26T15:11:36Z'
+generated_by: claude-sonnet
+workflow_run: 45845084160
 issue: 1876
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Raincloud geometry is textbook-correct: half-violin cloud rises above each category
-    baseline, box plot sits centered on the baseline, jittered rain points fall below
-    — the cloud/rain metaphor reads instantly.'
-  - 'Imprint palette applied in canonical order — Control is #009E73 green (mandatory
-    first-series brand color), then purple/blue/brown for Treatment A/B/C.'
-  - Both light (#FAF8F1) and dark (#1A1A17) renders use the correct warm backgrounds;
-    theme tokens (INK, INK_SOFT, BOX_FILL) thread through every chrome element — no
-    dark-on-dark or light-on-light failures.
-  - 'Box plot internals are well-rendered: white/dark-elevated fills, whiskers with
-    caps, and a category-color median line that ties each box visually to its cloud
-    and rain.'
-  - HoverTool with per-group stats (mean, median, std, n) on the rain points is a
-    genuinely distinctive bokeh feature that the static-PNG catalog can't show but
-    the .html catalog artifact will.
-  - Canvas is exactly 3200×1800 with toolbar_location=None — passes the canvas gate
-    cleanly.
-  - Reproducible (np.random.seed(42)), single-file/top-level (no functions or classes),
-    and uses ColumnDataSource for the scatter — idiomatic bokeh.
-  - 'Synthetic data tells a real story: Treatment B is bimodal (two superimposed normals),
-    giving the raincloud something to actually reveal that a box plot alone would
-    hide.'
+  - 'Textbook horizontal raincloud: half-violin cloud rising from each baseline, box
+    with series-colored median centered on it, translucent rain below — the metaphor
+    reads instantly in both themes'
+  - Theme tokens (INK, INK_SOFT, BOX_FILL, GRID_ALPHA) thread through every chrome
+    element; no dark-on-dark or light-on-light text
+  - 'Imprint palette in canonical order with Control as #009E73; data colors identical
+    across light and dark'
+  - x range derived from the data with padding, so every cloud tail and outlier sits
+    inside the plot
+  - Bimodal Treatment B gives the cloud something a box plot alone would hide
+  - HoverTool restricted to the rain renderers exposes value plus per-group mean,
+    median, std and n in the HTML artifact
+  - 'Adaptable layout: GROUP/VALUE constants, tidy df, categories taken from the data'
   weaknesses:
-  - The 'bimodal distribution' annotation (Label at x=475, y=2.35, 28pt italic INK_SOFT)
-    is not visually detectable in either render — it should be the focal call-out
-    that justifies Treatment B's two-peak shape, but it gets lost. Either reposition
-    it above the Treatment B cloud peak (closer to y≈2.5, slightly left of x=475 toward
-    the wider lobe) and raise its font weight/size, or draw a thin connector line
-    from the annotation to the second peak so the reader knows what's being labeled.
-  - Treatment B's bimodality is intentionally synthesized in the data but the KDE
-    bandwidth (Silverman's rule on the combined sample) over-smooths the two modes
-    into a single broad shoulder. Consider either a smaller bandwidth multiplier (e.g.
-    0.7 × Silverman) or splitting the visual focus so the bimodal feature actually
-    pops — right now Treatment B looks only slightly wider than the others, undermining
-    the storytelling beat the annotation is trying to highlight.
-  - 'DE-01/DE-03: beyond the four uniformly-styled rows there is no visual hierarchy
-    — no series is emphasized, the annotation doesn''t land, and the legend duplicates
-    the y-axis tick labels (every group''s name appears twice). Either suppress the
-    legend (color is already bound to the y-axis category, so the legend is redundant)
-    and reclaim the right-side whitespace, or make the legend useful by showing per-group
-    sample sizes (e.g. ''Control (n=80)'').'
-  - 'LM-01: box-plot internals are built from raw p.line + p.patch calls; bokeh has
-    a higher-level pattern (whisker glyphs / quad for the box body) that would express
-    intent more idiomatically and reduce the per-iteration line count.'
+  - 'CQ-04 (code): the Gaussian KDE is written out as a per-point loop with Silverman
+    bandwidth (lines 104-112) → scipy.stats.gaussian_kde(values, bw_method=''silverman'')(x_kde).
+    Likely cause: hand-rolled density instead of the available SciPy call.'
+  - 'Suggestion: start the rain jitter below the box''s lower edge (e.g. -0.40 to
+    -0.13) so no rain point is drawn inside the box.'
+  - 'Suggestion: bokeh''s Whisker annotation or quad/hbar glyphs could express the
+    box plot more idiomatically than raw line/patch calls.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct light theme surface, not pure white.
-      Chrome: bold dark-ink title at top-left ("raincloud-basic · python · bokeh · anyplot.ai" per the source), italic dark-ink axis labels ("Reaction Time (ms)" on x, "Treatment Group" on y), 34pt INK_SOFT tick labels 200/300/400/500/600 on x and the four category names on y. Subtle vertical-only grid at GRID_ALPHA=0.15. Legend on the right with the four category swatches. All chrome elements clearly readable on the warm cream background — no light-on-light failures.
-      Data: four horizontal raincloud rows stacked Control (green #009E73) at bottom → Treatment A (purple #C475FD) → Treatment B (blue #4467A3) → Treatment C (brown #BD8233) at top. Each row shows: a fill-color half-violin "cloud" rising above the category baseline, a white #FFFDF6 box plot centered on the baseline with INK whiskers/borders and a category-color median line, and jittered scatter "rain" points (size 12, alpha 0.65) below the baseline. First series is the brand green — palette compliant.
-      Legibility verdict: PASS.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "raincloud-basic · python · bokeh · anyplot.ai" top-left; italic dark axis titles "Reaction time (ms)" (x) and "Treatment group" (y); INK_SOFT tick labels 200-600 and the four category names; subtle vertical-only grid. All readable.
+      Data: four rows bottom to top — Control (#009E73), Treatment A (#C475FD), Treatment B (#4467A3, visibly two-humped), Treatment C (#BD8233). Each: translucent half-violin above the baseline with flat edge on it, cream box with ink border and whisker caps plus a thick series-colored median line centered on the baseline, and translucent rain points in a band below. All cloud tails and outliers (≈157 ms in C, ≈633 ms in B) lie inside the plot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: light-ink title, light-ink italic axis labels, INK_SOFT tick labels (B8B7B0) on both axes — all clearly visible against the dark background. Grid lines are at the slightly raised GRID_ALPHA=0.20 and stay subtle but visible. Legend on the right uses INK_SOFT text. No dark-on-dark text failures — every chrome element threads through the theme tokens correctly.
-      Data: identical colors to light render — Control green, Treatment A purple, Treatment B blue, Treatment C brown (the four Imprint palette positions are unchanged between themes, only chrome flips). Box plot fills use the elevated dark surface #242420 with white borders, which reads cleanly. The category-color median line still pops inside each box.
-      Legibility verdict: PASS.
-
-    Both renders pass the theme-readability checklist. The "bimodal distribution" annotation that the code adds at (x=475, y=2.35) is not visually locatable in either render — flagged in weaknesses as a storytelling failure rather than a legibility failure, since it appears to be a positioning/contrast issue rather than chrome being chopped.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: light title, axis titles and light-grey ticks, all clearly readable; no dark-on-dark text. Grid subtle but visible.
+      Data: same four categorical colors as the light render; boxes switch to dark #242420 fill with light borders and whiskers; median lines keep their series colors.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis-label/tick-label sizes set explicitly (50/42/34pt);
-          both themes readable. Mild deduction for the bimodal-distribution annotation
-          being effectively invisible.
+        comment: Title 50pt, axis titles 42pt, ticks 34pt set explicitly; all text
+          readable in both themes (INK / INK_SOFT tokens)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; rain rows are well separated from clouds
-          via the y-range padding.
+        comment: No text collisions; rain points overlap only where values are dense,
+          which the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rain marker size 12 with alpha 0.65 is appropriate for ~70-85 points
-          per group.
+        comment: 70-85 points per group at size 12, alpha 0.65 with a page-colored
+          outline; clouds, boxes and whiskers clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; color is redundant with y-axis position
-          so it isn't the sole signal.
+        comment: Imprint colors, and color is redundant with the y position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exactly 3200x1800 (canvas gate passed). Borders reserved correctly;
-          nothing clipped.
+        comment: 3200x1800 (gate passed); the four rows fill the plot area, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label includes units (ms); y-axis label is descriptive.
+        comment: '''Reaction time (ms)'' with unit, ''Treatment group'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint palette order; PAGE_BG correct
-          for both themes.'
+        comment: 'Control is #009E73, then canonical Imprint order; backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Layered raincloud is intricate but visually uniform across the four
-          rows; no per-series emphasis or refinement beyond the standard recipe.
+        passed: true
+        comment: Median drawn as a thick series-colored stroke inside a page-tinted
+          box (BOX_FILL per theme), tying each box to its cloud and rain
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Outline removed, y-grid removed (vertical-only x-grid), minor ticks
-          suppressed, generous whitespace.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Value-axis-only grid chosen for a horizontal distribution chart,
+          data-driven x padding, minor ticks off, short whisker caps
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: The bimodal-distribution annotation is meant to be the focal beat
-          but is not visually locatable in either render; KDE bandwidth also over-smooths
-          the very feature being called out.
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -161,29 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud: half-violin cloud above, box plot on baseline,
-          rain points below — horizontal orientation as required.'
+        comment: 'Horizontal raincloud: half-violin above, box on baseline, rain below;
+          no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cloud (KDE half-violin clipped to baseline), rain (jittered points,
-          alpha 0.65), box plot with median + quartile markers — all present.
+        comment: Cloud clipped to one half with flat edge on baseline, box with median
+          and quartiles, translucent jittered rain (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time, Y = categorical treatment groups; axes span all
-          data with sensible padding.
+        comment: Rain at its values; x range from the data with 12% padding shows
+          every cloud tail and point
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title set to 'raincloud-basic · python · bokeh · anyplot.ai' per
-          the canonical format; legend labels match the four category names.
+        comment: Title 'raincloud-basic · python · bokeh · anyplot.ai'; categories
+          labelled directly on the y axis, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -193,23 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape (cloud), summary stats (box), individual
-          observations (rain), and an intentional bimodal feature.
+        comment: Different spreads and centres plus a bimodal Treatment B that the
+          box alone would hide
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time comparison across clinical-trial groups — plausible
-          and neutral.
+        comment: Reaction times across treatment groups, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150-650 ms range is realistic for psychomotor reaction-time experiments.
+        comment: About 160-630 ms, plausible for choice reaction times; no Check values
+          in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -217,58 +189,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; everything at module level.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) at the top of the data block.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead deps.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Inline KDE (no scipy dep needed); reasonable per-iteration construction.
+        passed: false
+        comment: Gaussian KDE written out as a per-point loop (lines 104-112) instead
+          of scipy.stats.gaussian_kde (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Writes plot-{THEME}.png and plot-{THEME}.html; no bare plot.png.
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium, current Bokeh
+          3 API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ColumnDataSource for scatter, HoverTool, output_file/save pattern,
-          theme tokens threaded through bokeh property accessors. Box internals built
-          from raw p.line + p.patch rather than a higher-level pattern.
+        comment: ColumnDataSource from the tidy df, glyphs by column name; box and
+          whiskers assembled from raw line/patch calls
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: HoverTool per group with mean/median/std/n surfaces in the .html
-          artifact — a feature only interactive libraries can offer. HTML export retained.
+        comment: HoverTool limited to the rain renderers with per-group mean/median/std/n
+          and follow_mouse policy in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  rendered_at: '2026-11-26T15:07:51Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
@@ -277,5 +255,5 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
-  - publication-ready
