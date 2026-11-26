@@ -1,7 +1,7 @@
 """ anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -27,7 +27,6 @@ DRAWDOWN_COLOR = IMPRINT_PALETTE[4]
 RECOVERY_COLOR = IMPRINT_PALETTE[0]
 
 # Constants
-HEADROOM = 5  # percentage points of space kept above the zero line
 MIN_DROP = -0.5  # a return to a new high counts as a recovery after a drop deeper than this (%)
 
 # Columns
@@ -125,23 +124,23 @@ for idx in recovery_indices[:6]:
         zorder=5,
         edgecolors=PAGE_BG,
         linewidths=1.0,
+        clip_on=False,
     )
 
 # Statistics box
 stats_text = (
-    f"Max Drawdown: {max_dd_value:.1f}%\n"
-    f"Max DD Date: {max_dd_date.strftime('%Y-%m-%d')}\n"
-    f"Peak to Trough: {(max_dd_date - peak_date).days} days\n"
+    f"Max Drawdown: {max_dd_value:.1f}% on {max_dd_date.strftime('%Y-%m-%d')}   |   "
+    f"Peak to Trough: {(max_dd_date - peak_date).days} days   |   "
     f"Recovery: {recovery_days} days"
 )
-ax1.text(
+fig.text(
+    0.465,
     0.02,
-    0.04,
     stats_text,
-    transform=ax1.transAxes,
     fontsize=8,
-    verticalalignment="bottom",
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT},
+    ha="center",
+    va="bottom",
+    bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT},
     color=INK_SOFT,
 )
 
@@ -152,7 +151,7 @@ ax1.set_title("drawdown-basic · python · matplotlib · anyplot.ai", fontsize=1
 ax1.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax1.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}%"))
-ax1.set_ylim(min(drawdown) * 1.15, HEADROOM)
+ax1.set_ylim(min(drawdown) * 1.15, 0)
 ax1.spines["top"].set_visible(False)
 ax1.spines["right"].set_visible(False)
 ax1.spines["left"].set_color(INK_SOFT)
@@ -161,15 +160,19 @@ ax1.spines["bottom"].set_color(INK_SOFT)
 # Legend
 custom_handles = [
     Patch(facecolor=DRAWDOWN_COLOR, alpha=0.35),
-    Line2D([0], [0], marker="^", color="w", markerfacecolor=RECOVERY_COLOR, markersize=8),
+    Line2D(
+        [0], [0], marker="^", linestyle="none", markerfacecolor=RECOVERY_COLOR, markeredgecolor=PAGE_BG, markersize=8
+    ),
     Line2D([0], [0], color=INK_MUTED, linewidth=1.0, alpha=0.5),
 ]
 custom_labels = ["Drawdown", "New High (Recovery)", "Portfolio Value"]
-leg = ax1.legend(handles=custom_handles, labels=custom_labels, loc="upper right", fontsize=8)
+leg = ax1.legend(
+    handles=custom_handles, labels=custom_labels, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=3, fontsize=8
+)
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.08, right=0.85, top=0.92, bottom=0.12)
+fig.subplots_adjust(left=0.08, right=0.85, top=0.92, bottom=0.25)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
