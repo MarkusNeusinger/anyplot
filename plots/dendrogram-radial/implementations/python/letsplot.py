@@ -1,7 +1,7 @@
 """ anyplot.ai
 dendrogram-radial: Radial Dendrogram
-Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 92/100 | Created: 2026-08-24
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 75/100 | Updated: 2026-11-26
 """
 
 import os
@@ -22,23 +22,37 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first series always #009E73 (brand green)
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions in canonical order, one per cluster
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — synthetic marker-gene expression profiles for 32 tissue samples that
-# form 4 latent cell-type clusters, summarized by hierarchical clustering
+# Constants
+N_CLUSTERS = 4  # the tree is cut into this many clusters, colored as sectors
+STRUCTURAL = "Between clusters"  # merges that join two different clusters
+
+# Columns: set these to your table's column names
+SAMPLE = "Sample"  # role: labels
+
+# Data: replace this block with your own table, for example
+# df = pd.read_csv("expression.csv", index_col=SAMPLE); the linkage matrix and
+# the cluster assignment are derived from it below the block.
+# Synthetic marker-gene expression profiles for 32 tissue samples that form
+# 4 latent cell-type clusters
 np.random.seed(42)
-n_leaves = 32
-n_clusters = 4
-expression, _ = make_blobs(n_samples=n_leaves, centers=n_clusters, n_features=6, cluster_std=1.6, random_state=42)
+expression, _ = make_blobs(n_samples=32, centers=4, n_features=6, cluster_std=1.6, random_state=42)
+df = pd.DataFrame(
+    expression,
+    columns=[f"Gene {g}" for g in "ABCDEF"],
+    index=pd.Index([f"S{i + 1:02d}" for i in range(32)], name=SAMPLE),
+)
 
-linkage_matrix = linkage(expression, method="average")
-cluster_ids = fcluster(linkage_matrix, t=n_clusters, criterion="maxclust")
+# Plot
+n_leaves = len(df)
+sample_labels = list(df.index)
+linkage_matrix = linkage(df.to_numpy(), method="average")
+cluster_ids = fcluster(linkage_matrix, t=N_CLUSTERS, criterion="maxclust")
 
-sample_labels = [f"S{i + 1:02d}" for i in range(n_leaves)]
-cell_type_names = {1: "Cell type A", 2: "Cell type B", 3: "Cell type C", 4: "Cell type D"}
-cluster_color = {cluster_id: IMPRINT_PALETTE[cluster_id - 1] for cluster_id in cell_type_names}
-STRUCTURAL = "Between clusters"
+cell_type_names = {cid: f"Cell type {chr(64 + cid)}" for cid in range(1, N_CLUSTERS + 1)}
+cluster_color = {cid: IMPRINT_PALETTE[cid - 1] for cid in cell_type_names}
 
 # Propagate cluster identity bottom-up through the linkage tree; a merge keeps
 # its children's cluster label only while both sides still share one cluster,
@@ -63,6 +77,12 @@ leaf_order = ddata["leaves"]  # original sample indices, left-to-right
 icoord = ddata["icoord"]
 dcoord = ddata["dcoord"]
 branch_labels = ddata["color_list"]
+
+# Column names of the derived drawing tables
+X, Y, PATH, CLUSTER = "x", "y", "path_id", "cluster"
+X_IN, Y_IN, X_OUT, Y_OUT = "x_in", "y_in", "x_out", "y_out"
+X_LABEL, Y_LABEL, ROTATION, HJUST = "x_label", "y_label", "rotation", "hjust"
+X0, X1, X_TEXT, TEXT, RING = "x0", "x1", "x_text", "text", "ring_id"
 
 # Radial layout — root at center, leaves on the circumference, radial
 # distance proportional to merge height (as in the linear dendrogram). The
@@ -91,14 +111,14 @@ def polar_to_xy(angle, radius):
 # becomes a radial line, an arc sampled at the merge radius, and a radial
 # line back down, all pre-projected into Cartesian x/y
 branch_rows = []
-for path_id, ((x0, _x1, x2, _x3), (y0, y1, _y2, y3), branch_label) in enumerate(
+for path_id, ((xl, _x1, xr, _x3), (yl, ym, _y2, yr), branch_label) in enumerate(
     zip(icoord, dcoord, branch_labels, strict=True)
 ):
-    left_angle = to_angle(x0)
-    right_angle = to_angle(x2)
-    merge_radius = to_radius(y1)
-    left_child_radius = to_radius(y0)
-    right_child_radius = to_radius(y3)
+    left_angle = to_angle(xl)
+    right_angle = to_angle(xr)
+    merge_radius = to_radius(ym)
+    left_child_radius = to_radius(yl)
+    right_child_radius = to_radius(yr)
 
     arc_points = max(2, round(abs(right_angle - left_angle) / (2 * np.pi) * n_leaves * 8))
     arc_angles = np.linspace(left_angle, right_angle, arc_points)
@@ -109,7 +129,7 @@ for path_id, ((x0, _x1, x2, _x3), (y0, y1, _y2, y3), branch_label) in enumerate(
 
     for order, (angle, radius) in enumerate(polar_points):
         px, py = polar_to_xy(angle, radius)
-        branch_rows.append({"path_id": path_id, "order": order, "x": px, "y": py, "cluster": branch_label})
+        branch_rows.append({PATH: path_id, "order": order, X: px, Y: py, CLUSTER: branch_label})
 
 branches_df = pd.DataFrame(branch_rows)
 
@@ -134,16 +154,16 @@ for position, sample_index in enumerate(leaf_order):
 
     leaf_rows.append(
         {
-            "sample": sample_labels[sample_index],
-            "cluster": cluster,
-            "x_in": x_in,
-            "y_in": y_in,
-            "x_out": x_out,
-            "y_out": y_out,
-            "x_label": x_label,
-            "y_label": y_label,
-            "rotation": rotation,
-            "hjust": hjust,
+            SAMPLE: sample_labels[sample_index],
+            CLUSTER: cluster,
+            X_IN: x_in,
+            Y_IN: y_in,
+            X_OUT: x_out,
+            Y_OUT: y_out,
+            X_LABEL: x_label,
+            Y_LABEL: y_label,
+            ROTATION: rotation,
+            HJUST: hjust,
         }
     )
 
@@ -158,11 +178,9 @@ ring_label_rows = []
 for ring_id, fraction in enumerate(RING_FRACTIONS):
     ring_height = fraction * max_height
     ring_radius = to_radius(ring_height)
-    ring_rows += [
-        {"ring_id": ring_id, "x": px, "y": py} for px, py in (polar_to_xy(a, ring_radius) for a in ring_angles)
-    ]
+    ring_rows += [{RING: ring_id, X: px, Y: py} for px, py in (polar_to_xy(a, ring_radius) for a in ring_angles)]
     label_x, label_y = polar_to_xy(0.02, ring_radius)
-    ring_label_rows.append({"x": label_x, "y": label_y, "text": f"h={ring_height:.1f}"})
+    ring_label_rows.append({X: label_x, Y: label_y, TEXT: f"h={ring_height:.1f}"})
 
 rings_df = pd.DataFrame(ring_rows)
 ring_labels_df = pd.DataFrame(ring_label_rows)
@@ -177,26 +195,30 @@ color_values[STRUCTURAL] = INK_MUTED
 # ggsave scale=) cannot size a side/bottom legend against a fixed square
 # canvas without leaving the panel letterboxed by transparent padding, so an
 # in-panel legend is the reliable way to label 5 categories on this layout.
-legend_rows = [
-    (0.26, "Type A", "Cell type A"),
-    (0.13, "Type B", "Cell type B"),
-    (0.0, "Mixed", STRUCTURAL),
-    (-0.13, "Type C", "Cell type C"),
-    (-0.26, "Type D", "Cell type D"),
-]
+LEGEND_STEP = 0.13
+legend_entries = [(f"Type {name[-1]}", name) for name in cell_type_names.values()]
+legend_entries.insert(len(legend_entries) // 2, ("Mixed", STRUCTURAL))
 legend_df = pd.DataFrame(
     [
-        {"y": y, "x0": -0.22, "x1": -0.13, "x_text": -0.10, "text": text, "cluster": cluster}
-        for y, text, cluster in legend_rows
+        {
+            Y: ((len(legend_entries) - 1) / 2 - i) * LEGEND_STEP,
+            X0: -0.22,
+            X1: -0.13,
+            X_TEXT: -0.10,
+            TEXT: text,
+            CLUSTER: cluster,
+        }
+        for i, (text, cluster) in enumerate(legend_entries)
     ]
 )
 
-# Plot
+# Render
+VIEW = R_OUTER * 1.55  # half-width of the square view around the tree
 title = "dendrogram-radial · python · letsplot · anyplot.ai"
 plot = (
     ggplot()
     + geom_path(
-        aes(x="x", y="y", group="ring_id"),
+        aes(x=X, y=Y, group=RING),
         data=rings_df,
         color=INK_MUTED,
         size=0.4,
@@ -205,7 +227,7 @@ plot = (
         show_legend=False,
     )
     + geom_text(
-        aes(x="x", y="y", label="text"),
+        aes(x=X, y=Y, label=TEXT),
         data=ring_labels_df,
         color=INK_MUTED,
         size=3.5,
@@ -213,40 +235,34 @@ plot = (
         vjust=-0.3,
         show_legend=False,
     )
-    + geom_path(aes(x="x", y="y", group="path_id", color="cluster"), data=branches_df, size=1.1, show_legend=False)
+    + geom_path(aes(x=X, y=Y, group=PATH, color=CLUSTER), data=branches_df, size=1.1, show_legend=False)
     + geom_segment(
-        aes(x="x_in", y="y_in", xend="x_out", yend="y_out", color="cluster"),
+        aes(x=X_IN, y=Y_IN, xend=X_OUT, yend=Y_OUT, color=CLUSTER),
         data=leaves_df,
         size=3,
         show_legend=False,
-        tooltips=layer_tooltips().line("Sample|@sample").line("Cluster|@cluster"),
+        tooltips=layer_tooltips().line(f"Sample|@{SAMPLE}").line(f"Cluster|@{CLUSTER}"),
     )
     + geom_text(
-        aes(x="x_label", y="y_label", label="sample", angle="rotation", hjust="hjust"),
+        aes(x=X_LABEL, y=Y_LABEL, label=SAMPLE, angle=ROTATION, hjust=HJUST),
         data=leaves_df,
         color=INK_SOFT,
         size=8.5,
         vjust=0.5,
         show_legend=False,
     )
-    + geom_segment(aes(x="x0", y="y", xend="x1", yend="y", color="cluster"), data=legend_df, size=3, show_legend=False)
+    + geom_segment(aes(x=X0, y=Y, xend=X1, yend=Y, color=CLUSTER), data=legend_df, size=3, show_legend=False)
     + geom_text(
-        aes(x="x_text", y="y", label="text"),
-        data=legend_df,
-        color=INK_SOFT,
-        size=6,
-        hjust=0,
-        vjust=0.5,
-        show_legend=False,
+        aes(x=X_TEXT, y=Y, label=TEXT), data=legend_df, color=INK_SOFT, size=6, hjust=0, vjust=0.5, show_legend=False
     )
     + scale_color_manual(values=color_values)
-    + coord_fixed(ratio=1, xlim=[-1.55, 1.55], ylim=[-1.55, 1.55])
+    + coord_fixed(ratio=1, xlim=[-VIEW, VIEW], ylim=[-VIEW, VIEW])
     + labs(title=title)
-    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid=element_blank(),
+        panel_border=element_blank(),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -254,6 +270,8 @@ plot = (
         plot_title=element_text(color=INK, size=16),
     )
 )
+# A fixed aspect leaves the canvas edges transparent: the one-panel grid paints them
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
