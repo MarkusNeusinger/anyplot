@@ -131,7 +131,8 @@ p <- ggplot() +
   geom_text(
     data = label_df,
     aes(x = x_mid, y = y_change, label = change_label, color = change_color),
-    size = 3.2,
+    size = 4,
+    fontface = "bold",
     show.legend = FALSE
   ) +
   # Metric name label at bottom of tile
