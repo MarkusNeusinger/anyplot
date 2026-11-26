@@ -71,7 +71,7 @@ df = pd.DataFrame(
         ],
         CHANGE: [-5.2, 8.1, -15.3, 12.5, 3.7, -2.1],
         STATUS: ["good", "warning", "good", "critical", "good", "warning"],
-        LOWER_IS_BETTER: [False, False, True, True, False, False],
+        LOWER_IS_BETTER: [True, True, True, True, False, False],
     }
 )
 
@@ -112,7 +112,7 @@ for _, row in df.iterrows():
             x=0.5,
             y=0.85,
             text=row[METRIC],
-            text_font_size="20pt",
+            text_font_size="32pt",
             text_font_style="bold",
             text_color=INK,
             text_align="center",
@@ -142,7 +142,7 @@ for _, row in df.iterrows():
             x=0.5,
             y=0.43,
             text=change_text,
-            text_font_size="22pt",
+            text_font_size="32pt",
             text_font_style="bold",
             text_color=change_color,
             text_align="center",

@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:16:03Z'
-updated: '2026-11-26T12:18:40Z'
+updated: '2026-11-26T12:26:24Z'
 generated_by: claude-sonnet
-workflow_run: 45817301808
+workflow_run: 45818620715
 issue: 3791
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,56 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - alt.Gradient with GradientStop gives each sparkline a fading area fill in the
+  - 'Clear tile hierarchy via alt.Title text + subtitle: 36 pt bold value over a 16
+    pt INK_SOFT metric label'
+  - alt.Gradient with GradientStop gives each sparkline a fading area fill in its
     status color - a Vega-Lite-native mark feature
-  - Dashboard grid composed declaratively from nested hconcat/vconcat with configure_view(cornerRadius,
-    fill=ELEVATED_BG) giving rounded elevated tiles in both themes
+  - 'Dashboard grid composed declaratively from nested hconcat/vconcat with configure_view(cornerRadius,
+    fill=ELEVATED_BG): equal-width tiles aligned in a 3x2 grid in both themes'
   - 'Change indicators follow the spec exactly: arrow by sign, color by favorability,
     so the Memory and Error Rate rises are red while the Requests/sec rise is green'
-  - Status color (green good, amber warning) applied to the same part of every tile,
-    distinguishable in both themes
   - Theme tokens threaded through title, tile text, view fill and stroke - both renders
     fully readable
   weaknesses:
-  - 'SC-02 (both): C1 missed - the metric label (e.g. ''Response Time'') is drawn
-    at the same 36 pt bold as the headline value, so the label competes with the value
-    instead of the value being the most prominent element → label at about 16 pt in
-    INK_SOFT (−20 pt). Likely cause: alt.Title(text=[display_val, name]) puts both
-    lines in the title at fontSize=36; subtitleFontSize/subtitleColor are set but
-    no subtitle= is passed.'
-  - 'SC-02 (both): C2 missed - tile columns do not line up between rows: the Error
-    Rate tile sits about 75 px right of the Memory tile above it and Disk I/O about
-    65 px left of Response Time, because each hconcat cell is as wide as its oversized
-    title → equal-width columns aligned across rows (0 px offset). Likely cause: the
-    36 pt label lines widen each tile beyond TILE_WIDTH=190; smaller labels (or a
-    fixed title limit) keep every cell at the view width.'
-  - 'VQ-05 (both): the 36 pt metric labels overflow their tiles - ''Requests/sec''
-    and ''Response Time'' run about 100-140 px past each side of the 190-unit tile
-    view → labels within the tile width. Likely cause: same 36 pt title line as above.'
-  - 'SC-03 (both): every sparkline stops about 5% short of its tile''s right edge
-    (blank strip after the last point) because the quantitative x scale is niced from
-    0-19 to 0-20 → x domain fitted to the indices (0 px gap). Likely cause: alt.X(''t:Q'',
-    axis=None) without scale=alt.Scale(nice=False) or domain=[0, len(values)-1].'
+  - 'DQ-03 (both): the generated histories run against their change indicators - CPU
+    Usage (▼ 5.2%) and Response Time (▼ 15.3%) climb steadily to their highs at the
+    right end, and Error Rate (▲ 0.3%) ends near its low, so trend and change contradict
+    each other → each history ending in the direction of its change_percent. Likely
+    cause: np.linspace((-15 if change < 0 else 15), 0, ...) adds a ramp that rises
+    for negative changes; the sign is inverted.'
   - 'Suggestion: clip the gradient area to the view (mark_area(clip=True)) so the
     fill does not show square corners past the rounded tile border.'
+  - 'Suggestion: draw value, label, sparkline and change indicator inside one card
+    so each tile reads as a single unit rather than a sparkline box and a separate
+    change box.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1; tiles on slightly lighter #FFFDF6 rounded cards with a thin INK_SOFT border.
-      Chrome: title 'dashboard-metrics-tiles · python · altair · anyplot.ai' in dark ink at the top, about half the width. Each tile shows a bold 36 pt value (45%, 72%, 120ms, 2,847, 0.8%, 156MB/s) and below it the metric name at the same 36 pt bold (CPU Usage, Memory, Response Time, Requests/sec, Error Rate, Disk I/O); the long names are wider than the tile cards. Change rows (▼ 5.2%, ▲ 8.1%, ▼ 15.3%, ▲ 12.4%, ▲ 0.3%, ▼ 2.1%) in bold green or red. All text dark and readable.
-      Data: 3x2 grid; sparklines with 2 px stroke and gradient fill, green #009E73 for good tiles, amber #DDCC77 for the warning tiles Memory and Error Rate. Lines end short of the right card edge; bottom-row cards are not aligned with the top-row columns.
+      Background: warm off-white #FAF8F1; sparkline and change-row views on #FFFDF6 rounded cards with a thin INK_SOFT border.
+      Chrome: title 'dashboard-metrics-tiles · python · altair · anyplot.ai' bold dark ink centered at the top, about half the width. Each tile shows a 36 pt bold value (45%, 72%, 120ms, 2,847, 0.8%, 156MB/s) over a 16 pt grey metric label (CPU Usage, Memory, Response Time, Requests/sec, Error Rate, Disk I/O); change rows (▼ 5.2%, ▲ 8.1%, ▼ 15.3%, ▲ 12.4%, ▲ 0.3%, ▼ 2.1%) in bold green or red. All text dark and readable.
+      Data: 3x2 grid of equal-width, column-aligned tiles; sparklines with 2 px stroke and gradient fill spanning the full card width, green #009E73 for good tiles and amber #DDCC77 for the warning tiles Memory and Error Rate. Small square fill corners show past the rounded card bottoms.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; tiles on #242420 cards with a light grey border.
-      Chrome: title, values and metric names in light cream text, clearly readable; no dark-on-dark text. Change rows in the same green and red as the light render.
-      Data: sparkline colors identical to the light render (green good, amber warning); amber gradient fills read olive on the dark card but the strokes stay distinct. Same layout and misalignment as the light render.
+      Background: warm near-black #1A1A17; cards #242420 with a light grey border.
+      Chrome: title, values in cream and labels in light grey, all clearly readable; no dark-on-dark text.
+      Data: sparkline and change colors identical to the light render (green good, amber warning, red/green change); amber fills read olive on the dark card, strokes stay distinct. Same layout.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,70 +59,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set explicitly (title 16, headline 36, change 16 at
-          scale 4); every text reads clearly in both themes, no dark-on-dark or light-on-light.
+        comment: All sizes set explicitly (title 16, value 36 bold, label 16, change
+          16); every text reads clearly in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with the sparkline views in either
-          render.
+        comment: No text collides with text or sparkline views in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparkline strokes at 2 px with gradient fill read clearly on both
-          elevated tile backgrounds; amber stroke still distinct on the light tile.
+        comment: 2 px sparkline strokes with gradient fills read clearly in both themes;
+          amber stroke still distinct on the light card.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green #009E73, amber #DDCC77 and red #AE3030 differ strongly in
-          lightness; arrows carry direction independently of color.'
+        comment: Green, amber and red differ strongly in lightness; arrows carry direction
+          independently of color.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Grid uses the canvas well, but the metric labels at 36 pt are far
-          wider than their 190-unit tiles (Requests/sec, Response Time) and overflow
-          the tile bounds (defect line).
+        passed: true
+        comment: 3x2 grid fills the canvas with balanced margins; every label fits
+          within its tile width, nothing overflows.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (C6); units embedded in each headline value, metric
-          names are readable text.
+        comment: N/A for axes (C6); units sit in each headline value, metric names
+          are reader text.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Good = #009E73, warning = Imprint amber #DDCC77, critical = #AE3030;
+        comment: 'Good #009E73, warning Imprint amber #DDCC77, unfavorable #AE3030;
           backgrounds #FAF8F1 / #1A1A17; data colors identical across themes.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Raised by the alt.Gradient area fills fading to transparency and
-          the rounded, elevated tile surfaces (#FFFDF6 / #242420) - a deliberate card
-          look beyond the baseline.'
+        passed: true
+        comment: Raised by the clear value/label hierarchy (36 pt bold value over
+          a 16 pt INK_SOFT label) and the alt.Gradient fills fading to transparency
+          on rounded elevated cards.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: 'Default: tile parts are not aligned into a clean grid and the label/value
-          hierarchy is flat, so no refinement credit.'
+        passed: true
+        comment: Raised by the column-aligned grid with equal tile widths and consistent
+          internal arrangement in every tile.
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -141,7 +129,7 @@ review:
         comment: 'Default: status and favorability colors are what the Notes ask for;
           no further focal point chosen.'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,24 +137,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct KPI tile dashboard: 3x2 grid of tiles with value, label,
-          sparkline and change indicator.'
+        comment: 'Correct KPI tile dashboard: value, label, sparkline and change indicator
+          per tile.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'C1 missed: the metric label is set at the same 36 pt bold as the
-          value, so the value is not the most prominent element. C2 missed: tile columns
-          do not line up between rows (defect lines). C3, C4, C5 met.'
+        passed: true
+        comment: 'C1-C5 met: value most prominent, label, sparkline below value, arrow
+          by sign colored by favorability, status color on every sparkline; 6 tiles
+          in a 3x2 grid.'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Sparklines join the history in order, but the x scale is niced past
-          the last index so every line stops about 5% short of the tile's right edge
-          (defect line).
+        passed: true
+        comment: Sparklines join the history in order and span the full tile width
+          (x domain fitted to the indices).
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -175,7 +162,7 @@ review:
         comment: Title matches 'dashboard-metrics-tiles · python · altair · anyplot.ai';
           no legend needed (C6).
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -183,24 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rising and falling metrics, favorable and unfavorable changes
-          (including a lower-is-better rise in red and a higher-is-better rise in
-          green), status colors, mixed units. Status is optional, so the absent critical
-          level deducts nothing.
+        comment: Rising and falling metrics, favorable and unfavorable changes (lower-is-better
+          rises in red, a higher-is-better rise in green), two status levels, mixed
+          units. Status is optional; no critical level needed.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral server-operations dashboard: CPU, Memory, Response Time,
-          Requests/sec, Error Rate, Disk I/O.'
+        comment: Neutral server-operations dashboard with real metric names.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Plausible values for a mid-load web service (45% CPU, 120 ms, 2,847
-          req/s, 0.8% errors). No Check values: in the Notes.'
+        passed: false
+        comment: Headline values plausible (45% CPU, 120 ms, 2,847 req/s, 0.8% errors);
+          no Check values in the Notes. But the histories contradict the change indicators
+          (defect line).
     code_quality:
       score: 10
       max: 10
@@ -222,20 +208,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image all used.
+        comment: os, altair, numpy, pandas and PIL.Image all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; nothing an available call replaces.
+        comment: Appropriate complexity; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (fit block applied) and plot-{THEME}.html
-          with the Altair 6 API.
+        comment: Saves plot-{THEME}.png with the fit block and plot-{THEME}.html,
+          Altair 6 API.
     library_mastery:
       score: 6
       max: 10
@@ -244,10 +230,9 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Raised for composing the dashboard with nested hconcat/vconcat and
-          using alt.Title text lists and configure_view(cornerRadius, fill) for the
-          tile cards.
+        passed: true
+        comment: Raised for composing the dashboard from nested hconcat/vconcat and
+          using alt.Title with subtitle for the value/label pair.
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -258,20 +243,20 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
-  rendered_at: '2026-11-26T12:15:02Z'
+  rendered_at: '2026-11-26T12:22:36Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - sparklines
-  - small-multiples
-  - gradient-fill
+  - subplots
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
-  - dashboard-style
-  - alpha-blending
+  - gradient-fill
+  - minimal-chrome
