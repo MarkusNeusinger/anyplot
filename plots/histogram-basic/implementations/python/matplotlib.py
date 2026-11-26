@@ -1,99 +1,56 @@
 """ anyplot.ai
 histogram-basic: Basic Histogram
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-28
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import to_rgba
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
-MEAN_COLOR = "#AE3030"  # matte red — semantic anchor for reference/alert
 
-# Data - exam scores with slight left skew and high-performer cluster
+# Imprint palette: position 1 is the single series
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+SCORE = "Exam Score (points)"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
 base = np.random.normal(loc=72, scale=12, size=450)
 high_cluster = np.random.normal(loc=88, scale=4, size=50)
-scores = np.clip(np.concatenate([base, high_cluster]), 0, 100)
+df = pd.DataFrame({SCORE: np.clip(np.concatenate([base, high_cluster]), 0, 100)})
 
-# Title
+# Plot: reads only df and the constants above
 title = "histogram-basic · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
-# Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-n, bins, patches = ax.hist(scores, bins=25, color=BRAND, linewidth=0.8)
+ax.hist(df[SCORE].dropna(), bins=25, color=IMPRINT_PALETTE[0], edgecolor=PAGE_BG, linewidth=0.8)
 
-# Intensity-graded bar coloring via patch manipulation (matplotlib-distinctive)
-max_count = max(n)
-base_rgba = to_rgba(BRAND)
-for count, patch in zip(n, patches, strict=True):
-    intensity = 0.65 + 0.35 * (count / max_count)
-    patch.set_facecolor((*base_rgba[:3], intensity * 0.85))
-    patch.set_edgecolor(to_rgba(INK_SOFT, alpha=0.35))
-
-# Key statistics
-mean_score = np.mean(scores)
-y_max = max(n)
-pct_above_80 = 100 * np.sum(scores >= 80) / len(scores)
-
-# Combined mean/median line — values nearly equal, indicating symmetric distribution
-ax.axvline(mean_score, color=MEAN_COLOR, linewidth=2.5, linestyle="--", zorder=5)
-ax.annotate(
-    f"Mean ≈ Median: {mean_score:.0f}",
-    xy=(mean_score, y_max * 0.90),
-    xytext=(mean_score - 20, y_max * 0.97),
-    fontsize=8,
-    fontweight="bold",
-    color=MEAN_COLOR,
-    arrowprops={"arrowstyle": "->", "color": MEAN_COLOR, "lw": 1.8},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": MEAN_COLOR, "alpha": 0.9},
-    zorder=6,
-)
-
-# High-performer cluster annotation with percentage insight
-ax.annotate(
-    f"High-performer cluster\n{pct_above_80:.0f}% scored above 80",
-    xy=(88, y_max * 0.35),
-    xytext=(96, y_max * 0.58),
-    fontsize=8,
-    fontstyle="italic",
-    color=INK_SOFT,
-    ha="center",
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5, "connectionstyle": "arc3,rad=-0.2"},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
-    zorder=6,
-)
-
-# Labels and styling
-ax.set_xlabel("Exam Score (points)", fontsize=10, color=INK)
+# Style
+ax.set_xlabel(SCORE, fontsize=10, color=INK)
 ax.set_ylabel("Frequency (count)", fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Spine removal
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-# Subtle y-axis grid
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
-
-# Y-axis starts at zero
 ax.set_ylim(bottom=0)
 
 fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.12)
