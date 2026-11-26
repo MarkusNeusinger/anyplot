@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-basic: Basic Polar Chart
-Library: letsplot 4.11.0 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-07-24
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import math
@@ -20,12 +20,11 @@ from lets_plot import (
     geom_path,
     geom_point,
     geom_polygon,
-    geom_text,
+    gggrid,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
-    position_nudge,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -40,54 +39,45 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.25)" if THEME == "light" else "rgba(240,239,232,0.25)"
 BRAND = "#009E73"  # Imprint palette position 1
 
-# Data - hourly temperature readings over a 24-hour diurnal cycle
+# Constants
+CYCLE = 24  # one full turn of the circle is 24 hours
+LABEL_STEP = 3  # angular labels every 3 hours
+
+# Columns: set these to your table's column names
+HOUR = "Hour"  # role: theta
+TEMPERATURE = "Temperature (°C)"  # role: radius
+
+# Data: replace this block with your own table, for example df = pd.read_csv("readings.csv")
 np.random.seed(42)
-hours = np.arange(0, 24)
+hours = np.arange(0, CYCLE)
 base_temp = 15 + 10 * np.sin((hours - 6) * math.pi / 12)
-temperatures = base_temp + np.random.randn(24) * 2
+df = pd.DataFrame({HOUR: hours, TEMPERATURE: base_temp + np.random.randn(len(hours)) * 2})
 
-df = pd.DataFrame({"hour": hours, "temperature": temperatures})
-# Duplicate the first point at hour=24 to close the loop in polar coordinates
-df_path = pd.concat([df, df.iloc[[0]].assign(hour=24)], ignore_index=True)
+# Plot: reads only df and the constants above
+# Duplicate the first row at the end of the cycle to close the loop in polar coordinates
+closing_row = df.iloc[[0]].copy()
+closing_row[HOUR] = CYCLE
+df_path = pd.concat([df, closing_row], ignore_index=True)
 
-# Focal points — call out the diurnal peak and overnight low
-peak = df.loc[df["temperature"].idxmax()]
-trough = df.loc[df["temperature"].idxmin()]
-highlights = pd.DataFrame(
-    {
-        "hour": [peak["hour"], trough["hour"]],
-        "temperature": [peak["temperature"], trough["temperature"]],
-        "label": [f"{peak['temperature']:.0f}°C peak", f"{trough['temperature']:.0f}°C low"],
-    }
-)
-peak_label = highlights.iloc[[0]]
-trough_label = highlights.iloc[[1]]
-
-# Hour labels at standard 3-hour intervals
-hour_breaks = [0, 3, 6, 9, 12, 15, 18, 21]
-hour_labels = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"]
+hour_breaks = list(range(0, CYCLE, LABEL_STEP))
+hour_labels = [f"{h:02d}:00" for h in hour_breaks]
 
 # Donut-hole radial scale: the lower limit sits well below the coldest reading so
-# no hour collapses onto the origin where the 8 angular gridlines converge.
-radius_breaks = [5, 10, 15, 20, 25]
-radius_limits = [-8, 29]
+# no hour collapses onto the origin where the angular gridlines converge.
+t_min, t_max = df[TEMPERATURE].min(), df[TEMPERATURE].max()
+span = t_max - t_min
+radius_limits = [t_min - 0.4 * span, t_max + 0.1 * span]
 
-# Distinctive lets-plot touch: formatted hover tooltips on each hourly reading
-point_tooltips = (
-    layer_tooltips()
-    .format("@hour", "{}:00")
-    .format("@temperature", ".1f")
-    .line("Hour|@hour")
-    .line("Temperature|@temperature°C")
-)
+# Hover tooltips on each hourly reading
+point_tooltips = layer_tooltips().line(f"{HOUR}|@{{{HOUR}}}").line(f"{TEMPERATURE}|@{{{TEMPERATURE}}}")
 
-# Theme
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major=element_line(color=GRID, size=0.4),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=14),
     axis_text=element_text(color=INK_SOFT, size=12),
@@ -96,24 +86,20 @@ anyplot_theme = theme(
     plot_title=element_text(color=INK, size=16),
 )
 
-# Plot using coord_polar for an idiomatic lets-plot polar chart
 plot = (
-    ggplot(df_path, aes(x="hour", y="temperature"))
+    ggplot(df_path, aes(x=HOUR, y=TEMPERATURE))
     + geom_polygon(fill=BRAND, color=BRAND, size=0, alpha=0.15)
     + geom_path(color=BRAND, size=1.2)
     + geom_point(data=df, color=BRAND, size=3, tooltips=point_tooltips)
-    + geom_point(data=highlights, color=BRAND, size=5)
-    + geom_text(data=peak_label, mapping=aes(label="label"), color=INK, size=3.5, position=position_nudge(x=-1.6, y=-1))
-    + geom_text(
-        data=trough_label, mapping=aes(label="label"), color=INK, size=3.5, position=position_nudge(x=-1.8, y=9)
-    )
-    + scale_x_continuous(breaks=hour_breaks, labels=hour_labels, limits=[0, 24], expand=[0, 0])
-    + scale_y_continuous(breaks=radius_breaks, limits=radius_limits, expand=[0, 0])
+    + scale_x_continuous(breaks=hour_breaks, labels=hour_labels, limits=[0, CYCLE], expand=[0, 0])
+    + scale_y_continuous(limits=radius_limits, expand=[0, 0])
     + coord_polar(theta="x", start=0, direction=1)
-    + labs(title="polar-basic · letsplot · anyplot.ai", x="", y="Temperature (°C)")
-    + ggsize(600, 600)
+    + labs(title="polar-basic · python · letsplot · anyplot.ai", x="", y=TEMPERATURE)
     + anyplot_theme
 )
+
+# The one-panel grid paints the whole square canvas in the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
