@@ -17,7 +17,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 GRID        <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-BOX_FILL    <- if (THEME == "light") "#FFFDF6" else "#242420"
+BOX_FILL    <- if (THEME == "light") "#FFFDF6" else "#2E2E29"
 
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
@@ -59,7 +59,7 @@ cloud_data <- rt %>%
 rain_data <- rt %>%
     mutate(
         cat_pos = as.numeric(category),
-        y_pos   = cat_pos - 0.18 - runif(n(), 0, 0.20)
+        y_pos   = cat_pos - 0.18 - runif(n(), 0, 0.12)
     )
 
 box_data <- rt %>%
@@ -113,12 +113,12 @@ p <- ggplot() +
         panel.grid.minor   = element_blank(),
         axis.title.x       = element_text(color = INK, size = 10,
                                           margin = margin(t = 8)),
-        axis.text.x        = element_text(color = INK_SOFT, size = 9),
+        axis.text.x        = element_text(color = INK_SOFT, size = 8),
         axis.text.y        = element_text(color = INK, size = 11,
                                           margin = margin(r = 6)),
         axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.3),
         axis.ticks         = element_blank(),
-        plot.title         = element_text(color = INK, size = 11,
+        plot.title         = element_text(color = INK, size = 12,
                                           margin = margin(b = 14),
                                           face = "bold"),
         plot.margin        = margin(20, 28, 16, 16)
