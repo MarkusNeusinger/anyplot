@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-20
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-26
 """
 
 import os
