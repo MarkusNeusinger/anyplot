@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -41,17 +41,20 @@ STATUS = "Status"  # role: status
 # Data: replace this block with your own table, for example df = pd.read_csv("metrics.csv")
 np.random.seed(42)
 samples = [
-    # name, current value, unit, history start, step scale, change %, status
-    ("CPU Usage", 45, "%", 50, 2, -5.2, "good"),
-    ("Memory", 72, "%", 70, 1.5, 8.1, "warning"),
-    ("Response Time", 120, "ms", 130, 10, -15.3, "good"),
-    ("Requests/s", 2450, "", 2400, 50, 12.7, "good"),
-    ("Error Rate", 2.3, "%", 2, 0.3, 45.0, "critical"),
-    ("Disk I/O", 156, "MB/s", 150, 8, -3.8, "good"),
+    # name, current value, unit, step scale, change %, status
+    ("CPU Usage", 45, "%", 1.0, -5.2, "good"),
+    ("Memory", 72, "%", 0.8, 8.1, "warning"),
+    ("Response Time", 120, "ms", 5, -15.3, "good"),
+    ("Requests/s", 2450, "", 25, 12.7, "good"),
+    ("Error Rate", 2.3, "%", 0.08, 45.0, "critical"),
+    ("Disk I/O", 156, "MB/s", 4, -3.8, "good"),
 ]
 rows = []
-for name, value, unit, start, scale, change, status in samples:
-    history = np.cumsum(np.random.randn(30) * scale) + start
+for name, value, unit, scale, change, status in samples:
+    # The history ends at the current value; the last period's move matches the change percent
+    previous = value / (1 + change / 100)
+    walk = np.cumsum(np.random.randn(29) * scale)
+    history = np.append(previous + walk - walk[-1], value)
     for step, reading in enumerate(history):
         rows.append((name, value, unit, step, reading, change, status))
 df = pd.DataFrame(rows, columns=[METRIC, VALUE, UNIT, STEP, READING, CHANGE, STATUS])
