@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:42Z'
-updated: '2026-11-26T11:55:19Z'
+updated: '2026-11-26T12:02:14Z'
 generated_by: claude-sonnet
-workflow_run: 45813995972
+workflow_run: 45815047171
 issue: 3808
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,37 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Correct EAN-13 construction from L/G/R code tables and first-digit parity, with
-    start 101, center 01010 and end 101 guards and 9-module quiet zones
-  - 'Solid, sharp-edged bars: adjacent modules fuse into whole 1-4 module bars because
-    the rects carry the bar color as outline with size=0'
-  - Valid real German EAN (4006381333931) with the human-readable digits in monospace,
-    the leading 4 outside the left guard
+  - Correct EAN-13 construction from L/G/R code tables and first-digit parity (4 →
+    LGLLGG), with start 101, center 01010 and end 101 guards and 9-module quiet zones;
+    95 modules, runs of 1-4 modules
+  - Guard bars now extend downward below the digit bars toward the digit row, the
+    conventional EAN layout, so the three guards stand out from the digit bars
+  - 'Solid, sharp-edged bars: adjacent modules fuse into whole bars because the rects
+    carry the bar color as outline with size=0'
+  - Valid real German EAN (4006381333931) with human-readable monospace digits, the
+    leading 4 outside the left guard
   - layer_tooltips() exposes each module's section and index in the interactive HTML
     output
   - Theme tokens threaded through bars, digits and title; readable in both themes
   weaknesses:
-  - 'SC-02 (both): guard bars extend upward 10 units above the digit bars (ymax raised)
-    instead of reaching down between the groups of digits as C4 describes → keep the
-    guard tops level with the digit bars and extend the guard bars'' ymin downward
-    by about 10 units into the digit row. Likely cause: guard_y_max = bar_y_max +
-    10 applied to YMAX instead of lowering YMIN for guard positions.'
   - 'Suggestion: the 12-digit check-digit computation is unused for the 13-digit input;
     it could validate the given check digit instead.'
+  - 'Suggestion: letting the guard bars descend until their ends sit level with the
+    middle of the digit row would tie the digit groups to the guards even more tightly.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, thin grey frame at the canvas edge.
       Chrome: title "barcode-ean13 · python · letsplot · anyplot.ai" at the top in INK_SOFT grey, about 85 % of the width; no axes, ticks or grid (theme_void). All text readable.
-      Data: solid near-black (#1A1A17) bars with crisp edges; wide bars are single solid blocks; start, center and end guard pairs rise above the digit bars. Digits 4 · 006381 · 333931 in monospace ink below the bars, the 4 outside the left guard. Quiet zones blank on both sides. Monochrome, no categorical series.
+      Data: solid near-black (#1A1A17) bars with crisp edges, tops level; the start, center and end guard pairs extend below the digit bars toward the digit row. Digits 4 · 006381 · 333931 in monospace ink below the bars, the 4 outside the left guard, the two groups centered under the two halves. Quiet zones blank on both sides. Monochrome, no categorical series.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
       Chrome: title in light grey #B8B7B0, readable; no dark-on-dark text.
-      Data: same geometry with bars in #F0EFE8 on the dark page, solid and sharp; digits in #F0EFE8, readable. Only chrome and the monochrome ink flip.
+      Data: identical geometry with bars in #F0EFE8 on the dark page, solid and sharp; digits in #F0EFE8, readable. Only chrome and the monochrome ink flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -69,7 +69,7 @@ review:
         max: 6
         passed: true
         comment: Bars are solid ink on the page in both themes; guard bars visibly
-          taller.
+          longer, reaching below the digit bars.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -81,15 +81,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Symbol, digits and title balanced on the canvas with modest margins;
-          nothing cut off.
+        comment: Symbol, digits and title balanced on the 3200x1800 canvas; nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (barcode has no data axes, permitted by C6); mandated
-          title present.
+        comment: N/A for axes (no data axes, permitted by the spec); mandated title
+          present.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -107,8 +107,8 @@ review:
         max: 8
         passed: false
         comment: 'Above default: monospace OCR-style digits in INK with the mandated
-          title subordinated in INK_SOFT, a clear two-level type hierarchy chosen
-          for this chart.'
+          title subordinated in INK_SOFT, a two-level type hierarchy chosen for this
+          chart.'
       - id: DE-02
         name: Visual Refinement
         score: 2
@@ -123,7 +123,7 @@ review:
         comment: The symbol is displayed; no focal hierarchy beyond what the spec
           requires.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,13 +134,13 @@ review:
         comment: 'Correct chart type: EAN-13 linear barcode built from rectangles.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Guards, quiet zones, whole-module widths, digits with first digit
-          outside the left guard all present (C1, C2, C3, C5). C4 partly missed: guard
-          bars are longer but extend upward above the digit bars instead of down between
-          the digit groups (defect line).'
+        passed: true
+        comment: 'Guards, quiet zones, whole-module widths, digits with the first
+          digit outside the left guard (C1, C2, C3, C5) present; C4 met: guard bars
+          drawn longer, extending downward below the digit bars toward the gaps between
+          the digit groups.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -178,7 +178,8 @@ review:
         max: 4
         passed: true
         comment: 'Checked: check digit of 400638133393 computes to 1, matching the
-          13th digit; 95 modules between quiet zones; first digit 4 gives parity LGLLGG.'
+          13th digit; 95 modules between quiet zones; first digit 4 gives parity LGLLGG;
+          runs are 1-4 modules.'
     code_quality:
       score: 10
       max: 10
@@ -236,13 +237,15 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T11:52:07Z'
+  rendered_at: '2026-11-26T11:58:53Z'
 impl_tags:
   dependencies: []
   techniques:
+  - patches
+  - layer-composition
   - annotations
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
