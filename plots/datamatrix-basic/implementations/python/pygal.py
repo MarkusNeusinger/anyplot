@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-20
@@ -197,13 +197,6 @@ class DataMatrixChart(Graph):
         info_node.set("fill", self.ink_soft_color)
         info_node.set("style", "font-size:36px;font-family:sans-serif")
         info_node.text = f"Matrix: {matrix_rows} × {matrix_cols} | ECC 200 | 30% error recovery"
-
-        # Storytelling annotation: explains real-world significance
-        story_node = self.svg.node(dm_group, "text", x=label_x, y=label_y + 110)
-        story_node.set("text-anchor", "middle")
-        story_node.set("fill", self.ink_soft_color)
-        story_node.set("style", "font-size:30px;font-style:italic;font-family:sans-serif")
-        story_node.text = "NDC codes identify drugs in the US pharmaceutical supply chain (FDA 21 CFR § 207)"
 
     def _compute(self):
         if self._dm_matrix is None:
