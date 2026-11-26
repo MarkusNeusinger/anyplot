@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 92/100 | Created: 2026-05-28
@@ -161,7 +161,7 @@ base_map = alt.Chart(alt.topo_feature(world_url, "countries")).mark_geoshape(
 # Arc connection lines — wider strokeWidth range makes volume differences impactful
 arcs_layer = (
     alt.Chart(arcs_df)
-    .mark_line(opacity=0.5)
+    .mark_line(opacity=0.75)
     .encode(
         longitude="longitude:Q",
         latitude="latitude:Q",
@@ -177,6 +177,7 @@ arcs_layer = (
                 symbolType="stroke",
                 symbolSize=400,
                 symbolStrokeWidth=2,
+                padding=8,
             ),
         ),
         strokeWidth=alt.StrokeWidth("volume:Q", scale=alt.Scale(range=[0.3, 2.5]), legend=None),
@@ -204,7 +205,7 @@ markers_layer = (
 hub_df = airports_df[airports_df["connections"] >= 6]
 labels_layer = (
     alt.Chart(hub_df)
-    .mark_text(dy=-15, fontSize=9, color=INK, fontWeight="bold", align="center")
+    .mark_text(dy=-15, fontSize=12, color=INK, fontWeight="bold", align="center")
     .encode(longitude="longitude:Q", latitude="latitude:Q", text="code:N")
 )
 
@@ -213,12 +214,14 @@ chart = (
     alt.layer(base_map, arcs_layer, markers_layer, labels_layer)
     .project(type="naturalEarth1")
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
         title=alt.TitleParams(title_str, fontSize=title_fs, color=INK, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
@@ -233,18 +236,14 @@ chart = (
 # Save PNG
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Pad to exact 3200×1800 canvas (vl-convert may land slightly under target)
+# Fit-to-canvas safety net (no-op when autosize fit lands on target; never crops)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG_TUPLE)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 # Save HTML
