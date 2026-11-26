@@ -45,6 +45,28 @@ df <- tibble::tibble(
 )
 
 # Plot: reads only df and the constants above
+# View fitted to the route extent
+x_rng <- range(df[[LON]]); y_rng <- range(df[[LAT]])
+x_lim <- x_rng + c(-0.05, 0.05) * diff(x_rng)
+y_lim <- y_rng + c(-0.14, 0.06) * diff(y_rng)
+
+# Muted basemap drawn from the route: a coastline running south of the track (sea below,
+# land above) and a quiet street grid on the land
+smooth_path <- function(v, k = 41) as.numeric(stats::filter(v, rep(1 / k, k), sides = 2))
+core <- seq(21, n_points - 20)
+shore_x <- smooth_path(df[[LON]])[core] - 0.09 * diff(x_rng)
+shore_y <- smooth_path(df[[LAT]])[core] - 0.13 * diff(y_rng) -
+  0.02 * diff(y_rng) * sin(seq(0, 5 * pi, length.out = length(core)))
+shore_x <- c(x_lim[1] - 0.2 * diff(x_lim), shore_x, x_lim[2] + 0.2 * diff(x_lim))
+shore_y <- c(shore_y[1] - 0.12 * diff(y_rng), shore_y, shore_y[length(shore_y)] - 0.12 * diff(y_rng))
+sea <- data.frame(x = c(shore_x, rev(range(shore_x))),
+                  y = c(shore_y, rep(y_lim[1] - 0.2 * diff(y_lim), 2)))
+SEA_FILL <- if (THEME == "light") alpha("#4467A3", 0.20) else alpha("#4467A3", 0.28)
+STREET   <- alpha(INK_SOFT, 0.28)
+streets_across <- do.call(rbind, lapply(seq(0.08, 0.92, length.out = 9), function(f) {
+  data.frame(x = x_lim[1] + f * diff(x_lim) + c(-0.02, 0.03) * diff(x_lim),
+             y = c(y_lim[2], y_lim[1]), id = f)
+}))
 ends <- df[c(1, n_points), ]
 ends$role <- factor(c("Start", "End"), levels = c("Start", "End"))
 
@@ -56,6 +78,12 @@ arrows_df <- data.frame(
 )
 
 p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
+  geom_line(data = streets_across, aes(x = x, y = y, group = id), inherit.aes = FALSE,
+            color = STREET, linewidth = 0.3) +
+  geom_polygon(data = sea, aes(x = x, y = y), inherit.aes = FALSE,
+               fill = SEA_FILL, color = NA) +
+  geom_path(data = data.frame(x = shore_x, y = shore_y), aes(x = x, y = y),
+            inherit.aes = FALSE, color = alpha("#4467A3", 0.55), linewidth = 0.5) +
   geom_path(aes(color = .data[[ELEVATION]]), linewidth = 2.2,
             lineend = "round", linejoin = "round") +
   geom_segment(
@@ -73,9 +101,9 @@ p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
   ) +
   scale_fill_manual(values = c(Start = IMPRINT_PALETTE[1], End = IMPRINT_PALETTE[5])) +
   scale_shape_manual(values = c(Start = 21, End = 22)) +
-  scale_x_continuous(expand = expansion(mult = 0.04), n.breaks = 6) +
-  scale_y_continuous(expand = expansion(mult = 0.06)) +
-  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180)) +
+  scale_x_continuous(n.breaks = 6) +
+  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180),
+              xlim = x_lim, ylim = y_lim, expand = FALSE) +
   guides(fill = guide_legend(order = 1, title = NULL),
          shape = guide_legend(order = 1, title = NULL)) +
   labs(
