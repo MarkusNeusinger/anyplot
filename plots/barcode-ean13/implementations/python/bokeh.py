@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -186,10 +186,10 @@ while i < len(barcode_pattern):
         bar_sections.append(sec)
         if is_guard:
             bar_tops.append(guard_height + 150)
-            bar_bottoms.append(150)
+            bar_bottoms.append(text_y_pos)
         else:
             bar_tops.append(bar_height + 150)
-            bar_bottoms.append(280)
+            bar_bottoms.append(text_y_pos + 100)
     else:
         x_pos += module_width
         module_idx += 1
