@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-training-load-pmc: Training Load Performance Management Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Created: 2026-06-13
@@ -20,7 +20,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "#D5D4C8" if THEME == "light" else "#2E2E2A"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_MINOR = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,0.05)"
 
 # Imprint categorical palette — first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -29,7 +30,18 @@ COLOR_ATL = IMPRINT_PALETTE[1]  # lavender — Fatigue
 COLOR_TSB_POS = IMPRINT_PALETTE[2]  # blue — positive form / fresh
 COLOR_TSB_NEG = IMPRINT_PALETTE[4]  # matte red — negative form / fatigued (semantic)
 
-# Data — 180-day periodized training block (Jan–Jun 2024)
+# Constants
+K_CTL = 2 / (42 + 1)  # chronic load: 42-day exponential average
+K_ATL = 2 / (7 + 1)  # acute load: 7-day exponential average
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+TSS = "Daily TSS"  # role: tss
+CTL = "Fitness (CTL)"  # role: ctl
+ATL = "Fatigue (ATL)"  # role: atl
+TSB = "Form (TSB)"  # role: tsb
+
+# Data: replace this block with your own table, for example df = pd.read_csv("training.csv")
 np.random.seed(42)
 n_days = 180
 dates = pd.date_range("2024-01-01", periods=n_days)
@@ -54,43 +66,33 @@ for i in range(n_days):
     tss_list.append(round(tss_i, 1))
 
 tss = np.array(tss_list)
-
-# CTL: 42-day EWMA (chronic fitness), ATL: 7-day EWMA (acute fatigue)
-k_ctl = 2 / (42 + 1)
-k_atl = 2 / (7 + 1)
 ctl = np.zeros(n_days)
 atl = np.zeros(n_days)
 ctl[0] = atl[0] = tss[0]
 for i in range(1, n_days):
-    ctl[i] = tss[i] * k_ctl + ctl[i - 1] * (1 - k_ctl)
-    atl[i] = tss[i] * k_atl + atl[i - 1] * (1 - k_atl)
+    ctl[i] = tss[i] * K_CTL + ctl[i - 1] * (1 - K_CTL)
+    atl[i] = tss[i] * K_ATL + atl[i - 1] * (1 - K_ATL)
 
 # TSB (form) = previous-day CTL minus previous-day ATL
 tsb = np.zeros(n_days)
-for i in range(1, n_days):
-    tsb[i] = ctl[i - 1] - atl[i - 1]
+tsb[1:] = ctl[:-1] - atl[:-1]
 
-df = pd.DataFrame(
-    {
-        "date": dates,
-        "tss": tss,
-        "ctl": ctl,
-        "atl": atl,
-        "tsb": tsb,
-        "tsb_pos": np.maximum(tsb, 0.0),
-        "tsb_neg": np.minimum(tsb, 0.0),
-        "zero": np.zeros(n_days),
-        "tsb_pos_label": "Positive Form (TSB)",
-        "tsb_neg_label": "Negative Form (TSB)",
-        "tss_label": "Daily TSS",
-    }
+df = pd.DataFrame({DATE: dates, TSS: tss, CTL: ctl, ATL: atl, TSB: tsb})
+
+# Plot: reads only df and the constants above
+label_pos = f"Positive {TSB}"
+label_neg = f"Negative {TSB}"
+df_form = df.assign(
+    zero=0.0,
+    tsb_pos=df[TSB].clip(lower=0.0),
+    tsb_neg=df[TSB].clip(upper=0.0),
+    pos_label=label_pos,
+    neg_label=label_neg,
+    tss_label=TSS,
 )
 
-# Long format for CTL/ATL — drives the color legend via aes(color='label')
-df_lines = pd.melt(
-    df[["date", "ctl", "atl"]], id_vars=["date"], value_vars=["ctl", "atl"], var_name="metric", value_name="value"
-)
-df_lines["label"] = df_lines["metric"].map({"ctl": "Fitness (CTL)", "atl": "Fatigue (ATL)"})
+# Long format for CTL/ATL drives the color legend
+df_lines = df.melt(id_vars=[DATE], value_vars=[CTL, ATL], var_name="metric", value_name="value")
 
 # Title — 55 chars < 67 baseline, no font scaling needed
 title_str = "line-training-load-pmc · python · letsplot · anyplot.ai"
@@ -99,8 +101,8 @@ title_str = "line-training-load-pmc · python · letsplot · anyplot.ai"
 base_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=RULE, size=0.3),
-    panel_grid_minor=element_line(color=RULE, size=0.2),
+    panel_grid_major=element_line(color=GRID, size=0.3),
+    panel_grid_minor=element_line(color=GRID_MINOR, size=0.2),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
@@ -114,36 +116,49 @@ base_theme = theme(
 # Main panel: TSB ribbon (two-toned) + CTL/ATL lines + zero reference
 plot_main = (
     ggplot()
-    + geom_ribbon(data=df, mapping=aes(x="date", ymin="zero", ymax="tsb_pos", fill="tsb_pos_label"), alpha=0.32)
-    + geom_ribbon(data=df, mapping=aes(x="date", ymin="tsb_neg", ymax="zero", fill="tsb_neg_label"), alpha=0.32)
+    + geom_ribbon(data=df_form, mapping=aes(x=DATE, ymin="zero", ymax="tsb_pos", fill="pos_label"), alpha=0.45, size=0)
+    + geom_ribbon(data=df_form, mapping=aes(x=DATE, ymin="tsb_neg", ymax="zero", fill="neg_label"), alpha=0.45, size=0)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5, linetype="dashed")
-    + geom_line(data=df_lines, mapping=aes(x="date", y="value", color="label"), size=1.5)
-    + scale_color_manual(values={"Fitness (CTL)": COLOR_CTL, "Fatigue (ATL)": COLOR_ATL})
-    + scale_fill_manual(values={"Positive Form (TSB)": COLOR_TSB_POS, "Negative Form (TSB)": COLOR_TSB_NEG})
+    + geom_line(data=df_lines, mapping=aes(x=DATE, y="value", color="metric"), size=1.5)
+    + scale_color_manual(values={CTL: COLOR_CTL, ATL: COLOR_ATL})
+    + scale_fill_manual(values={label_pos: COLOR_TSB_POS, label_neg: COLOR_TSB_NEG})
     + scale_x_datetime(format="%b")
-    + labs(title=title_str, x="", y="Training Load (CTL / ATL / TSB)")
+    + scale_y_continuous(limits=[df[TSB].min() * 1.15, df[[CTL, ATL]].max().max() * 1.3])
+    + labs(title=title_str, x="", y=f"Training load / form ({CTL[-4:-1]}, {ATL[-4:-1]}, {TSB[-4:-1]})")
     + base_theme
     + theme(
         plot_title=element_text(color=INK, size=16),
         axis_text_x=element_blank(),
         axis_ticks_x=element_blank(),
-        legend_position=[0.82, 0.85],
+        legend_position=[0.01, 0.99],
+        legend_justification=[0, 1],
+        legend_direction="horizontal",
     )
 )
 
 # TSS panel: daily training stress scores as bars
 plot_tss = (
-    ggplot(df, aes(x="date", y="tss"))
-    + geom_bar(stat="identity", mapping=aes(fill="tss_label"), alpha=0.65)
-    + scale_fill_manual(values={"Daily TSS": INK_MUTED})
+    ggplot(df_form, aes(x=DATE, y=TSS))
+    + geom_bar(stat="identity", mapping=aes(fill="tss_label"), color=INK_MUTED, alpha=0.65, size=0)
+    + scale_fill_manual(values={TSS: INK_MUTED})
     + scale_x_datetime(format="%b")
-    + labs(x="Month (2024)", y="TSS")
+    + scale_y_continuous(limits=[0, df[TSS].max() * 1.4])
+    + labs(x=f"Month ({df[DATE].dt.year.iloc[0]})", y=TSS)
     + base_theme
-    + theme(plot_title=element_blank(), legend_position=[0.88, 0.82])
+    + theme(
+        plot_title=element_blank(),
+        legend_position=[0.01, 0.99],
+        legend_justification=[0, 1],
+        legend_direction="horizontal",
+    )
 )
 
-# Combine panels — main 75%, TSS 25%
-combined = gggrid([plot_main, plot_tss], ncol=1, heights=[3, 1]) + ggsize(800, 450)
+# Combine panels; the page color on the composite avoids white edges
+combined = (
+    gggrid([plot_main, plot_tss], ncol=1, heights=[3, 1.2])
+    + ggsize(800, 450)
+    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+)
 
 # Save PNG and HTML for both themes
 ggsave(combined, f"plot-{THEME}.png", scale=4, path=".")
