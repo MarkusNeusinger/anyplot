@@ -2,139 +2,132 @@ library: letsplot
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:01:31Z'
-updated: '2026-05-14T17:21:11Z'
-generated_by: claude-haiku
-workflow_run: 25873844269
+updated: '2026-11-26T11:09:42Z'
+generated_by: claude-sonnet
+workflow_run: 45806314727
 issue: 3002
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.html
-quality_score: 63
+quality_score: 83
 review:
   strengths:
-  - Layout AAA/BBC/DEF via ggbunch regions with a full-width primary panel and varied
-    panel sizes
-  - Six different plot types, each with a title and labelled axes suited to its panel
-  - Generous font sizes keep panel text readable at full size
+  - Layout derived from the string pattern 'AAA;BBC;DEF' (with '.' gaps supported)
+    into ggbunch regions, so the mosaic is defined the way the spec asks
+  - Whole canvas, gutters and main title follow the theme in both renders
+  - Heatmap uses the imprint_seq field stops per theme, with in-cell values whose
+    ink flips by tile luminance
+  - Six plot types, each titled and with unit-bearing axis labels suited to its panel
+  - Concrete retail scenario (product and region names) replaces placeholders
   weaknesses:
-  - 'VQ-01, VQ-07 (dark): the main title renders near-white #F0EFE8 on a pure-white
-    outer canvas and cannot be read → title on the #1A1A17 page. Likely cause: the
-    ggbunch-level theme sets no plot_background, so the bunch canvas stays white.'
-  - 'VQ-07 (both): outer canvas and gutters are pure white #FFFFFF around the #FAF8F1
-    / #1A1A17 panel boxes → whole canvas in the theme background. Likely cause: no
-    plot_background on the ggbunch.'
-  - 'VQ-07 (both): heatmap uses viridis → imprint_seq (#009E73 → #4467A3). Likely
-    cause: scale_fill_viridis.'
-  - 'VQ-05 (both): canvas 4800x2700, not a canonical size → 3200x1800 (−1600 × −900).
-    Likely cause: ggsize(1600, 900) with scale=3 instead of ggsize(800, 450) with
-    scale=4.'
-  - 'VQ-04 (light): black heatmap cell values on the darkest viridis tiles (61, 63,
-    64) have low contrast → label color that contrasts with every tile. Likely cause:
-    geom_text color=INK on a dark-to-bright colormap.'
-  - 'SC-04 (both): title ''subplot-mosaic · letsplot · anyplot.ai'' lacks the language
-    segment → ''subplot-mosaic · python · letsplot · anyplot.ai''. Likely cause: ggtitle
-    string.'
-  - 'SC-02 (code): the layout is typed as six fraction tuples, with the ASCII pattern
-    only in a comment, while the Notes ask for a layout defined by a string pattern
-    → derive the regions from a pattern string such as "AAA;BBC;DEF". Likely cause:
-    regions list written by hand.'
-  - 'DQ-02 (both): labels Product A–E and Region A–C read as generic placeholders
-    → concrete product and region names. Likely cause: the categories list and the
-    heatmap column labels.'
-  - 'CQ-01 (code): no column-0 # Data block and no column constants for the x/y roles
-    → one data block binding df with column constants above it. Likely cause: six
-    separate DataFrames with column names typed where used.'
-  - 'Suggestion: a focal accent in the primary panel would strengthen the dashboard
-    story.'
+  - 'CQ-01 (code): the adaptability self-check fails three perturbations — renamed
+    columns (KeyError at line 134), fewer_categories (KeyError ''Score'' at line 177)
+    and fewer_rows (KeyError ''Day'' at line 170) — and the plot zone adds panel(),
+    luminance() and regions_from_layout() helpers beyond the mandated ramp_color →
+    plot code that derives every panel from df without assuming a panel keeps all
+    its columns or rows, and inline the one-line panel filter. Likely cause: panel()
+    drops all-NaN columns, so a panel that loses a column or its rows under perturbation
+    raises KeyError on the column constants.'
+  - 'Suggestion: tighten the empty band between the main title and the top panel (TITLE_SHARE
+    plus GAP) so the primary panel gains height.'
+  - 'Suggestion: a fixed y-axis label width would line up the left edges of the plot
+    boxes across rows.'
   image_description: |-
     Light render (plot-light.png):
-      Background: outer canvas and gutters pure white #FFFFFF; each panel sits on its own #FAF8F1 box.
-      Chrome: bold dark title 'subplot-mosaic · letsplot · anyplot.ai' at top; panel titles, axis titles and ticks dark and readable; rotated product labels.
-      Data: A green line over a green area from zero (flat-looking trend); B green bars; C green scatter with lavender lm line; D green histogram; E green line with markers; F heatmap in viridis with black cell values, low contrast on the darkest purple tiles. Canvas 4800x2700.
-      Legibility verdict: PASS (with low-contrast heatmap values on dark tiles)
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, gutters included.
+      Chrome: centered bold dark title 'subplot-mosaic · python · letsplot · anyplot.ai'; bold left-aligned panel titles; axis titles and ticks dark and readable; subtle grid.
+      Data: A full-width green line over a translucent green area from zero (revenue over 100 days); B five green bars (Laptops..Headsets); C green scatter with a lavender #C475FD lm line; D bimodal green histogram; E green line with markers Jan-Jun; F 4x3 heatmap on imprint_seq light stops (mint -> green -> blue -> navy), values in cells in white on dark tiles and black on light ones. First series #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: panels on #1A1A17 boxes, but the outer canvas and gutters stay pure white.
-      Chrome: panel text light and readable; the main title is near-white on the white outer strip and effectively invisible (light-on-light).
-      Data: identical colors to the light render, viridis heatmap with light cell values.
-      Legibility verdict: FAIL (main title unreadable)
+      Background: warm near-black #1A1A17 across the whole canvas, gutters included.
+      Chrome: title, panel titles, axis titles and ticks light and readable; no dark-on-dark text.
+      Data: categorical greens and the lavender trend identical to the light render; bar and histogram outlines flip to light ink; heatmap uses the dark imprint_seq stops (deep green -> green -> pale blue) with contrasting cell values.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 15
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: 'Main title in the dark render is near-white #F0EFE8 on a pure-white
-          outer canvas and cannot be read (defect line)'
+        passed: true
+        comment: Main title, panel titles, axis titles and ticks explicitly sized
+          and readable in both themes; heatmap cell values switch between light and
+          dark ink per tile
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; rotated product labels clear
+        comment: No text collisions in any panel; product labels horizontal and clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, lines and bars well sized for their densities
+        comment: Line widths, 60 scatter points at size 2.5 with alpha, histogram
+          bars and month markers all suited to their densities
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Black cell labels on the darkest viridis tiles (61, 63, 64) have
-          low contrast in the light render (defect line)
+        passed: true
+        comment: Single-hue green panels plus lavender trend; cell values contrast
+          with every tile
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas 4800x2700, not one of the two canonical sizes (defect line)
+        passed: true
+        comment: 3200x1800, whole canvas used, consistent gutters from one GAP constant
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Every panel titled, axis labels with units
+        comment: Every panel titled; axes descriptive with units (Revenue ($), Effort
+          (hours), Growth Rate (%))
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Outer canvas and gutters pure white #FFFFFF in both renders and
-          heatmap uses viridis instead of imprint_seq (defect lines)'
+        passed: true
+        comment: 'First series #009E73, second #C475FD; heatmap on imprint_seq field
+          stops per theme; full canvas #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Style-guide baseline with a shared theme; nothing beyond
+        comment: Three-level type hierarchy (centered main title, left bold panel
+          titles, axis text) and one green hue carried across five panels so the heatmap
+          stands as the only multi-tone field
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Baseline spines and grid; nothing beyond
+        comment: Heatmap legend dropped in favor of in-cell values, tiles separated
+          by page-colored borders; baseline otherwise
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Hierarchy is what the Notes ask for
+        comment: Hierarchy is what the Notes ask for; no focal point chosen beyond
+          it
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,28 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mosaic of six plot types via ggbunch
+        comment: Mosaic of six different plot types with spanning panels
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Layout typed as fraction tuples, not defined by a string pattern
-          (defect line)
+        passed: true
+        comment: Layout defined by the string 'AAA;BBC;DEF' with '.' gaps supported;
+          consistent spacing; spanning primary panel; different plot types; C1-C4
+          met, C5 not applicable (no empty cell)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All marks at their data values; area from zero
+        comment: Marks at their data values; area and bars from zero; axes fit the
+          data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title lacks the 'python' language segment (defect line)
+        passed: true
+        comment: Title 'subplot-mosaic · python · letsplot · anyplot.ai'; heatmap
+          values labeled in cells, no other color to key
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,19 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Spanning panel, asymmetric rows, six plot types
+        comment: Full-width span, 2/3 + 1/3 split, three-up row, six plot types
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Generic labels Product A-E and Region A-C (defect line)
+        passed: true
+        comment: 'Electronics retail dashboard: Laptops/Monitors/Keyboards/Webcams/Headsets,
+          North/South/West regions'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values sensible
+        comment: 'Checked: revenue ~1,000-1,450 $, unit sales 290-520, growth 2.1-5.1
+          %, scores 60-99; no check values in spec'
     code_quality:
       score: 8
       max: 10
@@ -193,14 +191,14 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: 'No column-0 # Data block and no column constants for the x/y roles
-          (defect line)'
+        comment: Adaptability perturbations renamed, fewer_categories and fewer_rows
+          crash; panel/luminance/regions_from_layout helpers (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -212,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity; layout parser is what the spec asks for
       - id: CQ-05
         name: Output & API
         score: 1
@@ -228,8 +226,9 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: 'Reusable theme object, ggbunch regions, geom_smooth lm: idiomatic
-          grammar'
+        comment: Composable theme object reused across panels, geom_smooth(method='lm'),
+          stat='identity' bars, scale_y_discrete limits for order, ggbunch with theme
+          on the bunch
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -238,15 +237,24 @@ review:
         comment: Nothing beyond the ggbunch the spec needs
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T11:05:37Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - layer-composition
+  - annotations
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
+  - regression
+  - binning
   styling:
+  - custom-colormap
   - alpha-blending
+  - edge-highlighting
   - grid-styling

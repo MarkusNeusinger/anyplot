@@ -1,7 +1,7 @@
 """ anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
@@ -26,23 +26,23 @@ C_DEWPT = IMPRINT_PALETTE[1]
 
 # Reference line colors: subtle, theme-adaptive (Imprint positions 2, 3 and 1 as translucent rgba)
 C_ISO = "rgba(80, 80, 80, 0.22)" if THEME == "light" else "rgba(180, 180, 180, 0.28)"
-C_DRY = "rgba(196, 117, 253, 0.22)" if THEME == "light" else "rgba(196, 117, 253, 0.38)"
+C_DRY = "rgba(196, 117, 253, 0.35)" if THEME == "light" else "rgba(196, 117, 253, 0.38)"
 C_MOIST = "rgba(68, 103, 163, 0.40)" if THEME == "light" else "rgba(68, 103, 163, 0.50)"
-C_MIX = "rgba(0, 158, 115, 0.22)" if THEME == "light" else "rgba(0, 158, 115, 0.38)"
+C_MIX = "rgba(0, 158, 115, 0.35)" if THEME == "light" else "rgba(0, 158, 115, 0.38)"
 
 # Constants
-SKEW = 30.0  # °C shift per log10 decade of pressure from the reference pressure
+PLOT_W_PX, PLOT_H_PX = 570, 310  # inner plot area of the 800x450 canvas (after margins), for the 45° isotherms
 P_REF_HPA = 1000.0  # pressure where the skew is zero (hPa)
 Rd = 287.05  # J/(kg·K)
 Cp = 1004.0  # J/(kg·K)
 Lv = 2.5e6  # J/kg
 Rv = 461.5  # J/(kg·K)
 Rd_Cp = Rd / Cp  # ≈ 0.2854
-ISOTHERMS_C = range(-70, 55, 10)  # reference isotherms, also the x tick values
+ISO_STEP_C = 10  # minimum spacing of the reference isotherms, also the x tick values
 THETA_K = range(290, 430, 10)  # dry adiabats by potential temperature (K)
 MOIST_START_C = range(-10, 45, 10)  # moist adiabats by temperature at the reference pressure
 MIXING_RATIOS_GKG = [1, 2, 4, 8, 16]  # mixing ratio lines (g/kg)
-X_MAX = 75.0  # right edge of the skewed temperature axis
+X_PAD_C = 5.0  # axis padding beyond the data (°C)
 STANDARD_LEVELS_HPA = [100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]  # y tick candidates
 
 # Columns: set these to your table's column names
@@ -64,30 +64,29 @@ df = pd.DataFrame(
 
 
 # Plot: reads only df and the constants above
-def skew_x(T, P):
-    return T + SKEW * np.log10(P_REF_HPA / P)
-
-
-def moist_adiabat(T0_C, P_start, P_end, n=150):
-    """Integrate a moist adiabat from P_start to P_end starting at T0_C."""
-    P = np.linspace(P_start, P_end, n)
-    T = np.zeros(n)
-    T[0] = T0_C
-    for i in range(1, n):
-        T_K = T[i - 1] + 273.15
-        es = 6.112 * np.exp(17.67 * T[i - 1] / (T[i - 1] + 243.5))
-        rs = 0.622 * es / max(P[i - 1] - es, 0.001)
-        num = Rd * T_K + Lv * rs
-        den = P[i - 1] * (Cp + Lv**2 * rs / (Rv * T_K**2))
-        T[i] = T[i - 1] + (num / den) * (P[i] - P[i - 1])
-    return P, T
-
-
 pressure = df[PRESSURE].to_numpy(dtype=float)
 temperature = df[TEMPERATURE].to_numpy(dtype=float)
 dewpoint = df[DEWPOINT].to_numpy(dtype=float)
 p_bottom = float(np.nanmax(pressure))
 p_top = float(np.nanmin(pressure))
+
+# Skew in °C per decade of pressure so that isotherms rise at 45° on screen: the axis span depends on the
+# skew, so iterate s = aspect * span until it settles (a contraction, a few passes)
+decades = np.log10(p_bottom / p_top)
+aspect = PLOT_H_PX / (PLOT_W_PX * decades)
+level_shift = np.log10(P_REF_HPA / pressure)
+SKEW = 0.0
+for _ in range(50):
+    x_lo = float(np.nanmin(dewpoint + SKEW * level_shift)) - X_PAD_C
+    x_hi = float(np.nanmax(temperature + SKEW * level_shift)) + X_PAD_C
+    SKEW = aspect * (x_hi - x_lo)
+x_lo = float(np.nanmin(dewpoint + SKEW * level_shift)) - X_PAD_C
+x_hi = float(np.nanmax(temperature + SKEW * level_shift)) + X_PAD_C
+# widen the spacing for very wide temperature spans so the line count stays bounded
+iso_step = max(ISO_STEP_C, int(np.ceil((x_hi - x_lo + SKEW * decades) / 24 / ISO_STEP_C)) * ISO_STEP_C)
+iso_first = int(np.floor((x_lo - SKEW * decades) / iso_step)) * iso_step
+ISOTHERMS_C = list(range(iso_first, int(x_hi) + 1, iso_step))
+x_ticks = [t for t in ISOTHERMS_C if x_lo <= t <= x_hi]
 
 # Lifting Condensation Level of the surface parcel (Bolton 1980)
 i_sfc = int(np.nanargmax(pressure))
@@ -108,7 +107,7 @@ fig = go.Figure()
 for idx, T_iso in enumerate(ISOTHERMS_C):
     fig.add_trace(
         go.Scatter(
-            x=skew_x(T_iso * np.ones_like(P_ref), P_ref),
+            x=T_iso + SKEW * np.log10(P_REF_HPA / P_ref),
             y=P_ref,
             mode="lines",
             line=dict(color=C_ISO, width=0.8),
@@ -123,7 +122,7 @@ for idx, T_iso in enumerate(ISOTHERMS_C):
 for idx, theta in enumerate(THETA_K):
     T_dry = theta * (P_ref / P_REF_HPA) ** Rd_Cp - 273.15
     mask = (T_dry > -55) & (T_dry < 55)
-    x_d = np.where(mask, skew_x(T_dry, P_ref), np.nan)
+    x_d = np.where(mask, T_dry + SKEW * np.log10(P_REF_HPA / P_ref), np.nan)
     if not np.all(np.isnan(x_d)):
         fig.add_trace(
             go.Scatter(
@@ -140,10 +139,20 @@ for idx, theta in enumerate(THETA_K):
 
 # Moist adiabats (saturated adiabatic lapse rate, numerically integrated)
 for idx, T0 in enumerate(MOIST_START_C):
-    P_m, T_m = moist_adiabat(T0, p_bottom, p_top)
+    # Integrate the saturated adiabatic lapse rate from the surface upward (explicit Euler)
+    P_m = np.linspace(p_bottom, p_top, 150)
+    T_m = np.zeros_like(P_m)
+    T_m[0] = T0
+    for i in range(1, len(P_m)):
+        T_K = T_m[i - 1] + 273.15
+        es = 6.112 * np.exp(17.67 * T_m[i - 1] / (T_m[i - 1] + 243.5))
+        rs = 0.622 * es / max(P_m[i - 1] - es, 0.001)
+        num = Rd * T_K + Lv * rs
+        den = P_m[i - 1] * (Cp + Lv**2 * rs / (Rv * T_K**2))
+        T_m[i] = T_m[i - 1] + (num / den) * (P_m[i] - P_m[i - 1])
     fig.add_trace(
         go.Scatter(
-            x=skew_x(T_m, P_m),
+            x=T_m + SKEW * np.log10(P_REF_HPA / P_m),
             y=P_m,
             mode="lines",
             line=dict(color=C_MOIST, width=0.8, dash="dot"),
@@ -162,7 +171,7 @@ for idx, r_gkg in enumerate(MIXING_RATIOS_GKG):
         log_r = np.log(es / 6.112)
         T_mix = 243.5 * log_r / (17.67 - log_r)
     mask = np.isfinite(T_mix) & (T_mix > -50) & (T_mix < 35)
-    x_mix = np.where(mask, skew_x(T_mix, P_ref), np.nan)
+    x_mix = np.where(mask, T_mix + SKEW * np.log10(P_REF_HPA / P_ref), np.nan)
     fig.add_trace(
         go.Scatter(
             x=x_mix,
@@ -181,7 +190,7 @@ for idx, r_gkg in enumerate(MIXING_RATIOS_GKG):
 # Dewpoint (dashed)
 fig.add_trace(
     go.Scatter(
-        x=skew_x(dewpoint, pressure),
+        x=dewpoint + SKEW * np.log10(P_REF_HPA / pressure),
         y=pressure,
         mode="lines+markers",
         name="Dewpoint",
@@ -195,7 +204,7 @@ fig.add_trace(
 # Temperature (solid, Imprint position 1)
 fig.add_trace(
     go.Scatter(
-        x=skew_x(temperature, pressure),
+        x=temperature + SKEW * np.log10(P_REF_HPA / pressure),
         y=pressure,
         mode="lines+markers",
         name="Temperature",
@@ -208,11 +217,13 @@ fig.add_trace(
 
 # --- Layout ---
 
-# x-axis ticks: at the reference pressure the skew is zero, so tick position = actual temperature
+# x ticks sit at the reference pressure, where the skew is zero, so tick position = actual temperature
 y_ticks = [p for p in STANDARD_LEVELS_HPA if p_top <= p <= p_bottom]
 
 fig.update_layout(
     autosize=False,
+    width=800,
+    height=450,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     title=dict(
@@ -228,9 +239,9 @@ fig.update_layout(
         zeroline=False,
         showgrid=False,
         tickmode="array",
-        tickvals=[float(t) for t in ISOTHERMS_C],
-        ticktext=[f"{t}°" for t in ISOTHERMS_C],
-        range=[float(np.nanmin(skew_x(dewpoint, pressure))) - 5.0, X_MAX],
+        tickvals=[float(t) for t in x_ticks],
+        ticktext=[f"{t}°" for t in x_ticks],
+        range=[x_lo, x_hi],
     ),
     yaxis=dict(
         title=dict(text=PRESSURE, font=dict(size=12, color=INK)),
@@ -258,7 +269,7 @@ fig.update_layout(
     margin=dict(l=80, r=150, t=80, b=60),
     annotations=[
         dict(
-            x=skew_x(lcl_t, lcl_p),
+            x=lcl_t + SKEW * np.log10(P_REF_HPA / lcl_p),
             y=np.log10(lcl_p),
             xref="x",
             yref="y",
