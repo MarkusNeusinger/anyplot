@@ -1,7 +1,7 @@
 """anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Created: 2026-05-28
+Quality: pending | Created: 2026-05-28
 """
 
 import os
