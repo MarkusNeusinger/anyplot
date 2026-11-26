@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-26
@@ -67,7 +67,7 @@ fig.add_vrect(x0=optimal_complexity, x1=x_max, fillcolor="rgba(196,117,253,0.08)
 # Curves
 curve_styles = [
     (BIAS, BIAS_COLOR, 4, "dash"),
-    (VARIANCE, VARIANCE_COLOR, 4, "dash"),
+    (VARIANCE, VARIANCE_COLOR, 4, "dashdot"),
     (IRREDUCIBLE, IRRED_COLOR, 3, "dot"),
     (TOTAL, TOTAL_COLOR, 5, "solid"),
 ]
@@ -116,9 +116,9 @@ fig.add_annotation(
 
 # Formula annotation: in the clear area between the zone labels
 fig.add_annotation(
-    x=x_min + 0.5 * x_span,
-    y=y_top * 0.58,
-    text=f"<b>{TOTAL} = {BIAS} + {VARIANCE} + ε</b>",
+    x=x_min + 0.54 * x_span,
+    y=y_top * 0.67,
+    text=f"<b>{TOTAL} = {BIAS} + {VARIANCE} + {IRREDUCIBLE}</b>",
     showarrow=False,
     font=dict(size=13, color=INK),
     bgcolor=ELEVATED_BG,
