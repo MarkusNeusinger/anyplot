@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-22
 """
 
+import json
 import os
+import urllib.request
 
 import pandas as pd
 from lets_plot import (
@@ -17,6 +19,7 @@ from lets_plot import (
     element_text,
     geom_point,
     geom_polygon,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -106,64 +109,21 @@ df = pd.DataFrame(
     columns=[CITY, LATITUDE, LONGITUDE, POPULATION, REGION],
 )
 
-# Coarse continent outlines as the basemap: (continent, longitudes, latitudes)
-continent_outlines = [
-    (
-        "N. America",
-        [
-            -170,
-            -168,
-            -140,
-            -125,
-            -124,
-            -117,
-            -105,
-            -97,
-            -82,
-            -77,
-            -68,
-            -55,
-            -52,
-            -80,
-            -87,
-            -97,
-            -105,
-            -125,
-            -145,
-            -165,
-            -170,
-        ],
-        [60, 65, 70, 55, 48, 33, 25, 26, 25, 35, 45, 48, 45, 27, 30, 20, 22, 50, 60, 55, 60],
-    ),
-    (
-        "S. America",
-        [-80, -68, -60, -50, -35, -40, -50, -55, -68, -72, -75, -80, -82, -80],
-        [10, 12, 5, 0, -5, -22, -35, -52, -55, -18, -5, 0, 8, 10],
-    ),
-    (
-        "Europe",
-        [-10, 0, 10, 20, 30, 40, 50, 60, 50, 35, 25, 20, 10, 0, -10, -10],
-        [35, 37, 36, 35, 35, 40, 45, 55, 70, 70, 70, 65, 60, 50, 40, 35],
-    ),
-    (
-        "Africa",
-        [-17, -5, 10, 35, 50, 52, 43, 35, 30, 15, 0, -17, -17],
-        [15, 37, 37, 32, 12, 0, -25, -35, -35, -25, 5, 20, 15],
-    ),
-    (
-        "Asia",
-        [60, 80, 100, 120, 140, 145, 140, 130, 105, 100, 80, 60, 45, 30, 25, 30, 35, 50, 60],
-        [55, 70, 75, 70, 55, 45, 35, 30, 0, 5, 10, 25, 30, 35, 42, 55, 70, 70, 55],
-    ),
-    ("Oceania", [112, 130, 155, 168, 155, 145, 130, 115, 112], [-10, -10, -5, 0, -20, -35, -40, -30, -10]),
+# Basemap: Natural Earth 110m land polygons (public domain), one polygon id per exterior ring
+LAND_URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson"
+with urllib.request.urlopen(LAND_URL, timeout=60) as response:
+    land = json.load(response)
+rings = [
+    ring[0]
+    for feature in land["features"]
+    for ring in (
+        feature["geometry"]["coordinates"]
+        if feature["geometry"]["type"] == "MultiPolygon"
+        else [feature["geometry"]["coordinates"]]
+    )
 ]
 basemap = pd.DataFrame(
-    [
-        (name, i, lon, lat)
-        for name, lons, lats in continent_outlines
-        for i, (lon, lat) in enumerate(zip(lons, lats, strict=True))
-    ],
-    columns=["continent", "order", "lon", "lat"],
+    [(ring_id, lon, lat) for ring_id, ring in enumerate(rings) for lon, lat in ring], columns=["ring", "lon", "lat"]
 )
 
 # Plot
@@ -172,14 +132,7 @@ region_colors = [IMPRINT_PALETTE[i] for i in range(len(regions))]
 
 plot = (
     ggplot()
-    + geom_polygon(
-        aes(x="lon", y="lat", group="continent"),
-        data=basemap,
-        fill=ELEVATED_BG,
-        color=BASEMAP_BORDER,
-        size=0.15,
-        alpha=0.6,
-    )
+    + geom_polygon(aes(x="lon", y="lat", group="ring"), data=basemap, fill=ELEVATED_BG, color=BASEMAP_BORDER, size=0.15)
     + geom_point(
         aes(x=LONGITUDE, y=LATITUDE, color=REGION, size=POPULATION),
         data=df,
@@ -193,7 +146,6 @@ plot = (
     + scale_size(range=[2, 9], name=POPULATION)
     + labs(title="scatter-map-geographic · python · letsplot · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
     + coord_fixed(ratio=1.0, xlim=[-180, 180], ylim=[-60, 80])
-    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -210,6 +162,9 @@ plot = (
         panel_grid_minor=element_blank(),
     )
 )
+
+# One-panel grid paints the whole canvas in the page color around the fixed-aspect plot
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save PNG (scale 4 gives 3200 x 1800 px) and interactive HTML
 ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
