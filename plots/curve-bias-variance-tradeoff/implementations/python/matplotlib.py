@@ -1,7 +1,7 @@
 """ anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-28
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
@@ -86,10 +86,10 @@ ax.text(
 )
 
 # Direct curve labels (no legend needed — labels are placed on the curves)
-ax.text(0.5, bias_squared[4] + 0.22, "Bias²", fontsize=8, color=C_BIAS, fontweight="bold")
+ax.text(1.6, bias_squared[15] + 0.3, "Bias²", fontsize=8, color=C_BIAS, fontweight="bold")
 ax.text(8.2, variance[82] + 0.22, "Variance", fontsize=8, color=C_VARIANCE, fontweight="bold")
 ax.text(8.2, total_error[82] + 0.22, "Total Error", fontsize=8, color=C_TOTAL, fontweight="bold")
-ax.text(5.0, 0.62, "Irreducible Error", fontsize=8, ha="center", color=C_IRREDUCIBLE, fontweight="bold")
+ax.text(4.0, 0.14, "Irreducible Error", fontsize=8, ha="center", color=C_IRREDUCIBLE, fontweight="bold")
 
 # Formula annotation box (bottom right in axes coordinates)
 ax.text(
@@ -97,7 +97,7 @@ ax.text(
     0.03,
     "Total Error = Bias² + Variance + Irreducible Error",
     transform=ax.transAxes,
-    fontsize=7,
+    fontsize=8,
     ha="right",
     va="bottom",
     color=INK_SOFT,

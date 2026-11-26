@@ -2,127 +2,128 @@ library: matplotlib
 language: python
 specification_id: curve-bias-variance-tradeoff
 created: '2026-01-26T19:57:33Z'
-updated: '2026-05-28T03:19:35Z'
+updated: '2026-11-26T17:23:48Z'
 generated_by: claude-sonnet
-workflow_run: 26552195930
+workflow_run: 45866457275
 issue: 4134
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Complete spec compliance: all four curves, zones, optimal point, formula annotation,
-    and direct curve labels all implemented'
-  - 'Excellent palette usage: canonical positions 1-3 for active curves, muted anchor
-    correctly used for the reference Irreducible Error baseline'
-  - 'Full theme-adaptive chrome: all text, spines, grids, annotation boxes, and shaded
-    fills flip correctly between light and dark without any dark-on-dark failures'
-  - 'Strong data storytelling: intentional visual hierarchy (Total Error as the thickest
-    primary curve), shaded underfitting/overfitting zones with labeled captions, and
-    annotated optimal complexity point'
+  - 'Every direct label sits next to its own curve and clear of all lines: Bias² above
+    the green curve, Irreducible Error below the dashed floor, the formula box below
+    the curves'
+  - Optimum computed with np.argmin and marked by axvline plus an annotated marker
+    exactly at the total-error minimum (~2.7)
+  - 'Full theme-adaptive chrome: text, spines, grid, arrow, formula-box fill and zone
+    tints flip cleanly with no dark-on-dark text'
+  - 'Idiomatic matplotlib: axvspan zones, annotate with arrowprops, transAxes placement
+    of the formula'
   weaknesses:
-  - Formula annotation at fontsize=7 is borderline small; at mobile thumbnail widths
-    (~400px the canvas scales ~8x), this drops to ~5px effective height — consider
-    bumping to fontsize=8 to match other secondary labels
+  - 'SC-02 (both): Bias², Variance and Total Error are all drawn solid, only Irreducible
+    Error is dashed, so the spec''s ''distinct colors and line styles'' holds for
+    color only → give each curve its own line style (for example dash-dot for Variance,
+    a long dash for Bias²) while keeping Total Error solid. Likely cause: linestyle="-"
+    on the Bias² and Variance ax.plot calls (lines 47-48).'
+  - 'Suggestion: the Underfitting/Overfitting captions could move closer to their
+    zone edges so the empty top band reads less sparse.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "curve-bias-variance-tradeoff · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Model Complexity" (10pt) and "Prediction Error" (10pt) in dark ink, readable. Tick labels (8pt) — "Low", "Medium", "High" on x-axis and 0-5 on y-axis — in INK_SOFT, readable. Zone labels "Underfitting (High Bias)" and "Overfitting (High Variance)" in bold matching series colors, readable.
-      Data: Bias² in #009E73 (brand green), Variance in #C475FD (lavender), Total Error in #4467A3 (blue, thickest), Irreducible Error in INK_MUTED (muted gray, dashed). Shaded zones in matching series colors at low alpha. Optimal point marked with blue scatter dot and annotated arrow.
+      Background: warm off-white #FAF8F1; left zone tinted pale green, right zone pale lavender, split by a dotted vertical line at the optimum.
+      Chrome: title "curve-bias-variance-tradeoff · python · matplotlib · anyplot.ai" in dark ink; axis titles "Model Complexity" and "Prediction Error"; ticks Low/Medium/High and 0-5 in INK_SOFT; subtle horizontal grid; top/right spines removed. All readable.
+      Data: Bias² green #009E73 falling from ~3.6; Variance lavender #C475FD rising linearly to 3; Total Error thick blue #4467A3 U-curve with minimum ~2.4 at complexity ~2.7 marked by a blue dot and an "Optimal (≈2.7)" arrow callout; Irreducible Error grey dashed at 0.5. Bold direct labels: "Bias²" just above the green curve, "Variance" and "Total Error" above their lines at the right, "Irreducible Error" below the dashed floor; zone captions "Underfitting (High Bias)" / "Overfitting (High Variance)" at the top; formula "Total Error = Bias² + Variance + Irreducible Error" in a rounded box bottom right, clear of the curves.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all in light ink tokens (#F0EFE8 / #B8B7B0), clearly readable against dark surface. Zone labels remain in series colors and are readable. Optimal annotation text appears light-colored and readable. Formula box fill adapts to elevated dark surface #242420.
-      Data: All data colors (green, lavender, blue, muted gray) are identical to light render — only chrome flips as expected.
-      Legibility verdict: PASS — no dark-on-dark failures observed
+      Background: warm near-black #1A1A17 with dark green and dark lavender zone tints.
+      Chrome: title, axis titles and ticks in light ink; grid subtle; formula box on the elevated dark surface with light text; arrow light grey. No dark-on-dark text.
+      Data: curve colors identical to the light render (green, lavender, blue); Irreducible Error dashed in the lighter muted grey; label positions unchanged and clear of curves.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, curve/zone labels all readable in
-          both themes. Formula annotation at fontsize=7 borderline small at mobile
-          widths.
+        comment: All sizes set explicitly (title 12, axis titles 10, ticks and annotations
+          8 pt); every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data curves.
+        comment: Curve labels, zone labels, optimal callout and formula box all sit
+          clear of curves and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four curves clearly visible with appropriate line widths; dashed
-          linestyle for redundant encoding on Irreducible Error.
+        comment: Line widths 2.0-3.5 read clearly; optimal marker outlined in the
+          page color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette in canonical order; dashed linestyle as redundant
-          encoding; no red-green-only signaling.
+        comment: Green/lavender/blue/grey separate under CVD; dashed noise floor adds
+          a redundant cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Clean layout; no overflow or clipping
-          in either render.
+        comment: Canvas gate passed (3200x1800); plot fills the canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Model Complexity and Prediction Error are descriptive; title follows
-          required format.
+        comment: Model Complexity / Prediction Error, descriptive for a unitless theoretical
+          plot
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Bias²=#009E73 (pos 1), Variance=#C475FD (pos 2), Total Error=#4467A3
-          (pos 3), Irreducible Error=INK_MUTED. Backgrounds correct; data colors identical
-          across themes.
+        comment: 'Imprint positions 1-3 (#009E73, #C475FD, #4467A3) plus the muted
+          anchor; backgrounds #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional visual hierarchy via line thickness, shaded zones, bold
-          zone labels in matching colors, direct curve labels instead of legend. Above-average
-          design effort.
+        comment: Line-weight hierarchy (Total Error at 3.5 vs 2.5) and zone captions
+          colored to their curve, a typographic system beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; elevated-surface
-          formula annotation box; full theme-adaptive chrome.
+        comment: Formula set in an elevated-surface rounded box; labels placed clear
+          of every curve
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point (Total Error thickest), optimal point annotated
-          with arrow, zones with explanatory labels, formula reinforces decomposition.
+        comment: Total Error made the focal curve by weight, with the optimum value
+          printed in the callout
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -130,28 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-curve line plot showing bias-variance tradeoff — correct.
+        comment: Four-curve bias-variance decomposition
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All four curves with distinct colors/linestyles, optimal complexity
-          marked, direct curve labels, formula annotation, shaded zones — all present.
+        comment: 'C1, C3, C4, C5 met; C2 partly missed: three of four curves share
+          the solid line style (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Model Complexity (Low/Medium/High); Y: Prediction Error; all
-          curves follow correct monotonic behavior.'
+        comment: Complexity on x, error on y from zero; all curves inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: curve-bias-variance-tradeoff · python · matplotlib · anyplot.ai.
-          No legend — replaced by direct curve labels.'
+        comment: Mandated title; direct labels replace a legend
     data_quality:
       score: 15
       max: 15
@@ -161,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec aspects shown: four theoretical curves, optimal point,
-          zones, formula.'
+        comment: Falling bias, rising variance, flat floor, U-shaped total that lies
+          above the rest
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard ML educational visualization; neutral, non-controversial
-          domain.
+        comment: Standard ML teaching plot, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 data points (within 50-100 spec range); prediction error 0-5;
-          complexity 0.1-10 — all plausible.
+        comment: 100 points; optimum computed by argmin at ~2.7 (analytic 2.65), marker
+          sits on the curve minimum; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -186,35 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat, sequential script.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: np.linspace + mathematical formulas, no randomness.'
+        comment: Deterministic formulas
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy — all used, none unused.
+        comment: os, matplotlib.pyplot, numpy all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean separation of data, plot, and style
-          steps; no fake UI.
+        comment: np.argmin for the optimum; no hand-rolled algorithm, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — no
-          bbox_inches='tight'; correct filename format.
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,24 +218,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistent ax.* method usage; axvspan, axvline, scatter, annotate
-          with arrowprops, tick_params, yaxis.grid — all idiomatic.
+        comment: axvspan for zones, annotate with arrowprops, axvline, set_xticks/set_xticklabels
+          for Low/Medium/High
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses axvspan for region shading, annotate with arrowprops dict, transform=ax.transAxes
-          for axes-relative text. Solid matplotlib-specific patterns.
+        comment: transform=ax.transAxes pins the formula box in axes coordinates independent
+          of the data
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
+  rendered_at: '2026-11-26T17:19:34Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
