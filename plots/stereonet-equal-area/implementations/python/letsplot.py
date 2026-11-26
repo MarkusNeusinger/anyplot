@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-26
@@ -15,7 +15,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
-    geom_density2d,
+    geom_contour,
     geom_path,
     geom_point,
     geom_polygon,
@@ -102,8 +102,9 @@ dip_rad = np.radians(df[DIP].to_numpy())
 dip_dir_rad = np.radians(df[DIP_DIRECTION].to_numpy())
 
 # Equal-area (Schmidt net) lower-hemisphere projection of each pole
-pole_x_3d = np.sin(dip_rad) * np.sin(dip_dir_rad)
-pole_y_3d = np.sin(dip_rad) * np.cos(dip_dir_rad)
+# The pole trends opposite the dip direction (azimuth dip_direction + 180) and plunges 90 - dip
+pole_x_3d = -np.sin(dip_rad) * np.sin(dip_dir_rad)
+pole_y_3d = -np.sin(dip_rad) * np.cos(dip_dir_rad)
 pole_z_3d = -np.cos(dip_rad)
 pole_scale = 1.0 / np.sqrt(1.0 - pole_z_3d)
 poles_df = pd.DataFrame(
@@ -139,15 +140,27 @@ gc_df = pd.concat(gc_frames, ignore_index=True)
 theta = np.linspace(0, 2 * np.pi, 200)
 circle_df = pd.DataFrame({X: np.cos(theta), Y: np.sin(theta)})
 
-# Annular mask: fan quads between r=1 and r=1.6 hide any density bleed outside the primitive circle
-mask_rows = []
-n_seg = 180
-for k in range(n_seg):
-    a0 = 2 * np.pi * k / n_seg
-    a1 = 2 * np.pi * (k + 1) / n_seg
-    for radius, angle in [(1.0, a0), (1.6, a0), (1.6, a1), (1.0, a1)]:
-        mask_rows.append({X: radius * np.cos(angle), Y: radius * np.sin(angle), GROUP: k})
-mask_df = pd.DataFrame(mask_rows)
+# Kamb density with exponential smoothing (weight exp(k (|cos| - 1)) per pole, axial data), expressed in
+# standard deviations above the count expected from a uniform distribution
+n_poles = len(poles_df)
+pole_vec = np.column_stack([pole_x_3d, pole_y_3d, pole_z_3d])
+kamb_k = 2.0 * (1.0 + n_poles / 9.0)
+mean_w = (1.0 - np.exp(-kamb_k)) / kamb_k
+mean_w2 = (1.0 - np.exp(-2.0 * kamb_k)) / (2.0 * kamb_k)
+expected = n_poles * mean_w
+sigma = np.sqrt(n_poles * (mean_w2 - mean_w**2))
+grid = np.linspace(-1.0, 1.0, 241)
+gx_grid, gy_grid = np.meshgrid(grid, grid)
+r2 = gx_grid**2 + gy_grid**2
+inside_net = r2 <= 1.0
+# Inverse Lambert projection back to the lower hemisphere (outside the net the cell stays empty)
+k = np.sqrt(np.clip(2.0 - r2, 0.0, None))
+cell_vec = np.stack([gx_grid * k, gy_grid * k, -(1.0 - r2)], axis=-1)
+cos_angle = np.abs(cell_vec @ pole_vec.T)
+counts = np.exp(kamb_k * (cos_angle - 1.0)).sum(axis=-1)
+# Floor at 1.5 sigma so only the contours from 2 sigma upward are drawn, and none outside the net
+kamb_sigma = np.where(inside_net, np.maximum((counts - expected) / sigma, 1.5), 1.5)
+kamb_df = pd.DataFrame({X: gx_grid.ravel(), Y: gy_grid.ravel(), "kamb": kamb_sigma.ravel()})
 
 # Tick marks every 10° (longer every 30°)
 tick_degrees = np.arange(0, 360, 10)
@@ -161,7 +174,7 @@ tick_df = pd.DataFrame(
 ref_df = pd.DataFrame({X: [0, -1], Y: [-1, 0], XEND: [0, 1], YEND: [1, 0]})
 
 # Cardinal direction labels
-cardinal_df = pd.DataFrame({X: [0, 1.14, 0, -1.14], Y: [1.14, 0, -1.14, 0], LABEL: ["N", "E", "S", "W"]})
+cardinal_df = pd.DataFrame({X: [0, 1.1, 0, -1.1], Y: [1.1, 0, -1.1, 0], LABEL: ["N", "E", "S", "W"]})
 
 # Mean pole annotations and confidence ellipses per feature type
 mean_rows = []
@@ -174,14 +187,23 @@ for idx, ft in enumerate(feature_types):
     s_rad = strike_rad[sel]
     mean_strike = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
     mean_dip = df[DIP].to_numpy()[sel].mean()
-    # Push the label away from a nearby cardinal letter, otherwise place it just below the marker
-    nudge_x, nudge_y = 0.0, -0.20
-    for cx, cy in zip(cardinal_df[X], cardinal_df[Y], strict=True):
-        dx, dy = mx - cx, my - cy
-        dist = np.hypot(dx, dy)
-        if dist < 0.45:
-            norm = max(dist, 0.01)
-            nudge_x, nudge_y = dx / norm * 0.20, dy / norm * 0.20 - 0.06
+    # Place the label where it stays furthest from every pole, other labels and the cardinal letters
+    best_score, nudge_x, nudge_y = -1.0, 0.0, -0.25
+    obstacles = np.vstack(
+        [
+            np.column_stack([pole_x, pole_y]),
+            cardinal_df[[X, Y]].to_numpy(),
+            np.array([[r[X], r[Y]] for r in mean_rows]).reshape(-1, 2),
+        ]
+    )
+    for ang in np.radians(np.arange(0, 360, 20)):
+        for reach in (0.25, 0.35):
+            cx, cy = mx + reach * np.cos(ang), my + reach * np.sin(ang)
+            if np.hypot(cx, cy) > 1.0 - 0.12:
+                continue
+            score = np.hypot(obstacles[:, 0] - cx, obstacles[:, 1] - cy).min()
+            if score > best_score:
+                best_score, nudge_x, nudge_y = score, cx - mx, cy - my
     mean_rows.append(
         {X: mx, Y: my, LABEL: f"{ft}\n{mean_strike:.0f}/{mean_dip:.0f}", "nudge_x": nudge_x, "nudge_y": nudge_y}
     )
@@ -210,17 +232,9 @@ plot = (
     ggplot()
     # Reference cross lines
     + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND), data=ref_df, color=RULE, size=0.5, linetype="dashed")
-    # Density contours (gaussian KDE of the pole positions)
-    + geom_density2d(
-        aes(x=X, y=Y),
-        data=poles_df,
-        color=INK_MUTED,
-        alpha=0.55,
-        size=0.6,
-        bins=6,
-        kernel="gaussian",
-        adjust=0.8,
-        show_legend=False,
+    # Kamb density contours, one line per standard deviation above the expected count
+    + geom_contour(
+        aes(x=X, y=Y, z="kamb"), data=kamb_df, color=INK_MUTED, alpha=0.7, size=0.6, binwidth=1, show_legend=False
     )
     # Great circles
     + geom_path(aes(x=X, y=Y, group=GROUP, color=FEATURE_TYPE), data=gc_df, size=0.5, alpha=0.35, show_legend=False)
@@ -249,8 +263,6 @@ for _, row in mean_df.iterrows():
 
 plot = (
     plot
-    # Annular mask hides density bleed outside the primitive circle
-    + geom_polygon(aes(x=X, y=Y, group=GROUP), data=mask_df, fill=PAGE_BG, color=PAGE_BG, size=0)
     # Primitive circle and ticks
     + geom_path(aes(x=X, y=Y), data=circle_df, color=INK, size=1.4)
     + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND), data=tick_df, color=INK, size=0.9)
@@ -259,8 +271,8 @@ plot = (
     + scale_color_manual(values=IMPRINT_PALETTE, name=FEATURE_TYPE)
     + scale_fill_manual(values=IMPRINT_PALETTE)
     + coord_fixed()
-    + scale_x_continuous(limits=[-1.32, 1.32])
-    + scale_y_continuous(limits=[-1.32, 1.32])
+    + scale_x_continuous(limits=[-1.18, 1.18])
+    + scale_y_continuous(limits=[-1.18, 1.18])
     + labs(title="stereonet-equal-area · python · letsplot · anyplot.ai")
     + theme(
         plot_title=element_text(size=18, hjust=0.5, face="bold", color=INK, margin=[0, 0, 12, 0]),
