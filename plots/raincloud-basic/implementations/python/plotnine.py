@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-26
@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     coord_flip,
     element_blank,
     element_line,
@@ -42,7 +41,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — first series ALWAYS #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — reaction times (ms) for three experimental conditions
+# Columns: set these to your table's column names
+CONDITION = "Experimental Condition"  # role: category
+REACTION_TIME = "Reaction Time (ms)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("reaction_times.csv")
 np.random.seed(42)
 control = np.random.normal(450, 60, 80)
 treatment_a = np.random.normal(380, 50, 80)
@@ -50,26 +53,19 @@ treatment_b = np.concatenate([np.random.normal(350, 40, 50), np.random.normal(50
 
 df = pd.DataFrame(
     {
-        "condition": (
-            ["Control"] * len(control) + ["Treatment A"] * len(treatment_a) + ["Treatment B"] * len(treatment_b)
-        ),
-        "reaction_time": np.concatenate([control, treatment_a, treatment_b]),
+        CONDITION: ["Control"] * len(control) + ["Treatment A"] * len(treatment_a) + ["Treatment B"] * len(treatment_b),
+        REACTION_TIME: np.concatenate([control, treatment_a, treatment_b]),
     }
 )
-df["condition"] = pd.Categorical(df["condition"], categories=["Treatment B", "Treatment A", "Control"], ordered=True)
-
-# Category → Imprint palette positions 1, 2, 3 (brand green is Control, the reference group)
-colors = {"Control": IMPRINT_PALETTE[0], "Treatment A": IMPRINT_PALETTE[1], "Treatment B": IMPRINT_PALETTE[2]}
-
-cloud_shift = 0.15
 
 # Plot — horizontal raincloud via coord_flip
-# Pre-flip: x=condition (categorical), y=reaction_time. After flip: categories on y, values on x.
+# Pre-flip: x=condition (categorical), y=value. After flip: categories on y, values on x.
+groups = df[CONDITION].unique().tolist()
 plot = (
-    ggplot(df, aes(x="condition", y="reaction_time", fill="condition", color="condition"))
+    ggplot(df, aes(x=CONDITION, y=REACTION_TIME, fill=CONDITION, color=CONDITION))
     # Cloud (half-violin) — style="right" extends positive x = upward after flip
     + geom_violin(
-        aes(x=stage("condition", after_scale="x+{0}".format(cloud_shift))),
+        aes(x=stage(CONDITION, after_scale="x+0.15")),
         style="right",
         trim=True,
         scale="width",
@@ -81,40 +77,15 @@ plot = (
     + geom_boxplot(width=0.06, outlier_shape="", fill=ELEVATED_BG, color=INK, size=0.5, alpha=0.95, show_legend=False)
     # Rain (jittered points) — nudged negative x = downward after flip
     + geom_jitter(
-        aes(x=stage("condition", after_scale="x-0.18")), width=0.06, height=0, size=3.0, alpha=0.6, show_legend=False
+        aes(x=stage(CONDITION, after_scale="x-0.18")), width=0.06, height=0, size=3.0, alpha=0.6, show_legend=False
     )
-    # Annotation: bimodal callout for Treatment B (category index 1, 0-based)
-    + annotate(
-        "text",
-        x=0.35,
-        y=425,
-        label="Bimodal: two distinct response clusters",
-        size=13,
-        color=INK_SOFT,
-        ha="center",
-        fontstyle="italic",
-    )
-    # Arrows land inside the half-violin's two humps (above baseline x=1.15, at peak y=350 / y=500)
-    + annotate("segment", x=0.5, xend=1.28, y=420, yend=350, size=0.5, color=INK_MUTED, linetype="dashed")
-    + annotate("segment", x=0.5, xend=1.28, y=430, yend=500, size=0.5, color=INK_MUTED, linetype="dashed")
-    # Annotation: Treatment A shifted left
-    + annotate(
-        "text",
-        x=1.55,
-        y=290,
-        label="Faster responses\nvs. Control →",
-        size=12,
-        color=INK_SOFT,
-        ha="left",
-        fontstyle="italic",
-    )
-    + scale_fill_manual(values=colors)
-    + scale_color_manual(values=colors)
-    # Extra bottom padding (after coord_flip, the lower x = lower vertical) for the bimodal annotation
-    + scale_x_discrete(expand=(0, 0.95, 0, 0.6))
-    + scale_y_continuous(expand=(0.02, 0, 0.08, 0))
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=groups)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=groups)
+    # First group on top after coord_flip; room above the top cloud
+    + scale_x_discrete(limits=groups[::-1], expand=(0, 0.6, 0, 0.75))
+    + scale_y_continuous(expand=(0.03, 0, 0.03, 0))
     + coord_flip()
-    + labs(x="Experimental Condition", y="Reaction Time (ms)", title="raincloud-basic · python · plotnine · anyplot.ai")
+    + labs(title="raincloud-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
