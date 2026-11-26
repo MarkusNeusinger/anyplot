@@ -1,10 +1,11 @@
 """ anyplot.ai
 map-route-path: Route Path Map
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-21
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -17,11 +18,12 @@ from lets_plot import (
     element_text,
     geom_path,
     geom_point,
+    gggrid,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
-    scale_color_viridis,
+    scale_color_gradientn,
     scale_fill_manual,
     theme,
     theme_minimal,
@@ -37,9 +39,40 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_MINOR = "rgba(26,26,23,0.05)" if THEME == "light" else "rgba(240,239,232,0.05)"
 TERRAIN_BG = "#E8F0E4" if THEME == "light" else "#1D2419"
 
-# Data — Swiss Alps hiking trail (GPS track simulation)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential ramp for marks (a colored line on the page), as (position, hex) stops
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Columns: set these to your table's column names
+LAT = "Latitude (°)"  # role: lat
+LON = "Longitude (°)"  # role: lon
+SEQUENCE = "Sequence"  # role: sequence
+PROGRESS = "Progress (%)"  # role: extra
+MARKER = "Marker"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("track.csv")
+# Swiss Alps hiking trail (GPS track simulation)
 np.random.seed(42)
 start_lat, start_lon = 46.85, 9.85
 n_points = 150
@@ -48,26 +81,28 @@ t = np.linspace(0, 4 * np.pi, n_points)
 lat_offset = np.cumsum(np.sin(t) * 0.002 + np.random.randn(n_points) * 0.0003)
 lon_offset = np.cumsum(np.cos(t * 0.7) * 0.003 + np.random.randn(n_points) * 0.0004)
 
-lat = start_lat + lat_offset
-lon = start_lon + lon_offset
 sequence = np.arange(n_points)
+df = pd.DataFrame(
+    {
+        LAT: start_lat + lat_offset,
+        LON: start_lon + lon_offset,
+        SEQUENCE: sequence,
+        PROGRESS: sequence / (n_points - 1) * 100,
+    }
+)
 
-df = pd.DataFrame({"lat": lat, "lon": lon, "sequence": sequence, "progress": sequence / (n_points - 1) * 100})
+# Plot: reads only df and the constants above
+df = df.sort_values(SEQUENCE)
+markers_df = pd.concat([df.iloc[[0]].assign(**{MARKER: "Start"}), df.iloc[[-1]].assign(**{MARKER: "End"})])
 
-start_pt = df.iloc[[0]].copy()
-start_pt["marker"] = "Start"
-end_pt = df.iloc[[-1]].copy()
-end_pt["marker"] = "End"
-markers_df = pd.concat([start_pt, end_pt], ignore_index=True)
-
-# Plot
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=TERRAIN_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.3),
-    panel_grid_minor=element_line(color=INK_SOFT, size=0.15),
+    panel_grid_major=element_line(color=GRID, size=0.3),
+    panel_grid_minor=element_line(color=GRID_MINOR, size=0.2),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
+    axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=16),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
@@ -77,35 +112,37 @@ anyplot_theme = theme(
 plot = (
     ggplot()
     + geom_path(
-        aes(x="lon", y="lat", color="progress"),
+        aes(x=LON, y=LAT, color=PROGRESS),
         data=df,
         size=1.5,
         alpha=0.9,
         tooltips=layer_tooltips()
-        .line("Progress|@progress%")
-        .line("Lat|@lat")
-        .line("Lon|@lon")
-        .format("@progress", ".1f")
-        .format("@lat", ".4f")
-        .format("@lon", ".4f"),
+        .line(f"{PROGRESS}|@{{{PROGRESS}}}")
+        .line(f"Lat|@{{{LAT}}}")
+        .line(f"Lon|@{{{LON}}}")
+        .format(f"@{{{PROGRESS}}}", ".1f")
+        .format(f"@{{{LAT}}}", ".4f")
+        .format(f"@{{{LON}}}", ".4f"),
     )
     + geom_point(
-        aes(x="lon", y="lat", fill="marker"),
+        aes(x=LON, y=LAT, fill=MARKER),
         data=markers_df,
         size=5,
         shape=21,
         stroke=2,
         color="white",
-        tooltips=layer_tooltips().line("@marker"),
+        tooltips=layer_tooltips().line(f"@{{{MARKER}}}"),
     )
-    + scale_color_viridis(name="Progress (%)")
-    + scale_fill_manual(values={"Start": "#009E73", "End": "#C475FD"}, name="Markers")
-    + labs(x="Longitude (°)", y="Latitude (°)", title="map-route-path · python · letsplot · anyplot.ai")
+    + scale_color_gradientn(colors=[ramp_color(SEQ_MARKS, k / 255) for k in range(256)], name=PROGRESS)
+    + scale_fill_manual(values={"Start": IMPRINT_PALETTE[0], "End": IMPRINT_PALETTE[1]}, name="Markers")
+    + labs(x=LON, y=LAT, title="map-route-path · python · letsplot · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
     + coord_fixed(ratio=1.0)
-    + ggsize(800, 450)
 )
+
+# Fixed aspect leaves the canvas edges transparent: a one-panel grid paints the page color
+plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)

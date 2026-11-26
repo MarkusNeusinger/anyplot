@@ -2,140 +2,130 @@ library: letsplot
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:55:02Z'
-updated: '2026-05-21T05:55:27Z'
+updated: '2026-11-26T12:39:40Z'
 generated_by: claude-sonnet
-workflow_run: 26207813310
+workflow_run: 45820712385
 issue: 3768
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Terrain-themed panel background adds geographic context and is thematically appropriate
-    for a route map plot
-  - coord_fixed(ratio=1.0) correctly preserves geographic proportions without distortion
-  - layer_tooltips() with formatted lat/lon/progress output is idiomatic letsplot
-    and genuinely useful
-  - Viridis colormap for progress encoding is perceptually correct and communicates
-    travel direction intuitively
-  - Start/End markers use Okabe-Ito positions 1 and 2 with white stroke — clean, accessible,
-    and brand-consistent
-  - 'Full theme-adaptive chrome: all tokens correctly map INK, INK_SOFT, PAGE_BG,
-    ELEVATED_BG, TERRAIN_BG to both themes'
-  - Both renders pass theme-readability check with no dark-on-dark or light-on-light
-    issues
+  - Imprint sequential marks ramp (SEQ_MARKS) with theme-specific stops encodes progress
+    via scale_color_gradientn, as the library prompt prescribes
+  - One-panel gggrid wrapper paints the full 3200x1800 canvas in the page color around
+    the coord_fixed panel
+  - coord_fixed(ratio=1.0) keeps the geographic proportions of the track
+  - Distinct white-haloed Start (#009E73) and End (#C475FD) markers make the direction
+    of the journey readable at a glance
+  - layer_tooltips() with formatted progress/lat/lon lines gives useful hover inspection
+    in the HTML output
+  - Theme tokens threaded through every chrome element; both renders fully readable
   weaknesses:
-  - No geographic basemap (tile layer) — letsplot provides geom_livemap() which would
-    add real streets/terrain background, the most distinctive letsplot feature for
-    geographic data
-  - Route line size=1.5 is slightly thin for the canvas scale; increasing to size=2.0-2.5
-    would make the path more prominent
-  - No directional arrows, elevation annotations, or speed/segment overlays to elevate
-    design beyond a standard colored path
+  - 'SC-02 (both): no geographic basemap — the route sits on a flat tinted panel with
+    no streets, terrain or satellite context, which the Notes and the C5 property
+    ask for → draw a basemap under the route, quieter than the line, with the view
+    fitted to the route. Likely cause: only panel_background=TERRAIN_BG stands in
+    for the map; no basemap layer (e.g. geom_livemap tiles or terrain polygons) is
+    drawn.'
+  - 'Suggestion: a thicker route line (size about 2) would give the path more presence
+    against the panel.'
+  - 'Suggestion: a few sparse direction arrows along the path (as the Notes allow)
+    would make the travel direction readable without the color bar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Panel background: Soft terrain-green #E8F0E4 — contextually appropriate for a geographic map plot
-      Chrome: Title "map-route-path · python · letsplot · anyplot.ai" in dark #1A1A17 ink at size=16, spanning ~65% of plot width. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink at size=12. Tick labels in #4A4A44 at size=10. All chrome elements fully readable against light background.
-      Data: Route path rendered with viridis colormap from deep purple (progress=0%) through teal/green to bright yellow-green (progress=100%). Start marker filled with #009E73 (Okabe-Ito position 1, brand green). End marker filled with #D55E00 (Okabe-Ito position 2, vermillion). Both markers have white stroke border for definition.
-      Legibility verdict: PASS — no light-on-light issues, all text elements clearly readable
+      Background: Warm off-white #FAF8F1 across the whole canvas (gggrid wrapper paints the edges); panel tinted pale terrain-green #E8F0E4 inside a thin INK_SOFT frame
+      Chrome: Title "map-route-path · python · letsplot · anyplot.ai" in dark ink, ~45 % of width; axis titles "Longitude (°)" / "Latitude (°)" and tick labels dark grey; subtle major/minor grid; legends on #FFFDF6 boxes — all readable
+      Data: 150-point looping hiking track coloured by progress with the Imprint marks ramp, #009E73 green at 0 % through #4467A3 to navy #002850 at 100 %; Start marker #009E73, End marker #C475FD, both with white halos; 'Progress (%)' color bar and 'Markers' legend
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Panel background: Dark terrain-green #1D2419 — themed dark equivalent of the light terrain background
-      Chrome: Title text is rendered in light cream (#F0EFE8), axis labels and tick labels in light/muted tones (#B8B7B0). Legends display with light text on elevated dark background (#242420 frame). All text clearly readable against dark surface.
-      Data: Viridis route colors are identical to the light render — same purple-to-yellow progression. Start (#009E73) and End (#D55E00) marker colors unchanged. Only chrome elements (background, text, grid, legend frame) switched themes; data colors held constant.
-      Legibility verdict: PASS — no dark-on-dark failures, all labels and annotations visible against the dark surface
+      Background: Warm near-black #1A1A17 across the whole canvas; panel tinted dark green #1D2419
+      Chrome: Title and axis titles in light cream, ticks in #B8B7B0; grid subtle; legends on #242420 — no dark-on-dark text
+      Data: Same track; the continuous ramp uses its dark stops (#007755 → #009E73 → pale blue #CDD9FF); Start #009E73 and End #C475FD identical to the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=16, axis=12, tick=10, legend=10).
-          All text readable in both themes. Title spans ~65% of width — expected.
-          Minor: title weight could be bolder.'
+        comment: Explicit sizes (title 16, axis titles 12, ticks/legend 10); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions. Start and end markers well-separated.
-          Path does not crowd labels.
+        comment: No text collisions; Start/End markers clear of labels and legends
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 waypoints medium density. Path size=1.5 (6px effective) clearly
-          visible. Start/End markers size=5 prominent with white stroke. Viridis gradient
-          makes route legible.
+        comment: Path size 1.5 clearly visible at 150 waypoints; Start/End markers
+          size 5 with white halo; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe. Start/End markers
-          use Okabe-Ito positions 1 and 2.
+        comment: Ramp varies in lightness; Start/End differ in hue and lightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) with scale=4 = 3200x1800 correct. coord_fixed(1.0)
-          preserves geographic proportions. Canvas gate passed.
+        comment: gggrid one-panel wrapper paints the whole 3200x1800 canvas in the
+          page color; coord_fixed panel and legends use the canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units. Title format map-route-path
-          · python · letsplot · anyplot.ai correct.
+        comment: Longitude (°) / Latitude (°) with units; mandated title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_color_viridis for continuous progress data (correct). Start=#009E73
-          (Okabe-Ito pos 1). End=#D55E00 (Okabe-Ito pos 2). Backgrounds #FAF8F1/#1A1A17
-          correct. Both renders theme-correct.'
+        comment: 'Imprint SEQ_MARKS ramp with theme-specific stops; Start #009E73,
+          End #C475FD; page #FAF8F1 / #1A1A17; grid at INK 15 %'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Terrain-themed panel background creative and contextually appropriate.
-          Deliberate marker design with white stroke. Viridis choice shows taste.
-          Elevated legend frame polished. Lacks directional arrows and richer annotations.
+        comment: 'Beyond baseline: a terrain-tinted panel (#E8F0E4 / #1D2419) separating
+          the map area from the page, white-haloed endpoint markers'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_minimal() base with custom overlay. Subtle grid (major=0.3,
-          minor=0.15). White marker borders. Custom ELEVATED_BG legend frame.
+        comment: 'Beyond baseline: white halo rings lift the endpoints off the line;
+          framed panel with a subtle major/minor grid'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Viridis gradient makes travel direction instantly readable. Green
-          start / orange end creates natural narrative. Winding loop shape interesting.
-          Could add directional arrows or elevation annotations.
+        passed: false
+        comment: Progress gradient and endpoint markers are what the Notes ask; no
+          further hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,56 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected route path map with geographic coordinates — correct plot
-          type.
+        comment: Connected route path on lon/lat coordinates — correct type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Sequential waypoints via geom_path, distinct start/end markers, viridis
-          progress gradient, interactive tooltips. Basemap listed as optional in spec
-          Notes.
+        passed: false
+        comment: Sequenced line (C1), distinct Start/End markers (C2), progress gradient
+          with named color bar (C3) present; no geographic basemap (C5) — defect line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=lon, y=lat correct. 150 waypoints within 50-1000 range. Sequence
-          ordering correct. coord_fixed preserves spatial relationships.
+        comment: x=lon, y=lat, coord_fixed keeps proportions, path sorted by sequence,
+          marks at data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-route-path · python · letsplot · anyplot.ai' correct.
-          Markers legend with Start/End. Progress (%) colorbar correct.
+        comment: Title format correct; 'Progress (%)' color bar and 'Markers' Start/End
+          legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'GPS track simulation, route sequencing, progress encoding, start/end
-          identification, interactive exploration. Missing: no geographic basemap
-          tile layer (letsplot supports geom_livemap()).'
+        comment: Loop crossing itself, start/end distinction and time progression
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Swiss Alps hiking trail (Graubunden/Engadin area, lat~46.85, lon~9.85).
-          Realistic, geographically consistent, entirely neutral.
+        comment: Swiss Alps (Graubünden) hiking GPS track, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 GPS waypoints, lat range ~0.055 degrees, lon range ~0.1 degrees
-          — consistent with a realistic multi-kilometre hiking loop.
+        comment: 150 waypoints over ~5.5 x 7.6 km, plausible hiking loop; spec has
+          no Check values
     code_quality:
       score: 10
       max: 10
@@ -202,34 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat procedural script.
+        comment: Flat script; ramp_color is the helper the library prompt prescribes
+          for gradientn
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) — fully deterministic.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Clean separation of theme tokens, data generation,
-          plot assembly, and export.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct naming.
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -237,30 +223,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_path + geom_point grammar style. scale_color_viridis and scale_fill_manual
-          applied correctly. coord_fixed for geographic data. theme_minimal() base
-          with overlay. ggsave scale=4 correct.
+        comment: Grammar-of-graphics layering with per-layer data, coord_fixed for
+          geographic aspect
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: 'layer_tooltips() with formatted multi-line output (.line(), .format())
-          is letsplot-specific. HTML export. coord_fixed geographic projection. Missing:
-          geom_livemap() which is letsplot''s flagship geographic feature.'
+        passed: false
+        comment: layer_tooltips() with formatted multi-line lat/lon/progress tooltips
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T12:35:42Z'
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - layer-composition
   - hover-tooltips
   - html-export
-  - colorbar
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - alpha-blending
   - custom-colormap
   - edge-highlighting
+  - grid-styling
