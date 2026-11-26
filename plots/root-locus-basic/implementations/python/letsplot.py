@@ -173,7 +173,7 @@ plot = (
         .line(f"Re = @{{{REAL}}}")
         .line(f"Im = @{{{IMAGINARY}}}"),
     )
-    + scale_color_manual(values=dict(zip(branches, IMPRINT_PALETTE)), name=BRANCH)  # noqa: F405
+    + scale_color_manual(values=dict(zip(branches, IMPRINT_PALETTE, strict=False)), name=BRANCH)  # noqa: F405
     # ── Direction arrows (increasing gain) ─────────────────────────────
     + geom_segment(  # noqa: F405
         aes(x="x", y="y", xend="xend", yend="yend"),
