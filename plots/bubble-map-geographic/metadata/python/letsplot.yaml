@@ -18,37 +18,33 @@ review:
   - scale_size_area(max_size=17) maps population to bubble area with zero at zero,
     so Tokyo (37.4 M) reads as about twice the area of Mexico City (21.8 M), as the
     Notes ask
-  - 'Bubbles are sorted largest-first so smaller cities sit on top: Osaka stays visible
-    inside Tokyo''s bubble and Rio stays distinct next to Sao Paulo, with alpha 0.65
-    translucency'
-  - The basemap is drawn from theme tokens (LAND, COAST, inland seas in PAGE_BG),
-    so it is clearly quieter than the bubbles in both themes
+  - 'Bubbles sorted largest-first so smaller cities sit on top: Osaka stays visible
+    inside Tokyo''s bubble and Rio next to Sao Paulo, with alpha 0.65 translucency'
+  - Basemap drawn from theme tokens (LAND, COAST, inland seas in PAGE_BG), clearly
+    quieter than the bubbles in both themes
   - Separate size and Region legends, with override_aes giving neutral INK_SOFT reference
-    circles at the data alpha and uniform color swatches
+    circles at the data alpha
   - Native layer_tooltips with the city name as title plus population and region lines
     in the HTML output
   - coord_fixed(ratio=1.55) gives the map a sensible mid-latitude aspect that fills
     the 16:9 canvas
   weaknesses:
-  - 'Suggestion: the smallest bubbles (Dubai 3.5 M, Berlin 3.6 M) shrink to dots of
-    a few pixels in the 400 px thumbnail; a slightly larger max_size would keep them
-    more present without breaking area proportionality.'
-  - 'Suggestion: a thin page-colored outline on the bubbles (shape=21 with a fill
-    mapping) would separate the Tokyo/Osaka and Sao Paulo/Rio overlaps more crisply.'
   - 'Suggestion: the hand-traced coastlines are coarse (the Arabian Peninsula and
     the Mediterranean are blocky); a finer outline set would make the basemap read
     more like a map.'
+  - 'Suggestion: a thin page-colored outline on the bubbles would separate the Tokyo/Osaka
+    and Sao Paulo/Rio overlaps more crisply.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page and panel; land in a slightly darker beige (#E8E5DA) with thin grey-taupe coastlines; Black and Caspian Seas cut out in the page color.
-      Chrome: title "bubble-map-geographic · python · letsplot · anyplot.ai" top-left in dark ink, about 54 % of the width; axis titles "Longitude (°)" / "Latitude (°)" and ticks (-150..150, -60..60) in dark/soft ink; faint grid lines; two framed legends on the right on an elevated background: "Population (M)" with grey reference circles 10/20/30, and "Region" with six colored dots. All text readable.
-      Data: 30 world cities as translucent bubbles (alpha 0.65), area by population; Asia #009E73 (first series), S. America #C475FD, N. America #4467A3, Africa #BD8233, Europe #AE3030, Oceania #2ABCCD. Largest bubble Tokyo, with Osaka drawn on top; dense cluster over South and East Asia. Smallest bubbles (Dubai, Berlin) are small dots but visible.
+      Background: warm off-white #FAF8F1 page and panel; land in beige #E8E5DA with thin taupe coastlines; Black and Caspian Seas cut out in the page color.
+      Chrome: title "bubble-map-geographic · python · letsplot · anyplot.ai" top-left in dark ink (~54 % of width); axis titles "Longitude (°)" / "Latitude (°)" and ticks (-150..150, -60..60) in dark/soft ink; faint grid; two framed legends on the right: "Population (M)" with grey 10/20/30 reference circles and "Region" with six colored dots. All text readable.
+      Data: 30 world cities as translucent bubbles (alpha 0.65), area by population; Asia #009E73 (first series), S. America #C475FD, N. America #4467A3, Africa #BD8233, Europe #AE3030, Oceania #2ABCCD. Tokyo largest, Osaka drawn on top; dense South/East Asia cluster; smallest bubbles (Dubai, Berlin, Rome) small but visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; land in #2A2A26 with muted coastlines, still quieter than the bubbles.
-      Chrome: title, axis titles, ticks and legend text in light ink (#F0EFE8 / #B8B7B0), all clearly readable; no dark-on-dark text; legends framed on #242420.
-      Data: the same six palette colors at the same alpha as the light render; only the chrome and basemap flip. Brand green Asia bubbles stand out well; the Europe red and the N. America blue are darker against the dark land but clearly distinguishable.
+      Background: warm near-black #1A1A17 page and panel; land #2A2A26 with muted coastlines, quieter than the bubbles.
+      Chrome: title, axis titles, ticks and legend text in light ink (#F0EFE8 / #B8B7B0), all readable; no dark-on-dark text; legends framed on #242420.
+      Data: the same six Imprint colors at the same alpha as the light render; only chrome and basemap flip. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,36 +56,38 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 16, axis 12, ticks 10, legend 10/11); all text
-          readable in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10, legend 11/10);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: No text collisions; bubble overlaps (Tokyo/Osaka, Sao Paulo/Rio)
-          are permitted and handled with alpha and draw order
+          are permitted by the spec and handled with alpha 0.65 and largest-first
+          draw order
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bubbles are prominent for 30 points; the smallest ones are still
-          visible; legend glyphs are visible in both themes
+        comment: 30 bubbles prominent; smallest (Dubai, Berlin, Rome) still visible;
+          legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint categorical colors, distinct hues, good contrast against
-          land in both themes
+        comment: Six distinct Imprint hues with good contrast against the land in
+          both themes; size carries the value, color only the region
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; the map fills the panel, legends sit at the right, nothing
-          cut off
+        comment: 3200x1800; map fills the panel with both legends at the right; nothing
+          cut off (only the outermost 1 px pixel column at the left edge is transparent,
+          not visible at any display size)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,22 +109,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Theme-derived land, coast and inland-sea tokens make a cohesive,
-          quiet basemap in both themes; legends on an elevated surface
+        passed: false
+        comment: Theme-derived LAND, COAST and ELEVATED_BG tokens give a cohesive,
+          quiet basemap and legend surface in both themes
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Inland seas cut in the page color and a coastline weight chosen so
-          the basemap sits below the data
+        passed: false
+        comment: Inland seas cut out in the page color and a 0.3 coastline weight
+          chosen so the basemap sits below the data
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: The data is displayed; no hierarchy chosen beyond the Notes
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -142,21 +140,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Area scaling, size legend, alpha 0.65, coastline basemap, tooltips,
-          smaller bubbles on top, separate category legend: all present'
+        comment: 'Area scaling, size legend in millions, alpha 0.65, coastline basemap,
+          tooltips, smaller bubbles on top, separate Region legend: C1-C5 all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bubbles sit at their lon/lat; no displacement
+        comment: Bubbles at their lon/lat (Tokyo on Honshu, New York on the US east
+          coast, Sydney on the Australian coast); no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Correct title format; legend titles 'Population (M)' and 'Region'
-          are readable
+          readable
     data_quality:
       score: 15
       max: 15
@@ -166,8 +165,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide value range (3.5-37.4 M), dense and sparse regions, overlaps,
-          six categories
+        comment: Value range 3.5-37.4 M, dense (East/South Asia) and sparse regions,
+          overlaps, six categories
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -179,8 +178,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plausible metro population values in millions; coordinates checked
-          for Tokyo, NYC, Sydney and Lagos
+        comment: Plausible metro populations in millions; coordinates checked for
+          Tokyo, New York, Sydney and Lagos; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -208,8 +207,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: The coastline constants are data, not a reimplemented call; the rest
-          is concise
+        comment: Coastline rings are constants (data), not a reimplemented call; plot
+          block is concise
       - id: CQ-05
         name: Output & API
         score: 1
@@ -224,7 +223,7 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
+        passed: false
         comment: Grammar layering with scale_size_area, guides(override_aes), coord_fixed
           with limits
       - id: LM-02
@@ -236,7 +235,7 @@ review:
           on the basemap layers
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
   rendered_at: '2026-11-09T08:55:25Z'
 impl_tags:
   dependencies: []
