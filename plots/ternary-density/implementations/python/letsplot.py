@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
@@ -19,6 +19,7 @@ from lets_plot import (
     geom_contour,
     geom_path,
     geom_point,
+    geom_polygon,
     geom_raster,
     geom_segment,
     geom_text,
@@ -124,6 +125,15 @@ grid = pd.DataFrame(
     ]
 )
 triangle = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, SQRT3_2, 0]})
+
+# Page-colored frame around the triangle (a rectangle with the triangle cut out) hides the cells that poke past the edges
+PAD = 0.04
+frame = pd.DataFrame(
+    {
+        "x": [-PAD, 1 + PAD, 1 + PAD, -PAD, -PAD, 0, 0.5, 1, 0, -PAD],
+        "y": [-PAD, -PAD, SQRT3_2 + PAD, SQRT3_2 + PAD, -PAD, 0, SQRT3_2, 0, 0, -PAD],
+    }
+)
 vertices = pd.DataFrame({"x": [-0.05, 1.05, 0.5], "y": [-0.05, -0.05, SQRT3_2 + 0.06], "label": [SAND, SILT, CLAY]})
 
 plot = (
@@ -132,6 +142,7 @@ plot = (
     + scale_fill_gradientn(
         colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Relative density (peak = 1)"
     )
+    + geom_polygon(aes(x="x", y="y"), data=frame, fill=PAGE_BG, color=PAGE_BG, size=0)
     + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=grid, color="white", size=0.5, alpha=0.4)
     + geom_contour(aes(x="x", y="y", z="density"), data=surface, binwidth=CONTOUR_STEP, color="white", size=1.2)
     + geom_path(aes(x="x", y="y"), data=triangle, color=INK, size=1.6)
