@@ -5,6 +5,7 @@
 
 using CairoMakie
 using Colors
+using DataFrames
 using Random
 
 Random.seed!(42)
@@ -16,47 +17,47 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-const IMPRINT = [
-    colorant"#009E73",  # 1 — brand green  (NVDA)
-    colorant"#C475FD",  # 2 — purple       (AAPL)
-    colorant"#AE3030",  # 3 — red          (AMZN)
-    colorant"#4467A3",  # 4 — sky blue     (SPY)
+const IMPRINT_PALETTE = [
+    colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
+    colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 
-# Data: 252 trading days (~1 year) for 4 assets, normalized to 100
-const N_DAYS  = 252
-const TICKERS = ["NVDA", "AAPL", "AMZN", "SPY"]
+# Columns: set these to your table's column names
+const DAY    = "Trading day"                   # role: x
+const SYMBOL = "Symbol"                        # role: group
+const PRICE  = "Rebased performance (start = 100)"  # role: value
 
-# (daily drift, daily volatility) — geometric Brownian motion
-const GBM_PARAMS = [
-    (0.0018, 0.038),   # NVDA: high-growth tech, elevated vol
-    (0.0007, 0.019),   # AAPL: steady large-cap
-    (0.0005, 0.023),   # AMZN: moderate growth, higher vol
-    (0.0003, 0.012),   # SPY:  broad-market benchmark
+# Data: 252 trading days (~1 year) for 4 assets, geometric Brownian motion rebased to 100
+# Replace this block with your own table, for example df = CSV.read("prices.csv", DataFrame)
+Random.seed!(42)
+n_days = 252
+gbm_params = [   # (symbol, daily drift, daily volatility)
+    ("NVDA", 0.0018, 0.038),
+    ("AAPL", 0.0007, 0.019),
+    ("AMZN", 0.0005, 0.023),
+    ("SPY",  0.0003, 0.012),
 ]
-
-prices = Matrix{Float64}(undef, N_DAYS, 4)
-for (j, (μ, σ)) in enumerate(GBM_PARAMS)
-    p = fill(100.0, N_DAYS)
-    for i in 2:N_DAYS
+frames = map(gbm_params) do (sym, μ, σ)
+    p = fill(100.0, n_days)
+    for i in 2:n_days
         p[i] = p[i-1] * (1.0 + μ + σ * randn())
     end
-    prices[:, j] = p
+    DataFrame(DAY => 1:n_days, SYMBOL => sym, PRICE => p)
 end
+df = reduce(vcat, frames)
 
-days = 1:N_DAYS
+# Plot
+symbols = unique(df[!, SYMBOL])
+n_days_plot = maximum(df[!, DAY])
 
-# Approximate month tick positions (≈21 trading days per month, 2024)
-month_ticks  = [1, 22, 43, 64, 85, 106, 127, 148, 169, 190, 211, 232]
+# Month tick positions (~21 trading days per month)
+month_ticks  = collect(1:21:n_days_plot)
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][1:length(month_ticks)]
 
 # Semi-transparent colors for grid and reference line
-ink_r = Float32(red(INK))
-ink_g = Float32(green(INK))
-ink_b = Float32(blue(INK))
-grid_col = RGBAf(ink_r, ink_g, ink_b, 0.15f0)
-ref_col  = RGBAf(ink_r, ink_g, ink_b, 0.40f0)
+grid_col = RGBAf(red(INK), green(INK), blue(INK), 0.15f0)
+ref_col  = RGBAf(red(INK), green(INK), blue(INK), 0.40f0)
 
 # Figure
 fig = Figure(
@@ -70,8 +71,8 @@ ax = Axis(
     title              = "line-stock-comparison · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "2024 (Daily Close)",
-    ylabel             = "Rebased Performance (Start = 100)",
+    xlabel             = "Month (one trading year, daily close)",
+    ylabel             = PRICE,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xlabelsize         = 14,
@@ -98,21 +99,19 @@ ax = Axis(
 hlines!(ax, [100.0]; color = ref_col, linewidth = 1.2, linestyle = :dash)
 
 # Stock series lines
-for j in 1:4
-    lines!(ax, days, prices[:, j];
-        color     = IMPRINT[j],
+xlims!(ax, 1, n_days_plot + 25)
+for (j, sym) in enumerate(symbols)
+    sub = df[df[!, SYMBOL] .== sym, :]
+    lines!(ax, sub[!, DAY], sub[!, PRICE];
+        color     = IMPRINT_PALETTE[j],
         linewidth = 2.5,
-        label     = TICKERS[j],
+        label     = sym,
     )
-end
-
-# End-of-series value labels (final rebased performance)
-xlims!(ax, 1, N_DAYS + 25)
-for j in 1:4
-    final_val = prices[end, j]
-    text!(ax, N_DAYS + 3, final_val;
+    # End-of-series value label (final rebased performance)
+    final_val = sub[end, PRICE]
+    text!(ax, n_days_plot + 3, final_val;
         text     = string(round(Int, final_val)),
-        color    = IMPRINT[j],
+        color    = IMPRINT_PALETTE[j],
         fontsize = 13,
         align    = (:left, :center),
     )
