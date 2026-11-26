@@ -12,137 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: event flags with connector lines, distinct markers per
-    type (triangle/diamond/circle), earnings blackout regions, and earnings reaction
-    % annotations all implemented correctly'
-  - 'Strong data storytelling: earnings reaction percentages explicitly show market
-    response to corporate events, creating a narrative beyond mere display'
-  - 'Semantic color assignment is correct and well-reasoned: green (#009E73) for earnings,
-    lavender (#C475FD) for dividends, blue (#4467A3) for news, and matte red (#AE3030)
-    for negative price reactions'
-  - 'Complete theme adaptation: all chrome tokens (background, text, grid, legend)
-    properly flip between light (#FAF8F1) and dark (#1A1A17) renders with data colors
-    unchanged'
-  - Clean geometric Brownian motion simulation (mu=0.18, sigma=0.28) produces realistic
-    tech-stock price trajectory with plausible annual return and volatility parameters
-  - Alternating flag heights (flag_hi / flag_lo) prevent label overlap across the
-    8 events without any manual adjustment needed
+  - Alternating flag heights keep all eight flags and labels clear of each other and
+    of the price line
+  - Event types encoded redundantly by marker shape and Imprint color (triangle/#009E73,
+    diamond/#C475FD, circle/#4467A3), CVD-safe
+  - Colored dashed connectors run exactly from each flag to a dot on the price at
+    the event day
+  - Earnings windows drawn with poly!(Rect2f) at 12% alpha stay behind the price and
+    the flags
+  - 'Complete theme adaptation: page, ink, grid and legend tokens flip; data colors
+    identical in both renders'
   weaknesses:
-  - Earnings reaction annotations use fontsize=9, which is the smallest text on the
-    canvas; at mobile widths (~400px) these become very hard to read — increase to
-    10-11pt
-  - Price line at linewidth=1.2 is deliberately muted to let event flags dominate,
-    but 1.8-2.0 would improve readability without competing with the flags
-  - 'DE-01 minor gap to publication level: event marker markersize=17 is good but
-    a subtle strokewidth=1 on the flag markers (using INK_SOFT stroke) would add crispness
-    and definition at both resolutions'
+  - 'Suggestion: the 9 pt earnings reaction labels sit on or just below the price
+    line (-0.9% touches it in July); placing them above the flag labels at 11 pt would
+    keep them clear and readable.'
+  - 'Suggestion: the 1.2 px price line is thin for the main series; 1.8 px would give
+    it more presence without competing with the flags.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title "TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai" in dark ink, centered at top, fills ~75% of plot width — expected for this title length. Y-axis label "Share Price (USD)" and X-axis label "Month (2024)" in dark ink at 14pt, clearly readable. Month tick labels (Jan–Dec) in muted dark (#4A4A44) at 12pt. Y-axis tick labels ($120s–$180s) in same muted dark, readable.
-      Data: Price line in muted gray-brown (INK_SOFT, ~90% alpha) at linewidth=1.2 — thin by design to recede behind event flags. Area fill underneath price line in very subtle gray. Four earnings blackout windows in transparent green (#009E73 at 12% alpha). Event flags: green upward triangles for earnings (#009E73), lavender diamonds for dividends (#C475FD), blue circles for news (#4467A3). Dashed connector lines in matching event colors. Event labels (Q4 Earn, Dividend, Q1 Earn, Merger, Q2 Earn, Dividend, Q3 Earn, CEO Named) in dark ink above flags, alternating heights to avoid overlap. Earnings reaction annotations (+/-%) in green or matte red at fontsize=9, positioned below the price line near each earnings event — small but visible. Legend at bottom-left with green triangle, lavender diamond, blue circle markers and dark-ink labels.
-      Legibility verdict: PASS. All text readable against light background; no light-on-light failures. Reaction annotations at 9pt are the smallest element and borderline at mobile widths.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai' bold dark ink, ~35% of width; axis labels 'Share Price (USD)' and 'Month (2024)' and month/price ticks in dark ink, all readable; subtle y-grid only; legend lower left on an elevated fill.
+      Data: muted dark-gray price line (1.2 px) over a faint gray area fill; four pale green earnings windows; green triangles (earnings), lavender diamonds (dividends) and blue circles (news) at two alternating heights above the price, each with a colored dashed connector to a dot on the price and a dark label; earnings reaction percentages (+1.4%, -7.0%, -0.9%, +4.5%) in small 9 pt green/red text just below the price at each earnings date, partly touching the price line (-0.9%).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title in light cream text (#F0EFE8) — clearly readable against dark background. Y-axis label "Share Price (USD)" and X-axis label "Month (2024)" in same light cream. Month and price tick labels in muted light (#B8B7B0) — all readable. No dark-on-dark failures observed anywhere.
-      Data: Data colors identical to light render — green earnings flags (#009E73), lavender dividend flags (#C475FD), blue news flags (#4467A3), matte red negative annotations (#AE3030). The green blackout windows read correctly against the dark surface. Price line in muted light-gray (INK_SOFT dark token). Legend at bottom-left with dark elevated background (#242420) and frame in muted light — well-styled and readable.
-      Legibility verdict: PASS. All text readable against dark background; chrome tokens flip correctly; data colors are visually identical to the light render. Reaction annotations at 9pt are again the smallest element and very hard to read at mobile widths in dark mode.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and ticks in light ink, all readable; no dark-on-dark text; legend on #242420 with light labels.
+      Data: flag, connector and window colors identical to the light render; price line flips to light gray; the small red reaction labels below the price are the dimmest text, faint but present.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=20, labels=14, ticks=12, flags=12,
-          reactions=9, legend=11). Well-proportioned on desktop. Reaction annotations
-          at fontsize=9 are borderline small at mobile widths.
+        comment: All required text readable in both themes; title 20, labels 14, ticks
+          12, flag labels 12
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating flag heights (flag_hi/flag_lo) prevent label collisions.
-          Legend placed in empty bottom-left region. No text overlap anywhere.
+        comment: Flag labels and legend clear of the data and of each other
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Event markers (markersize=17) prominently visible. Price line at
-          linewidth=1.2 is thin by design to recede behind flags — appropriate but
-          could be slightly thicker.
+        comment: Flags at 17 px, price dots at 8 px and the price line are clearly
+          visible; legend glyphs match the flag shapes and colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Redundant encoding: distinct marker shapes (triangle/diamond/circle)
-          plus distinct colors. Imprint palette is CVD-safe. Red (#AE3030) is only
-          used semantically for negative returns, not as a primary categorical distinguisher.'
+        comment: Event types are told apart by shape (triangle, diamond, circle) as
+          well as color; reaction sign is in the text (+/-), not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Plot fills canvas well. Generous
-          vertical space above price data accommodates event flags without crowding.
-          Balanced margins.
+        comment: 3200x1800; the axis fills the canvas, flags occupy the headroom above
+          the price, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Share Price (USD)'' with units. X-axis: ''Month (2024)''
-          with temporal context. Both descriptive and clear.'
+        comment: '''Share Price (USD)'' and ''Month (2024)'' are descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First event series (earnings) uses #009E73 (brand green). Dividend
-          uses #C475FD (palette position 2). News uses #4467A3 (palette position 3).
-          Loss uses #AE3030 (semantic anchor for negative). Background #FAF8F1 light
-          / #1A1A17 dark. Chrome tokens fully theme-adaptive. Data colors identical
-          across both renders.'
+        comment: 'Imprint positions 1-3 for the event types (#009E73 first), #FAF8F1
+          / #1A1A17 backgrounds, theme tokens for all chrome'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design clearly above defaults: earnings blackout windows,
-          area fill under price, alternating flag heights, and earnings reaction annotations
-          all show intentional design. Not yet FiveThirtyEight level — event markers
-          lack the crisp definition a strokewidth=1 outline would add.'
+        passed: false
+        comment: 'Above the baseline: the price is drawn in muted ink with a soft
+          area fill so the saturated event flags carry the hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: 'Top/right spines removed. X-grid disabled; Y-grid at 12% opacity
-          (very subtle). Explicit spine colors set. Legend styled with frame and elevated
-          background. All tick colors explicitly set. Minor gap to perfect: could
-          add slight margin padding via padding= on the axis.'
+        passed: false
+        comment: Only the y-grid, x-grid off for a time axis with dashed connectors;
+          legend on an elevated fill tucked into the empty lower-left corner
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Visual hierarchy is clear: muted price line recedes, bright event
-          markers stand out, earnings percentage annotations directly answer ''how
-          did the market react?''. The blackout windows frame earnings periods. Functional
-          storytelling above the default of ''data displayed without interpretation''.'
+        passed: false
+        comment: 'Default: data displayed; the reaction % annotations are an unrequested
+          layer and earn no credit'
     spec_compliance:
       score: 15
       max: 15
@@ -152,35 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stock price chart with flag-style markers. Flags have dashed connector
-          lines, price dots at event dates, and distinct shaped markers per type.
-          Exactly matches the spec description.
+        comment: Price line with flag markers above it, as the spec describes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: flag markers with connector lines,
-          distinct icons/colors per event type (earnings/dividend/news), vertical
-          dashed lines to price level, earnings blackout background regions, event
-          labels. OHLC optional per spec and omitted appropriately for a static library.'
+        comment: Alternating flag heights (C2), dashed connectors to the price level
+          (C3), distinct icons and colors with short labels (C4), earnings windows
+          behind price and flags (C5); hover N/A for static CairoMakie
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: trading days mapped to month labels (Jan-Dec) for the 252-day
-          year. Y-axis: share price in USD. All 252 data points visible. Events correctly
-          placed at their trading day positions.'
+        comment: Price at its data values on all 252 days; flags and connectors at
+          their event days; axes fitted to the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai'
-          follows {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
-          format exactly. Legend labels 'Earnings', 'Dividend', 'News' match the three
-          event categories with correct marker shapes.
+        comment: Title 'TechCorp 2024 · stock-event-flags · julia · makie · anyplot.ai';
+          legend Earnings / Dividend / News matches the flag glyphs
     data_quality:
       score: 15
       max: 15
@@ -190,26 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three event types, both positive and negative earnings
-          reactions, earnings blackout periods, 8 events over 252 trading days, realistic
-          price trajectory with ups and downs.
+        comment: Three event types, 8 events over 252 trading days, an extended-event
+          region type, rises and falls in price
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TechCorp 2024 with quarterly earnings, semi-annual dividends, Merger
-          announcement, and CEO Named news — fully realistic financial scenario. Neutral,
-          non-controversial business context.
+        comment: Fictional tech company with quarterly earnings, dividends, merger
+          and CEO news; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting price $150, mu=0.18 (18% annual return), sigma=0.28 (28%
-          annual volatility) — realistic parameters for a mid-cap tech stock. 252
-          trading days = one calendar year. Event cadence (4 quarterly earnings, 2
-          dividends, 2 news) is realistic.
+        comment: Start at $150, GBM mu=0.18 sigma=0.28 gives a plausible $120-175
+          range over one year; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -219,57 +187,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clear Imports → Constants → Data → Plot → Save flow. No functions
-          or classes. Event loop is appropriate complexity.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: using CairoMakie, using Colors, using Random — all three are actively
-          used.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Julia/Makie code. No fake interactive elements.
-          Event iteration loop is well-structured. No over-engineering.
+        comment: Straightforward event loop, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png. Uses current Makie API (size= for newer
-          Makie versions). px_per_unit=2 correctly doubles resolution.
+        comment: save("plot-$(THEME).png"; px_per_unit=2), current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Uses Makie''s native primitives correctly: band!, poly! with Rect2f,
-          scatter!, lines!, text!, axislegend with MarkerElement. RGBAf for semi-transparent
-          colors. Figure+Axis layout pattern. Strong idiomatic usage throughout.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: band! for area fill (Makie-specific primitive), poly! with Rect2f
-          for earnings blackout patches, axislegend with hand-crafted MarkerElement
-          list. Moderately Makie-distinctive; could push further with e.g. Observables
-          or Recipe pattern for the flag drawing.
+        passed: false
+        comment: 'Default: Figure/Axis, band!, poly!(Rect2f), scatter!, text!, axislegend
+          with MarkerElement — standard Makie usage'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: nothing beyond what the library prompt mandates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d9c138255d
 impl_tags:
   dependencies:
   - colors
