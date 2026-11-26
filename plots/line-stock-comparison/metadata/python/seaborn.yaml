@@ -2,131 +2,128 @@ library: seaborn
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:22:19Z'
-updated: '2026-05-23T10:00:07Z'
+updated: '2026-11-26T13:30:27Z'
 generated_by: claude-sonnet
-workflow_run: 26329496995
+workflow_run: 45828673721
 issue: 3748
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders use
-    correct backgrounds, all chrome elements flip correctly, no dark-on-dark failures.'
-  - 'Strong seaborn idioms: sns.move_legend(), sns.despine(), sns.set_context(), palette_map
-    with hue_order for controlled multi-series coloring.'
-  - Reference line at y=100 adds meaningful analytical baseline context for rebased
-    stock comparison.
-  - Imprint palette order strictly followed with green (#009E73) as first series (AAPL).
-  - Y-axis-only grid at alpha=0.10 is appropriately subtle; top+right spines removed.
-  - Geometric Brownian motion generates realistic synthetic stock price data with
-    appropriate per-symbol drift and volatility parameters.
+  - Every series is rebased in the data computation (price / first price * 100 via
+    groupby().transform('first')), so all four lines start together at exactly 100
+    on the first date.
+  - 'Imprint positions 1-4 in canonical order, identical in both renders, with theme-correct
+    chrome on #FAF8F1 and #1A1A17.'
+  - Reference line at 100 is dashed, INK_SOFT at alpha 0.6 and drawn at zorder 0,
+    subordinate to the series and visible in both themes.
+  - 'Idiomatic seaborn: one sns.lineplot call on long-form data with hue/hue_order
+    and a palette dict, sns.move_legend to place the legend outside the axes, sns.despine.'
+  - plt.tight_layout() fills the fixed 3200x1800 canvas with no clipping.
   weaknesses:
-  - 'Critical rebasing bug: `price = 100 * np.exp(np.cumsum(returns))` does not normalize
-    each series to start at exactly 100. The cumsum starts at returns[0] (not 0),
-    so the first price equals 100 * exp(returns[0]) — a random value. Visually: MSFT
-    starts near 85 and AAPL/GOOGL/SPY near ~107 instead of all starting at exactly
-    100. Fix: use np.concatenate([[0], np.cumsum(returns[:-1])]) in the exponent,
-    OR normalize afterward: price = price / price[0] * 100.'
-  - Legend positioned in upper-left partially overlaps the AAPL (green) data line
-    in early-2024 period where lines are clustered; consider nudging with bbox_to_anchor
-    or choosing a less congested position.
+  - 'Suggestion: an index-style y label such as ''Indexed performance (start = 100)''
+    would read even less like a price than ''Rebased price''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title "line-stock-comparison · python · seaborn · anyplot.ai" in dark text, clearly readable. X-axis label "Date" and y-axis label "Rebased Price (Start = 100)" both in dark text at fontsize=10, readable. Tick labels at fontsize=8, rotated 30° on x-axis (2024-01 through 2025-01), horizontal on y-axis (80–170) — all legible. Legend "Symbol" in upper-left with AAPL/GOOGL/MSFT/SPY entries at 8pt — readable. Dashed gray reference line at y=100.
-      Data: AAPL=#009E73 (green), GOOGL=#9418DB (purple), MSFT=#B71D27 (red), SPY=#16B8F3 (cyan). Lines at linewidth=2.5. All four series clearly distinguishable. IMPORTANT: series do NOT all start at 100 — MSFT starts near ~85, others near ~107 — rebasing bug.
-      Legibility verdict: PASS (all text readable against light background).
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'line-stock-comparison · python · seaborn · anyplot.ai' in dark ink at the top, about 55% of the width; y label 'Rebased price (start = 100)', x label 'Date'; y ticks 80-150 every 10, monthly date ticks 2024-01 to 2025-01 rotated 30°; legend 'Symbol' outside the axes on the right with an elevated box. All text readable.
+      Data: four lines at 2.5 width: AAPL #009E73 green, GOOGL #C475FD purple, MSFT #4467A3 blue, SPY #BD8233 ochre. All start at exactly 100 on 2024-01-01; GOOGL peaks near 148 in late June and ends near 127, SPY ends near 116, AAPL near 97, MSFT near 92 after a low near 83. Dashed grey reference line at 100 behind the lines; subtle horizontal grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title in light text clearly readable against dark background. Axis labels and tick labels in light/soft-ink colors — all readable. Legend text readable. No dark-on-dark failures observed. Dashed reference line visible as subtle lighter element.
-      Data: Colors identical to light render — AAPL green, GOOGL purple, MSFT red, SPY cyan. No data color drift between themes. Same rebasing bug visible (series don't start at 100).
-      Legibility verdict: PASS (all text readable against dark background, no dark-on-dark issues).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis labels and legend text in light ink, ticks in soft light grey; legend box on the dark elevated surface with a light border; grid lines subtle but visible. No dark-on-dark text.
+      Data: the same four colors as the light render (green, purple, blue, ochre), identical data; brand green clearly visible; dashed reference line at 100 visible in light grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title/axis/tick/legend all readable in both themes; 8pt legend is
-          compact but legible.
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all set explicitly;
+          every text element readable in both themes; title spans about 55% of the
+          width.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text collisions. Minor legend-line overlap in early 2024
-          data region.
+        comment: 'No collisions: the legend sits outside the axes on the right, tick
+          labels rotated 30° stay apart.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four lines at linewidth=2.5, all distinct. Reference dashed line
-          clearly visible.
+        comment: Four lines at linewidth 2.5 over 252 daily points stay distinct;
+          legend line samples match the lines in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Mandated Imprint palette used; green+red as series 1+3 poses mild
-          red-green CVD risk.
+        passed: true
+        comment: Green, purple, blue and ochre differ in hue and lightness; no red-green
+          pair carries the series identity.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 passes gate. Title ~65% width, balanced labels,
-          no overflow.
+        comment: plt.tight_layout() fills the 3200x1800 canvas; legend outside the
+          axes uses the right margin without cramping; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; correct title format.
+        comment: '''Date'' and ''Rebased price (start = 100)'' tell the reader the
+          axis is a rebased index.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical palette order; correct backgrounds
-          in both themes.'
+        comment: 'Imprint positions 1-4 in canonical order (#009E73, #C475FD, #4467A3,
+          #BD8233), identical in both renders; backgrounds #FAF8F1 / #1A1A17 and theme-adaptive
+          chrome.'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Intentional palette, professional reference line, clean layout —
-          above default.
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          font sizes) and nothing decided beyond it.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Spines removed, y-only grid at alpha=0.10, legend with title — meaningfully
-          above default.
+        comment: 'Spines removed and a subtle y-only grid: the baseline; the legend
+          moved outside the axes is the only further decision and does not lift the
+          item.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Reference line at 100 anchors the story. No event annotations or
-          further narrative devices.
+        comment: Data displayed with the Notes' reference line; no emphasis or focal
+          point chosen beyond the Notes.
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,53 +131,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line time-series chart comparing four stocks — correct.
+        comment: Multi-line rebased price comparison chart, the requested type.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Reference line at 100 and distinct colors present. Major gap: series
-          do NOT start at 100 on the first date (rebasing bug).'
+        passed: true
+        comment: Rebased to 100 on the first date, distinct color per symbol with
+          a legend, reference line at 100 drawn subordinate (dashed, INK_SOFT, alpha
+          0.6, zorder 0) and visible in both themes, y grid present; C1-C4 met, C5
+          not drawn (conditional).
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Date on X, rebased price on Y — concept correct. Y-axis label 'Rebased
-          Price (Start = 100)' is misleading since series don't actually start at
-          100.
+        passed: true
+        comment: Date on x, rebased value on y; y axis 80-150 fits the series around
+          100 without forcing zero; round ticks every 10 and monthly date ticks.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match symbols with 'Symbol' title.
+        comment: Title 'line-stock-comparison · python · seaborn · anyplot.ai' is
+          correct; legend titled 'Symbol' with AAPL, GOOGL, MSFT, SPY.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Multi-series, reference line, legend, time series all present. Core
-          rebasing incorrectly implemented limits analytical value.
+        passed: true
+        comment: 'All series begin together at exactly 100 and separate: GOOGL far
+          above, SPY ends near 116, AAPL and MSFT end below 100; crossings and widening
+          spread shown.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real tickers (AAPL, GOOGL, MSFT, SPY), 252 business days, realistic
-          GBM movements, neutral financial context.
+        comment: 'The spec''s own example: AAPL, GOOGL, MSFT and SPY over one trading
+          year of 2024.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 252 business days correct; Y-axis range ~80-170 plausible for rebased
-          stock data.
+        comment: 'Checked: 252 business days from 2024-01-01; start prices 185/140/375/470
+          are plausible for January 2024; SPY with the lowest daily volatility (1.0%)
+          moves least, consistent with an index; rebasing computed as price / first
+          price * 100 (lines 66-67), so every series reads 100 on the first date.'
     code_quality:
       score: 10
       max: 10
@@ -190,34 +192,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: 'Linear script: tokens, constants, Data block ending in df, plot,
+          save; no functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports used.
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: zip(..., strict=True) idiomatic; GBM model appropriate; palette_map
-          elegant.
+        comment: Rebasing in one groupby().transform('first'); palette looked up by
+          position; no written-out algorithm or dead code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400; no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png at dpi=400 with default bbox; current seaborn
+          0.13 API.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -225,26 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.lineplot, sns.set_theme, sns.move_legend, sns.despine, sns.set_context
-          — strong idiomatic seaborn.
+        comment: Long-form df with hue/hue_order and a palette dict in one sns.lineplot
+          call, sns.move_legend to place the legend outside, sns.despine and sns.set_theme
+          rc for the theme.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: true
-        comment: sns.move_legend() for repositioning, sns.despine() for spine cleanup,
-          palette_map dict with hue_order for controlled ordering — good seaborn-specific
-          patterns.
+        comment: Generic line plot usage; nothing distinctive to seaborn beyond what
+          the library prompt mandates.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T13:26:31Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep:
-  - time-series
+  - normalization
   - cumulative-sum
+  - time-series
   styling:
+  - publication-ready
   - grid-styling
