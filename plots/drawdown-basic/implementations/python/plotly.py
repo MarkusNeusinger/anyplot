@@ -1,19 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-23
 """
 
 import os
-import sys
 
-
-# Remove current directory from sys.path to avoid shadowing installed packages
-sys.path = [p for p in sys.path if p not in ("", ".")]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import plotly.graph_objects as go  # noqa: E402
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 
 
 # Theme tokens
@@ -24,53 +19,54 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
-LOSS_RED = "#AE3030"  # Imprint palette position 3 — semantic: loss/drawdown
-RECOVERY_GREEN = "#009E73"  # Imprint palette position 1 — semantic: recovery/new high
+# Imprint palette: full list in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+RECOVERY_GREEN = IMPRINT_PALETTE[0]  # semantic: recovery / new high
+LOSS_RED = IMPRINT_PALETTE[4]  # semantic: loss / drawdown
+LOSS_FILL = "rgba(174, 48, 48, 0.30)"  # LOSS_RED, semi-transparent
 
-# Data — simulated stock price with realistic volatility
+# Constants
+DRAWDOWN = "Drawdown (%)"  # role: extra
+
+# Column constants
+DATE = "Date"  # role: date
+PRICE = "Price (index, start = 100)"  # role: price
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 500
-dates = pd.date_range("2022-01-01", periods=n_days, freq="B").strftime("%Y-%m-%d").tolist()
-
 returns = np.random.normal(0.0003, 0.015, n_days)
 returns[100:150] -= 0.008  # market correction
 returns[300:350] -= 0.012  # larger drawdown period
-price = 100 * np.cumprod(1 + returns)
-
-# Calculate drawdown
-running_max = np.maximum.accumulate(price)
-drawdown = (price - running_max) / running_max * 100
-
-# Find maximum drawdown
-max_dd_idx = np.argmin(drawdown)
-max_dd_value = drawdown[max_dd_idx]
-max_dd_date = dates[max_dd_idx]
-
-# Find recovery points (drawdown returns to zero after being negative)
-recovery_mask = (drawdown == 0) & (np.roll(drawdown, 1) < 0)
-recovery_mask[0] = False
-recovery_dates = [d for d, m in zip(dates, recovery_mask, strict=False) if m]
-
-# Calculate max drawdown duration
-max_dd_duration = 0
-current_duration = 0
-for dd in drawdown:
-    if dd < 0:
-        current_duration += 1
-        max_dd_duration = max(max_dd_duration, current_duration)
-    else:
-        current_duration = 0
+df = pd.DataFrame({DATE: pd.date_range("2022-01-01", periods=n_days, freq="B"), PRICE: 100 * np.cumprod(1 + returns)})
 
 # Plot
+# Drawdown: percentage decline from the running maximum
+running_max = df[PRICE].cummax()
+df[DRAWDOWN] = (df[PRICE] - running_max) / running_max * 100
+
+# Maximum drawdown
+max_dd_idx = df[DRAWDOWN].idxmin()
+max_dd_value = df.loc[max_dd_idx, DRAWDOWN]
+max_dd_date = df.loc[max_dd_idx, DATE]
+
+# Recovery points: drawdown returns to zero after being negative
+recovery_mask = (df[DRAWDOWN] == 0) & (df[DRAWDOWN].shift(1) < 0)
+recovery_dates = df.loc[recovery_mask, DATE]
+
+# Longest run of consecutive days below the previous peak
+under_water = df[DRAWDOWN] < 0
+max_dd_duration = int(under_water.groupby((~under_water).cumsum()).sum().max())
+
 fig = go.Figure()
 
 # Drawdown fill area
 fig.add_trace(
     go.Scatter(
-        x=dates,
-        y=drawdown,
+        x=df[DATE],
+        y=df[DRAWDOWN],
         fill="tozeroy",
-        fillcolor="rgba(174, 48, 48, 0.30)",
+        fillcolor=LOSS_FILL,
         line=dict(color=LOSS_RED, width=2),
         name="Drawdown",
         hovertemplate="Date: %{x|%Y-%m-%d}<br>Drawdown: %{y:.2f}%<extra></extra>",
@@ -86,14 +82,14 @@ fig.add_trace(
         marker=dict(size=14, color=LOSS_RED, symbol="diamond"),
         text=[f"Max DD: {max_dd_value:.1f}%"],
         textposition="bottom center",
-        textfont=dict(size=10, color=LOSS_RED),
+        textfont=dict(size=10, color=INK),
         name="Max Drawdown",
         showlegend=False,
-        hovertemplate=(f"Max Drawdown<br>Date: {max_dd_date}<br>Drawdown: {max_dd_value:.2f}%<extra></extra>"),
+        hovertemplate=f"Max Drawdown<br>Date: {max_dd_date:%Y-%m-%d}<br>Drawdown: {max_dd_value:.2f}%<extra></extra>",
     )
 )
 
-# Recovery point markers (larger for better visibility)
+# Recovery point markers
 if len(recovery_dates) > 0:
     fig.add_trace(
         go.Scatter(
@@ -106,7 +102,7 @@ if len(recovery_dates) > 0:
         )
     )
 
-# Statistics annotation inside plot (bottom-left, avoids right-edge clipping)
+# Statistics annotation inside plot (bottom-left)
 stats_text = (
     f"<b>Drawdown Statistics</b><br>"
     f"Max Drawdown: {max_dd_value:.2f}%<br>"
@@ -140,7 +136,7 @@ fig.update_layout(
         text="drawdown-basic · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
     ),
     xaxis=dict(
-        title=dict(text="Date", font=dict(size=12, color=INK)),
+        title=dict(text=DATE, font=dict(size=12, color=INK)),
         tickfont=dict(size=10, color=INK_SOFT),
         showgrid=True,
         gridcolor=GRID,
@@ -148,7 +144,7 @@ fig.update_layout(
         zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Drawdown (%)", font=dict(size=12, color=INK)),
+        title=dict(text=DRAWDOWN, font=dict(size=12, color=INK)),
         tickfont=dict(size=10, color=INK_SOFT),
         ticksuffix="%",
         showgrid=True,
@@ -166,7 +162,7 @@ fig.update_layout(
         borderwidth=1,
         orientation="h",
         yanchor="bottom",
-        y=1.02,
+        y=1.0,
         xanchor="center",
         x=0.5,
     ),
