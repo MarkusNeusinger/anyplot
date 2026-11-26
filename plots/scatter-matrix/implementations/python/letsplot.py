@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 78/100 | Updated: 2026-11-21
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -60,29 +60,22 @@ for var in VARIABLES:
 # Grid geometry (fractions of the canvas)
 margin_top = 0.07
 margin_bottom = 0.09
-margin_left = 0.01
-margin_right = 0.01
-cell_width = (1.0 - margin_left - margin_right) / n_vars
-cell_height = (1.0 - margin_top - margin_bottom) / n_vars
+margin_side = 0.01
 
-
-def cell_theme():
-    return theme(
-        axis_title=element_blank(),
-        axis_text=element_text(size=9, color=INK_SOFT),
-        legend_position="none",
-        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_minor=element_blank(),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.2),
-    )
-
+cell_theme = theme(
+    axis_title=element_blank(),
+    axis_text=element_text(size=9, color=INK_SOFT),
+    legend_position="none",
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_minor=element_blank(),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+)
 
 # Full-canvas background layer, drawn first so the margins carry the page color
 background = ggplot() + geom_blank() + theme_void() + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
-plots = [background]
-regions = [(0, 0, 1, 1, 0, 0)]
 
+cells = []
 for i, var_y in enumerate(VARIABLES):
     for j, var_x in enumerate(VARIABLES):
         if i == j:
@@ -102,16 +95,17 @@ for i, var_y in enumerate(VARIABLES):
                 + scale_x_continuous(limits=limits[var_x])
                 + scale_y_continuous(limits=limits[var_y])
             )
-        p = p + theme_minimal() + cell_theme()
+        p = p + theme_minimal() + cell_theme
 
         # Variable names along the bottom edge (last row) and the left edge (first column)
         if i == n_vars - 1:
             p = p + labs(x=var_x) + theme(axis_title_x=element_text(size=11, color=INK))
         if j == 0:
             p = p + labs(y=var_y) + theme(axis_title_y=element_text(size=11, color=INK))
+        cells.append(p)
 
-        plots.append(p)
-        regions.append((margin_left + j * cell_width, margin_top + i * cell_height, cell_width, cell_height, 0, 0))
+# align=True lines the panel edges up across cells whose tick labels differ in width
+grid = gggrid(cells, ncol=n_vars, align=True)
 
 # Title
 title_plot = (
@@ -121,8 +115,6 @@ title_plot = (
     + theme_void()
     + theme(plot_title=element_text(size=18, hjust=0.5, face="bold", color=INK), plot_background=element_blank())
 )
-plots.append(title_plot)
-regions.append((0, 0, 1, margin_top, 0, 0))
 
 # One legend for the whole grid: a key per species, drawn as points with text labels
 legend_df = df[[SPECIES]].drop_duplicates().reset_index(drop=True)
@@ -131,16 +123,21 @@ legend_df["row"] = 0.0
 legend_plot = (
     ggplot(legend_df, aes(x="pos", y="row", color=SPECIES))
     + geom_point(size=6)
-    + geom_text(aes(label=SPECIES), nudge_x=0.1, hjust=0, size=7, color=INK_SOFT)
+    + geom_text(aes(label=SPECIES), nudge_x=0.08, hjust=0, size=4, color=INK_SOFT)
     + scale_color_manual(values=IMPRINT_PALETTE)
     + scale_x_continuous(limits=[-0.3, len(legend_df) - 0.1])
     + theme_void()
     + theme(legend_position="none", plot_background=element_blank())
 )
-plots.append(legend_plot)
-regions.append((0.2, 1.0 - margin_bottom, 0.6, margin_bottom, 0, 0))
 
-combined = ggbunch(plots, regions) + ggsize(600, 600)
+plots = [background, grid, title_plot, legend_plot]
+regions = [
+    (0, 0, 1, 1, 0, 0),
+    (margin_side, margin_top, 1.0 - 2 * margin_side, 1.0 - margin_top - margin_bottom, 0, 0),
+    (0, 0, 1, margin_top, 0, 0),
+    (0.2, 1.0 - margin_bottom, 0.6, margin_bottom, 0, 0),
+]
+combined = ggbunch(plots, regions) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save: scale 4 gives 2400 x 2400 px
 ggsave(combined, filename=f"plot-{THEME}.png", path=".", scale=4)
