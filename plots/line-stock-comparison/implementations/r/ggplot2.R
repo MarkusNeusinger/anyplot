@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-stock-comparison: Stock Price Comparison Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-05-23
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 86/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(ragg)
@@ -17,14 +17,14 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 # embed alpha into hex — ggplot2 element_line lacks alpha parameter
 GRID_COLOR  <- adjustcolor(INK_SOFT, alpha.f = if (THEME == "dark") 0.22 else 0.35)
 
-IMPRINT <- c("#009E73", "#C475FD", "#AE3030", "#4467A3")
+IMPRINT <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
 # Data — approximately 1 year of trading days starting Jan 2023
 all_dates     <- seq(as.Date("2023-01-03"), by = "day", length.out = 400)
 trading_dates <- all_dates[!weekdays(all_dates) %in% c("Saturday", "Sunday")]
 trading_dates <- trading_dates[1:252]
 
-tickers <- c("NVDA", "MSFT", "AAPL", "SPY")
+tickers <- c("NOVA", "MERI", "ORCH", "MKTX")
 mu      <- c(0.0020, 0.0007, 0.0005, 0.0003)
 sigma   <- c(0.028,  0.015,  0.012,  0.008)
 
@@ -46,10 +46,10 @@ last_pts <- do.call(rbind, lapply(tickers, function(s) {
     sub_df[nrow(sub_df), ]
 }))
 
-# NVDA subset for outperformance ribbon
-nvda_df <- df[df$symbol == "NVDA", ]
+# NOVA subset for outperformance ribbon
+nvda_df <- df[df$symbol == "NOVA", ]
 
-# Key 2023 market events
+# Key (fictional) market events
 svb_region <- data.frame(
     xmin = as.Date("2023-03-06"), xmax = as.Date("2023-03-17"),
     ymin = -Inf, ymax = Inf
@@ -76,20 +76,22 @@ anyplot_theme <- theme_minimal(base_size = 8) +
         legend.box.background = element_blank(),
         legend.text           = element_text(color = INK_SOFT, size = 8),
         legend.title          = element_text(color = INK, size = 10),
-        legend.position       = "right",
-        plot.margin           = margin(12, 70, 12, 12)
+        legend.position       = "top",
+        legend.justification  = "left",
+        legend.direction      = "horizontal",
+        plot.margin           = margin(12, 60, 12, 12)
     )
 
 # Plot
 p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
-    # SVB collapse period — shaded rect
+    # Banking stress period — shaded rect
     geom_rect(
         data = svb_region,
         aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
         fill = "#AE3030", alpha = 0.07,
         inherit.aes = FALSE
     ) +
-    # Subtle fill ribbon under NVDA to emphasize outperformance
+    # Subtle fill ribbon under NOVA to emphasize outperformance
     geom_ribbon(
         data = nvda_df,
         aes(x = date, ymin = 100, ymax = rebased),
@@ -111,26 +113,26 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
         show.legend = FALSE
     ) +
     # Styled callout boxes using annotate(geom="label") — distinctively ggplot2
-    # SVB label at y=145 clears the stock cluster; color-coded to match the shaded region
-    annotate("label", x = as.Date("2023-03-11"), y = 145,
-             label = "SVB Collapse", color = "#AE3030",
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
-             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
-    annotate("label", x = ai_surge_date, y = 102,
-             label = "NVDA AI Surge", color = IMPRINT[1],
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
-             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
-    annotate("label", x = rate_peak_date, y = 102,
+    # Event labels sit above the data range, clear of every line; color-coded to match the shaded region
+    annotate("label", x = as.Date("2023-03-11"), y = 168,
+             label = "Banking Stress", color = "#AE3030",
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
+             angle = 0, hjust = 0.5, vjust = 0.5, fontface = "italic") +
+    annotate("label", x = ai_surge_date, y = 168,
+             label = "Tech Rally", color = IMPRINT[1],
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
+             angle = 0, hjust = 0.5, vjust = 0.5, fontface = "italic") +
+    annotate("label", x = rate_peak_date, y = 168,
              label = "Rates Peak", color = INK_SOFT,
-             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
-             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
+             fill = ELEVATED_BG, linewidth = 0.15, size = 3.0,
+             angle = 0, hjust = 0.5, vjust = 0.5, fontface = "italic") +
     # clip="off" enables end-of-line labels and off-axis annotations outside the panel
-    coord_cartesian(clip = "off") +
+    coord_cartesian(ylim = c(NA, 172), clip = "off") +
     scale_color_manual(values = setNames(IMPRINT, tickers), name = NULL) +
     scale_x_date(date_labels = "%b '%y", date_breaks = "2 months") +
     labs(
         title    = "line-stock-comparison · r · ggplot2 · anyplot.ai",
-        subtitle = "Rebased to 100 at start of 2023  ·  shaded region: SVB bank collapse (Mar)",
+        subtitle = "Rebased to 100 at start of 2023  ·  shaded region: banking stress (Mar)",
         x        = "Date",
         y        = "Rebased Price (Start = 100)"
     ) +

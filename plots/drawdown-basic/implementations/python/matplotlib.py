@@ -1,7 +1,7 @@
 """ anyplot.ai
 drawdown-basic: Drawdown Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-23
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,19 +21,24 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Semantic palette: red for drawdown (loss), green for recovery (gain)
-DRAWDOWN_COLOR = "#AE3030"  # Imprint palette position 3
-RECOVERY_COLOR = "#009E73"  # Imprint palette position 1
+# Imprint palette (full list); red for drawdown (loss) and green for recovery (gain) are semantic picks
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+DRAWDOWN_COLOR = IMPRINT_PALETTE[4]
+RECOVERY_COLOR = IMPRINT_PALETTE[0]
 
-# Data — 2 years of simulated daily portfolio values with multiple drawdown cycles
+# Constants
+HEADROOM = 5  # percentage points of space kept above the zero line
+MIN_DROP = -0.5  # a return to a new high counts as a recovery after a drop deeper than this (%)
+
+# Columns
+DATE = "Date"  # role: date
+VALUE = "Portfolio value (USD)"  # role: price
+
+# Data: replace this block with your own table, for example df = pd.read_csv("portfolio.csv")
 np.random.seed(42)
 dates = pd.date_range("2022-01-01", periods=500, freq="B")
-n_points = len(dates)
-
 prices = [10000]
-trend = 0.0008
-
-for i in range(1, n_points):
+for i in range(1, len(dates)):
     if 50 <= i < 85:
         drift = -0.005
     elif 85 <= i < 130:
@@ -49,11 +54,13 @@ for i in range(1, n_points):
     elif 450 <= i < 470:
         drift = -0.004
     else:
-        drift = trend
-    noise = np.random.normal(0, 0.008)
-    prices.append(prices[-1] * (1 + drift + noise))
+        drift = 0.0008
+    prices.append(prices[-1] * (1 + drift + np.random.normal(0, 0.008)))
+df = pd.DataFrame({DATE: dates, VALUE: prices})
 
-portfolio_value = np.array(prices)
+# Plot
+dates = df[DATE]
+portfolio_value = df[VALUE].to_numpy()
 running_max = np.maximum.accumulate(portfolio_value)
 drawdown = (portfolio_value - running_max) / running_max * 100
 
@@ -66,20 +73,12 @@ peak_mask = portfolio_value[:max_dd_idx] == running_max[:max_dd_idx]
 peak_before_max_dd = np.where(peak_mask)[0][-1] if peak_mask.any() else 0
 peak_date = dates[peak_before_max_dd]
 
-recovery_after_max = None
-for i in range(max_dd_idx + 1, len(drawdown)):
-    if drawdown[i] >= 0:
-        recovery_after_max = dates[i]
-        break
-recovery_days = (recovery_after_max - max_dd_date).days if recovery_after_max is not None else "N/A"
+recovered = np.where(drawdown[max_dd_idx + 1 :] >= 0)[0]
+recovery_days = (dates[max_dd_idx + 1 + recovered[0]] - max_dd_date).days if len(recovered) else "N/A"
 
 # Recovery points: first bar where drawdown hits 0 after a meaningful drop
-recovery_indices = []
-for i in range(1, len(drawdown)):
-    if drawdown[i] >= 0 and drawdown[i - 1] < -0.5:
-        recovery_indices.append(i)
+recovery_indices = [i for i in range(1, len(drawdown)) if drawdown[i] >= 0 and drawdown[i - 1] < MIN_DROP]
 
-# Plot
 fig, ax1 = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax1.set_facecolor(PAGE_BG)
 
@@ -147,13 +146,13 @@ ax1.text(
 )
 
 # Primary axis style
-ax1.set_xlabel("Date", fontsize=10, color=INK)
+ax1.set_xlabel(DATE, fontsize=10, color=INK)
 ax1.set_ylabel("Drawdown (%)", fontsize=10, color=INK)
 ax1.set_title("drawdown-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax1.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax1.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}%"))
-ax1.set_ylim(min(drawdown) * 1.15, 5)
+ax1.set_ylim(min(drawdown) * 1.15, HEADROOM)
 ax1.spines["top"].set_visible(False)
 ax1.spines["right"].set_visible(False)
 ax1.spines["left"].set_color(INK_SOFT)
