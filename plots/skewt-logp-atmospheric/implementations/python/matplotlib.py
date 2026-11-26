@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-21
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import ScalarFormatter
@@ -23,55 +24,84 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Boost reference line visibility on dark background
 REF_ALPHA = 0.10 if THEME == "light" else 0.18
 
-# Okabe-Ito — data series
-TEMP_COLOR = "#009E73"  # temperature — position 1
-DEWPOINT_COLOR = "#C475FD"  # dewpoint — position 2
-CAPE_COLOR = "#AE3030"  # CAPE shading — position 5
-CIN_COLOR = "#4467A3"  # CIN shading — position 3
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+TEMP_COLOR = IMPRINT_PALETTE[0]  # temperature
+DEWPOINT_COLOR = IMPRINT_PALETTE[1]  # dewpoint
+CIN_COLOR = IMPRINT_PALETTE[2]  # CIN shading
+CAPE_COLOR = IMPRINT_PALETTE[4]  # CAPE shading
 
-# Data — simulated mid-latitude radiosonde sounding (surface to upper troposphere)
+# Constants: the frame of a Skew-T Log-P diagram, true for any sounding
+P_REF = 1000.0  # hPa, reference level where the skew is zero
+P_TOP = 100.0  # hPa, level where the skew reaches SKEW_MAX
+SKEW_MAX = 45.0  # degrees C of horizontal shift between P_REF and P_TOP
+T_AXIS_MIN, T_AXIS_MAX = -80, 50  # visible temperature axis (skewed coordinates)
+PRESSURE_TICKS = [1000, 850, 700, 500, 400, 300, 250, 200, 150, 100]  # standard levels
+SYNOPTIC_LEVEL = 500  # hPa, key synoptic reference level
+
+# Columns: set these to your table's column names
+PRESSURE = "Pressure (hPa)"  # role: pressure
+TEMPERATURE = "Temperature (°C)"  # role: temperature
+DEWPOINT = "Dewpoint (°C)"  # role: dewpoint
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sounding.csv")
 np.random.seed(42)
-pressure = np.array([1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100])
-temperature = np.array([25, 22, 19, 15, 12, 8, 5, 1, -3, -8, -14, -21, -28, -37, -45, -52, -56, -58, -56])
-dewpoint = np.array([18, 16, 14, 10, 6, 2, -2, -8, -15, -22, -28, -35, -42, -50, -55, -60, -65, -70, -75])
+df = pd.DataFrame(
+    {
+        PRESSURE: [1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
+        TEMPERATURE: [25, 22, 19, 15, 12, 8, 5, 1, -3, -8, -14, -21, -28, -37, -45, -52, -56, -58, -56],
+        DEWPOINT: [18, 16, 14, 10, 6, 2, -2, -8, -15, -22, -28, -35, -42, -50, -55, -60, -65, -70, -75],
+    }
+)
 
-# Lifted parcel — Bolton (1980) LCL + simplified moist adiabat above for CAPE/CIN shading
+# Plot: reads only df and the constants above
+df = df.sort_values(PRESSURE, ascending=False).reset_index(drop=True)
+pressure = df[PRESSURE].to_numpy(dtype=float)
+temperature = df[TEMPERATURE].to_numpy(dtype=float)
+dewpoint = df[DEWPOINT].to_numpy(dtype=float)
+p_bottom = pressure.max() * 1.05
+p_top = pressure.min()
+
+
+def skew(p):
+    """Horizontal shift of the temperature axis at pressure p (45-degree skew)."""
+    return SKEW_MAX * np.log(p / P_REF) / np.log(P_TOP / P_REF)
+
+
+# Lifted parcel: Bolton (1980) LCL, then a simplified moist adiabat above for CAPE/CIN shading
 T0_K = temperature[0] + 273.15
 Td0_K = dewpoint[0] + 273.15
-P0 = float(pressure[0])
+P0 = pressure[0]
 T_lcl_K = 1.0 / (1.0 / (Td0_K - 56.0) + np.log(T0_K / Td0_K) / 800.0) + 56.0
-P_lcl = P0 * (T_lcl_K / T0_K) ** 3.5  # ~902 hPa
+P_lcl = P0 * (T_lcl_K / T0_K) ** 3.5
 parcel_temp = np.where(
     pressure > P_lcl,
     T0_K * (pressure / P0) ** 0.286 - 273.15,  # dry adiabatic below LCL
     T_lcl_K * (pressure / P_lcl) ** 0.19 - 273.15,  # moist adiabatic above LCL
 )
 
-# Plot — square canvas for symmetric atmospheric profile
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 ax.set_yscale("log")
-ax.set_ylim(1050, 100)
-ax.set_xlim(-80, 50)
+ax.set_ylim(p_bottom, p_top)
+ax.set_xlim(T_AXIS_MIN, T_AXIS_MAX)
 
 ax.yaxis.set_major_formatter(ScalarFormatter())
-ax.set_yticks([1000, 850, 700, 500, 400, 300, 250, 200, 150, 100])
+ax.set_yticks([p for p in PRESSURE_TICKS if p_top <= p <= p_bottom])
 
-# Precompute skew offsets (45-degree skew of temperature axis)
-p0_ref = 1000.0
-p_range = np.logspace(np.log10(1050), np.log10(100), 100)
-skew_ref = 45.0 * (np.log(p_range) - np.log(p0_ref)) / (np.log(100) - np.log(p0_ref))
-skew_data = 45.0 * (np.log(pressure) - np.log(p0_ref)) / (np.log(100) - np.log(p0_ref))
+p_range = np.logspace(np.log10(p_bottom), np.log10(p_top), 100)
+skew_ref = skew(p_range)
+skew_data = skew(pressure)
 
-# Reference lines — isotherms (constant temperature, skewed 45°)
-for t in np.arange(-80, 60, 10):
+# Reference lines: isotherms (constant temperature, skewed 45 degrees)
+for t in np.arange(T_AXIS_MIN, T_AXIS_MAX + 10, 10):
     ax.plot(t + skew_ref, p_range, color="#8B4513", alpha=REF_ALPHA, linewidth=0.5)
 
 # Dry adiabats (constant potential temperature)
 for theta in np.arange(-30, 150, 10):
-    t_dry = (theta + 273.15) * (p_range / 1000) ** 0.286 - 273.15
-    mask = (t_dry > -80) & (t_dry < 50)
+    t_dry = (theta + 273.15) * (p_range / P_REF) ** 0.286 - 273.15
+    mask = (t_dry > T_AXIS_MIN) & (t_dry < T_AXIS_MAX)
     if np.any(mask):
         ax.plot(
             t_dry[mask] + skew_ref[mask],
@@ -84,10 +114,10 @@ for theta in np.arange(-30, 150, 10):
 
 # Moist adiabats (simplified saturated-adiabatic lapse rate)
 for theta_e in np.arange(0, 50, 4):
-    t_dry = (theta_e + 273.15) * (p_range / 1000) ** 0.286 - 273.15
+    t_dry = (theta_e + 273.15) * (p_range / P_REF) ** 0.286 - 273.15
     moisture_factor = np.clip((t_dry + 30) / 60, 0, 1) * 0.5
-    t_moist = t_dry * (1 - moisture_factor * (1 - (p_range / 1000) ** 0.2))
-    mask = (t_moist > -80) & (t_moist < 50)
+    t_moist = t_dry * (1 - moisture_factor * (1 - (p_range / P_REF) ** 0.2))
+    mask = (t_moist > T_AXIS_MIN) & (t_moist < T_AXIS_MAX)
     if np.any(mask):
         ax.plot(
             t_moist[mask] + skew_ref[mask],
@@ -102,7 +132,7 @@ for theta_e in np.arange(0, 50, 4):
 for w in [0.5, 1, 2, 4, 7, 10, 15, 20]:
     e = (w * p_range) / (622 + w)
     td = 243.5 * np.log(e / 6.112) / (17.67 - np.log(e / 6.112))
-    mask = (td > -80) & (td < 50) & (p_range >= 400)
+    mask = (td > T_AXIS_MIN) & (td < T_AXIS_MAX) & (p_range >= 400)
     if np.any(mask):
         ax.plot(
             td[mask] + skew_ref[mask],
@@ -118,13 +148,13 @@ temp_skewed = temperature + skew_data
 dewpoint_skewed = dewpoint + skew_data
 parcel_skewed = parcel_temp + skew_data
 
-# CAPE/CIN shading — meteorological insight into convective potential
+# CAPE/CIN shading: convective potential between parcel and environment
 ax.fill_betweenx(
     pressure,
     temp_skewed,
     parcel_skewed,
     where=(parcel_temp < temperature),
-    alpha=0.18,
+    alpha=0.40,
     color=CIN_COLOR,
     zorder=2,
     interpolate=True,
@@ -134,17 +164,17 @@ ax.fill_betweenx(
     temp_skewed,
     parcel_skewed,
     where=(parcel_temp >= temperature),
-    alpha=0.25,
+    alpha=0.40,
     color=CAPE_COLOR,
     zorder=2,
     interpolate=True,
 )
 
 # Lifted parcel trace
-ax.plot(parcel_skewed, pressure, color=INK_MUTED, linewidth=1.0, linestyle=":", zorder=3.5, alpha=0.65)
+ax.plot(parcel_skewed, pressure, color=INK_MUTED, linewidth=1.5, linestyle=":", zorder=3.5, alpha=0.8)
 
-# 500 hPa emphasis — key synoptic reference level
-ax.axhline(y=500, color=INK_SOFT, linewidth=1.5, alpha=0.4, linestyle="-", zorder=1.5)
+# Key synoptic reference level
+ax.axhline(y=SYNOPTIC_LEVEL, color=INK_SOFT, linewidth=1.5, alpha=0.4, linestyle="-", zorder=1.5)
 
 # Data profiles
 ax.plot(temp_skewed, pressure, color=TEMP_COLOR, linewidth=2.5, solid_capstyle="round", zorder=4)
@@ -153,13 +183,13 @@ ax.scatter(temp_skewed, pressure, color=TEMP_COLOR, s=120, zorder=5, edgecolors=
 ax.plot(dewpoint_skewed, pressure, color=DEWPOINT_COLOR, linewidth=2.5, linestyle="--", dash_capstyle="round", zorder=4)
 ax.scatter(dewpoint_skewed, pressure, color=DEWPOINT_COLOR, s=120, zorder=5, edgecolors=PAGE_BG, linewidth=0.8)
 
-# LCL annotation — lifted condensation level (base of cumulus clouds)
+# LCL annotation: lifted condensation level (base of cumulus clouds)
 ax.axhline(y=P_lcl, color=INK_MUTED, linewidth=0.8, alpha=0.45, linestyle=":", zorder=3)
-ax.text(48, P_lcl, f"LCL {P_lcl:.0f}hPa", fontsize=6.5, color=INK_MUTED, va="center", ha="right")
+ax.text(T_AXIS_MAX - 2, P_lcl, f"LCL {P_lcl:.0f}hPa", fontsize=8, color=INK_MUTED, va="center", ha="right")
 
 # Style
-ax.set_xlabel("Temperature (°C)", fontsize=10, color=INK)
-ax.set_ylabel("Pressure (hPa)", fontsize=10, color=INK)
+ax.set_xlabel(TEMPERATURE, fontsize=10, color=INK)
+ax.set_ylabel(PRESSURE, fontsize=10, color=INK)
 ax.set_title(
     "skewt-logp-atmospheric · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10
 )
@@ -176,7 +206,7 @@ ax.xaxis.grid(True, alpha=0.08, linewidth=0.5, color=INK)
 legend_elements = [
     Line2D([0], [0], color=TEMP_COLOR, linewidth=2, label="Temperature"),
     Line2D([0], [0], color=DEWPOINT_COLOR, linewidth=2, linestyle="--", label="Dewpoint"),
-    Line2D([0], [0], color=INK_MUTED, linewidth=1, linestyle=":", alpha=0.65, label="Lifted Parcel"),
+    Line2D([0], [0], color=INK_MUTED, linewidth=1.5, linestyle=":", alpha=0.8, label="Lifted Parcel"),
     Patch(facecolor=CAPE_COLOR, alpha=0.5, label="CAPE"),
     Patch(facecolor=CIN_COLOR, alpha=0.5, label="CIN"),
     Line2D([0], [0], color="#8B4513", linewidth=0.8, alpha=0.6, label="Isotherms"),
