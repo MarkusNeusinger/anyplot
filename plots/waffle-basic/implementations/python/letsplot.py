@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-26
@@ -41,7 +41,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Theme-adaptive custom theme
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     plot_title=element_text(size=16, color=INK, hjust=0.5),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_title=element_text(size=14, color=INK),
