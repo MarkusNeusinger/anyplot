@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-23
@@ -30,48 +30,60 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
+# Imprint palette: all eight positions, one per stock in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — synthetic stock price paths via geometric Brownian motion
-n_days = 252
-dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
+# Constants
+BASE = 100  # every series is rebased to this value on the first date
+BAND = 15  # half-width of the shaded "normal" envelope around the base
 
-stocks = {
-    "AAPL": {"drift": 0.0006, "volatility": 0.018, "seed": 42},
-    "GOOGL": {"drift": 0.0005, "volatility": 0.020, "seed": 43},
-    "MSFT": {"drift": 0.0002, "volatility": 0.016, "seed": 44},
-    "SPY": {"drift": 0.0003, "volatility": 0.009, "seed": 45},
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+SYMBOL = "Symbol"  # role: symbol
+PRICE = "Adjusted close (USD)"  # role: price
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+# Synthetic daily prices via geometric Brownian motion, one row per symbol and trading day
+dates = pd.date_range("2024-01-02", periods=252, freq="B")
+params = {
+    "AAPL": {"drift": 0.0006, "volatility": 0.018, "seed": 42, "start": 185.0},
+    "GOOGL": {"drift": 0.0005, "volatility": 0.020, "seed": 43, "start": 140.0},
+    "MSFT": {"drift": 0.0002, "volatility": 0.016, "seed": 44, "start": 370.0},
+    "SPY": {"drift": 0.0003, "volatility": 0.009, "seed": 45, "start": 470.0},
 }
+frames = []
+for symbol, cfg in params.items():
+    rng = np.random.RandomState(cfg["seed"])
+    returns = rng.normal(cfg["drift"], cfg["volatility"], len(dates))
+    prices = cfg["start"] * np.exp(np.cumsum(returns))
+    prices = prices / prices[0] * cfg["start"]
+    frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: prices}))
+df = pd.concat(frames, ignore_index=True)
 
-price_data = {"date": dates}
-for symbol, params in stocks.items():
-    rng = np.random.RandomState(params["seed"])
-    returns = rng.normal(params["drift"], params["volatility"], n_days)
-    prices = 100 * np.exp(np.cumsum(returns))
-    prices = prices / prices[0] * 100  # Rebase to exactly 100 at start
-    price_data[symbol] = prices
+# Plot: reads only df and the constants above
+df = df.sort_values([SYMBOL, DATE], kind="stable")
+df["rebased"] = df[PRICE].astype(float) / df.groupby(SYMBOL, sort=False)[PRICE].transform("first").astype(float) * BASE
+symbols = list(df[SYMBOL].unique())
+all_dates = np.sort(df[DATE].unique())
+final = df.groupby(SYMBOL, sort=False)["rebased"].last()
+best, worst = final.idxmax(), final.idxmin()
 
-df = pd.DataFrame(price_data)
-
-# Determine visual hierarchy by final performance
-final_vals = {symbol: df[symbol].iloc[-1] for symbol in stocks}
-ranked = sorted(final_vals, key=lambda s: final_vals[s])
-best, worst = ranked[-1], ranked[0]
-
-# Extend x-axis range to accommodate end-of-series labels
+# Extend the x-axis to the right to make room for the end-of-series labels
 DAY_MS = 24 * 60 * 60 * 1000
-start_ms = int((dates[0] - pd.Timedelta(days=5)).timestamp() * 1000)
-end_ms = int((dates[-1] + pd.Timedelta(days=60)).timestamp() * 1000)
+first_ms = pd.Timestamp(all_dates[0]).timestamp() * 1000
+last_ms = pd.Timestamp(all_dates[-1]).timestamp() * 1000
+span_ms = last_ms - first_ms
+x_range = Range1d(start=first_ms - 0.02 * span_ms, end=last_ms + 0.24 * span_ms)
 
-# Figure — 3200×1800 with toolbar disabled for correct PNG dimensions
+# Figure: 3200x1800 with the toolbar disabled for correct PNG dimensions
 p = figure(
     width=3200,
     height=1800,
     title="line-stock-comparison · python · bokeh · anyplot.ai",
-    x_axis_label="Date",
-    y_axis_label="Rebased Price (Start = 100)",
+    x_axis_label=DATE,
+    y_axis_label=f"Rebased price (start = {BASE})",
     x_axis_type="datetime",
-    x_range=Range1d(start=start_ms, end=end_ms),
+    x_range=x_range,
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -79,7 +91,7 @@ p = figure(
     min_border_right=80,
 )
 
-# Font sizes — bokeh CSS pt sizing (~1.333 source-px per pt)
+# Font sizes: bokeh CSS pt sizing (~1.333 source-px per pt)
 p.title.text_font_size = "50pt"
 p.title.text_font_style = "bold"
 p.xaxis.axis_label_text_font_size = "42pt"
@@ -87,43 +99,46 @@ p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 
-# Subtle ±15% performance band — visually anchors the "normal" return envelope
-band_source = ColumnDataSource(data={"x": df["date"], "lower": np.full(n_days, 85.0), "upper": np.full(n_days, 115.0)})
-perf_band = Band(
-    base="x", lower="lower", upper="upper", source=band_source, fill_color=INK, fill_alpha=0.04, line_color=None
+# Subtle performance band around the base, behind the lines
+band_source = ColumnDataSource(
+    data={"x": all_dates, "lower": np.full(len(all_dates), BASE - BAND), "upper": np.full(len(all_dates), BASE + BAND)}
 )
-p.add_layout(perf_band)
+p.add_layout(
+    Band(base="x", lower="lower", upper="upper", source=band_source, fill_color=INK, fill_alpha=0.04, line_color=None)
+)
 
-# Reference line at 100 (starting point indicator)
-hline = Span(location=100, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3)
-p.add_layout(hline)
+# Reference line at the base (starting point indicator)
+p.add_layout(Span(location=BASE, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3))
 
-# Smart label y-position assignment — spread overlapping end-of-series labels
-sorted_syms = sorted(stocks.keys(), key=lambda s: final_vals[s])
-min_gap = 8  # minimum vertical gap in data units
+# End-of-series label positions: spread the labels apart where final values are close
+y_span = df["rebased"].max() - df["rebased"].min()
+min_gap = 0.07 * y_span
 label_ys: dict[str, float] = {}
-prev_y = -999.0
-for sym in sorted_syms:
-    y = max(final_vals[sym], prev_y + min_gap)
-    label_ys[sym] = y
-    prev_y = y
+prev_y = -np.inf
+for sym in final.sort_values().index:
+    prev_y = max(final[sym], prev_y + min_gap)
+    label_ys[sym] = prev_y
 
-# Plot each stock series with performance-based line widths for visual hierarchy
+# One line per stock, thicker for the best and worst performers
 legend_items = []
-label_ms_offset = 8 * DAY_MS
-for i, symbol in enumerate(stocks):
-    lw = 7 if symbol in (best, worst) else 4
-    line = p.line(x=df["date"], y=df[symbol], line_width=lw, line_color=IMPRINT[i], alpha=0.9)
+for i, symbol in enumerate(symbols):
+    rows = ColumnDataSource(df[df[SYMBOL] == symbol])
+    width = 7 if symbol in (best, worst) else 4
+    line = p.line(
+        x=DATE,
+        y="rebased",
+        source=rows,
+        line_width=width,
+        line_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        alpha=0.9,
+    )
     legend_items.append((symbol, [line]))
-
-    # End-of-series label showing symbol and final value with vertical alignment fix
-    final_date_ms = int(df["date"].iloc[-1].timestamp() * 1000)
     p.add_layout(
         Label(
-            x=final_date_ms + label_ms_offset,
+            x=last_ms + 8 * DAY_MS,
             y=label_ys[symbol],
-            text=f"{symbol} {final_vals[symbol]:.0f}",
-            text_color=IMPRINT[i],
+            text=f"{symbol} {final[symbol]:.0f}",
+            text_color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
             text_font_size="28pt",
             text_font_style="bold",
             text_baseline="middle",
@@ -131,30 +146,35 @@ for i, symbol in enumerate(stocks):
         )
     )
 
-# Hover tool — active in HTML artifact
-hover = HoverTool(tooltips=[("Date", "@x{%F}"), ("Value", "@y{0.1f}")], formatters={"@x": "datetime"}, mode="vline")
+# Hover tool: active in the HTML artifact
+hover = HoverTool(
+    tooltips=[(SYMBOL, f"@{{{SYMBOL}}}"), (DATE, f"@{{{DATE}}}{{%F}}"), ("Rebased", "@rebased{0.1f}")],
+    formatters={f"@{{{DATE}}}": "datetime"},
+    mode="vline",
+)
 p.add_tools(hover)
 
-# Legend
+# Legend above the plot, so it never covers data
 legend = Legend(
     items=legend_items,
-    location="top_left",
+    orientation="horizontal",
     label_text_font_size="34pt",
     label_text_color=INK_SOFT,
     glyph_width=60,
-    glyph_height=30,
-    spacing=15,
+    glyph_height=40,
+    label_standoff=16,
+    spacing=40,
     padding=20,
     background_fill_color=ELEVATED_BG,
-    border_line_color=INK_SOFT,
+    border_line_color=None,
     click_policy="hide",
 )
-p.add_layout(legend)
+p.add_layout(legend, "above")
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = None  # Remove box; L-shaped frame via axis lines only
+p.outline_line_color = None  # L-shaped frame via axis lines only
 
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
@@ -175,7 +195,7 @@ p.xgrid.grid_line_color = None
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome — use CDP clip to capture exactly W×H px
+# Screenshot with headless Chrome, pinned to exactly W x H px via CDP
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -191,6 +211,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H + 200)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 screenshot = driver.execute_cdp_cmd(
     "Page.captureScreenshot",
