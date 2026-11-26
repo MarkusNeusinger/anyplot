@@ -88,7 +88,7 @@ end_df = df.iloc[[-1]]
 peak_df = df.loc[[df[ELEVATION].idxmax()]].assign(label=lambda d: [f"▲ Highest point {d[ELEVATION].iloc[0]:.0f} m"])
 start_df = start_df.assign(label=f"Start: {start_df[PLACE].iloc[0]}")
 end_df = end_df.assign(label=f"End: {end_df[PLACE].iloc[0]}")
-dot_df = df.iloc[::3]
+dot_df = df.iloc[::4]
 
 title_str = "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai"
 
@@ -101,8 +101,20 @@ elevation_scale = alt.Scale(
 states = alt.topo_feature("https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json", "states")
 geo = {"longitude": alt.Longitude(LON, type="quantitative"), "latitude": alt.Latitude(LAT, type="quantitative")}
 
+# Projection fitted to the route: centered on its extent, scaled so the route spans ~72% of the width
+lon_mid = (df[LONGITUDE].max() + df[LONGITUDE].min()) / 2
+lat_mid = (df[LATITUDE].max() + df[LATITUDE].min()) / 2
+lon_span = np.radians(df[LONGITUDE].max() - df[LONGITUDE].min()) * np.cos(np.radians(lat_mid))
+PROJ = {
+    "type": "albers",
+    "rotate": [-lon_mid, 0],
+    "center": [0, lat_mid],
+    "parallels": [df[LATITUDE].min(), df[LATITUDE].max()],
+    "scale": float(0.72 * 800 / lon_span),
+}
+
 background = (
-    alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.6).project(type="albersUsa")
+    alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.6, clip=True).project(**PROJ)
 )
 
 route_line = (
@@ -117,12 +129,12 @@ route_line = (
             alt.Tooltip(ELEV, type="quantitative", title=ELEVATION, format=".0f"),
         ],
     )
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 elevation_dots = (
     alt.Chart(dot_df)
-    .mark_circle(size=90, opacity=0.95, stroke=PAGE_BG, strokeWidth=0.8)
+    .mark_circle(size=42, opacity=0.95, stroke=PAGE_BG, strokeWidth=0.6)
     .encode(
         **geo,
         color=alt.Color(
@@ -141,7 +153,7 @@ elevation_dots = (
         ),
         tooltip=[alt.Tooltip(ELEV, type="quantitative", title=ELEVATION, format=".0f")],
     )
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 start_marker = (
@@ -150,7 +162,7 @@ start_marker = (
         shape="circle", size=420, filled=True, opacity=1, color=IMPRINT_PALETTE[0], stroke=PAGE_BG, strokeWidth=2.5
     )
     .encode(**geo, tooltip=alt.Tooltip("label", type="nominal", title="Start"))
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 end_marker = (
@@ -159,7 +171,7 @@ end_marker = (
         shape="square", size=420, filled=True, opacity=1, color=IMPRINT_PALETTE[1], stroke=PAGE_BG, strokeWidth=2.5
     )
     .encode(**geo, tooltip=alt.Tooltip("label", type="nominal", title="End"))
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 # Labels: one layer each, because every label needs its own alignment to stay clear of the others
@@ -167,21 +179,21 @@ start_label = (
     alt.Chart(start_df)
     .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="center", color=INK)
     .encode(**geo, text=alt.Text(PLACE, type="nominal"))
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 end_label = (
     alt.Chart(end_df)
-    .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="right", color=INK)
+    .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="left", color=INK)
     .encode(**geo, text=alt.Text(PLACE, type="nominal"))
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 peak_label = (
     alt.Chart(peak_df)
     .mark_text(fontSize=12, fontWeight="bold", dy=-30, dx=6, baseline="bottom", align="left", color=INK)
     .encode(**geo, text=alt.Text("label", type="nominal"))
-    .project(type="albersUsa")
+    .project(**PROJ)
 )
 
 chart = (

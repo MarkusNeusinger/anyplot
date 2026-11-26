@@ -2,107 +2,119 @@ library: seaborn
 language: python
 specification_id: map-projections
 created: '2026-01-20T02:49:37Z'
-updated: '2026-05-23T08:26:01Z'
+updated: '2026-11-26T13:07:08Z'
 generated_by: claude-sonnet
-workflow_run: 26327396014
+workflow_run: 45825109889
 issue: 3771
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - Theme-adaptive geographic color tokens (OCEAN/LAND/LAND_EDGE differ between light
-    and dark) produce a polished, publication-aware map in both themes
-  - Four-projection 2x2 comparison with consistent city reference dots is a genuine
-    data storytelling choice that communicates projection distortion visually
-  - Custom projection math (orthographic, aitoff, hammer, lambert cylindrical) implemented
-    correctly in pure numpy; real Natural Earth boundary data fetched and rendered
-    at 177 countries
-  - Orthographic horizon circle is a clean detail that distinguishes the globe-view
-    panel from the flat-world panels
-  - 'Palette compliance is strong: #009E73 city dots, correct backgrounds, fully theme-adaptive
-    chrome'
+  - Four-panel comparison (orthographic, Aitoff, Hammer, Lambert cylindrical) with
+    identical world data and styling so only the projection differs
+  - Real Natural Earth 110m boundaries render clean coastlines and country borders
+    through every projection, with a 30-degree graticule lighter than the coastlines
+  - Panel subtitles state what each projection preserves (equal-area, compromise,
+    globe perspective)
+  - Theme-specific ocean, land and border tokens and a horizon circle on the globe
+    panel; chrome correct in both themes
   weaknesses:
-  - Panel subtitle fontsize=8pt is slightly small for a 3200x1800 canvas — consider
-    9pt or 10pt to improve mobile readability
-  - Seaborn's role is minimal (scatter layer + theme setup); the map rendering is
-    entirely matplotlib. The implementation reads more as a matplotlib map with seaborn
-    styling than a seaborn visualization
-  - 'DE-03: No visual hierarchy between projections — consider making one panel slightly
-    larger or adding a brief caption explaining what each projection preserves (area,
-    shape, etc.)'
-  - 'CQ-01: The project() function, while pragmatic, technically violates the KISS
-    no-functions structure'
+  - 'SC-03 (both): in the orthographic panel, country polygons that cross the horizon
+    are filled across the NaN gap, painting spurious land wedges east of Siberia and
+    along the left edge near South America → only the visible part of each polygon
+    is filled. Likely cause: ax.fill() on rings whose back-side points were set to
+    NaN instead of clipping each ring to the visible hemisphere.'
+  - 'SC-01, SC-04 (both): six green city dots are a layer the spec neither requires
+    nor offers, and nothing says what they mark → remove the city layer. Likely cause:
+    the cities DataFrame and the sns.scatterplot call.'
+  - 'VQ-03 (dark): land #2A3D26 on ocean #192837 has little contrast and the #3A5534
+    country borders are near-invisible, so land barely separates from sea → a lighter
+    land fill and border token for the dark theme. Likely cause: the dark LAND and
+    LAND_EDGE values.'
+  - 'VQ-05 (both): an empty band of about 12 % of the canvas height sits between the
+    suptitle and the panels and the orthographic panel is small with empty space either
+    side → panels that fill the canvas height. Likely cause: tight_layout(rect=[0,
+    0, 1, 0.955]) with equal-aspect axes in an even 2x2 grid; use gridspec width ratios
+    that match the panel aspects.'
+  - 'CQ-01 (code): a project() helper function is defined → inline the projection
+    formulas in the panel loop. Likely cause: the def project block.'
+  - 'CQ-04 (code): the Aitoff and Hammer formulas (project() branches) are written
+    out although matplotlib computes them with plt.subplot(projection=''aitoff''/''hammer'')
+    → use the built-in projections for those panels. Likely cause: the hand-written
+    projection branches.'
+  - 'Suggestion: a Mercator panel would show conformal distortion next to the equal-area
+    ones.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Suptitle "map-projections · python · seaborn · anyplot.ai" dark text, clearly readable. Panel titles bold 8pt dark text on figure background — readable. No tick labels (map-appropriate).
-      Data: Land in soft sage green (#C4D5B0), ocean in pale blue (#D4E8F7). Graticule gray at 0.5 linewidth/0.6 alpha — subtle. City dots in #009E73 teal — 6 sparse points visible. Orthographic horizon circle present.
+      Background: warm off-white #FAF8F1 page; map panels filled with pale blue ocean.
+      Chrome: suptitle 'map-projections · python · seaborn · anyplot.ai' in dark ink; four bold two-line panel titles (Orthographic / Aitoff / Hammer / Lambert Cylindrical with property subtitles) dark and readable; no ticks.
+      Data: real Natural Earth countries in sage green with dark-green borders, grey 30-degree graticule curved per projection, orthographic horizon circle, six #009E73 city dots with page-colored outline. Orthographic panel shows spurious land-fill wedges near Siberia and South America at the horizon. Empty band between suptitle and panels.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Suptitle and panel titles in cream/off-white (#F0EFE8) — clearly legible against dark background. No dark-on-dark failures detected.
-      Data: Land in dark olive-green (#2A3D26), ocean in deep navy (#192837) — lower contrast than light but distinguishable. City dots remain #009E73 teal — identical to light render, most prominent visual element. Orthographic horizon circle white/light, visible.
+      Background: warm near-black #1A1A17 page; panels in deep navy ocean.
+      Chrome: suptitle and panel titles in light ink, clearly readable; light horizon circle and spines; no dark-on-dark text.
+      Data: city dots #009E73 identical to light; land dark olive #2A3D26 with borders barely visible against the navy ocean, country borders nearly lost; graticule subtle grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; suptitle=12pt correct, panel titles=8pt
-          slightly small for 3200x1800 but readable in both themes
+        comment: Suptitle 12 pt and bold 10 pt panel titles explicitly set; all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlaps in either render
+        comment: No text collides with text or data in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Land, ocean, graticule, city dots all well-sized and visible
+        comment: 'Dark render: land #2A3D26 on ocean #192837 and borders #3A5534 are
+          near-invisible (defect line); light render fine'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Good contrast; #009E73 city dots pop against both land and ocean;
-          CVD-safe'
+        comment: Green dots read on land and ocean; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 2x2 grid fills canvas well; balanced margins; tight_layout with rect
-          applied
+        comment: Empty band of about 12 % of the canvas height between suptitle and
+          panels; orthographic panel small with empty sides (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Panel titles describe each projection clearly; suptitle in required
-          format
+        comment: Panel titles name each projection and its property; map axes need
+          no axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'City dots are #009E73; semantic geographic colors for land/ocean;
-          correct backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome in both renders'
+        comment: 'City dots #009E73; page #FAF8F1 / #1A1A17; chrome theme-correct;
+          land and ocean are neutral geographic tokens'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,54 +122,54 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive geographic tokens elevate above defaults; professional
-          multi-panel comparison layout; between well-configured default and strong
-          design
+        comment: Theme-specific ocean/land/edge tokens chosen per theme and a horizon
+          circle on the globe panel go beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle graticule; tick marks cleared; panel borders kept appropriately
-          for map extent; some refinement visible but not maximally polished
+        comment: 'Ticks cleared on map panels, graticule kept lighter than coastlines,
+          orthographic horizon outline: some refinement'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Consistent city reference dots enable cross-projection comparison;
-          four-panel layout communicates distortion differences; missing per-panel
-          property captions
+        comment: Panel subtitles state what each projection preserves (equal-area,
+          compromise), guiding the comparison beyond the required names
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: World map with multiple projections; 4 distinct projection families
+        comment: Multi-projection world map, but a city-marker layer the spec does
+          not ask for is added (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple projections, graticule at 30deg, coastlines, country borders,
-          neutral color scheme, side-by-side layout all present
+        comment: Coastlines and country borders (C1), 30-degree graticule (C2), every
+          panel named (C3), neutral land; Tissot/choropleth optional and not used
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Natural Earth 110m boundaries correct; city coordinates accurate
+        comment: 'Orthographic panel: polygons crossing the horizon fill spurious
+          land wedges (Siberia, South America edge) (defect line)'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title 'map-projections · python · seaborn · anyplot.ai' in exact
-          format; no legend needed
+        comment: Title in exact format; green city dots have no key or labels (defect
+          line)
     data_quality:
       score: 15
       max: 15
@@ -167,24 +179,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Orthographic (globe), Aitoff (compromise), Hammer (equal-area), Lambert
-          Cylindrical (cylindrical) — covers main projection property types
+        comment: 'Four projection families: azimuthal globe, compromise, two equal-area;
+          distortion contrast visible'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Natural Earth boundaries; real cities with correct coordinates;
-          educational cartography context
+        comment: Real Natural Earth 110m boundaries and real cities
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Geographic coordinates factually correct; projection math verified
-          by visual output
+        comment: Checked city coordinates (London 51.5N 0.1E, Sydney 33.9S 151.2E,
+          etc.) land on the right places in every panel
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -192,33 +203,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Defines project() helper function (deviates from no-functions rule),
-          but mathematically justified
+        comment: Defines a project() helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: No random data; stable Natural Earth URL; fixed city constants
+        comment: No randomness; fixed URL and constants
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 imports used
+        comment: All seven imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean and readable; no fake UI; concise projection loop
+        comment: Aitoff and Hammer formulas written out although matplotlib provides
+          projection='aitoff'/'hammer' (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400; no bbox_inches=tight; current
-          API
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
       score: 4
       max: 10
@@ -228,21 +238,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.scatterplot() as axes-level layer correct; sns.set_theme() with
-          rc dict is canonical; bulk of rendering is matplotlib
+        comment: sns.set_theme rc dict and axes-level sns.scatterplot; map body is
+          plain matplotlib
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Seaborn limited to scatter layer and theme; could be replicated with
-          matplotlib alone; no seaborn-distinctive features exploited
+        comment: Nothing seaborn-distinctive beyond theme setup and a scatter layer
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T13:03:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - layer-composition
   patterns:
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
