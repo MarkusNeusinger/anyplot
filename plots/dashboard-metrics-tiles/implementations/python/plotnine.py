@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -66,8 +66,8 @@ metrics = [
 ]
 rows = []
 for name, value, unit, change, status, better in metrics:
-    drift = np.linspace(0, np.sign(change) * abs(change) / 100 * value, n_points)
-    history = value - drift + np.random.randn(n_points) * value * 0.1
+    history = np.linspace(value / (1 + change / 100), value, n_points) + np.random.randn(n_points) * value * 0.03
+    history[-1] = value
     for step, point in enumerate(history):
         rows.append(
             {
