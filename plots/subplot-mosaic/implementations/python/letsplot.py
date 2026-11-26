@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -77,10 +77,6 @@ df = pd.concat(
 
 
 # Plot: reads only df and the constants above
-def panel(letter):
-    return df[df[PANEL] == letter].dropna(axis=1, how="all")
-
-
 def ramp_color(stops, t):
     """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
     t = min(max(t, 0.0), 1.0)
@@ -89,11 +85,6 @@ def ramp_color(stops, t):
     return "#" + "".join(
         f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
     )
-
-
-def luminance(hex_color):
-    lin = [(int(hex_color[i : i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)]
-    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
 
 
 def regions_from_layout(layout):
@@ -125,74 +116,93 @@ base_theme = theme_minimal() + theme(
     legend_title=element_text(size=10, color=INK),
 )
 
+# One frame per panel, in the order the panels appear in df: A to F in the sample
+frames = [frame for _, frame in df.groupby(PANEL, sort=False)]
+
+# Each panel is drawn when df holds its frame, so a table with fewer panels still renders
+plots = []
+
 # A: primary panel, the revenue trend over time
-data_a = panel("A")
-plot_a = (
-    ggplot(data_a, aes(x=X, y=Y))
-    + geom_area(fill=IMPRINT_PALETTE[0], alpha=0.3)
-    + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
-    + scale_y_continuous(limits=[0, float(data_a[Y].max()) * 1.05])
-    + labs(x=X, y="Revenue ($)", title="Daily Revenue Overview")
-    + base_theme
-)
+if len(frames) > 0:
+    data_a = frames[0]
+    plots.append(
+        ggplot(data_a, aes(x=X, y=Y))
+        + geom_area(fill=IMPRINT_PALETTE[0], alpha=0.3)
+        + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
+        + scale_y_continuous(limits=[0, float(data_a[Y].max()) * 1.05])
+        + labs(x=X, y="Revenue ($)", title="Daily Revenue Overview")
+        + base_theme
+    )
 
 # B: sales per product
-plot_b = (
-    ggplot(panel("B"), aes(x=CATEGORY, y=Y))
-    + geom_bar(stat="identity", fill=IMPRINT_PALETTE[0], color=INK_SOFT, size=0.3, alpha=0.9)
-    + labs(x="Product", y="Units Sold", title="Sales by Product")
-    + base_theme
-)
+if len(frames) > 1:
+    plots.append(
+        ggplot(frames[1], aes(x=CATEGORY, y=Y))
+        + geom_bar(stat="identity", fill=IMPRINT_PALETTE[0], color=INK_SOFT, size=0.3, alpha=0.9)
+        + labs(x="Product", y="Units Sold", title="Sales by Product")
+        + base_theme
+    )
 
 # C: scatter with a linear trend
-plot_c = (
-    ggplot(panel("C"), aes(x=X, y=Y))
-    + geom_point(color=IMPRINT_PALETTE[0], size=2.5, alpha=0.7)
-    + geom_smooth(method="lm", color=IMPRINT_PALETTE[1], size=1.0, se=False)
-    + labs(x="Effort (hours)", y="Output (units)", title="Effort vs Output")
-    + base_theme
-)
+if len(frames) > 2:
+    plots.append(
+        ggplot(frames[2], aes(x=X, y=Y))
+        + geom_point(color=IMPRINT_PALETTE[0], size=2.5, alpha=0.7)
+        + geom_smooth(method="lm", color=IMPRINT_PALETTE[1], size=1.0, se=False)
+        + labs(x="Effort (hours)", y="Output (units)", title="Effort vs Output")
+        + base_theme
+    )
 
 # D: histogram
-plot_d = (
-    ggplot(panel("D"), aes(x=X))
-    + geom_histogram(bins=25, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
-    + labs(x="Performance Score", y="Frequency", title="Score Distribution")
-    + base_theme
-)
+if len(frames) > 3:
+    plots.append(
+        ggplot(frames[3], aes(x=X))
+        + geom_histogram(bins=25, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
+        + labs(x="Performance Score", y="Frequency", title="Score Distribution")
+        + base_theme
+    )
 
 # E: line with markers over months
-data_e = panel("E")
-plot_e = (
-    ggplot(data_e, aes(x=X, y=Y))
-    + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
-    + geom_point(color=IMPRINT_PALETTE[0], size=3.5)
-    + scale_x_continuous(breaks=data_e[X].tolist(), labels=data_e[CATEGORY].tolist())
-    + labs(x="Month", y="Growth Rate (%)", title="Monthly Growth")
-    + base_theme
-)
+if len(frames) > 4:
+    data_e = frames[4]
+    plots.append(
+        ggplot(data_e, aes(x=X, y=Y))
+        + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
+        + geom_point(color=IMPRINT_PALETTE[0], size=3.5)
+        + scale_x_continuous(breaks=data_e[X].tolist(), labels=data_e[CATEGORY].tolist())
+        + labs(x="Month", y="Growth Rate (%)", title="Monthly Growth")
+        + base_theme
+    )
 
 # F: heatmap, cell values in a color that contrasts with each tile
-data_f = panel("F").copy()
-z_min, z_max = data_f[Z].min(), data_f[Z].max()
-tile_hex = [ramp_color(SEQ_FIELDS, (v - z_min) / (z_max - z_min)) for v in data_f[Z]]
-on_dark_tile = np.array([luminance(h) < 0.18 for h in tile_hex])
-plot_f = (
-    ggplot(data_f, aes(x=GROUP, y=CATEGORY, fill=Z))
-    + geom_tile(color=PAGE_BG, size=0.8)
-    + geom_text(aes(label=Z), data=data_f[on_dark_tile], size=6, color="#FAF8F1")
-    + geom_text(aes(label=Z), data=data_f[~on_dark_tile], size=6, color="#1A1A17")
-    + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)])
-    + scale_y_discrete(limits=data_f[CATEGORY].unique().tolist()[::-1])
-    + labs(x="Region", y="Quarter", title="Regional Score (value in cell)")
-    + base_theme
-    + theme(legend_position="none")
-)
+if len(frames) > 5:
+    data_f = frames[5]
+    z_min, z_max = data_f[Z].min(), data_f[Z].max()
+    tile_hex = [ramp_color(SEQ_FIELDS, (v - z_min) / max(z_max - z_min, 1e-9)) for v in data_f[Z]]
+    # relative luminance of each tile decides the ink: light text on dark tiles, dark text on light ones
+    weights = (0.2126, 0.7152, 0.0722)
+    on_dark_tile = np.array(
+        [
+            sum(w * (int(h[i : i + 2], 16) / 255) ** 2.2 for w, i in zip(weights, (1, 3, 5), strict=True)) < 0.18
+            for h in tile_hex
+        ]
+    )
+    plots.append(
+        ggplot(data_f, aes(x=GROUP, y=CATEGORY, fill=Z))
+        + geom_tile(color=PAGE_BG, size=0.8)
+        + geom_text(aes(label=Z), data=data_f[on_dark_tile], size=6, color="#FAF8F1")
+        + geom_text(aes(label=Z), data=data_f[~on_dark_tile], size=6, color="#1A1A17")
+        + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)])
+        + scale_y_discrete(limits=data_f[CATEGORY].unique().tolist()[::-1])
+        + labs(x="Region", y="Quarter", title="Regional Score (value in cell)")
+        + base_theme
+        + theme(legend_position="none")
+    )
 
-plots = [plot_a, plot_b, plot_c, plot_d, plot_e, plot_f]
 placement = regions_from_layout(LAYOUT)
+boxes = [placement[letter] for letter in sorted(placement)][: len(plots)]
 final_plot = (
-    ggbunch(plots=plots, regions=[placement[letter] for letter in sorted(placement)])
+    ggbunch(plots=plots, regions=boxes)
     + ggsize(800, 450)
     + ggtitle("subplot-mosaic · python · letsplot · anyplot.ai")
     + theme(
