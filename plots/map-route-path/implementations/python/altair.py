@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Created: 2026-05-21
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -24,77 +24,97 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 MAP_FILL = "#DEDAD4" if THEME == "light" else "#2C2C28"
 MAP_STROKE = "#B0AAA0" if THEME == "light" else "#4A4A42"
 
-# Data — Route 66: Chicago → Los Angeles (8 segments, ~160 synthetic waypoints)
+# Imprint palette (route line = position 1, end marker = position 2)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential ramp for marks drawn on the page, as (position, hex) stops
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+# Column constants
+LATITUDE = "Latitude"  # role: lat
+LONGITUDE = "Longitude"  # role: lon
+SEQUENCE = "Sequence"  # role: sequence
+ELEVATION = "Elevation (m)"  # role: extra
+PLACE = "Place"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("route.csv")
+# Route 66, Chicago to Los Angeles: 8 segments, ~160 synthetic waypoints
 np.random.seed(42)
-
-city_coords = [
-    (41.85, -87.65),  # Chicago, IL
-    (39.80, -89.65),  # Springfield, IL
-    (38.63, -90.20),  # St. Louis, MO
-    (37.08, -94.52),  # Joplin, MO
-    (35.47, -97.52),  # Oklahoma City, OK
-    (35.22, -101.83),  # Amarillo, TX
-    (35.08, -106.65),  # Albuquerque, NM
-    (35.20, -111.65),  # Flagstaff, AZ
-    (34.05, -118.25),  # Los Angeles, CA
+cities = [
+    ("Chicago", 41.85, -87.65, 180),
+    ("Springfield", 39.80, -89.65, 165),
+    ("St. Louis", 38.63, -90.20, 130),
+    ("Joplin", 37.08, -94.52, 290),
+    ("Oklahoma City", 35.47, -97.52, 365),
+    ("Amarillo", 35.22, -101.83, 1100),
+    ("Albuquerque", 35.08, -106.65, 1510),
+    ("Flagstaff", 35.20, -111.65, 2100),
+    ("Los Angeles", 34.05, -118.25, 95),
 ]
-city_elevations = [180, 165, 130, 290, 365, 1100, 1510, 2100, 95]
+steps = 20
+t_vals = np.linspace(0, 1, steps, endpoint=False)
+lat_parts, lon_parts, elev_parts, place_parts = [], [], [], []
+for (name, lat1, lon1, el1), (_, lat2, lon2, el2) in zip(cities[:-1], cities[1:], strict=True):
+    lat_parts.append(lat1 + (lat2 - lat1) * t_vals + np.random.normal(0, 0.07, steps))
+    lon_parts.append(lon1 + (lon2 - lon1) * t_vals + np.random.normal(0, 0.07, steps))
+    elev_parts.append(el1 + (el2 - el1) * t_vals)
+    place_parts.append([name] + [None] * (steps - 1))
+lat_parts.append(np.array([cities[-1][1]]))
+lon_parts.append(np.array([cities[-1][2]]))
+elev_parts.append(np.array([cities[-1][3]]))
+place_parts.append([cities[-1][0]])
+elevation = np.concatenate(elev_parts)
+df = pd.DataFrame(
+    {
+        LATITUDE: np.concatenate(lat_parts),
+        LONGITUDE: np.concatenate(lon_parts),
+        SEQUENCE: np.arange(len(elevation)),
+        ELEVATION: elevation,
+        PLACE: [p for part in place_parts for p in part],
+    }
+)
+df[ELEVATION] = df[ELEVATION] + np.random.normal(0, 45, len(df))
 
-rows = []
-seq = 0
-for i in range(len(city_coords) - 1):
-    lat1, lon1 = city_coords[i]
-    lat2, lon2 = city_coords[i + 1]
-    n = 20
-    t_vals = np.linspace(0, 1, n + 1)[:-1]
-    lats = lat1 + (lat2 - lat1) * t_vals + np.random.normal(0, 0.07, n)
-    lons = lon1 + (lon2 - lon1) * t_vals + np.random.normal(0, 0.07, n)
-    for j in range(n):
-        rows.append({"lat": lats[j], "lon": lons[j], "sequence": seq})
-        seq += 1
-rows.append({"lat": city_coords[-1][0], "lon": city_coords[-1][1], "sequence": seq})
-df = pd.DataFrame(rows)
+# Plot
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+LAT, LON, SEQ, ELEV = (c.translate(ESCAPE) for c in (LATITUDE, LONGITUDE, SEQUENCE, ELEVATION))
 
-city_s = np.linspace(0, 1, len(city_coords))
-route_s = df["sequence"].values / df["sequence"].max()
-df["elevation_m"] = np.interp(route_s, city_s, city_elevations) + np.random.normal(0, 45, len(df))
-
-start_df = df.iloc[[0]].copy()
-start_df["label"] = "Start: Chicago, IL"
-end_df = df.iloc[[-1]].copy()
-end_df["label"] = "End: Los Angeles, CA"
-dot_df = df.iloc[::3].reset_index(drop=True)
-
-# City label DataFrames (separate layers needed for different per-label alignment)
-chicago_ldf = pd.DataFrame([{"lon": city_coords[0][1], "lat": city_coords[0][0], "label": "Chicago"}])
-la_ldf = pd.DataFrame([{"lon": city_coords[-1][1], "lat": city_coords[-1][0], "label": "Los Angeles"}])
-flagstaff_ldf = pd.DataFrame([{"lon": city_coords[7][1], "lat": city_coords[7][0], "label": "▲ Flagstaff 2100m"}])
+start_df = df.iloc[[0]]
+end_df = df.iloc[[-1]]
+peak_df = df.loc[[df[ELEVATION].idxmax()]].assign(label=lambda d: [f"▲ Highest point {d[ELEVATION].iloc[0]:.0f} m"])
+start_df = start_df.assign(label=f"Start: {start_df[PLACE].iloc[0]}")
+end_df = end_df.assign(label=f"End: {end_df[PLACE].iloc[0]}")
+dot_df = df.iloc[::3]
 
 title_str = "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai"
 
-# Basemap: US states (CDN topojson, no local package required)
-us_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
-states = alt.topo_feature(us_url, "states")
+lo, hi = df[ELEVATION].min(), df[ELEVATION].max()
+elevation_scale = alt.Scale(
+    domain=[lo + p * (hi - lo) for p, _ in SEQ_MARKS], range=[c for _, c in SEQ_MARKS], interpolate="rgb"
+)
 
-# Map layers
+# Basemap: US states (CDN topojson)
+states = alt.topo_feature("https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json", "states")
+geo = {"longitude": alt.Longitude(LON, type="quantitative"), "latitude": alt.Latitude(LAT, type="quantitative")}
+
 background = (
-    alt.Chart(states)
-    .mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.6)
-    .project(type="albersUsa")
-    .properties(width=620, height=320)
+    alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.6).project(type="albersUsa")
 )
 
 route_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=3.5, color="#009E73", strokeCap="round")
+    .mark_line(strokeWidth=3.5, color=IMPRINT_PALETTE[0], strokeCap="round")
     .encode(
-        longitude="lon:Q",
-        latitude="lat:Q",
-        order="sequence:O",
+        **geo,
+        order=alt.Order(SEQ, type="quantitative"),
         tooltip=[
-            alt.Tooltip("lat:Q", title="Latitude", format=".2f"),
-            alt.Tooltip("lon:Q", title="Longitude", format=".2f"),
-            alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=".0f"),
+            alt.Tooltip(LAT, type="quantitative", title=LATITUDE, format=".2f"),
+            alt.Tooltip(LON, type="quantitative", title=LONGITUDE, format=".2f"),
+            alt.Tooltip(ELEV, type="quantitative", title=ELEVATION, format=".0f"),
         ],
     )
     .project(type="albersUsa")
@@ -102,89 +122,92 @@ route_line = (
 
 elevation_dots = (
     alt.Chart(dot_df)
-    .mark_circle(size=55, opacity=0.9)
+    .mark_circle(size=90, opacity=0.95, stroke=PAGE_BG, strokeWidth=0.8)
     .encode(
-        longitude="lon:Q",
-        latitude="lat:Q",
+        **geo,
         color=alt.Color(
-            "elevation_m:Q",
-            scale=alt.Scale(scheme="viridis"),
+            ELEV,
+            type="quantitative",
+            title=ELEVATION,
+            scale=elevation_scale,
             legend=alt.Legend(
-                title="Elevation (m)",
-                titleFontSize=12,
-                labelFontSize=10,
-                gradientLength=180,
+                titleFontSize=13,
+                labelFontSize=12,
+                gradientLength=200,
                 gradientThickness=14,
-                orient="bottom-right",
+                orient="bottom-left",
                 offset=10,
             ),
         ),
-        order="sequence:O",
-        tooltip=[alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=".0f")],
+        tooltip=[alt.Tooltip(ELEV, type="quantitative", title=ELEVATION, format=".0f")],
     )
     .project(type="albersUsa")
 )
 
 start_marker = (
     alt.Chart(start_df)
-    .mark_point(shape="circle", size=320, filled=True, color="#009E73", stroke="white", strokeWidth=2.5)
-    .encode(longitude="lon:Q", latitude="lat:Q", tooltip="label:N")
+    .mark_point(
+        shape="circle", size=420, filled=True, opacity=1, color=IMPRINT_PALETTE[0], stroke=PAGE_BG, strokeWidth=2.5
+    )
+    .encode(**geo, tooltip=alt.Tooltip("label", type="nominal", title="Start"))
     .project(type="albersUsa")
 )
 
 end_marker = (
     alt.Chart(end_df)
-    .mark_point(shape="square", size=320, filled=True, color="#C475FD", stroke="white", strokeWidth=2.5)
-    .encode(longitude="lon:Q", latitude="lat:Q", tooltip="label:N")
+    .mark_point(
+        shape="square", size=420, filled=True, opacity=1, color=IMPRINT_PALETTE[1], stroke=PAGE_BG, strokeWidth=2.5
+    )
+    .encode(**geo, tooltip=alt.Tooltip("label", type="nominal", title="End"))
     .project(type="albersUsa")
 )
 
-# Chicago: center-aligned above the start marker
-chicago_label = (
-    alt.Chart(chicago_ldf)
-    .mark_text(fontSize=10, fontWeight="bold", dy=-18, baseline="bottom", align="center")
-    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+# Labels: one layer each, because every label needs its own alignment to stay clear of the others
+start_label = (
+    alt.Chart(start_df)
+    .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="center", color=INK)
+    .encode(**geo, text=alt.Text(PLACE, type="nominal"))
     .project(type="albersUsa")
 )
 
-# Los Angeles: right-aligned (text extends west, clear of Flagstaff overlap)
-la_label = (
-    alt.Chart(la_ldf)
-    .mark_text(fontSize=10, fontWeight="bold", dy=-18, baseline="bottom", align="right")
-    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+end_label = (
+    alt.Chart(end_df)
+    .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="right", color=INK)
+    .encode(**geo, text=alt.Text(PLACE, type="nominal"))
     .project(type="albersUsa")
 )
 
-# Flagstaff elevation peak: left-aligned + higher offset, extends east away from LA label
-flagstaff_label = (
-    alt.Chart(flagstaff_ldf)
-    .mark_text(fontSize=9, fontWeight="bold", dy=-32, baseline="bottom", align="left", dx=6)
-    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+peak_label = (
+    alt.Chart(peak_df)
+    .mark_text(fontSize=12, fontWeight="bold", dy=-30, dx=6, baseline="bottom", align="left", color=INK)
+    .encode(**geo, text=alt.Text("label", type="nominal"))
     .project(type="albersUsa")
 )
 
 chart = (
-    (background + route_line + elevation_dots + start_marker + end_marker + chicago_label + la_label + flagstaff_label)
-    .properties(background=PAGE_BG, title=alt.Title(text=title_str, fontSize=14, anchor="start", color=INK, offset=8))
+    alt.layer(background, route_line, elevation_dots, start_marker, end_marker, start_label, end_label, peak_label)
+    .properties(
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        background=PAGE_BG,
+        title=alt.Title(text=title_str, fontSize=16, anchor="start", color=INK, offset=8),
+    )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
 )
 
 # Save PNG + HTML
-TW, TH = 3200, 1800
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
 
-# Canvas check: pad to target, raise on overshoot
+TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
