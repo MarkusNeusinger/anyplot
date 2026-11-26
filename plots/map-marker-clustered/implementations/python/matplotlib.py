@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import FancyArrowPatch, Rectangle
+from matplotlib.ticker import MaxNLocator
 
 
 # Theme tokens
@@ -24,9 +25,9 @@ OCEAN_BG = "#C4D9E8" if THEME == "light" else "#192633"
 LAND_BG = "#EDE8D4" if THEME == "light" else "#2A2820"
 BORDER_COL = "#AAAAAA" if THEME == "light" else "#555550"
 
-# anyplot categorical palette (positions 1-3)
+# Imprint palette (positions 1-3)
 cat_names = ["Retail", "Grocery", "Electronics"]
-cat_colors = {"Retail": "#009E73", "Grocery": "#C475FD", "Electronics": "#AE3030"}
+cat_colors = {"Retail": "#009E73", "Grocery": "#C475FD", "Electronics": "#4467A3"}
 
 # Data: European store locations clustered by city
 np.random.seed(42)
@@ -53,10 +54,10 @@ lons = np.array(lons)
 categories = np.array(categories)
 
 # Grid-based clustering (simulates zoom-level clustering)
-grid_size_lat = 3.0
-grid_size_lon = 4.0
-lat_bins = np.floor((lats - 36) / grid_size_lat).astype(int)
-lon_bins = np.floor((lons + 12) / grid_size_lon).astype(int)
+grid_size_lat = 4.0
+grid_size_lon = 6.0
+lat_bins = np.floor((lats - 35) / grid_size_lat).astype(int)
+lon_bins = np.floor((lons + 8) / grid_size_lon).astype(int)
 cell_ids = lat_bins * 100 + lon_bins
 
 cluster_centers, cluster_sizes, cluster_dominant_cat = [], [], []
@@ -76,82 +77,73 @@ cluster_dominant_cat = np.array(cluster_dominant_cat)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(OCEAN_BG)
 
-# Simplified European land polygon
-europe_coast_lon = [
-    -10,
-    -9,
-    -9.5,
-    -8,
-    -5,
-    -2,
-    0,
-    2,
-    3,
-    5,
-    7,
-    9,
-    10,
-    12,
-    13,
-    15,
-    16,
-    18,
-    20,
-    22,
-    22,
-    20,
-    18,
-    15,
-    12,
-    10,
-    8,
-    5,
-    3,
-    0,
-    -2,
-    -5,
-    -8,
-    -10,
-    -10,
+# Simplified continental Europe outline (Iberia, France, Benelux, Germany, Poland, Balkans, Italy)
+europe_coast = [
+    (-9.5, 43.2),
+    (-8.0, 43.7),
+    (-1.8, 43.4),
+    (-1.2, 46.0),
+    (-2.3, 47.2),
+    (-4.7, 48.2),
+    (-1.5, 48.7),
+    (-1.5, 49.7),
+    (1.6, 50.9),
+    (3.5, 51.4),
+    (4.5, 52.9),
+    (7.0, 53.5),
+    (8.6, 54.0),
+    (9.0, 57.0),
+    (10.5, 57.6),
+    (10.5, 55.5),
+    (11.0, 54.2),
+    (14.0, 54.0),
+    (18.0, 54.8),
+    (21.0, 55.3),
+    (22.0, 56.0),
+    (22.0, 38.0),
+    (21.0, 38.5),
+    (20.0, 39.7),
+    (19.4, 41.5),
+    (18.5, 42.4),
+    (16.0, 43.5),
+    (14.5, 45.2),
+    (13.7, 45.6),
+    (12.3, 45.3),
+    (12.3, 44.2),
+    (13.6, 43.5),
+    (14.2, 42.2),
+    (16.0, 41.9),
+    (18.5, 40.2),
+    (17.2, 40.4),
+    (16.5, 39.5),
+    (17.1, 39.0),
+    (16.0, 38.0),
+    (15.7, 38.9),
+    (15.7, 40.0),
+    (14.0, 40.8),
+    (12.5, 41.4),
+    (11.0, 42.5),
+    (10.2, 43.9),
+    (8.8, 44.4),
+    (7.5, 43.8),
+    (6.0, 43.1),
+    (4.0, 43.4),
+    (3.1, 42.4),
+    (3.2, 41.9),
+    (0.9, 41.0),
+    (-0.3, 39.5),
+    (0.0, 38.7),
+    (-0.8, 37.6),
+    (-2.2, 36.7),
+    (-4.4, 36.7),
+    (-5.6, 36.0),
+    (-6.4, 36.8),
+    (-7.4, 37.2),
+    (-8.9, 37.0),
+    (-9.0, 38.7),
+    (-8.8, 41.0),
 ]
-europe_coast_lat = [
-    36,
-    37,
-    40,
-    42,
-    43,
-    44,
-    46,
-    47,
-    50,
-    52,
-    54,
-    55,
-    54,
-    52,
-    50,
-    48,
-    46,
-    44,
-    42,
-    40,
-    56,
-    56,
-    55,
-    54,
-    55,
-    55,
-    54,
-    52,
-    50,
-    51,
-    52,
-    48,
-    44,
-    40,
-    36,
-]
-ax.fill(europe_coast_lon, europe_coast_lat, color=LAND_BG, alpha=0.9, zorder=1)
+ax.fill(*zip(*europe_coast, strict=True), color=LAND_BG, alpha=0.9, zorder=1)
 
 # British Isles — Great Britain and Ireland (fills the map's western extent)
 gb_lon = [-5.7, 1.8, 1.5, 0.0, -2.0, -4.0, -5.5, -5.0, -5.5, -5.7]
@@ -162,11 +154,8 @@ ie_lon = [-10.5, -8.0, -6.0, -6.0, -6.5, -7.5, -10.0, -10.5]
 ie_lat = [51.5, 51.5, 52.0, 53.0, 54.5, 55.0, 54.5, 51.5]
 ax.fill(ie_lon, ie_lat, color=LAND_BG, alpha=0.9, zorder=1)
 
-# Country boundary lines
-ax.plot([-2, 3], [42.5, 42.5], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
-ax.plot([6, 8, 8], [49, 49, 47], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
-ax.plot([15, 15], [51, 54], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
-ax.plot([6, 10, 14], [46, 47, 46], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
+for outline in (europe_coast, list(zip(gb_lon, gb_lat, strict=True)), list(zip(ie_lon, ie_lat, strict=True))):
+    ax.plot(*zip(*outline, outline[0], strict=False), color=BORDER_COL, linewidth=0.6, alpha=0.7, zorder=2)
 
 # Subtle coordinate grid
 ax.grid(True, alpha=0.10, linestyle="--", color=INK, linewidth=0.5, zorder=3)
@@ -176,24 +165,27 @@ for cat in cat_names:
     mask = categories == cat
     ax.scatter(lons[mask], lats[mask], c=cat_colors[cat], alpha=0.20, s=12, edgecolors="none", zorder=4)
 
-# Cluster markers — logarithmic size scaling prevents over-large small-count markers
+# Cluster markers — logarithmic size scaling; single-store cells stay plain markers at their own coordinates
 for center, size, cat in zip(cluster_centers, cluster_sizes, cluster_dominant_cat, strict=True):
     lat, lon = center
+    if size == 1:
+        ax.scatter(lon, lat, s=70, c=cat_colors[cat], alpha=0.95, edgecolors=PAGE_BG, linewidths=1.0, zorder=5)
+        continue
     marker_size = 150 + np.log1p(size) * 80
     ax.scatter(lon, lat, s=marker_size, c=cat_colors[cat], alpha=0.88, edgecolors=PAGE_BG, linewidths=1.5, zorder=5)
     ax.annotate(str(size), (lon, lat), fontsize=7, fontweight="bold", ha="center", va="center", color="white", zorder=6)
 
-# Data storytelling: annotate the London cluster (highest-count city) as the key insight
+# Data storytelling: annotate the cluster nearest to London
 london_ref_lat, london_ref_lon = 51.5074, -0.1278
 city_dist = np.sqrt((cluster_centers[:, 0] - london_ref_lat) ** 2 + (cluster_centers[:, 1] - london_ref_lon) ** 2)
 largest_idx = np.argmin(city_dist)
 lc_lon = float(cluster_centers[largest_idx][1])
 lc_lat = float(cluster_centers[largest_idx][0])
 ax.annotate(
-    f"London hub · {cluster_sizes[largest_idx]} stores",
+    f"London cluster · {cluster_sizes[largest_idx]} stores",
     xy=(lc_lon, lc_lat),
     xytext=(lc_lon - 10.8, lc_lat - 3.6),
-    fontsize=6,
+    fontsize=7,
     color=INK,
     ha="left",
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.8, "shrinkB": 10},
@@ -267,21 +259,19 @@ for cat in cat_names:
         )
 ax_inset.set_xlim(-2.5, 2.2)
 ax_inset.set_ylim(49.8, 53.5)
-ax_inset.set_title("London → expanded", fontsize=6.5, color=INK, pad=2)
-ax_inset.tick_params(axis="both", labelsize=5.5, colors=INK_MUTED)
+ax_inset.set_title("London → expanded", fontsize=7.5, color=INK, pad=2)
+ax_inset.tick_params(axis="both", labelsize=7, colors=INK_MUTED)
+ax_inset.xaxis.set_major_locator(MaxNLocator(3))
+ax_inset.yaxis.set_major_locator(MaxNLocator(3))
 for s in ("top", "right"):
     ax_inset.spines[s].set_visible(False)
 for s in ("left", "bottom"):
     ax_inset.spines[s].set_color(INK_SOFT)
-# District labels to represent individual marker context
-for dname, dlon, dlat in [("Central", -0.12, 51.50), ("East End", 0.85, 51.52), ("North", -0.10, 52.30)]:
-    ax_inset.text(dlon, dlat, dname, fontsize=5, color=INK_MUTED, ha="center", va="bottom", alpha=0.9, zorder=5)
-
 # Summary annotation
 ax.text(
     0.98,
     0.02,
-    f"Total: {len(lats)} locations · {len(cluster_sizes)} clusters",
+    f"Total: {len(lats)} locations · {int(np.sum(cluster_sizes > 1))} clusters · {int(np.sum(cluster_sizes == 1))} single stores",
     transform=ax.transAxes,
     fontsize=7,
     ha="right",
