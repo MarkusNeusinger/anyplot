@@ -16,7 +16,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 DD_COLOR    <- "#AE3030"  # red — semantic: loss / drawdown
-DD_ALPHA    <- if (THEME == "light") 0.25 else 0.45  # more visible in dark mode
+DD_ALPHA    <- if (THEME == "light") 0.25 else 0.35  # more visible in dark mode, line stays dominant
 
 # Data: synthetic portfolio NAV, Jan 2021 – Dec 2023
 # bull → correction → full recovery (new highs) → deeper bear → partial recovery
