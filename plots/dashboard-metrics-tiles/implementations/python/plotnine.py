@@ -1,7 +1,7 @@
 """ anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-21
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
@@ -34,131 +34,107 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 SPARKLINE_BG = "#EDEAE0" if THEME == "light" else "#2A2A26"
 
-# imprint semantic anchors
-STATUS_COLORS = {
-    "good": "#009E73",  # green
-    "warning": "#DDCC77",  # amber
-    "critical": "#AE3030",  # red
-}
+# Imprint palette: position 1 is green, position 5 is red
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"  # warning anchor, outside the categorical pool
 
+# Constants
+STATUS_COLORS = {"good": IMPRINT_PALETTE[0], "warning": ANYPLOT_AMBER, "critical": IMPRINT_PALETTE[4]}
+FAVORABLE = IMPRINT_PALETTE[0]
+UNFAVORABLE = IMPRINT_PALETTE[4]
+
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: metric_name
+CURRENT = "Current value"  # role: current_value
+HISTORY = "History"  # role: history
+CHANGE = "Change (%)"  # role: change_percent
+STATUS = "Status"  # role: status
+UNIT = "Unit"  # role: extra
+BETTER = "Better direction (1 = higher, -1 = lower)"  # role: extra
+STEP = "Step"  # role: extra
+
+# Data: replace this block with your own table, one row per history point, for example df = pd.read_csv("metrics.csv")
 np.random.seed(42)
-
-metrics = [
-    {"name": "CPU Usage", "value": 45, "unit": "%", "change": -5.2, "status": "good"},
-    {"name": "Memory", "value": 72, "unit": "%", "change": 8.3, "status": "warning"},
-    {"name": "Response Time", "value": 120, "unit": "ms", "change": -15.4, "status": "good"},
-    {"name": "Active Users", "value": 1284, "unit": "", "change": 12.7, "status": "good"},
-    {"name": "Error Rate", "value": 0.8, "unit": "%", "change": 45.2, "status": "critical"},
-    {"name": "Throughput", "value": 3450, "unit": "req/s", "change": -2.1, "status": "good"},
-]
-
-# Generate sparkline history for each metric
 n_points = 20
-sparkline_data = []
-for metric in metrics:
-    base_value = metric["value"]
-    trend_direction = -1 if metric["change"] < 0 else 1
-    noise = np.random.randn(n_points) * (base_value * 0.1)
-    trend = np.linspace(0, trend_direction * abs(metric["change"]) / 100 * base_value, n_points)
-    history = base_value - trend + noise
-
-    hist_min, hist_max = history.min(), history.max()
-    history_norm = (history - hist_min) / (hist_max - hist_min) if hist_max > hist_min else np.ones(n_points) * 0.5
-    history_scaled = history_norm * 0.22 + 0.03
-
-    for j, val in enumerate(history_scaled):
-        sparkline_data.append(
+metrics = [
+    ("CPU Usage", 45, "%", -5.2, "good", -1),
+    ("Memory", 72, "%", 8.3, "warning", -1),
+    ("Response Time", 120, "ms", -15.4, "good", -1),
+    ("Active Users", 1284, "", 12.7, "good", 1),
+    ("Error Rate", 0.8, "%", 45.2, "critical", -1),
+    ("Throughput", 3450, "req/s", -2.1, "good", 1),
+]
+rows = []
+for name, value, unit, change, status, better in metrics:
+    drift = np.linspace(0, np.sign(change) * abs(change) / 100 * value, n_points)
+    history = value - drift + np.random.randn(n_points) * value * 0.1
+    for step, point in enumerate(history):
+        rows.append(
             {
-                "metric_name": metric["name"],
-                "x": j / (n_points - 1) * 18 + 1,
-                "y": val,
-                "line_color": STATUS_COLORS[metric["status"]],
+                METRIC: name,
+                CURRENT: value,
+                HISTORY: point,
+                CHANGE: change,
+                STATUS: status,
+                UNIT: unit,
+                BETTER: better,
+                STEP: step,
             }
         )
+df = pd.DataFrame(rows)
 
-df_sparkline = pd.DataFrame(sparkline_data)
+# Plot: reads only df and the constants above
+order = df[METRIC].unique().tolist()
+n_steps = df[STEP].max() + 1
 
-# Build label rows with theme-adaptive and status-aware colors
-label_data = []
-for metric in metrics:
-    value = metric["value"]
-    value_str = f"{value:,.0f}" if value >= 1000 else (f"{value:.1f}" if value < 1 else f"{value:.0f}")
-    value_display = f"{value_str}{metric['unit']}"
+spark = pd.DataFrame(
+    {
+        "tile": pd.Categorical(df[METRIC], categories=order, ordered=True),
+        "x": df[STEP] / (n_steps - 1) * 18 + 1,
+        "y": df.groupby(METRIC, sort=False)[HISTORY].transform(lambda s: (s - s.min()) / (s.max() - s.min())) * 0.22
+        + 0.03,
+        "line_color": df[STATUS].map(lambda s: STATUS_COLORS.get(s, INK_SOFT)),
+    }
+)
 
-    change = metric["change"]
-    arrow = "▲" if change >= 0 else "▼"
-    change_str = f"{arrow} {abs(change):.1f}%"
+head = df.groupby(METRIC, sort=False).first().reset_index()
+fmt = head[CURRENT].map(lambda v: f"{v:,.0f}" if v >= 1000 else (f"{v:.1f}" if v < 1 else f"{v:.0f}"))
+favorable = (head[CHANGE] > 0) == (head[BETTER] > 0)
+tiles = pd.DataFrame(
+    {
+        "tile": pd.Categorical(head[METRIC], categories=order, ordered=True),
+        "name": head[METRIC],
+        "value": fmt + head[UNIT],
+        "change": np.where(head[CHANGE] >= 0, "▲ ", "▼ ") + head[CHANGE].abs().map(lambda v: f"{v:.1f}%"),
+        "status_color": head[STATUS].map(lambda s: STATUS_COLORS.get(s, INK_SOFT)),
+        "change_color": np.where(favorable, FAVORABLE, UNFAVORABLE),
+        "ink": INK,
+        "x": 10,
+    }
+)
 
-    # Context-aware change color: for error rate, up = bad
-    if metric["name"] == "Error Rate":
-        change_color = "#C475FD" if change >= 0 else "#009E73"
-    else:
-        change_color = "#009E73" if change >= 0 else "#C475FD"
+strip = pd.DataFrame({"tile": tiles["tile"], "xmin": 0, "xmax": 20, "ymin": 0, "ymax": 0.28})
 
-    label_data.append(
-        {
-            "metric_name": metric["name"],
-            "metric_label": metric["name"],
-            "value_display": value_display,
-            "change_str": change_str,
-            "status_color": STATUS_COLORS[metric["status"]],
-            "change_color": change_color,
-            "ink_color": INK,
-            "label_x": 10,
-            "label_y": 0.88,
-            "value_x": 10,
-            "value_y": 0.62,
-            "change_x": 10,
-            "change_y": 0.38,
-        }
-    )
-
-df_labels = pd.DataFrame(label_data)
-
-all_metrics = [m["name"] for m in metrics]
-df_sparkline["metric_name"] = pd.Categorical(df_sparkline["metric_name"], categories=all_metrics, ordered=True)
-df_labels["metric_name"] = pd.Categorical(df_labels["metric_name"], categories=all_metrics, ordered=True)
-
-bg_data = [{"metric_name": m["name"], "xmin": 0, "xmax": 20, "ymin": 0, "ymax": 0.28} for m in metrics]
-df_bg = pd.DataFrame(bg_data)
-df_bg["metric_name"] = pd.Categorical(df_bg["metric_name"], categories=all_metrics, ordered=True)
-
-# Plot
 plot = (
     ggplot()
-    # Sparkline area background
-    + geom_rect(df_bg, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=SPARKLINE_BG)
-    # Sparklines — thicker for visibility, colored by status
-    + geom_line(df_sparkline, aes(x="x", y="y", color="line_color"), size=1.4, alpha=0.9)
-    # Metric label
+    + geom_rect(strip, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=SPARKLINE_BG)
+    + geom_line(spark, aes(x="x", y="y", color="line_color"), size=1.4, alpha=0.9)
     + geom_text(
-        df_labels,
-        aes(x="label_x", y="label_y", label="metric_label", color="ink_color"),
-        size=7,
+        tiles, aes(x="x", y=0.88, label="name", color="ink"), size=7, ha="center", va="center", fontweight="bold"
+    )
+    + geom_text(
+        tiles, aes(x="x", y=0.62, label="value", color="ink"), size=13, ha="center", va="center", fontweight="bold"
+    )
+    + geom_text(
+        tiles,
+        aes(x="x", y=0.40, label="change", color="change_color"),
+        size=8,
         ha="center",
         va="center",
         fontweight="bold",
     )
-    # Main value (colored by status)
-    + geom_text(
-        df_labels,
-        aes(x="value_x", y="value_y", label="value_display", color="status_color"),
-        size=13,
-        ha="center",
-        va="center",
-        fontweight="bold",
-    )
-    # Change indicator (colored green/red by favorable/unfavorable direction)
-    + geom_text(
-        df_labels,
-        aes(x="change_x", y="change_y", label="change_str", color="change_color"),
-        size=6,
-        ha="center",
-        va="center",
-    )
-    # Use hex values directly from data columns
     + scale_color_identity()
-    + facet_wrap("~metric_name", ncol=3)
+    + facet_wrap("~tile", ncol=3)
     + scale_x_continuous(limits=(0, 20), expand=(0.02, 0.02))
     + scale_y_continuous(limits=(0, 1), expand=(0.02, 0.02))
     + labs(title="dashboard-metrics-tiles · python · plotnine · anyplot.ai")
@@ -168,7 +144,9 @@ plot = (
         plot_title=element_text(size=10, ha="center", color=INK, margin={"b": 12}),
         strip_text=element_blank(),
         strip_background=element_blank(),
-        panel_spacing=0.12,
+        plot_margin=0.03,
+        panel_spacing_x=0.03,
+        panel_spacing_y=0.04,
         panel_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="none",
