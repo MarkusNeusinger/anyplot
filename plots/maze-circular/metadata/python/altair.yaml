@@ -12,121 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 77
 review:
   strengths:
-  - Correct Kruskal maze generation guarantees exactly one solution, properly inlined
-    per KISS rules
-  - 'Excellent theme adaptation: wall colors and backgrounds flip correctly while
-    entry/goal marker colors remain constant across themes'
-  - detail+order encoding is the idiomatic Altair solution for rendering hundreds
-    of disconnected wall segments
-  - 'Perfect spec compliance: concentric rings, radial passages, entry gap, goal marker
-    all present and correct'
-  - Square canvas (2400x2400) correctly chosen for circular visualization
+  - Kruskal union-find generation over ring/sector cells with a fixed seed gives a
+    reproducible maze with long curved corridors and many dead ends
+  - detail+order encoding on mark_line draws hundreds of disconnected wall polylines
+    from one tidy table — the idiomatic Altair answer
+  - 'Theme handling is clean: walls and title flip with the theme while the blue entry
+    and red goal markers stay identical'
+  - Entry marker position is derived from the gap in the outer boundary, so START
+    and its arrow always sit over the opening
   weaknesses:
-  - 'DE-01: Consider adding subtle depth to the maze interior (elevated fill inside
-    outer ring) or passage-opening markers to increase aesthetic sophistication'
-  - 'DE-02: START and GOAL labels could use more refined styling (small colored indicator
-    dot before START, thin ring around goal halo)'
-  - 'LM-01: Title configured via configure_title() rather than the idiomatic alt.TitleParams()
-    in .properties()'
+  - 'VQ-05 (both): the canvas is 2440x2520, neither 3200x1800 nor 2400x2400 → 2400x2400
+    (−40 × −120 px). Likely cause: .properties(width=600, height=600) without autosize
+    fit, so title and padding grow the canvas past 600x600 × 4.'
+  - 'SC-02 (both): the maze has more than one route to the goal — no wall closes the
+    center, so the star is open to all 12 innermost sectors, and every opened ring
+    arc spans a whole inner sector, so it opens onto two outer cells where the spanning
+    tree counted one; both add loops, against C3 (''exactly one route … no second
+    way through'') → exactly one opening into the center and one opening per removed
+    ring wall. Likely cause: the radial walls start at r=0.3 with no wall circle there,
+    and the ring arcs are cut on the inner ring''s sector grid (`ring_theta`) instead
+    of over the outer cell `outer_sector` chosen in the Kruskal step.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "maze-circular · python · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. START label in bold blue (#0072B2) with downward arrow (▼). All chrome text readable against light background.
-      Data: Dark walls (#1A1A17) — outer boundary at strokeWidth=4.0, interior at 2.5. Entry gap at top of outer ring. Gold star (★) in #E69F00 at center as goal marker with subtle amber halo (opacity=0.30).
+      Background: warm off-white #FAF8F1, 2440x2520 canvas (off the canonical sizes)
+      Chrome: title "maze-circular · python · altair · anyplot.ai" in dark ink at the top, START in bold blue with a ▼ arrow above a gap in the top of the outer boundary; all readable
+      Data: near-black walls — 7 concentric ring arcs with gaps and radial sector walls, outer boundary heavier (4 px) than interior (2.5 px); a red ★ on a translucent red halo at the center. No data series, so no first-series green applies; markers use Imprint blue (#4467A3) and red (#AE3030)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light text (#F0EFE8 via INK token), clearly readable against dark background. START label retains blue (#0072B2) — readable. No dark-on-dark failures observed.
-      Data: Off-white walls (#E0DFD8) — same structure as light render. Goal star still amber (#E69F00) — identical to light render. Data colors (entry blue, goal amber) are theme-independent and match the light render exactly.
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, readable; START and arrow in the same blue, readable; no dark-on-dark text
+      Data: off-white walls (#E0DFD8) with the same layout; entry blue and goal red identical to the light render; halo reads darker on the dark surface but the star stays clear
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, START=18, arrow=14, goal
-          star=24). Readable in both themes. Minor: title could be slightly larger
-          on 2400x2400 canvas.'
+        comment: Title 16 pt, START 18 pt bold, star 24 pt, all set explicitly; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. START label, arrow, and goal star have clear
-          spatial separation.
+        comment: No text collides; START and arrow sit above the entry gap, the star
+          sits in the open center
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Walls, markers, and text clearly distinguishable. Outer wall (4.0)
-          vs interior (2.5) differentiates boundary from interior.
+        comment: Walls 2.5 px interior and 4 px boundary, clearly visible on both
+          surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Entry blue (#0072B2) and goal amber (#E69F00) are CVD-safe Okabe-Ito
-          colors with good contrast.
+        comment: Blue entry and red goal differ in hue and lightness and are also
+          told apart by shape and text
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square 2400x2400 canvas correct for circular plot. Maze fills ~75%
-          of canvas with balanced margins.
+        passed: false
+        comment: Canvas 2440x2520 matches neither 3200x1800 nor 2400x2400 (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes appropriate for maze. Title correctly formatted as spec-id
-          · python · altair · anyplot.ai.
+        comment: 'N/A: no data axes in a maze (spec permits); title present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Entry/goal use
-          Okabe-Ito positions 3 and 5, theme-independent, identical across renders.
-          Chrome adapts correctly.'
+        comment: 'Walls #1A1A17 on #FAF8F1 (light) and #E0DFD8 on #1A1A17 (dark);
+          markers use Imprint positions 3 and 5, identical in both themes'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above configured default: differential wall thickness, semantic
-          color coding, theme-adaptive ink. Not yet strong design level due to plain
-          line-art walls.'
+        passed: false
+        comment: 'Style-guide baseline: theme ink, heavier boundary as the Notes allow;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clean: axes hidden, no grid, strokeWidth=0 on view, outer boundary
-          emphasis. Missing final level of polish for 6.'
+        passed: false
+        comment: Clean layout, no axes; nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Entry arrow + START and centered gold star create clear puzzle narrative.
-          Color coding (blue=navigate, amber=goal) reinforces story.
+        passed: false
+        comment: Entry and goal markers are what the Notes ask for; no further hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -134,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Circular maze with concentric rings and radial passages.
+        comment: Circular maze with concentric ring walls and radial sector walls
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Concentric ring walls, radial sector dividers, passage gaps, entry
-          at outer perimeter, goal at center, Kruskal's guarantees one solution, seed=42.
+        passed: false
+        comment: 'Rings, radial walls, ring openings, entry and goal marked (C1, C2,
+          C4 met); C3 missed: the maze has several routes to the center (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 7 rings (within 5-10), correct coordinate transforms, proper scaling.
+        comment: 'N/A: position is construction; geometry is consistent and circular
+          via shared scale domains'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is maze-circular · python · altair · anyplot.ai. No legend
-          needed.
+        comment: Title format correct; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -164,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec features: concentric corridors, radial passages with gaps,
-          entry gap, goal marker, solvable structure.'
+        comment: Shows ring corridors, sector walls, dead ends, outer rings with more
+          sectors, entry and goal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Printable circular maze puzzle matching spec use case. 7 rings medium
-          difficulty.
+        comment: A printable puzzle, the spec's own use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 rings within recommended 5-10, density=1.0 for medium, seed=42.
+        comment: 'Checked: 7 rings (spec example, inside 5-10), medium density, sectors
+          12→36 ring by ring'
     code_quality:
       score: 10
       max: 10
@@ -188,54 +186,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Kruskal's inlined. Imports → Setup → Data
-          → Chart → Save.
+        comment: No functions or classes; Imports → data → chart → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(SEED) with SEED=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas — all used.
+        comment: os, sys, altair, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path workaround is legitimate and commented. Inlined union-find
-          appropriate for CQ-01. No fake functionality.
+        comment: Appropriate complexity; inline union-find suits the Kruskal step
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=4.0) and plot-{THEME}.html.
-          Current altair 6.1.0 API.
+        comment: Saves plot-{THEME}.png at scale_factor=4 and plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Good: alt.layer(), detail+order for disconnected segments, shared
-          Scale for equal-aspect, configure_view(strokeWidth=0). Minor: configure_title()
-          used instead of alt.TitleParams().'
+        passed: false
+        comment: alt.layer of mark_line with detail+order for hundreds of disconnected
+          wall polylines, shared alt.Scale domains for equal aspect, mark_text for
+          markers
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: detail+order encoding for independent wall segments is distinctly
-          Altair. Layer composition with mixed mark types is idiomatic.
+        passed: false
+        comment: No feature beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
 impl_tags:
   dependencies: []
   techniques:
