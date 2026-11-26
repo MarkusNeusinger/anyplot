@@ -16,15 +16,22 @@ const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+# Imprint sequential ramp for marks (colored points on the page)
+const ANYPLOT_SEQ = THEME == "light" ?
+    cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
+    cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
 
-# Theme-adaptive tile providers
-const TILE_URL   = THEME == "light" ?
-    "https://tile.openstreetmap.org/{z}/{x}/{y}.png" :
-    "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-const TILE_CREDIT = THEME == "light" ?
-    "© OpenStreetMap contributors" :
-    "© OpenStreetMap contributors © CARTO"
+# OpenStreetMap tiles; the dark theme inverts their lightness (keyless dark
+# basemaps now serve watermarked tiles)
+const TILE_URL    = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+const TILE_CREDIT = "© OpenStreetMap contributors"
+
+function theme_tile(c)
+    THEME == "light" && return c
+    lum = 0.299f0 * red(c) + 0.587f0 * green(c) + 0.114f0 * blue(c)
+    g = 0.07f0 + 0.30f0 * (1f0 - lum)
+    return RGBA{Float32}(g, g, g * 1.04f0, 1f0)
+end
 
 # Web Mercator helpers (EPSG:3857 slippy-map tile convention)
 lat_to_merc(lat)     = log(tan(lat * π / 180) + 1 / cos(lat * π / 180))
@@ -107,7 +114,7 @@ mktempdir() do tmpdir
                     "anyplot.ai static visualization; contact@anyplot.ai"])
             tile_mat = PNGFiles.load(fpath)   # size = (height, width) = [row, col] = [y, x]
             # Transpose to [x, y] layout expected by the stitched array
-            tile_t = permutedims(RGBA{Float32}.(tile_mat), (2, 1))
+            tile_t = permutedims(theme_tile.(RGBA{Float32}.(tile_mat)), (2, 1))
             stitched[ix*TILE_PX+1:(ix+1)*TILE_PX, iy*TILE_PX+1:(iy+1)*TILE_PX] = tile_t
         catch e
             @warn "Tile ($tx, $ty) unavailable" exception = e
@@ -150,8 +157,8 @@ ax = Axis(
     ylabelsize         = 14,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 11,
-    yticklabelsize     = 11,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -185,7 +192,7 @@ top8 = sortperm(visitors, rev = true)[1:8]
 for i in top8
     text!(ax, lons[i], y_merc[i];
         text     = city_names[i],
-        fontsize = 10,
+        fontsize = 11,
         color    = INK,
         offset   = (8, 5),
         align    = (:left, :bottom),
@@ -195,7 +202,7 @@ end
 # Tile provider attribution (bottom-right)
 text!(ax, ax_lon_max, ax_merc_min;
     text     = TILE_CREDIT,
-    fontsize = 9,
+    fontsize = 10,
     color    = INK_SOFT,
     align    = (:right, :bottom),
     offset   = (-4, 4),
@@ -209,7 +216,7 @@ Colorbar(
     labelcolor     = INK,
     tickcolor      = INK_SOFT,
     ticklabelcolor = INK_SOFT,
-    width          = 16,
+    width          = 20,
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
