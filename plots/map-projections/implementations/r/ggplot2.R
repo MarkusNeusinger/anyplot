@@ -149,7 +149,7 @@ p <- ggplot() +
     coord_fixed() +
     labs(
         title    = "map-projections · r · ggplot2 · anyplot.ai",
-        subtitle = "Mollweide equal-area projection  ·  Tissot indicatrices (green) confirm equal-area: every circle covers identical surface"
+        subtitle = "Mollweide equal-area projection  ·  green Tissot circles: equal area, changing shape"
     ) +
     theme_void(base_size = 8) +
     theme(
