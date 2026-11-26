@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -29,7 +29,7 @@ BENCHMARK = "SPY"  # drawn thicker than the single stocks
 # Columns
 DATE = "Date"  # role: date
 SYMBOL = "Symbol"  # role: symbol
-REBASED = "Rebased price (start = 100)"  # role: price
+REBASED = "Performance index (start = 100)"  # role: price
 
 # Data
 np.random.seed(42)
@@ -39,7 +39,8 @@ returns_params = {"AAPL": (0.0003, 0.012), "GOOGL": (0.0002, 0.011), "MSFT": (0.
 frames = []
 for symbol, (mean_return, volatility) in returns_params.items():
     returns = np.random.normal(mean_return, volatility, len(dates))
-    frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, REBASED: BASE * np.cumprod(1 + returns)}))
+    prices = 50 * np.cumprod(1 + returns)
+    frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, REBASED: prices / prices[0] * BASE}))
 df = pd.concat(frames, ignore_index=True)
 
 # Plot
