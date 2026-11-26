@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -54,7 +54,9 @@ lon = df[LON].to_numpy()
 lat = df[LAT].to_numpy()
 sequence = df[SEQUENCE].to_numpy()
 
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.27, right=0.90, top=0.92, bottom=0.09)
+ax.set_anchor("W")
 ax.set_facecolor(PAGE_BG)
 
 # Line segments colored along the route by sequence
@@ -65,8 +67,16 @@ lc = LineCollection(segments, cmap=imprint_seq, norm=norm, linewidth=2.5, alpha=
 lc.set_array(sequence[:-1])
 line = ax.add_collection(lc)
 
-# Colorbar
-cbar = fig.colorbar(line, ax=ax, shrink=0.8, pad=0.02)
+x_margin = (lon.max() - lon.min()) * 0.1
+y_margin = (lat.max() - lat.min()) * 0.1
+ax.set_xlim(lon.min() - x_margin, lon.max() + x_margin)
+ax.set_ylim(lat.min() - y_margin, lat.max() + y_margin)
+# Colorbar: hugs the aspect-locked axes
+ax.set_aspect(1 / np.cos(np.radians(lat.mean())), adjustable="box")
+ax.apply_aspect()
+box = ax.get_position()
+cax = fig.add_axes((box.x1 + 0.03, box.y0 + 0.2 * box.height, 0.03, 0.6 * box.height))
+cbar = fig.colorbar(line, cax=cax)
 cbar.set_label(SEQUENCE, fontsize=10, color=INK_SOFT)
 cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
@@ -94,7 +104,7 @@ for i in arrow_indices:
 # Style
 ax.set_xlabel(LON, fontsize=10, color=INK)
 ax.set_ylabel(LAT, fontsize=10, color=INK)
-ax.set_title("map-route-path · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+fig.suptitle("map-route-path · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, y=0.975)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Suppress offset notation so full coordinate values are shown
@@ -112,12 +122,8 @@ leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-x_margin = (lon.max() - lon.min()) * 0.1
-y_margin = (lat.max() - lat.min()) * 0.1
-ax.set_xlim(lon.min() - x_margin, lon.max() + x_margin)
-ax.set_ylim(lat.min() - y_margin, lat.max() + y_margin)
 
-plt.tight_layout()
+ax.xaxis.set_major_locator(plt.MaxNLocator(4))
 
-# Save — no bbox_inches so figsize×dpi gives exact 3200×1800
+# Save — no bbox_inches so figsize×dpi gives exact 2400×2400
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
