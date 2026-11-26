@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-basic: Basic Area Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-28
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label
+from bokeh.models import ColumnDataSource, HoverTool, Range1d
 from bokeh.plotting import figure
 from PIL import Image
 from selenium import webdriver
@@ -32,40 +32,37 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
 
-# Title with length-aware font scaling
-title_str = "Daily Website Traffic · area-basic · python · bokeh · anyplot.ai"
-n = len(title_str)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = f"{max(34, round(50 * ratio))}pt"
+# Constants
+TITLE = "Daily Website Traffic · area-basic · python · bokeh · anyplot.ai"
 
-# Data — tech blog visitors, March 2024
+# Columns: set these to your table's column names
+DATE = "Date (March 2024)"  # role: x
+VISITORS = "Daily Visitors (count)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
 np.random.seed(42)
 dates = pd.date_range(start="2024-03-01", periods=31, freq="D")
-base_visitors = 4200
-trend = np.linspace(0, 800, 31)
-weekly_pattern = 600 * np.sin(np.arange(31) * 2 * np.pi / 7 - 1.2)
-noise = np.random.randn(31) * 300
-visitors = base_visitors + trend + weekly_pattern + noise
+visitors = (
+    4200 + np.linspace(0, 800, 31) + 600 * np.sin(np.arange(31) * 2 * np.pi / 7 - 1.2) + np.random.randn(31) * 300
+)
 visitors = np.maximum(visitors, 1800)
+visitors[7:9] = [2100, 2400]  # scheduled maintenance
+visitors[21:24] = [11400, 9900, 7700]  # tutorial hits the Hacker News front page
+df = pd.DataFrame({DATE: dates, VISITORS: visitors})
 
-# Traffic dip: scheduled maintenance on day 8–9
-visitors[7] = 2100
-visitors[8] = 2400
-
-# Viral surge: tutorial hits Hacker News front page on day 22
-visitors[21] = 11400
-visitors[22] = 9900
-visitors[23] = 7700
-
-source = ColumnDataSource(data={"date": dates, "visitors": visitors})
+# Plot: reads only df and the constants above
+n = len(TITLE)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = f"{max(34, round(50 * ratio))}pt"
+source = ColumnDataSource(df)
 
 # Figure — 3200×1800 landscape
 p = figure(
     width=3200,
     height=1800,
-    title=title_str,
-    x_axis_label="Date (March 2024)",
-    y_axis_label="Daily Visitors (count)",
+    title=TITLE,
+    x_axis_label=DATE,
+    y_axis_label=VISITORS,
     x_axis_type="datetime",
     toolbar_location=None,
     min_border_bottom=160,
@@ -75,44 +72,33 @@ p = figure(
 )
 
 # Area fill + edge line
-p.varea(x="date", y1=0, y2="visitors", source=source, fill_color=BRAND, fill_alpha=0.35)
-p.line(x="date", y="visitors", source=source, line_color=BRAND, line_width=4)
+p.varea(x=DATE, y1=0, y2=VISITORS, source=source, fill_color=BRAND, fill_alpha=0.35)
+p.line(x=DATE, y=VISITORS, source=source, line_color=BRAND, line_width=4)
 
 # Invisible scatter for hover hit targets
-p.scatter(x="date", y="visitors", source=source, size=18, fill_alpha=0, line_alpha=0)
+p.scatter(x=DATE, y=VISITORS, source=source, size=18, fill_alpha=0, line_alpha=0)
 
 # HoverTool with datetime formatter
 hover = HoverTool(
-    tooltips=[("Date", "@date{%b %d, %Y}"), ("Visitors", "@visitors{0,0}")],
-    formatters={"@date": "datetime"},
+    tooltips=[("Date", f"@{{{DATE}}}{{%b %d, %Y}}"), ("Visitors", f"@{{{VISITORS}}}{{0,0}}")],
+    formatters={f"@{{{DATE}}}": "datetime"},
     mode="vline",
 )
 p.add_tools(hover)
-
-# Annotation — viral surge event
-surge_label = Label(
-    x=dates[21],
-    y=11700,
-    text="HN front page  +172%",
-    text_font_size="28pt",
-    text_color=INK,
-    text_font_style="bold",
-    x_offset=15,
-    y_offset=0,
-)
-p.add_layout(surge_label)
 
 # Text sizing — canonical bokeh values for 3200×1800
 p.title.text_font_size = title_fontsize
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
@@ -129,9 +115,8 @@ p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
 
-# Y range with tight headroom for annotation
-p.y_range.start = 0
-p.y_range.end = 12800
+# Area baseline at zero, headroom from the data
+p.y_range = Range1d(0, df[VISITORS].max() * 1.08)
 
 # Save HTML (interactive catalog artifact)
 output_file(f"plot-{THEME}.html")
