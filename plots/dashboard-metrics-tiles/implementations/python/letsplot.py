@@ -1,7 +1,7 @@
 """ anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
@@ -72,6 +72,7 @@ VALUE_Y = "Value y"  # role: extra
 CHANGE_Y = "Change y"  # role: extra
 FLOOR = "Floor"  # role: extra
 TOP = "Top"  # role: extra
+BOTTOM = "Bottom"  # role: extra
 
 # Data: replace this block with your own table, one row per metric and step
 np.random.seed(42)
@@ -111,14 +112,15 @@ labels[EFFECT] = [
     for c, lower in zip(labels[CHANGE], labels[LOWER_BETTER], strict=True)
 ]
 labels[VALUE_Y] = (high + span * 0.55).to_numpy()
-labels[CHANGE_Y] = (low - span * 0.40).to_numpy()
+labels[CHANGE_Y] = (low - span * 1.0).to_numpy()
 labels[TOP] = (high + span * 0.95).to_numpy()
+labels[BOTTOM] = (low - span * 1.4).to_numpy()
 
 # Warning tiles carry a badge in the strip, a second cue beyond color
 badge = {m: WARNING_BADGE + m if s in BADGE_STATES else m for m, s in zip(tiles.index, tiles[STATUS], strict=True)}
 df[TILE] = df[METRIC].map(badge)
 labels[TILE] = labels[METRIC].map(badge)
-df[FLOOR] = df[METRIC].map(low - span * 0.7)
+df[FLOOR] = df[METRIC].map(low - span * 0.55)
 last_points = df[df[STEP] == df[STEP].max()]
 
 plot = (
@@ -146,6 +148,7 @@ plot = (
         show_legend=False,
     )
     + geom_blank(data=labels, mapping=aes(x=STEP, y=TOP))
+    + geom_blank(data=labels, mapping=aes(x=STEP, y=BOTTOM))
     + scale_fill_manual(values=STATE_COLORS)
     + scale_color_manual(values=STATE_COLORS)
     + scale_x_continuous(expand=[0.05, 0.05])
