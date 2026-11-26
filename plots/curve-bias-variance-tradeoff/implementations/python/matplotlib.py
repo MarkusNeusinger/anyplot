@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-26
@@ -44,9 +44,9 @@ ax.axvspan(0, optimal_complexity, alpha=0.07, color=C_BIAS)
 ax.axvspan(optimal_complexity, 10, alpha=0.07, color=C_VARIANCE)
 
 # Curves
-ax.plot(complexity, bias_squared, color=C_BIAS, linewidth=2.5, linestyle="-", zorder=3)
-ax.plot(complexity, variance, color=C_VARIANCE, linewidth=2.5, linestyle="-", zorder=3)
-ax.plot(complexity, irreducible_error, color=C_IRREDUCIBLE, linewidth=2.0, linestyle="--", zorder=2)
+ax.plot(complexity, bias_squared, color=C_BIAS, linewidth=2.5, linestyle="--", zorder=3)
+ax.plot(complexity, variance, color=C_VARIANCE, linewidth=2.5, linestyle="-.", zorder=3)
+ax.plot(complexity, irreducible_error, color=C_IRREDUCIBLE, linewidth=2.0, linestyle=":", zorder=2)
 ax.plot(complexity, total_error, color=C_TOTAL, linewidth=3.5, linestyle="-", zorder=4)
 
 # Optimal complexity marker
