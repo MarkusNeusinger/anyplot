@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-21
@@ -108,7 +108,7 @@ scatter_plot = (
     + anyplot_theme
 )
 
-grid_plot = gggrid([price_plot, volume_plot, returns_plot, scatter_plot], ncol=2)
+grid_plot = gggrid([price_plot, volume_plot, returns_plot, scatter_plot], ncol=2, align=True)
 final_plot = (
     grid_plot
     + ggsize(800, 450)
