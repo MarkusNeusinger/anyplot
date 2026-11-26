@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:39:27Z'
-updated: '2026-11-26T16:12:59Z'
+updated: '2026-11-26T16:19:49Z'
 generated_by: claude-sonnet
-workflow_run: 45855427575
+workflow_run: 45856832000
 issue: 3756
 language_version: 3.14.10
 library_version: 4.11.0
@@ -15,39 +15,34 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 quality_score: 85
 review:
   strengths:
-  - Interactive HTML uses geom_livemap with real CARTO Positron / Lets-Plot dark tilesets,
+  - Interactive HTML uses geom_livemap with real CARTO Positron / Lets-Plot dark tilesets
     fitted to the data bounds via location=[...], with layer_tooltips showing station
     name and trips
-  - 'Static basemap is latitude-corrected: coord_fixed(ratio=1/cos(lat)) and tile
-    seams kept square on screen'
-  - 'Theme-adaptive water, land and park tones with markers in #009E73 and page-colored
+  - 'Static basemap is latitude-corrected: coord_fixed(ratio=1/cos(lat)) keeps the
+    map and its tile seams square on screen'
+  - 'Theme-adaptive water, land and park tones with #009E73 markers and page-colored
     outlines that separate close stations in both themes'
-  - Realistic, neutral bike-share scenario with accurate station coordinates across
+  - Realistic, neutral bike-share scenario with plausible station coordinates across
     Manhattan, Brooklyn, Queens and Jersey City
   weaknesses:
-  - 'SC-02 (both): the PNG shows hand-drawn land/water polygons with drawn seams instead
-    of imagery from a tile provider, so the static render has no street-level context
-    (C1) and its caption credits CARTO / OpenStreetMap for data it does not contain
-    → render real provider tiles in the PNG where the export allows it, otherwise
-    label the basemap honestly as a simplified outline. Likely cause: static branch
-    built from geom_polygon + geom_segment instead of tiles.'
-  - 'CQ-01 (code): helper function polygon_frame() (lines 191-192) → inline the two
-    DataFrame constructions. Likely cause: def polygon_frame.'
-  - 'CQ-04 (code): PAD = 0.012 (line 94) is never used → delete it. Likely cause:
-    leftover padding constant replaced by the literal 0.025/0.033/0.015 offsets.'
+  - 'SC-02 (both): the PNG shows a simplified land/water polygon basemap with drawn
+    seams instead of imagery from a tile provider, so the static render has no street-level
+    context (C1) → render real provider tiles in the PNG where the lets-plot export
+    allows it. Likely cause: static branch built from geom_polygon + geom_segment
+    because geom_livemap does not rasterize via ggsave.'
   - 'Suggestion: place the attribution caption at a corner of the map frame rather
     than below the legend so it reads as belonging to the basemap.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 page; square 2400x2400 canvas.
-      Chrome: title 'map-tile-background · python · letsplot · anyplot.ai' in dark ink top-left, about 67% of the width; bottom legend panel (#FFFDF6) titled 'Average daily trips' with seven reference circles 600-1,800 in two rows; caption 'Tile-style basemap (CARTO Positron style) | © OpenStreetMap contributors' in muted ink bottom-right. All readable.
-      Data: simulated basemap of Lower/Midtown Manhattan with Hudson and East River in pale blue-grey, land in warm grey, Central Park as a pale green strip, square tile seams; 26 green #009E73 station markers (alpha 0.85) with page-colored outlines, sized by trips; Penn Station and Grand Central largest; Grand Central / Murray Hill overlap slightly.
+      Chrome: title 'map-tile-background · python · letsplot · anyplot.ai' in dark ink top-left; bottom legend panel (#FFFDF6) titled 'Average daily trips' with seven reference circles 600-1,800 in two rows; caption 'Simplified basemap outline, not provider tiles | HTML version: © OpenStreetMap contributors, © CARTO' in muted ink at the bottom. All readable.
+      Data: simulated basemap of Lower/Midtown Manhattan with the Hudson and East River in pale blue-grey, land in warm grey, Central Park as a pale green strip, square tile seams; 26 #009E73 station markers (alpha 0.85) with page-colored outlines, sized by trips; Penn Station and Grand Central largest.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page.
       Chrome: title in light ink, legend panel #242420 with light title and soft-grey value labels, caption in muted light grey. No dark-on-dark text.
-      Data: basemap flips to dark water #20282B, dark land #2E2E29 and dark-green park; markers the same #009E73 with dark page-colored outlines - categorical color identical to the light render.
+      Data: basemap flips to dark water, dark land and dark-green park; markers the same #009E73 with dark page-colored outlines, identical categorical color to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,15 +54,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16 pt, legend and caption 10 pt explicitly set; all text readable
-          in both themes
+        comment: Title 16 pt, legend title/labels and caption 10 pt explicitly set;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the Grand Central / Murray Hill marker overlap
-          is permitted (C6) and both stay distinguishable by their outline
+        comment: No text collisions; close stations (Grand Central / Murray Hill)
+          overlap as C6 permits and stay distinguishable by their outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -80,22 +75,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Single green series on neutral basemap; size carries the value, no
-          red-green signal
+        comment: Single green series on a neutral basemap; size carries the value,
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas; map, legend and caption use it well; nothing
-          cut off
+        comment: Square 2400x2400 canvas; map frame, bottom legend and caption fill
+          it; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (theme_void map); title in mandated format, legend titled
-          'Average daily trips'
+        comment: N/A for axes (theme_void map); legend titled 'Average daily trips'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -104,23 +98,23 @@ review:
         comment: 'Markers #009E73 in both renders; page #FAF8F1 / #1A1A17; chrome
           theme-correct'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
+        passed: false
         comment: Theme-adaptive basemap palette with distinct water, land and park
-          tones and tile seams kept square on screen via cos(latitude)
+          tones; tile seams kept square on screen via cos(latitude)
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Bottom legend in an elevated panel, page-colored marker outlines
-          separating close stations
+        comment: 'Style-guide baseline: elevated bottom legend panel, page-colored
+          outlines; nothing beyond'
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -142,23 +136,23 @@ review:
         name: Required Features
         score: 3
         max: 4
-        passed: true
+        passed: false
         comment: 'HTML: real CARTO / Lets-Plot tiles, auto-fit location, zoom/pan,
-          tooltips. PNG: no tile-provider imagery (C1) - a hand-drawn polygon basemap
-          (defect line)'
+          tooltips. PNG: a simplified polygon basemap instead of provider tiles (C1),
+          now labelled honestly in the caption (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon/lat mapped with a latitude-corrected aspect; view fitted to the
-          data bounds; all 26 points inside the frame
+        comment: Markers at their lat/lon; view fitted to data bounds with Mercator-corrected
+          aspect; every point inside the frame
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact; size legend names the variable
+        comment: Mandated title format; size legend names the variable
     data_quality:
       score: 15
       max: 15
@@ -168,39 +162,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Basemap, markers, size encoding, attribution all shown
+        comment: Points on a basemap, size encoding of value, fitted view, attribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bike-share stations across Manhattan, Brooklyn, Queens and Jersey
-          City - real, neutral
+        comment: Neutral NYC bike-share stations with real station names and plausible
+          coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked coordinates of Penn Station, Grand Central, Times Square,
-          Union Square against their real locations; 480-1850 trips/day plausible
-          for busy stations
+        comment: 520-1,850 average daily trips per station is plausible; no Check
+          values in the spec
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: A helper function polygon_frame() (lines 191-192) breaks the flat-script
-          structure (defect line)
+        passed: true
+        comment: No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,38 +201,39 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: PAD = 0.012 (line 94) is defined and never used (defect line)
+        passed: true
+        comment: No dead code; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current lets-plot
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: geom_livemap(location=...) bounds fitting, coord_fixed with Mercator
-          ratio, gggrid page-color wrap per library prompt
+        passed: false
+        comment: Layered grammar, coord_fixed with Mercator ratio, theme_void, gggrid
+          page-color wrap
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
+        passed: false
         comment: geom_livemap with tilesets (CARTO_POSITRON / LETS_PLOT_DARK) and
-          layer_tooltips().title().line() are lets-plot specific
+          layer_tooltips().title().line() in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T16:08:57Z'
+  rendered_at: '2026-11-26T16:16:30Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -250,6 +243,6 @@ impl_tags:
   patterns: []
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome

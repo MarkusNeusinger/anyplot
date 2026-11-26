@@ -90,8 +90,7 @@ df = pd.DataFrame(
 
 # Plot
 TITLE = "map-tile-background · python · letsplot · anyplot.ai"
-CAPTION = "Tile-style basemap (CARTO Positron style) | © OpenStreetMap contributors"
-PAD = 0.012
+CAPTION = "Simplified basemap outline, not provider tiles | HTML version: © OpenStreetMap contributors, © CARTO"
 lon_min, lon_max = df[LON].min() - 0.025, df[LON].max() + 0.033
 lat_min, lat_max = df[LAT].min() - 0.015, df[LAT].max() + 0.015
 lat_mid = (lat_min + lat_max) / 2
@@ -188,12 +187,14 @@ shapes = {
 park_shape = [(-73.9730, 40.7644), (-73.9818, 40.7681), (-73.9582, 40.8003), (-73.9493, 40.7968)]
 
 
-def polygon_frame(outline, name):
-    return pd.DataFrame({LON: [p[0] for p in outline], LAT: [p[1] for p in outline], "area": name})
-
-
-df_land = pd.concat([polygon_frame(outline, name) for name, outline in shapes.items()], ignore_index=True)
-df_park = polygon_frame(park_shape, "Central Park")
+df_land = pd.concat(
+    [
+        pd.DataFrame({LON: [p[0] for p in outline], LAT: [p[1] for p in outline], "area": name})
+        for name, outline in shapes.items()
+    ],
+    ignore_index=True,
+)
+df_park = pd.DataFrame({LON: [p[0] for p in park_shape], LAT: [p[1] for p in park_shape], "area": "Central Park"})
 
 # Tile seams: square on screen, so a latitude step is the longitude step times cos(latitude)
 tile_lon = 0.02
