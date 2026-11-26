@@ -12,93 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - Correct and complete flow map with all spec-required features (Bezier arcs, proportional
-    widths, transparency, direction arrows, basemap, hover tooltips)
-  - Dual-encoding of flow volume (arc width AND opacity) creates strong visual hierarchy
-  - Variable city node sizes proportional to total trade volume add meaningful data
-    layer
-  - Fully theme-adaptive implementation including basemap colors — both renders are
-    professional quality
-  - Perfect spec compliance and data quality — realistic, well-chosen trade data with
-    factually accurate port locations
+  - Idiomatic go.Scattergeo on a natural earth geo subplot with theme-tuned basemap
+    colors that stay quieter than the arcs
+  - Arc width and opacity both scale with volume, so the major corridors lead while
+    thin flows stay visible
+  - Plotly's native 'arrow' marker symbol, rotated to the Bezier tangent, shows flow
+    direction
+  - Hover tooltips in the HTML give route and volume per arc
   weaknesses:
-  - Label crowding in East Asia cluster (Shanghai/Busan/Tokyo/Hong Kong area) — labels
-    are visually tight despite per-label positioning
-  - Design sophistication is solid but falls short of publication quality — directional
-    arrow markers are functional but the overall visual style remains within well-configured
-    rather than exceptional
+  - 'VQ-07 (both): arcs are drawn in Okabe-Ito blue #0072B2, which is not an Imprint
+    color → Imprint position-3 blue #4467A3. Likely cause: ARC_RGB = ''0, 114, 178''.'
+  - 'VQ-02 (both): the ''Dubai'' label sits on the Mumbai node, the bottom caption
+    collides with the lower edge of the map frame, and the Panama City and Hong Kong
+    labels sit over arcs → place Dubai''s label away from Mumbai (top left) and lower
+    the caption clear of the frame. Likely cause: label_positions ''Dubai'': ''bottom
+    right''; caption y=-0.04 with margin t=80.'
+  - 'Suggestion: a small width key with sample flow values would let readers read
+    volumes off the static PNG.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "flowmap-origin-destination · python · plotly · anyplot.ai" in dark ink, readable. City labels in secondary dark ink (INK_SOFT). Footnote annotation "Line width proportional to trade volume (millions of tons)" in muted dark ink. All text readable.
-      Data: Flow arcs in Okabe-Ito blue (#0072B2) with varying width (2–10px) and opacity (0.35–0.75). City nodes in Okabe-Ito green (#009E73) with variable marker sizes (10–25px) proportional to total flow volume. Directional arrow markers at 85% arc position. Basemap uses warm land tones and light blue ocean.
-      Legibility verdict: PASS — all text readable; minor crowding in East Asia cluster (Shanghai/Busan/Tokyo/Hong Kong area) but not unreadable
+      Background: Warm off-white #FAF8F1 paper; full natural earth ellipse with light blue ocean, beige land and thin grey borders, Antarctica along the bottom.
+      Chrome: Title in dark ink, 15 city labels in dark soft ink, caption 'Line width proportional to trade volume (millions of tons)' in muted ink at the bottom edge of the map frame. All readable.
+      Data: 25 translucent Bezier arcs in Okabe-Ito blue #0072B2, 2-10 px wide, with arrowheads near the destination; green #009E73 port nodes sized by total volume. The 'Dubai' label sits on the Mumbai node; Panama City and Hong Kong labels touch arcs.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light #F0EFE8 text, clearly readable. City labels in light gray (#B8B7B0 equivalent). Footnote annotation in muted light tone (#A8A79F equivalent). All chrome correctly flips to light text. No dark-on-dark failures observed.
-      Data: Arc colors and city node colors (#009E73) are visually identical to light render — only basemap and chrome change. Dark basemap: darker land (rgb(55,55,50)), dark ocean (rgb(28,42,60)).
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 paper; dark navy ocean, dark grey land.
+      Chrome: Title, labels and caption in light inks; no dark-on-dark text.
+      Data: Arc and node colors identical to the light render; only basemap and chrome flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, labels=11, footnote=12);
-          all text readable in both themes; minor deduction for small label size in
-          dense East Asia cluster
+        comment: Explicit sizes (16/11/12); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: East Asia cluster (Shanghai/Busan/Tokyo, Hong Kong/Dubai/Mumbai)
-          has label crowding; per-label positioning helps but labels are still visually
-          tight
+        comment: Dubai label on the Mumbai node; caption collides with the map frame;
+          Panama City and Hong Kong labels over arcs (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Arcs clearly visible with good width variation; city markers well-sized;
-          directional arrow markers visible
+        comment: Arc widths and opacity readable; nodes outlined
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors, CVD-safe; good luminance contrast on both backgrounds
+        comment: Blue arcs vs green nodes; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Natural Earth projection fills canvas well; margins reasonable; minor
-          wasted space at extreme edges
+        comment: Map ellipse fits the canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; footnote annotation explains line width
-          encoding
+        comment: Caption names the width encoding with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'City nodes #009E73 (Okabe-Ito pos 1); arcs #0072B2 (Okabe-Ito pos
-          3); backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome correct in both renders'
+        passed: false
+        comment: 'Arcs in #0072B2, outside the Imprint palette (defect line)'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,22 +101,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: opacity variation encodes volume,
-          variable city marker sizes, per-label positioning, theme-adaptive basemap'
+        comment: Per-theme tuned basemap keeps the map quieter than the arcs
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Theme-adaptive basemap colors (land/ocean/coast/country all custom-tuned
-          per theme), clean map without chartjunk
+        passed: false
+        comment: Per-city label placement attempted, but the Dubai label and the caption
+          collide; nothing beyond the baseline survives
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arc widths + opacity create clear visual hierarchy; city marker sizes
-          encode trade hub importance; directional arrows show flow direction
+        comment: Node size by port total and volume-tied opacity make Shanghai and
+          the trans-Pacific corridor the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: origin-destination flow map with curved arcs on geographic
-          basemap'
+        comment: Origin-destination flow map with curved arcs on a basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bezier curves, proportional widths, alpha transparency, direction
-          arrows, basemap with country boundaries, hover tooltips — all present
+        comment: C1, C2, C3, C5 met; hover tooltips in the HTML
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 25 flows correctly mapped; geographic coordinates accurate; volume
-          encoded in arc width
+        comment: Arc ends on the port coordinates; all 25 flows drawn
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; footnote provides encoding explanation
+        comment: Mandated title; caption keys width
     data_quality:
       score: 15
       max: 15
@@ -162,22 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied volumes (18-85M tons), multiple geographic regions,
-          bidirectional flows, hub vs peripheral ports
+        comment: Hubs and peripheral ports, 18-85 Mt range, bidirectional pairs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real world ports (Shanghai, Rotterdam, Singapore, etc.) in neutral
-          trade/logistics context
+        comment: Trade between real ports; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: City coordinates accurate; trade volumes plausible for major container
-          ports; Shanghai dominance reflects reality
+        comment: Port coordinates checked; volumes plausible. No Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -187,53 +176,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: tokens -> data -> arcs -> arrows -> city markers
-          -> layout -> save; no functions/classes'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: math, os, numpy, plotly.graph_objects — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Bezier computation, good variable naming, appropriate complexity
-          for a flow map
+        comment: Compact Bezier and arrow computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4) + plot-{THEME}.html
+        comment: plot-{THEME}.png at 800x450 scale 4 plus HTML
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: go.Scattergeo with geo layout config is correct idiomatic Plotly
-          pattern for geographic visualizations; HTML export and hover interactivity
-          used well
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Arrow marker symbol on Scattergeo is Plotly-distinctive; interactive
-          hover tooltips with formatted text; HTML CDN export
+        comment: go.Scattergeo on a geo subplot, but the layout omits autosize=False
+          with explicit width/height that the plotly prompt requires
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Native 'arrow' marker symbol with angle; hovertext tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
 impl_tags:
   dependencies: []
   techniques:
