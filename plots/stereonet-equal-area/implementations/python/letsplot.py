@@ -1,7 +1,7 @@
 """ anyplot.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-16
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-26
 """
 
 import os
@@ -21,6 +21,7 @@ from lets_plot import (
     geom_polygon,
     geom_segment,
     geom_text,
+    gggrid,
     ggplot,
     ggsize,
     labs,
@@ -45,11 +46,17 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "#D8D4C8" if THEME == "light" else "#33332E"
 
-# Imprint categorical palette — first series ALWAYS #009E73
-# 4 abstract structural-feature classes → canonical order 1→4
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per feature class in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Field measurements from a structural geology mapping campaign
+# Columns: set these to your table's column names
+STRIKE = "Strike (°)"  # role: strike
+DIP = "Dip (°)"  # role: dip
+DIP_DIRECTION = "Dip direction (°)"  # role: dip_direction
+FEATURE_TYPE = "Feature Type"  # role: feature_type
+
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+# Field measurements from a structural geology mapping campaign
 np.random.seed(42)
 
 # Bedding planes (NE strike ~045, moderate dip ~35° SE)
@@ -72,177 +79,140 @@ n_foliation = 12
 foliation_strike = np.random.normal(270, 8, n_foliation) % 360
 foliation_dip = np.clip(np.random.normal(25, 6, n_foliation), 5, 60)
 
-strikes = np.concatenate([bedding_strike, joints_strike, faults_strike, foliation_strike])
-dips = np.concatenate([bedding_dip, joints_dip, faults_dip, foliation_dip])
-feature_types = ["Bedding"] * n_bedding + ["Joint"] * n_joints + ["Fault"] * n_faults + ["Foliation"] * n_foliation
-
-# Equal-area (Schmidt net) lower-hemisphere projection
-strike_rad = np.radians(strikes)
-dip_rad = np.radians(dips)
-dip_dir_rad = strike_rad + np.pi / 2
-
-# Pole 3D coordinates (lower hemisphere normal to each plane)
-pole_x_3d = np.sin(dip_rad) * np.sin(dip_dir_rad)
-pole_y_3d = np.sin(dip_rad) * np.cos(dip_dir_rad)
-pole_z_3d = -np.cos(dip_rad)
-
-# Lambert azimuthal equal-area projection
-pole_scale = 1.0 / np.sqrt(1.0 - pole_z_3d)
-pole_x = pole_x_3d * pole_scale
-pole_y = pole_y_3d * pole_scale
-
-poles_df = pd.DataFrame(
+strike_values = np.concatenate([bedding_strike, joints_strike, faults_strike, foliation_strike])
+df = pd.DataFrame(
     {
-        "x": pole_x,
-        "y": pole_y,
-        "feature_type": feature_types,
-        "strike": [f"{s:.0f}°" for s in strikes],
-        "dip": [f"{d:.0f}°" for d in dips],
+        STRIKE: strike_values,
+        DIP: np.concatenate([bedding_dip, joints_dip, faults_dip, foliation_dip]),
+        DIP_DIRECTION: (strike_values + 90) % 360,
+        FEATURE_TYPE: ["Bedding"] * n_bedding
+        + ["Joint"] * n_joints
+        + ["Fault"] * n_faults
+        + ["Foliation"] * n_foliation,
     }
 )
 
-# Great circle paths for each plane
-gc_rows = []
+# Plot: reads only df and the constants above
+# Derived columns used by the layers below
+X, Y, XEND, YEND, GROUP, LABEL = "x", "y", "xend", "yend", "group", "label"
+
+feature_types = list(dict.fromkeys(df[FEATURE_TYPE]))
+strike_rad = np.radians(df[STRIKE].to_numpy())
+dip_rad = np.radians(df[DIP].to_numpy())
+dip_dir_rad = np.radians(df[DIP_DIRECTION].to_numpy())
+
+# Equal-area (Schmidt net) lower-hemisphere projection of each pole
+pole_x_3d = np.sin(dip_rad) * np.sin(dip_dir_rad)
+pole_y_3d = np.sin(dip_rad) * np.cos(dip_dir_rad)
+pole_z_3d = -np.cos(dip_rad)
+pole_scale = 1.0 / np.sqrt(1.0 - pole_z_3d)
+poles_df = pd.DataFrame(
+    {
+        X: pole_x_3d * pole_scale,
+        Y: pole_y_3d * pole_scale,
+        FEATURE_TYPE: df[FEATURE_TYPE],
+        "strike": [f"{s:.0f}°" for s in df[STRIKE]],
+        "dip": [f"{d:.0f}°" for d in df[DIP]],
+    }
+)
+pole_x = poles_df[X].to_numpy()
+pole_y = poles_df[Y].to_numpy()
+
+# Great circle path for each plane, clipped to the primitive circle
+gc_frames = []
 alphas = np.linspace(0, np.pi, 60)
-cos_a = np.cos(alphas)
-sin_a = np.sin(alphas)
-
-for i in range(len(strikes)):
-    s = strike_rad[i]
-    d = dip_rad[i]
-    dd = dip_dir_rad[i]
-    sv_x, sv_y = np.sin(s), np.cos(s)
-    dv_x = np.cos(d) * np.sin(dd)
-    dv_y = np.cos(d) * np.cos(dd)
-    dv_z = -np.sin(d)
-    px = cos_a * sv_x + sin_a * dv_x
-    py = cos_a * sv_y + sin_a * dv_y
-    pz = sin_a * dv_z
+for i in range(len(df)):
+    sv_x, sv_y = np.sin(strike_rad[i]), np.cos(strike_rad[i])
+    dv_x = np.cos(dip_rad[i]) * np.sin(dip_dir_rad[i])
+    dv_y = np.cos(dip_rad[i]) * np.cos(dip_dir_rad[i])
+    dv_z = -np.sin(dip_rad[i])
+    px = np.cos(alphas) * sv_x + np.sin(alphas) * dv_x
+    py = np.cos(alphas) * sv_y + np.sin(alphas) * dv_y
+    pz = np.sin(alphas) * dv_z
     sc = 1.0 / np.sqrt(1.0 - pz)
-    gx = px * sc
-    gy = py * sc
-    # Clip to unit circle boundary
-    r2 = gx**2 + gy**2
-    mask_inside = r2 <= 1.0
-    gx_clip = gx[mask_inside]
-    gy_clip = gy[mask_inside]
-    for j in range(len(gx_clip)):
-        gc_rows.append({"x": gx_clip[j], "y": gy_clip[j], "group": i, "feature_type": feature_types[i]})
-
-gc_df = pd.DataFrame(gc_rows)
+    gx, gy = px * sc, py * sc
+    inside = gx**2 + gy**2 <= 1.0
+    gc_frames.append(pd.DataFrame({X: gx[inside], Y: gy[inside], GROUP: i, FEATURE_TYPE: df[FEATURE_TYPE].iloc[i]}))
+gc_df = pd.concat(gc_frames, ignore_index=True)
 
 # Primitive circle (outer boundary)
 theta = np.linspace(0, 2 * np.pi, 200)
-circle_df = pd.DataFrame({"x": np.cos(theta), "y": np.sin(theta)})
+circle_df = pd.DataFrame({X: np.cos(theta), Y: np.sin(theta)})
 
-# Annular mask — covers any density bleed outside the primitive circle with the
-# page background so the stereonet stays cleanly bounded (built as fan quads
-# between r=1 and r=1.6, one filled polygon per angular segment).
+# Annular mask: fan quads between r=1 and r=1.6 hide any density bleed outside the primitive circle
 mask_rows = []
 n_seg = 180
 for k in range(n_seg):
     a0 = 2 * np.pi * k / n_seg
     a1 = 2 * np.pi * (k + 1) / n_seg
-    inner0 = (np.cos(a0), np.sin(a0))
-    inner1 = (np.cos(a1), np.sin(a1))
-    outer0 = (1.6 * np.cos(a0), 1.6 * np.sin(a0))
-    outer1 = (1.6 * np.cos(a1), 1.6 * np.sin(a1))
-    for vx, vy in [inner0, outer0, outer1, inner1]:
-        mask_rows.append({"x": vx, "y": vy, "group": k})
+    for radius, angle in [(1.0, a0), (1.6, a0), (1.6, a1), (1.0, a1)]:
+        mask_rows.append({X: radius * np.cos(angle), Y: radius * np.sin(angle), GROUP: k})
 mask_df = pd.DataFrame(mask_rows)
 
 # Tick marks every 10° (longer every 30°)
-tick_rows = []
-for deg in range(0, 360, 10):
-    rad = np.radians(deg)
-    inner_r = 0.95 if deg % 30 != 0 else 0.92
-    tick_rows.append({"x": np.sin(rad) * inner_r, "y": np.cos(rad) * inner_r, "xend": np.sin(rad), "yend": np.cos(rad)})
-tick_df = pd.DataFrame(tick_rows)
+tick_degrees = np.arange(0, 360, 10)
+tick_rad = np.radians(tick_degrees)
+tick_inner = np.where(tick_degrees % 30 != 0, 0.95, 0.92)
+tick_df = pd.DataFrame(
+    {X: np.sin(tick_rad) * tick_inner, Y: np.cos(tick_rad) * tick_inner, XEND: np.sin(tick_rad), YEND: np.cos(tick_rad)}
+)
 
 # Reference cross lines (N-S, E-W)
-ref_df = pd.DataFrame(
-    [{"x": 0, "y": -1, "xend": 0, "yend": 1, "group": 0}, {"x": -1, "y": 0, "xend": 1, "yend": 0, "group": 1}]
-)
+ref_df = pd.DataFrame({X: [0, -1], Y: [-1, 0], XEND: [0, 1], YEND: [1, 0]})
 
 # Cardinal direction labels
-cardinal_positions = [(0, 1.14, "N"), (1.14, 0, "E"), (0, -1.14, "S"), (-1.14, 0, "W")]
-label_df = pd.DataFrame(
-    {
-        "x": [c[0] for c in cardinal_positions],
-        "y": [c[1] for c in cardinal_positions],
-        "label": [c[2] for c in cardinal_positions],
-    }
-)
+cardinal_df = pd.DataFrame({X: [0, 1.14, 0, -1.14], Y: [1.14, 0, -1.14, 0], LABEL: ["N", "E", "S", "W"]})
 
 # Mean pole annotations and confidence ellipses per feature type
-mean_annotations = []
-ellipse_rows = []
-for idx, ft in enumerate(["Bedding", "Joint", "Fault", "Foliation"]):
-    mask = np.array(feature_types) == ft
-    mx = pole_x[mask].mean()
-    my = pole_y[mask].mean()
+mean_rows = []
+ellipse_frames = []
+t = np.linspace(0, 2 * np.pi, 40)
+for idx, ft in enumerate(feature_types):
+    sel = (df[FEATURE_TYPE] == ft).to_numpy()
+    mx, my = pole_x[sel].mean(), pole_y[sel].mean()
     # Circular mean for strike (handles wraparound at 0/360°)
-    s_rad = np.radians(strikes[mask])
-    ms = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
-    md = dips[mask].mean()
-    # Smart label nudge: push outward from cluster centroid, away from cardinal labels
+    s_rad = strike_rad[sel]
+    mean_strike = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
+    mean_dip = df[DIP].to_numpy()[sel].mean()
+    # Push the label away from a nearby cardinal letter, otherwise place it just below the marker
     nudge_x, nudge_y = 0.0, -0.20
-    for cx, cy, _ in cardinal_positions:
-        dist = np.sqrt((mx - cx) ** 2 + (my - cy) ** 2)
+    for cx, cy in zip(cardinal_df[X], cardinal_df[Y], strict=True):
+        dx, dy = mx - cx, my - cy
+        dist = np.hypot(dx, dy)
         if dist < 0.45:
-            # Push label away from the nearby cardinal direction, toward the centre
-            dx, dy = mx - cx, my - cy
-            norm = max(np.sqrt(dx**2 + dy**2), 0.01)
-            nudge_x = dx / norm * 0.20
-            nudge_y = dy / norm * 0.20 - 0.06
-    mean_annotations.append(
-        {"x": mx, "y": my, "label": f"{ft}\n{ms:.0f}/{md:.0f}", "nudge_x": nudge_x, "nudge_y": nudge_y}
+            norm = max(dist, 0.01)
+            nudge_x, nudge_y = dx / norm * 0.20, dy / norm * 0.20 - 0.06
+    mean_rows.append(
+        {X: mx, Y: my, LABEL: f"{ft}\n{mean_strike:.0f}/{mean_dip:.0f}", "nudge_x": nudge_x, "nudge_y": nudge_y}
     )
-    # Confidence ellipse (1-sigma) around each cluster
-    px_ft = pole_x[mask]
-    py_ft = pole_y[mask]
-    cov = np.cov(px_ft, py_ft)
-    eigvals, eigvecs = np.linalg.eigh(cov)
+    # 1-sigma confidence ellipse around the cluster
+    eigvals, eigvecs = np.linalg.eigh(np.cov(pole_x[sel], pole_y[sel]))
     angle = np.arctan2(eigvecs[1, 1], eigvecs[0, 1])
-    t = np.linspace(0, 2 * np.pi, 40)
     ex = np.sqrt(eigvals[1]) * np.cos(t)
     ey = np.sqrt(eigvals[0]) * np.sin(t)
-    rx = mx + ex * np.cos(angle) - ey * np.sin(angle)
-    ry = my + ex * np.sin(angle) + ey * np.cos(angle)
-    for j in range(len(t)):
-        ellipse_rows.append({"x": rx[j], "y": ry[j], "group": idx, "feature_type": ft})
-
-ellipse_df = pd.DataFrame(ellipse_rows)
-mean_df = pd.DataFrame(mean_annotations)
-
-# Tooltips for poles showing strike/dip
-pole_tooltips = layer_tooltips().line("@feature_type").line("Strike: @strike").line("Dip: @dip")
-
-# Build individual mean label layers to handle per-label nudge offsets
-mean_label_layers = []
-for _, row in mean_df.iterrows():
-    single_df = pd.DataFrame([{"x": row["x"], "y": row["y"], "label": row["label"]}])
-    mean_label_layers.append(
-        geom_text(
-            aes(x="x", y="y", label="label"),
-            data=single_df,
-            size=7,
-            color=INK,
-            nudge_x=row["nudge_x"],
-            nudge_y=row["nudge_y"],
-            fontface="italic",
-            show_legend=False,
+    ellipse_frames.append(
+        pd.DataFrame(
+            {
+                X: mx + ex * np.cos(angle) - ey * np.sin(angle),
+                Y: my + ex * np.sin(angle) + ey * np.cos(angle),
+                GROUP: idx,
+                FEATURE_TYPE: ft,
+            }
         )
     )
+ellipse_df = pd.concat(ellipse_frames, ignore_index=True)
+mean_df = pd.DataFrame(mean_rows)
 
-# Plot
+# Tooltips for poles showing strike/dip
+pole_tooltips = layer_tooltips().line(f"@{{{FEATURE_TYPE}}}").line("Strike: @strike").line("Dip: @dip")
+
 plot = (
     ggplot()
     # Reference cross lines
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=ref_df, color=RULE, size=0.5, linetype="dashed")
-    # Density contours (Kamb-style preferred-orientation clustering)
+    + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND), data=ref_df, color=RULE, size=0.5, linetype="dashed")
+    # Density contours (gaussian KDE of the pole positions)
     + geom_density2d(
-        aes(x="x", y="y"),
+        aes(x=X, y=Y),
         data=poles_df,
         color=INK_MUTED,
         alpha=0.55,
@@ -253,33 +223,40 @@ plot = (
         show_legend=False,
     )
     # Great circles
-    + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.35, alpha=0.18)
+    + geom_path(aes(x=X, y=Y, group=GROUP, color=FEATURE_TYPE), data=gc_df, size=0.5, alpha=0.35, show_legend=False)
     # Confidence ellipses around each cluster
     + geom_polygon(
-        aes(x="x", y="y", group="group", fill="feature_type"), data=ellipse_df, alpha=0.12, size=0, show_legend=False
+        aes(x=X, y=Y, group=GROUP, fill=FEATURE_TYPE), data=ellipse_df, alpha=0.12, size=0, show_legend=False
     )
     # Poles to planes with tooltips
-    + geom_point(aes(x="x", y="y", color="feature_type"), data=poles_df, size=4.5, alpha=0.88, tooltips=pole_tooltips)
+    + geom_point(aes(x=X, y=Y, color=FEATURE_TYPE), data=poles_df, size=4.5, alpha=0.88, tooltips=pole_tooltips)
     # Mean pole markers (diamond shape)
-    + geom_point(aes(x="x", y="y"), data=mean_df, size=9, shape=18, color=INK, alpha=0.95, show_legend=False)
+    + geom_point(aes(x=X, y=Y), data=mean_df, size=9, shape=18, color=INK, alpha=0.95, show_legend=False)
 )
 
-# Add per-label mean annotation layers
-for layer in mean_label_layers:
-    plot = plot + layer
+# Mean annotations, one layer per label because each carries its own nudge
+for _, row in mean_df.iterrows():
+    plot += geom_text(
+        aes(x=X, y=Y, label=LABEL),
+        data=pd.DataFrame([{X: row[X], Y: row[Y], LABEL: row[LABEL]}]),
+        size=7,
+        color=INK,
+        nudge_x=row["nudge_x"],
+        nudge_y=row["nudge_y"],
+        fontface="italic",
+        show_legend=False,
+    )
 
 plot = (
     plot
     # Annular mask hides density bleed outside the primitive circle
-    + geom_polygon(aes(x="x", y="y", group="group"), data=mask_df, fill=PAGE_BG, color=PAGE_BG, size=0)
-    # Primitive circle
-    + geom_path(aes(x="x", y="y"), data=circle_df, color=INK, size=1.4)
-    # Tick marks
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=tick_df, color=INK, size=0.9)
+    + geom_polygon(aes(x=X, y=Y, group=GROUP), data=mask_df, fill=PAGE_BG, color=PAGE_BG, size=0)
+    # Primitive circle and ticks
+    + geom_path(aes(x=X, y=Y), data=circle_df, color=INK, size=1.4)
+    + geom_segment(aes(x=X, y=Y, xend=XEND, yend=YEND), data=tick_df, color=INK, size=0.9)
     # Cardinal labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=9, color=INK, fontface="bold")
-    # Color scale (Imprint palette)
-    + scale_color_manual(values=IMPRINT_PALETTE, name="Feature Type")
+    + geom_text(aes(x=X, y=Y, label=LABEL), data=cardinal_df, size=9, color=INK, fontface="bold")
+    + scale_color_manual(values=IMPRINT_PALETTE, name=FEATURE_TYPE)
     + scale_fill_manual(values=IMPRINT_PALETTE)
     + coord_fixed()
     + scale_x_continuous(limits=[-1.32, 1.32])
@@ -289,7 +266,7 @@ plot = (
         plot_title=element_text(size=18, hjust=0.5, face="bold", color=INK, margin=[0, 0, 12, 0]),
         legend_title=element_text(size=14, face="bold", color=INK),
         legend_text=element_text(size=12, color=INK_SOFT),
-        legend_position=[0.86, 0.16],
+        legend_position=[0.9, 0.1],
         legend_justification=[0.5, 0.5],
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
         axis_title=element_blank(),
@@ -300,8 +277,10 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
-    + ggsize(600, 600)
 )
+
+# The fixed aspect leaves the canvas edges transparent: a one-panel grid paints the page color
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
