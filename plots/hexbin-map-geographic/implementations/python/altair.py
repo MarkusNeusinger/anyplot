@@ -1,7 +1,7 @@
 """anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Created: 2026-05-27
+Quality: pending | Created: 2026-05-27
 """
 
 import os
