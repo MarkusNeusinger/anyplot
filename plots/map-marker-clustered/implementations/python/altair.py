@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -14,7 +14,6 @@ sys.path = [p for p in sys.path if p not in ("", os.path.dirname(os.path.abspath
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
 
 
 # Theme tokens
@@ -101,15 +100,10 @@ us_10m_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
 states = alt.topo_feature(us_10m_url, "states")
 
 background = (
-    alt.Chart(states)
-    .mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.5)
-    .project(type="albersUsa")
-    .properties(width=620, height=320)
+    alt.Chart(states).mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.5).project(type="albersUsa")
 )
 
-category_colors = alt.Scale(
-    domain=["retail", "food", "services"], range=[IMPRINT[0], IMPRINT[1], IMPRINT[2]]
-)
+category_colors = alt.Scale(domain=["retail", "food", "services"], range=[IMPRINT[0], IMPRINT[1], IMPRINT[2]])
 
 # Hover selection on cluster circles — gates spider lines and member-point reveal
 cluster_hover = alt.selection_point(fields=["lat_bin", "lon_bin"], on="mouseover", empty=False)
@@ -148,7 +142,7 @@ clusters = (
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
-        size=alt.Size("marker_size:Q", scale=alt.Scale(range=[200, 2000]), legend=None),
+        size=alt.Size("marker_size:Q", scale=alt.Scale(range=[40, 500]), legend=None),
         color=alt.Color("dominant_category:N", scale=category_colors, title="Category"),
         tooltip=[
             alt.Tooltip("count:Q", title="Locations"),
@@ -174,6 +168,10 @@ TITLE = "map-marker-clustered · python · altair · anyplot.ai"
 chart = (
     (background + spider_lines + hover_points + clusters + count_labels)
     .properties(
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(
             text=TITLE,
@@ -194,25 +192,13 @@ chart = (
         labelFontSize=10,
         titleFontSize=10,
         symbolSize=150,
+        padding=8,
         orient="bottom-right",
     )
 )
 
-# Save PNG then pad to exact 3200×1800 target
+# Save PNG: autosize "fit" makes the whole chart exactly 800x450, so scale 4 gives 3200x1800
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-TW, TH = 3200, 1800
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        "Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
 
 # Save HTML — interactive: hover cluster circles to reveal spider lines + member points
 chart.save(f"plot-{THEME}.html")
