@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -14,6 +14,7 @@ import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
+from scipy.stats import gaussian_kde
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -99,16 +100,14 @@ p.yaxis.major_label_overrides = dict(enumerate(categories))
 for idx, cat in enumerate(categories):
     color = IMPRINT_PALETTE[idx % len(IMPRINT_PALETTE)]
     y_base = idx
-    values = df.loc[df[GROUP] == cat, VALUE].to_numpy()
+    group_rows = df[df[GROUP] == cat].dropna(subset=[VALUE])
+    values = group_rows[VALUE].to_numpy()
 
     # KDE: Silverman's rule
     n = len(values)
     bw = 1.06 * np.std(values) * n ** (-1 / 5)
     x_kde = np.linspace(values.min() - 0.7 * bw, values.max() + 0.7 * bw, 256)
-    y_kde = np.zeros_like(x_kde)
-    for point in values:
-        y_kde += np.exp(-0.5 * ((x_kde - point) / bw) ** 2) / (bw * np.sqrt(2 * np.pi))
-    y_kde /= n
+    y_kde = gaussian_kde(values, bw_method="silverman")(x_kde)
     y_kde_scaled = y_kde / y_kde.max() * 0.40
 
     # Cloud: half-violin above the baseline
@@ -138,7 +137,7 @@ for idx, cat in enumerate(categories):
     p.line(x=[q2, q2], y=[y_base - box_h, y_base + box_h], line_color=color, line_width=6)
 
     # Rain: jittered points below the baseline
-    rows = df[df[GROUP] == cat].assign(
+    rows = group_rows.assign(
         y=y_base + np.random.uniform(-0.40, -0.08, n),
         mean=f"{values.mean():.1f}",
         median=f"{q2:.1f}",
