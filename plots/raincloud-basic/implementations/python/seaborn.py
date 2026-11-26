@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-26
@@ -38,33 +38,37 @@ sns.set_theme(
     },
 )
 
-# Reaction times (ms) across experimental conditions; Treatment B is bimodal to
-# showcase what a raincloud reveals that a box plot would hide.
-np.random.seed(42)
-control = np.random.normal(450, 60, 80)
-treatment_a = np.random.normal(380, 50, 80)
-treatment_b = np.concatenate([np.random.normal(350, 30, 50), np.random.normal(480, 40, 30)])
+# Columns: set these to your table's column names
+METHOD = "Teaching method"  # role: category
+SCORE = "Exam score (points)"  # role: value
 
-data = pd.DataFrame(
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# Exam scores by teaching method; the lecture group is bimodal (two student subgroups),
+# which a raincloud shows and a box plot would hide.
+rng = np.random.default_rng(42)
+lecture = np.concatenate([rng.normal(56, 6, 40), rng.normal(79, 5, 40)])
+flipped = rng.normal(73, 8, 80)
+project = rng.normal(82, 6, 80)
+df = pd.DataFrame(
     {
-        "Condition": ["Control"] * len(control)
-        + ["Treatment A"] * len(treatment_a)
-        + ["Treatment B"] * len(treatment_b),
-        "Reaction Time": np.concatenate([control, treatment_a, treatment_b]),
+        METHOD: ["Lecture"] * len(lecture) + ["Flipped"] * len(flipped) + ["Project-based"] * len(project),
+        SCORE: np.clip(np.concatenate([lecture, flipped, project]), 0, 100),
     }
 )
 
-order = ["Control", "Treatment A", "Treatment B"]
-palette = {c: IMPRINT_PALETTE[i] for i, c in enumerate(order)}
+# Plot: reads only df and the constants above
+order = list(df[METHOD].unique())
+n_groups = len(order)
+palette = IMPRINT_PALETTE[:n_groups]
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 # Cloud — half-violin, clipped to the upper half above each category baseline
 sns.violinplot(
-    data=data,
-    x="Reaction Time",
-    y="Condition",
-    hue="Condition",
+    data=df,
+    x=SCORE,
+    y=METHOD,
+    hue=METHOD,
     palette=palette,
     order=order,
     hue_order=order,
@@ -77,19 +81,18 @@ sns.violinplot(
     ax=ax,
     legend=False,
 )
+n_violin_collections = len(ax.collections)
 for i, collection in enumerate(ax.collections):
     for path in collection.get_paths():
         v = path.vertices
         v[v[:, 1] < i, 1] = i
 
-n_violin_collections = len(ax.collections)
-
 # Rain — jittered strip points, shifted below the baseline
 sns.stripplot(
-    data=data,
-    x="Reaction Time",
-    y="Condition",
-    hue="Condition",
+    data=df,
+    x=SCORE,
+    y=METHOD,
+    hue=METHOD,
     palette=palette,
     order=order,
     hue_order=order,
@@ -110,10 +113,10 @@ for collection in ax.collections[n_violin_collections:]:
 # Box plot — outlined boxes on the baseline; palette colours the outline,
 # whiskers, caps, and median in one stroke (no fragile post-hoc recolouring).
 sns.boxplot(
-    data=data,
-    x="Reaction Time",
-    y="Condition",
-    hue="Condition",
+    data=df,
+    x=SCORE,
+    y=METHOD,
+    hue=METHOD,
     palette=palette,
     order=order,
     hue_order=order,
@@ -127,10 +130,10 @@ sns.boxplot(
     zorder=4,
 )
 
-ax.set_xlabel("Reaction Time (ms)", fontsize=10, labelpad=6, color=INK)
-ax.set_ylabel("Condition", fontsize=10, labelpad=6, color=INK)
-ax.set_title("raincloud-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=3, width=0.6)
+ax.set_xlabel(SCORE, fontsize=10, labelpad=6, color=INK)
+ax.set_ylabel(METHOD, fontsize=10, labelpad=6, color=INK)
+ax.set_title("raincloud-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10, color=INK)
+ax.tick_params(axis="both", labelsize=9, colors=INK_SOFT, length=3, width=0.6)
 ax.grid(True, axis="x", alpha=0.15, linewidth=0.5, color=INK)
 ax.set_axisbelow(True)
 ax.spines["top"].set_visible(False)
@@ -140,37 +143,7 @@ ax.spines["bottom"].set_linewidth(0.6)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-ax.set_ylim(-0.55, 2.45)
+ax.set_ylim(-0.55, n_groups - 0.55)
 
-# Data storytelling
-ax.annotate(
-    "Bimodal distribution\nrevealed by raincloud",
-    xy=(425, 2.15),
-    xytext=(540, 1.55),
-    fontsize=9,
-    fontweight="medium",
-    color=INK_SOFT,
-    ha="left",
-    va="center",
-    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 0.7, "connectionstyle": "arc3,rad=-0.2"},
-    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.5},
-)
-
-ta_median = float(np.median(data.loc[data["Condition"] == "Treatment A", "Reaction Time"]))
-ctrl_median = float(np.median(data.loc[data["Condition"] == "Control", "Reaction Time"]))
-diff_ms = ctrl_median - ta_median
-
-ax.annotate(
-    f"~{diff_ms:.0f} ms faster\nthan Control",
-    xy=(ta_median, 1.0),
-    xytext=(290, 0.4),
-    fontsize=9,
-    fontweight="medium",
-    color=INK_SOFT,
-    ha="center",
-    va="center",
-    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 0.7, "connectionstyle": "arc3,rad=0.25"},
-    bbox={"boxstyle": "round,pad=0.35", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.5},
-)
-
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
