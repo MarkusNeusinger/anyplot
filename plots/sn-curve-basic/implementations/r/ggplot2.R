@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' sn-curve-basic: S-N Curve (Wöhler Curve)
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-20
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 87/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(dplyr)
@@ -68,14 +68,14 @@ p <- ggplot() +
     geom_point(data = df, aes(x = cycles, y = stress),
                shape = 21, size = 3.0, stroke = 0.5,
                color = IMPRINT[1], fill = IMPRINT[1], alpha = 0.85) +
-    # Reference line labels — right-aligned at x = 10^7.5
-    annotate("text", x = 10^7.5, y = sigma_u * 1.05,
+    # Reference line labels — right-aligned at x = 10^7.9, clear of the data
+    annotate("text", x = 10^7.9, y = sigma_u * 1.05,
              label = "Ultimate Strength (750 MPa)",
              color = IMPRINT[2], hjust = 1, vjust = 0, size = 4.0) +
-    annotate("text", x = 10^7.5, y = sigma_y * 1.05,
+    annotate("text", x = 10^7.9, y = sigma_y * 1.05,
              label = "Yield Strength (530 MPa)",
              color = IMPRINT[3], hjust = 1, vjust = 0, size = 4.0) +
-    annotate("text", x = 10^7.5, y = sigma_e * 1.06,
+    annotate("text", x = 10^7.9, y = sigma_e * 1.06,
              label = "Endurance Limit (375 MPa)",
              color = IMPRINT[5], hjust = 1, vjust = 0, size = 4.0,
              fontface = "bold") +
@@ -112,7 +112,7 @@ p <- ggplot() +
         axis.ticks       = element_blank(),
         axis.title       = element_text(color = INK, size = 10),
         axis.text        = element_text(color = INK_SOFT, size = 8),
-        plot.title       = element_text(color = INK, size = 13, face = "bold"),
+        plot.title       = element_text(color = INK, size = 12, face = "bold"),
         plot.caption     = element_text(color = INK_MUTED, size = 7, hjust = 1),
         plot.margin      = margin(10, 20, 10, 10, "pt")
     )

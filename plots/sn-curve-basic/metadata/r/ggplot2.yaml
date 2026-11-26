@@ -2,55 +2,55 @@ library: ggplot2
 language: r
 specification_id: sn-curve-basic
 created: '2026-05-20T00:03:13Z'
-updated: '2026-05-20T18:01:06Z'
+updated: '2026-11-26T09:46:53Z'
 generated_by: claude-sonnet
-workflow_run: 26178983749
+workflow_run: 45794215647
 issue: 3826
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Complete and accurate spec implementation: all required S-N curve features (log-log
-    axes, three material property reference lines, Basquin fit, data scatter, infinite
-    life region) are present and correct.'
-  - 'Scientifically accurate data: AISI 1045 steel with physically correct UTS/Ys/Se
-    values and a proper Basquin equation calibration (Se ~50% UTS, mapping to ~10^5.6
-    endurance life).'
-  - 'Excellent theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
-    GRID) flip correctly; data colors identical across both renders.'
-  - 'Intentional visual hierarchy: the endurance limit is distinguished by a thicker
-    line, bold annotation, and matching shaded zone — making the key engineering threshold
-    immediately apparent.'
-  - Clean, modern ggplot2 code with proper linewidth= (not deprecated size=), scales::trans_format
-    for math-formatted log tick labels, and flat procedural structure.
+  - 'Complete S-N curve: log-log axes with superscript 10^n cycle ticks, three directly
+    labeled reference lines, Basquin fit through the scatter and replicate specimens
+    per stress level'
+  - 'Physically consistent AISI 1045 data: endurance limit at half the UTS, and the
+    fit meets it at 10^6 cycles where the infinite-life shading begins'
+  - Clear hierarchy around the endurance limit (thicker long-dash line, bold label)
+    with all reference labels set right of the data
+  - Chrome tokens flip correctly between themes; data and reference colors stay identical
+  - 'Idiomatic ggplot2: scale_*_log10 with scales::trans_format/math_format, annotate()
+    for rect and text, modern linewidth='
   weaknesses:
-  - Title fontsize is 13pt, slightly above the recommended 12pt. No visual problem,
-    but tightening to 12pt would bring the title width closer to the expected 70-85%
-    of canvas width for this mandated title format.
-  - The Basquin fit line uses INK_MUTED (gray) color which blends somewhat with the
-    neutral tone of the plot; a slightly more prominent or distinctly styled line
-    (e.g., a dash-dot pattern or subtle opacity distinction) could improve visual
-    hierarchy between the fit curve and the reference lines.
-  - LM-02 stays at 3/5 — the trans_format math labels and annotate(rect) are good,
-    but no truly unique ggplot2 feature (e.g., coord_trans, secondary axes, stat_function
-    for the fit instead of manual data frame) is leveraged.
+  - 'VQ-07 (both): the endurance-limit line, its bold label and the infinite-life
+    shading are drawn in #AE3030, the red anchor that means bad/loss/error, on the
+    zone that is the safe design region, and the reference lines skip Imprint position
+    4 → take the next canonical position #BD8233 for the endurance limit and its zone.
+    Likely cause: IMPRINT[5] in the endurance geom_hline, its annotate("text") and
+    annotate("rect").'
+  - 'LM-01 (code): the data block builds df from bare column names and aes(x = cycles,
+    y = stress) instead of the library prompt''s column constants, tibble with !!COL
+    := and .data[[COL]] in aes() with labs() from the constants → follow that pattern.
+    Likely cause: data.frame(stress = ...) |> mutate(cycles = ...) with hard-coded
+    names.'
+  - 'Suggestion: the reference-line labels at size 4.0 (~11 pt) read larger than the
+    10 pt axis titles; about 3.5 would balance them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "sn-curve-basic · r · ggplot2 · anyplot.ai" in bold dark text (~50% canvas width). Y-axis label "Stress Amplitude (MPa)" and X-axis label "Cycles to Failure" in dark gray, clearly readable. Log tick labels (10^3–10^8 on X; 350–800 on Y) in medium gray — all legible.
-      Data: ~20 teal (#009E73) filled circles following a downward power-law trend. Gray Basquin fit line through data. Three Okabe-Ito colored dashed horizontal reference lines (orange-red Ultimate Strength, blue Yield Strength, amber Endurance Limit). Amber-shaded Infinite Life Region rectangle in lower right. Color-matched right-aligned annotations label all reference lines.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title 'sn-curve-basic · r · ggplot2 · anyplot.ai' (~46% width), axis titles 'Stress Amplitude (MPa)' and 'Cycles to Failure' in dark ink, y ticks 350-800, x ticks 10^3-10^8 as superscripts, caption with the Basquin model bottom right; subtle y-only grid; all readable.
+      Data: 26 green #009E73 points falling from 620 MPa at ~5x10^3 cycles to ~390 MPa near 10^6; dark gray Basquin line from 750 MPa at 10^3 to the endurance limit at 10^6; dashed purple Ultimate (750), dashed blue Yield (530), thick red long-dash Endurance Limit (375) with color-matched labels right-aligned at the far right, clear of all data; light red shaded 'Infinite Life Region' box (italic) right of 10^6.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title and axis labels rendered in light cream/gray (INK/INK_SOFT dark tokens), clearly visible against dark background. Tick labels in lighter gray — readable. Grid lines are subtle light gray lines. No dark-on-dark failures observed.
-      Data: Teal (#009E73) scatter points, Okabe-Ito reference lines — visually identical colors to light render confirming only chrome flips. Fit line appears as lighter gray rule, distinguishable. Infinite life region shading visible as muted warm tone.
-      Legibility verdict: PASS — all text readable against dark background. Data colors unchanged from light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks and caption in soft light gray, faint grid; no dark-on-dark text.
+      Data: same #009E73 points and purple/blue/red reference colors as light; fit line flips to light gray; shaded zone a dark muted red; labels clear of data.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,54 +58,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=13, axis=10, tick=8, caption=7,
-          annotations=4mm/3.2mm). Readable in both themes. Minor: title at 13pt slightly
-          above recommended 12pt.'
+        comment: All sizes set explicitly (title 12, axis titles 10, ticks 8, caption
+          7, labels 4 mm); everything readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between annotations, data, reference lines, or tick
-          labels.
+        comment: No text collides with data, lines or other text; labels sit right
+          of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~20 scatter points at size=3.0 clearly prominent; fit line and reference
-          lines all clearly visible in both themes.
+        comment: 26 sparse points at size 3 clearly visible; fit line and reference
+          lines distinct in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette throughout; all CVD-safe.
+        comment: Reference lines differ by color and dash pattern and are labeled
+          directly; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 landscape canvas, balanced margins, no content
-          cut off.
+        comment: 3200x1800 landscape; plot fills the canvas with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stress Amplitude (MPa) and Cycles to Failure are descriptive with
-          units; title format correct; caption adds model attribution.
+        comment: '''Stress Amplitude (MPa)'' and ''Cycles to Failure'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First data series #009E73; reference lines use Okabe-Ito positions
-          2, 3, 5 (position 5 matches shaded zone intentionally); backgrounds #FAF8F1
-          / #1A1A17; both renders pass theme-chrome checks.'
+        passed: false
+        comment: 'The endurance-limit line, its label and the infinite-life shading
+          use #AE3030, the red anchor for bad/loss/error, on the safe zone, skipping
+          position 4 (defect line)'
     design_excellence:
       score: 13
       max: 20
@@ -114,24 +114,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above well-configured default: intentional hierarchy with endurance
-          limit emphasized. Not quite at publication/FiveThirtyEight level — palette
-          is required not custom, typography is standard.'
+        passed: false
+        comment: 'Typographic hierarchy chosen: bold, thicker long-dash endurance
+          limit with bold label, italic muted region label, color-matched right-aligned
+          labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Y-axis grid only (x-axis removed), no minor gridlines, no tick marks,
-          axis lines instead of panel border. Good polished feel.
+        passed: false
+        comment: X grid and ticks removed for a y-only grid chosen for this chart;
+          labels placed in the empty right region clear of all data; caption carries
+          the model
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Strong engineering narrative: emphasized endurance limit (thicker
-          line, bold text, shaded zone) immediately communicates the key design threshold.'
+        passed: false
+        comment: Implementation chose the endurance limit as focal point (thicker
+          line, bold label, shaded zone where the fit ends at 10^6)
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N / Woehler curve with log-log axes on both axes.
+        comment: S-N curve with log-log axes; region shading is within the spec's
+          allowance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log-log axes, three reference lines, Basquin
-          fit, scatter data with replicates, Infinite Life Region.'
+        comment: Log axes, three labeled reference lines, Basquin fit, replicate scatter,
+          infinite-life shading all present (C1-C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Cycles to Failure (log, 10^3-10^8), Y=Stress Amplitude MPa (log,
-          310-900). Full range shown.
+        comment: Cycles on log x, stress on log y; points at their values; axes cover
+          data, references and the infinite-life zone
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: sn-curve-basic · r · ggplot2 · anyplot.ai. Annotation labels
-          used instead of formal legend — appropriate design choice.'
+        comment: Title 'sn-curve-basic · r · ggplot2 · anyplot.ai'; reference lines
+          labeled directly, single series needs no legend
     data_quality:
       score: 15
       max: 15
@@ -172,23 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all three S-N curve regions: low-cycle fatigue, high-cycle
-          fatigue, infinite life zone; scatter at multiple stress levels; Basquin
-          fit; material property markers.'
+        comment: Replicates per stress level from above yield down toward the endurance
+          limit, fit line, endurance knee at 10^6
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AISI 1045 steel with physically correct UTS/Ys/Se values. Neutral
-          engineering context.
+        comment: AISI 1045 steel fatigue test; neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Se ~50% UTS (standard steel approximation), Ys/UTS ~0.71 (realistic),
-          cycle range 10^3-10^8, Basquin parameters physically meaningful.
+        comment: 'Checked: Se = 375 = 0.5 x UTS 750; Basquin fit reaches Se at N =
+          10^(31.74-10*log10 375) = 10^6.0 as drawn; exponent b = -0.1 within steel
+          range; yield/UTS = 0.71'
     code_quality:
       score: 10
       max: 10
@@ -198,61 +199,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural script: theme tokens -> data -> plot -> save. No
-          functions or classes.'
+        comment: 'Flat script: tokens -> data -> plot -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, scales, ragg all used.
+        comment: ggplot2, dplyr (mutate), scales (formatters), ragg (device) all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized layered ggplot2 code. No fake UI. Appropriate
-          complexity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ragg::agg_png; current modern API (linewidth=
-          not deprecated size=).
+        comment: Saves plot-{THEME}.png via ragg::agg_png, linewidth= API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Excellent idiomatic ggplot2: theme_minimal() as base with layered
-          theme(), proper log-scale axis declarations, annotate() for both rect and
-          text, modern linewidth= syntax.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses scales::trans_format with math_format for superscript log labels,
-          adjustcolor() for alpha-blended grid, annotate(rect) for shaded zone. Moderately
-          distinctive.
+        passed: false
+        comment: theme_minimal base with layered theme(), scale_x_log10/scale_y_log10,
+          annotate() for rect and text; stays at the default because the data block
+          skips the library prompt's column-constant / .data[[...]] pattern (defect
+          line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: scales::trans_format + math_format for superscript 10^n log ticks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
+  rendered_at: '2026-11-26T09:43:26Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
