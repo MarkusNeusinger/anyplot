@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -26,44 +26,44 @@ WORLD_URL = "https://cdn.jsdelivr.net/npm/vega-datasets@1.31.1/data/world-110m.j
 MAIN_TITLE = "map-projections · python · altair · anyplot.ai"
 
 
-def make_panel(proj_type, label, subtitle, w, h):
-    sphere = alt.Chart(alt.sphere()).mark_geoshape(
-        fill=ELEVATED_BG, stroke=INK_SOFT, strokeWidth=0.4, strokeOpacity=0.6
-    )
-    graticule = alt.Chart(alt.graticule(step=[30, 30])).mark_geoshape(
-        filled=False, stroke=INK_SOFT, strokeWidth=0.3, strokeOpacity=0.35
-    )
-    countries = alt.Chart(alt.topo_feature(WORLD_URL, "countries")).mark_geoshape(
-        fill=BRAND, stroke=PAGE_BG, strokeWidth=0.5, fillOpacity=0.88
-    )
-    return (
-        (sphere + graticule + countries)
-        .project(type=proj_type)
-        .properties(
-            width=w,
-            height=h,
-            title=alt.Title(
-                text=label,
-                subtitle=subtitle,
-                fontSize=12,
-                subtitleFontSize=10,
-                color=INK,
-                subtitleColor=INK_SOFT,
-                anchor="middle",
-            ),
-        )
-    )
+# Layers built once; every panel reuses them, so only the projection differs
+sphere = alt.Chart(alt.sphere()).mark_geoshape(fill=ELEVATED_BG, stroke=INK_SOFT, strokeWidth=0.4, strokeOpacity=0.6)
+graticule = alt.Chart(alt.graticule(step=[30, 30])).mark_geoshape(
+    filled=False, stroke=INK_SOFT, strokeWidth=0.3, strokeOpacity=0.35
+)
+countries = alt.Chart(alt.topo_feature(WORLD_URL, "countries")).mark_geoshape(
+    fill=BRAND, stroke=PAGE_BG, strokeWidth=0.5, fillOpacity=0.88
+)
+world = sphere + graticule + countries
 
+# (Vega projection, panel title, property subtitle)
+PROJECTIONS = [
+    ("mercator", "Mercator", "conformal · cylindrical · distorts area near poles"),
+    ("naturalEarth1", "Natural Earth", "compromise · minimises overall distortion"),
+    ("equalEarth", "Equal Earth", "equal-area · preserves relative country sizes"),
+    ("orthographic", "Orthographic", "azimuthal · perspective view from space"),
+]
 
 # 4 projections in a 2×2 grid
-# Mercator clips naturally at height=145 — avoids infinite polar distortion
-map_mercator = make_panel("mercator", "Mercator", "conformal · cylindrical · distorts area near poles", 380, 165)
-map_natural = make_panel("naturalEarth1", "Natural Earth", "compromise · minimises overall distortion", 380, 165)
-map_equal_earth = make_panel("equalEarth", "Equal Earth", "equal-area · preserves relative country sizes", 380, 165)
-map_orthographic = make_panel("orthographic", "Orthographic", "azimuthal · perspective view from space", 380, 165)
+panels = [
+    world.project(type=proj).properties(
+        width=380,
+        height=165,
+        title=alt.Title(
+            text=label,
+            subtitle=subtitle,
+            fontSize=12,
+            subtitleFontSize=10,
+            color=INK,
+            subtitleColor=INK_SOFT,
+            anchor="middle",
+        ),
+    )
+    for proj, label, subtitle in PROJECTIONS
+]
 
-row1 = alt.hconcat(map_mercator, map_natural, spacing=10)
-row2 = alt.hconcat(map_equal_earth, map_orthographic, spacing=10)
+row1 = alt.hconcat(panels[0], panels[1], spacing=10)
+row2 = alt.hconcat(panels[2], panels[3], spacing=10)
 
 chart = (
     alt.vconcat(row1, row2, spacing=12)
