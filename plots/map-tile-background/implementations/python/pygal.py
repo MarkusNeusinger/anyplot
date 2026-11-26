@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tile-background: Map with Tile Background
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 77/100 | Updated: 2026-11-26
+Quality: 76/100 | Updated: 2026-11-26
 """
 
 import importlib
@@ -36,7 +36,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Semantic exception: temperature carries a strong cold -> blue, mild -> green, hot -> red expectation
 BAND_COLORS = [IMPRINT_PALETTE[2], IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]]  # cool, mild, warm
 BAND_LIMITS = [12, 22]  # annual mean in deg C that separates cool | mild | warm
-BAND_NAMES = ["Cool (< 12 °C)", "Mild (12–22 °C)", "Warm (> 22 °C)"]
+BAND_NAMES = ["Annual mean < 12 °C", "Annual mean 12–22 °C", "Annual mean > 22 °C"]
 DOT_SIZES = [16, 20, 24]  # redundant size encoding per band, aids color-vision accessibility
 
 # Columns: set these to your table's column names

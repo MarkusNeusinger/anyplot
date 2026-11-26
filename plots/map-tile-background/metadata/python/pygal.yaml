@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:46:06Z'
-updated: '2026-11-26T16:05:27Z'
+updated: '2026-11-26T16:11:33Z'
 generated_by: claude-sonnet
-workflow_run: 45854432141
+workflow_run: 45855642527
 issue: 3756
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,13 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/pygal/plot-dark.html
-quality_score: 77
+quality_score: 76
 review:
   strengths:
   - Explicit-value tick labels ({label, value} dicts) put every longitude/latitude
-    tick at its true coordinate, so the stations read off the grid correctly
-  - 'Fully theme-adaptive chrome: PAGE_BG on both page and plot area, INK/INK_MUTED
-    text and grid; readable in both renders'
+    tick at its true coordinate, so stations read off the grid correctly
+  - 'Fully theme-adaptive chrome: PAGE_BG on page and plot area, INK/INK_MUTED text
+    and grid; readable in both renders'
   - Semantic temperature colors (blue/green/red from Imprint) with redundant marker
     sizes for CVD safety
   - 'Per-point tooltip labels (station: temperature) in pygal''s interactive HTML'
@@ -26,26 +26,29 @@ review:
   weaknesses:
   - 'SC-01, SC-02 (both): no tile background — the stations sit on a blank #FAF8F1
     / #1A1A17 plane with grid lines, so the render is a lat/lon scatter, not a map
-    with tiles (C1) → draw street, terrain or satellite tiles under the markers. Likely
-    cause: pygal has no tile layer; nothing in the code fetches or embeds tile imagery.'
+    with street, terrain or satellite tiles (C1) → draw tile imagery from a provider
+    under the markers, covering the whole plot area. Likely cause: pygal has no tile
+    layer and nothing in the code fetches or embeds tile imagery (e.g. stitch OSM/CartoDB
+    tiles into an image and place it as the plot background).'
   - 'SC-02 (both): no tile-provider attribution anywhere on the map (C4) → readable
-    attribution text in a map corner. Likely cause: no attribution text in the chart
-    config.'
-  - 'SC-04 (both): the legend bands ''Cool (< 12 °C)'' … never name the variable they
-    encode (C5) → name ''Annual mean temperature'' in the legend entries or a legend
-    title. Likely cause: BAND_NAMES carry only the band ranges.'
-  - 'Suggestion: some annual means read warm against climate normals (Phoenix 28.5
-    °C, Houston 24.5 °C); double-check the values.'
+    attribution text such as ''© OpenStreetMap contributors'' in a map corner, clear
+    of markers and legend. Likely cause: no attribution text in the chart config.'
+  - 'DQ-03 (both): Phoenix is given an annual mean of 28.5 °C and Houston 24.5 °C,
+    about +4 °C and +3.5 °C above their climate normals (~24.5 °C and ~21 °C) → use
+    normals (Phoenix ≈ 24.5 °C, Houston ≈ 21 °C). Likely cause: the TEMP list in the
+    Data block.'
+  - 'Suggestion: a legend title ''Annual mean temperature'' with short band labels
+    would read more compactly than repeating ''Annual mean'' in every entry.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 on page and plot area; no tile imagery.
-      Chrome: title 'map-tile-background · python · pygal · anyplot.ai' in dark ink at the top (~60% width); axis titles 'Longitude (°)' and 'Latitude (°)'; ticks -130°…-70° and 25°…50° in uniform 44 px dark text; dashed INK_MUTED grid; legend below with Cool / Mild / Warm.
-      Data: 25 station dots — blue #4467A3 (cool, 16 px), green #009E73 (mild, 20 px), red #AE3030 (warm, 24 px); dots sit at their coordinates (Seattle top-left, Miami bottom-right).
+      Chrome: title 'map-tile-background · python · pygal · anyplot.ai' in dark ink at the top (~60% width); axis titles 'Longitude (°)' and 'Latitude (°)'; ticks -130°…-70° and 25°…50° in uniform dark text; dashed INK_MUTED grid; legend below the x-axis title with 'Annual mean < 12 °C', 'Annual mean 12–22 °C', 'Annual mean > 22 °C'.
+      Data: 25 station dots — blue #4467A3 (16 px), green #009E73 (20 px), red #AE3030 (24 px), each at its coordinates (Seattle top-left, Miami bottom-right).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 on page and plot area.
-      Chrome: title, axis titles, ticks and legend in light #F0EFE8 text; grid visible but subtle; no dark-on-dark text.
+      Chrome: title, axis titles, ticks and legend in light #F0EFE8 text; grid subtle but visible; no dark-on-dark text.
       Data: the same blue/green/red dots as the light render, identical colors and positions.
       Legibility verdict: PASS
   criteria_checklist:
@@ -58,8 +61,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set via Style (title 66, ticks/major ticks 44, legend
-          44); tick sizes uniform; all text readable in both themes
+        comment: Title 66, ticks/legend 44 set via Style; all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -78,15 +81,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Blue/green/red bands backed by a redundant size encoding, so color
-          is not the sole signal
+        comment: Blue/green/red bands backed by a redundant size encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, plot area fills the canvas width, legend below
-          the axis title; nothing cut off
+        comment: 3200x1800 canvas, plot area fills the width, legend below the axis
+          title; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -98,8 +100,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic temperature exception (blue/green/red from Imprint); page
-          and plot background #FAF8F1 / #1A1A17; grid uses INK_MUTED'
+        comment: 'Semantic temperature exception (blue/green/red from Imprint); #FAF8F1
+          / #1A1A17 backgrounds; INK_MUTED grid'
     design_excellence:
       score: 8
       max: 20
@@ -124,7 +126,7 @@ review:
         comment: Data displayed by temperature band; no focal point chosen beyond
           the encoding
     spec_compliance:
-      score: 8
+      score: 9
       max: 15
       items:
       - id: SC-01
@@ -139,26 +141,24 @@ review:
         score: 1
         max: 4
         passed: false
-        comment: C1 tile background missing, C4 provider attribution missing; C3 view
-          fitted to the data bounds met; C5 legend present; HTML zoom not enabled
-          beyond pygal defaults (defect line)
+        comment: C1 tile background missing, C4 provider attribution missing (defect
+          lines); C3 view fitted to the data bounds met; C5 legend present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = longitude, y = latitude; explicit-value ticks sit at their coordinates
-          (Seattle at -122.3/47.6 checked against the grid); all points inside the
-          frame
+        comment: x = longitude, y = latitude; explicit-value ticks sit at their coordinates;
+          all points inside the frame
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; the legend bands show °C ranges but never name
-          the variable 'Annual mean temperature' (defect line)
+        passed: true
+        comment: Title format correct; legend entries name the variable ('Annual mean
+          < 12 °C' …) with the band ranges
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -167,7 +167,7 @@ review:
         max: 6
         passed: true
         comment: 25 stations across the continental US with a value driving color
-          and size; covers the data aspects of the type
+          and size
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -176,11 +176,12 @@ review:
         comment: Real US cities, neutral climate scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Coordinates checked for Seattle, Miami, Boston, Denver — accurate;
-          temperatures plausible in range (no check values in the spec)
+        passed: false
+        comment: Coordinates checked (Seattle, Miami, Boston, Denver) accurate; Phoenix
+          28.5 °C and Houston 24.5 °C annual means are several degrees above their
+          normals (defect line); no check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -214,40 +215,36 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the pygal 3 API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: pygal.XY with Style tokens, per-series dots_size, and x_labels/y_labels
-          as {label, value} dicts so ticks sit at real coordinates
+        comment: pygal.XY with Style tokens and per-series dots_size; standard usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: 'Per-point dict values with ''label'' feed pygal''s native hover
-          tooltips (station: temperature) in the HTML output'
+        comment: x_labels/y_labels as {label, value} dicts put ticks at true coordinates;
+          per-point 'label' dicts feed pygal's native hover tooltips in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
-  rendered_at: '2026-11-26T16:01:34Z'
+  rendered_at: '2026-11-26T16:08:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
-  styling:
-  - minimal-chrome
+  styling: []
