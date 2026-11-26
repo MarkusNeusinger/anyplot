@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-26
@@ -17,11 +17,12 @@ from lets_plot import (
     element_text,
     geom_polygon,
     geom_text,
+    gggrid,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
-    scale_fill_manual,
+    scale_fill_identity,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -35,247 +36,143 @@ LetsPlot.setup_html()
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-# Level 2/3 segments stay light pastels in both themes (only chrome flips), so their
-# labels are fixed dark ink for contrast rather than the theme-adaptive INK token.
-LABEL_ON_PASTEL = "#1A1A17"
+DARK_INK = "#1A1A17"  # wedge fills are theme-invariant, so labels on them are too
+LIGHT_INK = "#FFFFFF"
 
-# Data - Organizational budget by department, team, and project (3 levels)
-data = [
-    # Engineering branch
-    {"level_1": "Eng", "level_2": "Backend", "level_3": "API", "value": 15},
-    {"level_1": "Eng", "level_2": "Backend", "level_3": "Database", "value": 10},
-    {"level_1": "Eng", "level_2": "Frontend", "level_3": "Web App", "value": 12},
-    {"level_1": "Eng", "level_2": "Frontend", "level_3": "Mobile", "value": 8},
-    # Sales branch
-    {"level_1": "Sales", "level_2": "North", "level_3": "Enterprise", "value": 18},
-    {"level_1": "Sales", "level_2": "North", "level_3": "SMB", "value": 7},
-    {"level_1": "Sales", "level_2": "South", "level_3": "Retail", "value": 9},
-    # Marketing branch
-    {"level_1": "Mktg", "level_2": "Digital", "level_3": "SEO", "value": 6},
-    {"level_1": "Mktg", "level_2": "Digital", "level_3": "Ads", "value": 8},
-    {"level_1": "Mktg", "level_2": "Brand", "level_3": "Events", "value": 7},
-]
+# Imprint palette: one position per top-level branch, in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-df = pd.DataFrame(data)
-total_value = df["value"].sum()
+# Constants
+RING_BOUNDS = [(0, 28), (31, 52), (55, 80)]  # inner and outer radius of each ring, with gaps between rings
+TINTS = [0.0, 0.4, 0.7]  # share of white mixed into the branch color, per ring
+LUMINANCE_SPLIT = 0.5  # fills darker than this carry white labels
+ARC_POINTS = 40  # vertices per arc edge
+LABEL_SIZES = [6, 5.5, 4.5]  # geom_text size in mm, per ring
+
+# Columns: set these to your table's column names
+LEVEL_1 = "Department"  # role: level_1
+LEVEL_2 = "Team"  # role: level_2
+LEVEL_3 = "Project"  # role: level_3
+VALUE = "Budget ($K)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+df = pd.DataFrame(
+    {
+        LEVEL_1: ["Eng"] * 4 + ["Sales"] * 3 + ["Mktg"] * 3,
+        LEVEL_2: ["Backend"] * 2 + ["Frontend"] * 2 + ["North"] * 2 + ["South"] + ["Digital"] * 2 + ["Brand"],
+        LEVEL_3: ["API", "Database", "Web App", "Mobile", "Enterprise", "SMB", "Retail", "SEO", "Ads", "Events"],
+        VALUE: [15, 10, 12, 8, 18, 7, 9, 6, 8, 7],
+    }
+)
+
+# Plot: reads only df and the constants above
+SEGMENT, RING, FILL, ANGLE, X, Y, GROUP, LABEL_COLOR = "Segment", "Ring", "Fill", "Angle", "x", "y", "group", "ink"
+LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3]
+TOTAL = df[VALUE].sum()
+
+# Keep each branch contiguous, in the data's order, so a parent's arc covers its children's arcs
+branch_rank = {name: i for i, name in enumerate(df[LEVEL_1].unique())}
+df = df.sort_values(LEVEL_1, key=lambda s: s.map(branch_rank), kind="stable").reset_index(drop=True)
 
 
-def create_wedge(inner_r, outer_r, start_angle, end_angle, n_points=30):
-    angles_outer = [start_angle + (end_angle - start_angle) * i / n_points for i in range(n_points + 1)]
-    angles_inner = angles_outer[::-1]
-    x_outer = [outer_r * math.cos(a) for a in angles_outer]
-    y_outer = [outer_r * math.sin(a) for a in angles_outer]
-    x_inner = [inner_r * math.cos(a) for a in angles_inner]
-    y_inner = [inner_r * math.sin(a) for a in angles_inner]
-    return x_outer + x_inner, y_outer + y_inner
+def mix_with_white(hex_color, share):
+    """The hex color with `share` of white blended in."""
+    channels = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return "#" + "".join(f"{round(c + (255 - c) * share):02X}" for c in channels)
 
 
-# Imprint palette branch colors for level 1; graduated lighter shades for levels 2-3
-branch_colors = {
-    "Eng": "#009E73",  # Imprint palette position 1
-    "Sales": "#C475FD",  # Imprint palette position 2
-    "Mktg": "#4467A3",  # Imprint palette position 3
-}
-level2_colors = {
-    "Backend": "#66C5AB",  # Eng, ~40% lighter
-    "Frontend": "#80CFB9",  # Eng, ~50% lighter
-    "North": "#E69E66",  # Sales, ~40% lighter
-    "South": "#EEAF80",  # Sales, ~50% lighter
-    "Digital": "#66AAD1",  # Mktg, ~40% lighter
-    "Brand": "#80B9D9",  # Mktg, ~50% lighter
-}
-level3_colors = {
-    "API": "#A6DDCE",  # Eng, ~65% lighter
-    "Database": "#B3E2D5",  # Eng, ~70% lighter
-    "Web App": "#BFE7DC",  # Eng, ~75% lighter
-    "Mobile": "#CCECE3",  # Eng, ~80% lighter
-    "Enterprise": "#F0C7A6",  # Sales, ~65% lighter
-    "SMB": "#F2CFB3",  # Sales, ~70% lighter
-    "Retail": "#F5D7BF",  # Sales, ~75% lighter
-    "SEO": "#A6CEE4",  # Mktg, ~65% lighter
-    "Ads": "#B3D5E8",  # Mktg, ~70% lighter
-    "Events": "#BFDCEC",  # Mktg, ~75% lighter
-}
-all_colors = {**branch_colors, **level2_colors, **level3_colors}
+def luminance(hex_color):
+    """Relative luminance of a hex color."""
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
-# Ring radii
-r_inner_1, r_outer_1 = 0, 28  # Level 1 (innermost, filled center)
-r_inner_2, r_outer_2 = 31, 52  # Level 2
-r_inner_3, r_outer_3 = 55, 80  # Level 3 (outermost)
 
-# Calculate proportions
-level1_agg = df.groupby("level_1")["value"].sum().reset_index()
-level1_agg["pct"] = level1_agg["value"] / total_value
-level1_agg = level1_agg.sort_values("level_1").reset_index(drop=True)
+def wedge(inner_r, outer_r, start, end):
+    """Polygon vertices of an annular sector between two angles."""
+    angles = [start + (end - start) * i / ARC_POINTS for i in range(ARC_POINTS + 1)]
+    outer = [(outer_r * math.cos(a), outer_r * math.sin(a)) for a in angles]
+    inner = [(inner_r * math.cos(a), inner_r * math.sin(a)) for a in reversed(angles)]
+    return outer + inner
 
-level2_agg = df.groupby(["level_1", "level_2"])["value"].sum().reset_index()
-level2_agg["pct"] = level2_agg["value"] / total_value
 
-df["pct"] = df["value"] / total_value
-
-# Build polygon and label data
-polygon_rows = []
-label_rows = []
-segment_id = 0
-
-start_angle = math.pi / 2  # Start at top, go clockwise
-level1_angles = {}
-
-for _, row in level1_agg.iterrows():
-    end_angle = start_angle - row["pct"] * 2 * math.pi
-    level1_angles[row["level_1"]] = {"start": start_angle, "end": end_angle}
-
-    x_pts, y_pts = create_wedge(r_inner_1, r_outer_1, end_angle, start_angle)
-    for x, y in zip(x_pts, y_pts, strict=True):
-        polygon_rows.append(
-            {
-                "x": x,
-                "y": y,
-                "segment_id": segment_id,
-                "color": row["level_1"],
-                "value": row["value"],
-                "pct": row["pct"],
-            }
-        )
-
-    mid_angle = (start_angle + end_angle) / 2
-    label_r = r_outer_1 * 0.55
-    label_rows.append(
-        {"x": label_r * math.cos(mid_angle), "y": label_r * math.sin(mid_angle), "label": row["level_1"], "level": 1}
-    )
-
-    segment_id += 1
-    start_angle = end_angle
-
-level2_angles = {}
-
-for level1_name in level1_agg["level_1"]:
-    l1_angles = level1_angles[level1_name]
-    l2_data = level2_agg[level2_agg["level_1"] == level1_name].sort_values("level_2")
-    cur_angle = l1_angles["start"]
-
-    for _, row in l2_data.iterrows():
-        end_angle = cur_angle - row["pct"] * 2 * math.pi
-        level2_angles[(row["level_1"], row["level_2"])] = {"start": cur_angle, "end": end_angle}
-
-        x_pts, y_pts = create_wedge(r_inner_2, r_outer_2, end_angle, cur_angle)
-        for x, y in zip(x_pts, y_pts, strict=True):
+polygon_rows, label_rows = [], []
+for ring, (inner_r, outer_r) in enumerate(RING_BOUNDS):
+    segments = df.groupby(LEVELS[: ring + 1], sort=False)[VALUE].sum().reset_index()
+    sweeps = segments[VALUE] / TOTAL * 2 * math.pi
+    starts = math.pi / 2 - sweeps.cumsum() + sweeps  # clockwise from twelve o'clock
+    for seg_id, (row, start, sweep) in enumerate(zip(segments.itertuples(index=False), starts, sweeps, strict=True)):
+        branch_color = IMPRINT_PALETTE[branch_rank[row[0]] % len(IMPRINT_PALETTE)]
+        fill = mix_with_white(branch_color, TINTS[ring])
+        name = row[ring]
+        seg_key = ring * 1000 + seg_id
+        for px, py in wedge(inner_r, outer_r, start, start - sweep):
             polygon_rows.append(
-                {
-                    "x": x,
-                    "y": y,
-                    "segment_id": segment_id,
-                    "color": row["level_2"],
-                    "value": row["value"],
-                    "pct": row["pct"],
-                }
+                {X: px, Y: py, GROUP: seg_key, SEGMENT: name, FILL: fill, VALUE: row[len(LEVELS[: ring + 1])]}
             )
-
-        mid_angle = (cur_angle + end_angle) / 2
-        label_r = (r_inner_2 + r_outer_2) / 2
+        mid = start - sweep / 2
+        mid_r = (inner_r + outer_r) / 2 if ring else outer_r * 0.55
+        on_dark_fill = ring == 0 and luminance(fill) < LUMINANCE_SPLIT
         label_rows.append(
             {
-                "x": label_r * math.cos(mid_angle),
-                "y": label_r * math.sin(mid_angle),
-                "label": row["level_2"],
-                "level": 2,
+                X: mid_r * math.cos(mid),
+                Y: mid_r * math.sin(mid),
+                SEGMENT: name,
+                RING: ring,
+                LABEL_COLOR: LIGHT_INK if on_dark_fill else DARK_INK,
             }
         )
 
-        segment_id += 1
-        cur_angle = end_angle
+polygons = pd.DataFrame(polygon_rows)
+polygons[ANGLE] = (polygons[VALUE] / TOTAL * 100).round(1).astype(str) + "%"
+labels = pd.DataFrame(label_rows)
+limit = RING_BOUNDS[-1][1] * 1.1
 
-for level1_name in level1_agg["level_1"]:
-    l2_data = level2_agg[level2_agg["level_1"] == level1_name].sort_values("level_2")
-
-    for _, l2_row in l2_data.iterrows():
-        l2_key = (l2_row["level_1"], l2_row["level_2"])
-        l2_angles_range = level2_angles[l2_key]
-        l3_data = df[(df["level_1"] == l2_row["level_1"]) & (df["level_2"] == l2_row["level_2"])].sort_values("level_3")
-        cur_angle = l2_angles_range["start"]
-
-        for _, row in l3_data.iterrows():
-            end_angle = cur_angle - row["pct"] * 2 * math.pi
-
-            x_pts, y_pts = create_wedge(r_inner_3, r_outer_3, end_angle, cur_angle)
-            for x, y in zip(x_pts, y_pts, strict=True):
-                polygon_rows.append(
-                    {
-                        "x": x,
-                        "y": y,
-                        "segment_id": segment_id,
-                        "color": row["level_3"],
-                        "value": row["value"],
-                        "pct": row["pct"],
-                    }
-                )
-
-            mid_angle = (cur_angle + end_angle) / 2
-            label_r = (r_inner_3 + r_outer_3) / 2
-            label_rows.append(
-                {
-                    "x": label_r * math.cos(mid_angle),
-                    "y": label_r * math.sin(mid_angle),
-                    "label": row["level_3"],
-                    "level": 3,
-                }
-            )
-
-            segment_id += 1
-            cur_angle = end_angle
-
-polygon_df = pd.DataFrame(polygon_rows)
-label_df = pd.DataFrame(label_rows)
-
-# Plot
 plot = (
-    ggplot(polygon_df)
+    ggplot(polygons)
     + geom_polygon(
-        aes(x="x", y="y", fill="color", group="segment_id"),
+        aes(x=X, y=Y, fill=FILL, group=GROUP),
         color=PAGE_BG,
         size=0.75,
-        alpha=0.9,
         tooltips=layer_tooltips()
-        .line("@color")
-        .line("Budget|@value K")
-        .format("@pct", ".1%")
-        .line("Share of total|@pct"),
+        .line(f"@{{{SEGMENT}}}")
+        .line(f"{VALUE}|@{{{VALUE}}}")
+        .line(f"Share of total|@{{{ANGLE}}}"),
     )
-    + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=label_df[label_df["level"] == 1],
-        size=6,
-        color="#FFFFFF",
-        fontface="bold",
-    )
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 2], size=5.5, color=LABEL_ON_PASTEL
-    )
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 3], size=4.5, color=LABEL_ON_PASTEL
-    )
-    + scale_fill_manual(values=all_colors)
+    + scale_fill_identity()
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-100, 100))
-    + scale_y_continuous(limits=(-100, 100))
+    + scale_x_continuous(limits=(-limit, limit))
+    + scale_y_continuous(limits=(-limit, limit))
     + labs(
-        title="sunburst-basic · letsplot · anyplot.ai",
-        subtitle="Budget allocation by department, team, and project ($K)",
+        title="sunburst-basic · python · letsplot · anyplot.ai",
+        subtitle=f"Budget allocation by {LEVEL_1.lower()}, {LEVEL_2.lower()} and {LEVEL_3.lower()} {VALUE.split(' ', 1)[1]}",
     )
-    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=13, hjust=0.5, color=INK),
-        plot_subtitle=element_text(size=9, hjust=0.5, color=INK),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=16, hjust=0.5, color=INK, face="bold"),
+        plot_subtitle=element_text(size=11, hjust=0.5, color=INK),
         legend_position="none",
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
+        panel_border=element_blank(),
     )
 )
+for ring, size in enumerate(LABEL_SIZES):
+    ring_labels = labels[labels[RING] == ring]
+    for ink in ring_labels[LABEL_COLOR].unique():
+        plot += geom_text(
+            aes(x=X, y=Y, label=SEGMENT),
+            data=ring_labels[ring_labels[LABEL_COLOR] == ink],
+            size=size,
+            color=ink,
+            fontface="bold" if ring == 0 else "plain",
+        )
+
+# The one-panel grid paints the whole square canvas, because coord_fixed leaves strips transparent
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
