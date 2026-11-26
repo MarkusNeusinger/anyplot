@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' stock-event-flags: Stock Chart with Event Flags
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 93/100 | Created: 2026-05-27
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 87/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(dplyr)
@@ -16,7 +16,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-GRID_COLOR  <- adjustcolor(INK, alpha.f = 0.12)
+GRID_COLOR  <- adjustcolor(INK, alpha.f = 0.15)
 
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
@@ -134,30 +134,30 @@ p <- ggplot() +
     data  = event_df,
     aes(x = date, y = flag_y, label = label, color = event_type),
     size  = 2.7,
-    vjust = -0.65,
+    vjust = -1.6,
     fontface    = "bold",
     show.legend = FALSE
   ) +
   # Curved arrow callout: points to the price level at Q2 Miss, narrates the decline
   annotate(
     "curve",
-    x    = miss_date + 6,
+    x    = miss_date - 6,
     xend = miss_date + 1,
     y    = miss_close - price_range * 0.08,
     yend = miss_close - price_range * 0.01,
     color     = IMPRINT_PALETTE[5],
     linewidth = 0.5,
-    curvature = -0.3,
+    curvature = 0.3,
     arrow = arrow(length = unit(0.06, "inches"), type = "closed")
   ) +
   annotate(
     "text",
-    x     = miss_date + 6,
-    y     = miss_close - price_range * 0.09,
+    x     = miss_date - 7,
+    y     = miss_close - price_range * 0.10,
     label = "Decline\nfollows miss",
     color = IMPRINT_PALETTE[5],
-    size  = 2.2,
-    hjust = 0,
+    size  = 2.7,
+    hjust = 1,
     vjust = 1,
     fontface = "italic"
   ) +
@@ -190,7 +190,7 @@ p <- ggplot() +
     axis.text          = element_text(color = INK_SOFT,    size = 8),
     plot.title         = element_text(color = INK,         size = 12,
                                       face = "bold"),
-    legend.background  = element_rect(fill = ELEVATED_BG,  color = INK_SOFT,
+    legend.background  = element_rect(fill = ELEVATED_BG,  color = NA,
                                       linewidth = 0.3),
     legend.key         = element_rect(fill = PAGE_BG,      color = NA),
     legend.text        = element_text(color = INK_SOFT,    size = 8),
