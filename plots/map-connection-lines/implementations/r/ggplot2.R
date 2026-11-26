@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-connection-lines: Connection Lines Map (Origin-Destination)
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 82/100 | Updated: 2026-11-26
+#' Quality: 83/100 | Updated: 2026-11-26
 
 library(ggplot2)
 library(dplyr)
@@ -31,32 +31,6 @@ LAT        <- "lat"           # role: y
 LON        <- "lon"           # role: x
 PASSENGERS <- "passengers_m"  # role: value
 
-# Natural Earth projection (Savric et al.): lon/lat in degrees -> planar x/y
-natural_earth <- function(lon, lat) {
-  l <- lon * pi / 180
-  p <- lat * pi / 180
-  p2 <- p^2
-  p4 <- p2^2
-  data.frame(
-    x = l * (0.8707 - 0.131979 * p2 + p4 * (-0.013791 + p4 * (0.003971 * p2 - 0.001529 * p4))),
-    y = p * (1.007226 + p2 * (0.015085 + p4 * (-0.044475 + 0.028874 * p2 - 0.005916 * p4)))
-  )
-}
-
-# Great-circle arc by spherical linear interpolation
-great_circle_arc <- function(lon1, lat1, lon2, lat2, n = 80L) {
-  r <- pi / 180
-  v1 <- c(cos(lat1 * r) * cos(lon1 * r), cos(lat1 * r) * sin(lon1 * r), sin(lat1 * r))
-  v2 <- c(cos(lat2 * r) * cos(lon2 * r), cos(lat2 * r) * sin(lon2 * r), sin(lat2 * r))
-  d  <- acos(pmax(pmin(sum(v1 * v2), 1), -1))
-  t  <- seq(0, 1, length.out = n)
-  xyz <- outer(sin((1 - t) * d) / sin(d), v1) + outer(sin(t * d) / sin(d), v2)
-  data.frame(
-    lon = atan2(xyz[, 2], xyz[, 1]) / r,
-    lat = atan2(xyz[, 3], sqrt(xyz[, 1]^2 + xyz[, 2]^2)) / r
-  )
-}
-
 # Data: major international hub airports and annual passengers per route (millions)
 airports <- tibble::tibble(
   !!CITY := c("New York", "London", "Tokyo", "Dubai", "Sydney", "Sao Paulo",
@@ -66,7 +40,7 @@ airports <- tibble::tibble(
   !!LON  := c(-73.78, -0.45, 139.78, 55.36, 151.17, -46.47,
               103.99, 18.60, 72.87, -118.41, 8.57, 113.91),
   # label placement relative to the marker
-  hjust  = c(1.15, 1.15, -0.15, -0.15, 0.5, 1.15, -0.15, 1.15, 0.4, 1.15, -0.15, -0.15),
+  hjust  = c(1.15, 1.3, -0.3, -0.15, 0.5, 1.15, -0.15, 1.15, 0.4, 1.15, -0.15, -0.15),
   vjust  = c(0.5, 0.5, 0.5, -0.4, 1.8, 0.5, 1.4, 0.5, 1.9, 0.5, -0.5, 1.3)
 )
 
@@ -86,28 +60,67 @@ df <- routes |>
   left_join(airports[, c(CITY, LAT, LON)], by = c("dest" = CITY)) |>
   rename(dest_lat = all_of(LAT), dest_lon = all_of(LON))
 
-# Plot: arcs are split where they cross the antimeridian, then projected
-arc_df <- bind_rows(lapply(seq_len(nrow(df)), function(i) {
-  pts <- great_circle_arc(df$origin_lon[i], df$origin_lat[i], df$dest_lon[i], df$dest_lat[i])
-  pts$seg_id <- i * 10 + cumsum(c(0, abs(diff(pts$lon)) > 180))
-  pts[[PASSENGERS]] <- df[[PASSENGERS]][i]
-  pts
-}))
-arc_df[, c("x", "y")] <- natural_earth(arc_df$lon, arc_df$lat)
+# Plot: great-circle arcs by spherical interpolation, 80 points per route
+R_DEG <- pi / 180
+N_ARC <- 80L
+arc_df <- df |>
+  mutate(
+    route = row_number(),
+    p1x = cos(origin_lat * R_DEG) * cos(origin_lon * R_DEG),
+    p1y = cos(origin_lat * R_DEG) * sin(origin_lon * R_DEG),
+    p1z = sin(origin_lat * R_DEG),
+    p2x = cos(dest_lat * R_DEG) * cos(dest_lon * R_DEG),
+    p2y = cos(dest_lat * R_DEG) * sin(dest_lon * R_DEG),
+    p2z = sin(dest_lat * R_DEG),
+    ang = acos(pmax(pmin(p1x * p2x + p1y * p2y + p1z * p2z, 1), -1))
+  ) |>
+  tidyr::crossing(t = seq(0, 1, length.out = N_ARC)) |>
+  arrange(route, t) |>
+  mutate(
+    wa = sin((1 - t) * ang) / sin(ang),
+    wb = sin(t * ang) / sin(ang),
+    ax = wa * p1x + wb * p2x,
+    ay = wa * p1y + wb * p2y,
+    az = wa * p1z + wb * p2z,
+    lon = atan2(ay, ax) / R_DEG,
+    lat = atan2(az, sqrt(ax^2 + ay^2)) / R_DEG
+  ) |>
+  group_by(route) |>
+  # a longitude jump over 180 degrees marks an antimeridian crossing: start a new segment
+  mutate(seg_id = route * 10 + cumsum(c(0, abs(diff(lon)) > 180))) |>
+  ungroup()
 
-world_map <- map_data("world")
-world_map[, c("x", "y")] <- natural_earth(world_map$long, world_map$lat)
-airports[, c("x", "y")] <- natural_earth(airports[[LON]], airports[[LAT]])
-
-# Graticule every 30 degrees and the map outline, in projected space
+# Base map layers in lon/lat: country polygons, graticule every 30 degrees, map outline
 lats <- seq(-90, 90, length.out = 181)
 lons <- seq(-180, 180, length.out = 361)
-graticule <- bind_rows(
-  lapply(seq(-60, 60, by = 30), function(a) cbind(natural_earth(lons, rep(a, length(lons))), g = paste0("lat", a))),
-  lapply(seq(-150, 150, by = 30), function(o) cbind(natural_earth(rep(o, length(lats)), lats), g = paste0("lon", o)))
+geo <- bind_rows(
+  arcs     = arc_df |> select(lon, lat, seg_id, all_of(PASSENGERS)),
+  airports = airports |> select(all_of(c(CITY, LAT, LON, "hjust", "vjust"))) |>
+    rename(lat = all_of(LAT), lon = all_of(LON)),
+  world    = map_data("world") |> select(lon = long, lat, group),
+  graticule = bind_rows(
+    lapply(seq(-60, 60, by = 30), function(a) tibble::tibble(lon = lons, lat = a, g = paste0("lat", a))),
+    lapply(seq(-150, 150, by = 30), function(o) tibble::tibble(lon = o, lat = lats, g = paste0("lon", o)))
+  ),
+  outline  = tibble::tibble(lon = c(rep(-180, length(lats)), rep(180, length(lats))), lat = c(lats, rev(lats))),
+  .id = "layer"
 )
-outline <- natural_earth(c(rep(-180, length(lats)), rep(180, length(lats))),
-                         c(lats, rev(lats)))
+
+# Natural Earth projection (Savric et al.): lon/lat in degrees -> planar x/y
+geo <- geo |>
+  mutate(
+    phi  = lat * R_DEG,
+    phi2 = phi^2,
+    phi4 = phi2^2,
+    x = lon * R_DEG * (0.8707 - 0.131979 * phi2 +
+                         phi4 * (-0.013791 + phi4 * (0.003971 * phi2 - 0.001529 * phi4))),
+    y = phi * (1.007226 + phi2 * (0.015085 + phi4 * (-0.044475 + 0.028874 * phi2 - 0.005916 * phi4)))
+  )
+arc_df    <- filter(geo, layer == "arcs")
+airports  <- filter(geo, layer == "airports")
+world_map <- filter(geo, layer == "world")
+graticule <- filter(geo, layer == "graticule")
+outline   <- filter(geo, layer == "outline")
 
 title_str  <- "Global Flight Routes · map-connection-lines · r · ggplot2 · anyplot.ai"
 title_size <- max(round(12 * 67 / nchar(title_str)), 8L)
