@@ -89,6 +89,26 @@ pac_pts = Point2f[
     (-122.479, 37.835),
 ]
 
+# Ride starts happen on land: drop every point that falls inside a water polygon
+# (even-odd ray casting against the polygon vertices).
+function in_polygon(x, y, poly)
+    inside = false
+    j = length(poly)
+    for i in eachindex(poly)
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if (yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi
+            inside = !inside
+        end
+        j = i
+    end
+    return inside
+end
+
+on_land = [!in_polygon(x, y, bay_pts) && !in_polygon(x, y, pac_pts) for (x, y) in zip(lons, lats)]
+lons = lons[on_land]
+lats = lats[on_land]
+
 # --- Figure -----------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
