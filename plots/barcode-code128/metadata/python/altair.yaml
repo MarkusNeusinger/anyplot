@@ -2,12 +2,12 @@ library: altair
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:16Z'
-updated: '2026-05-21T01:08:26Z'
+updated: '2026-11-26T11:18:43Z'
 generated_by: claude-sonnet
-workflow_run: 26198444628
+workflow_run: 45808407110
 issue: 3809
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-light.html
@@ -15,122 +15,112 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 quality_score: 85
 review:
   strengths:
-  - Complete from-scratch Code 128B encoding with start/stop/checksum — all spec-required
-    barcode components correctly implemented
-  - Idiomatic Altair layer composition (mark_rect + mark_text) with explicit scale
-    domain control via alt.Scale(domain=...)
-  - Realistic shipping label context 'SHIP-2024-ABC123' in a logistics scenario with
-    correct bar width proportions
-  - Interactive tooltip reveals encoding metadata; HTML export included alongside
-    PNG
-  - Clean deterministic flat code with no unnecessary abstractions; large lookup tables
-    are unavoidable for Code 128
+  - 'Complete Code 128B encoding from scratch: start B, data characters, modulo-103
+    check character (31 for this content) and stop pattern, at whole-module widths'
+  - Layered Altair chart with shared exact scales (nice=False) and autosize fit fills
+    the 3200x1800 canvas with symmetric quiet zones
+  - Dark bars on a light tile in both themes keep the symbol scannable while the page
+    chrome follows the theme
+  - Native tooltip on the bars in the HTML output names the encoded content
   weaknesses:
-  - configure_view(fill='#FAF8F1') hardcodes the inner chart view fill to the light
-    background regardless of ANYPLOT_THEME — use fill=PAGE_BG instead for theme-adaptive
-    chrome; if barcode scanning requires forced-white inner area, document the intent
-    and use color=INK for bars/text marks
-  - Bar color and text color are hardcoded to '#1A1A17' rather than using the INK
-    token — inconsistent with the theme-adaptive chrome pattern even though the inner
-    view is forced light
-  - 'Design storytelling is limited — add a small text annotation below the human-readable
-    barcode string (e.g., ''Code 128B · 16 chars · Check: modulo 103'') to contextualise
-    the barcode for viewers unfamiliar with the format'
+  - 'CQ-04 (code): CHECK_PATTERNS (lines 126-230) repeats as values 0-94 the same
+    95 patterns CODE128_PATTERNS already holds, about 95 duplicate lines with no effect
+    on either render → one list of the 107 Code 128 patterns indexed by symbol value
+    (ord(char) - 32 for subset B), replacing CODE128_PATTERNS, CODE128_VALUES and
+    the duplicate. Likely cause: separate tables for data characters and check character.'
+  - 'Suggestion: small labels under the bars naming the start, data, check and stop
+    parts (which the spec allows if drawn) would show the symbol''s structure.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) fills the full 3200x1800 canvas — correct
-      Chrome: title "barcode-code128 · python · altair · anyplot.ai" in dark text at top — clearly readable; no axis labels or tick labels (appropriately hidden for barcode)
-      Data: dense black (#1A1A17) bars on the light background with visible quiet zones on both sides; bold monospace "SHIP-2024-ABC123" below barcode
+      Background: warm off-white #FAF8F1 across the canvas; the symbol's tile is the same color, so the bars sit directly on the page
+      Chrome: title 'barcode-code128 · python · altair · anyplot.ai' in dark bold sans at the top centre, readable; no axes, ticks or grid (permitted)
+      Data: one row of near-black (#1A1A17) bars of equal height spanning about 75 % of the width, symmetric quiet zones left and right; bold monospace 'SHIP-2024-ABC123' centred below, clear of the bars
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: outer canvas is near-black (#1A1A17) — correct; inner chart view area is hardcoded #FAF8F1 (light) creating a white barcode label on dark canvas effect
-      Chrome: title appears in light text on the dark canvas — readable; inner view text and bars use hardcoded #1A1A17 (dark) on the forced-light view background — readable within the view
-      Data: colors are identical to light render (same hardcoded #1A1A17 bars) — no dark-on-dark failure; barcode bars and human-readable text are both readable
-      Legibility verdict: PASS — all text readable in both themes; no dark-on-dark failure; view fill hardcoding is functionally justified for barcode scanning requirements
+      Background: warm near-black #1A1A17 page; a warm off-white tile spans the quiet zones and the text line, centred with even margins
+      Chrome: title in light text (#F0EFE8) on the dark page, readable; no dark-on-dark text
+      Data: identical near-black bars and human-readable text on the light tile, same geometry as the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'fontSize=16 for title and fontSize=20 for barcode text explicitly
-          set; readable in both themes. Minor: bar/text colors hardcoded (#1A1A17)
-          rather than INK token, so inner view is always light in dark mode (readable
-          but not fully theme-adaptive).'
+        comment: Title fontSize=16 and human-readable text fontSize=22 bold monospace;
+          all text readable in both themes (light title on dark page, dark text on
+          the light tile)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: 'No collisions: the human-readable text stands clear below the bars,
+          the title clear above'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars and human-readable text are clearly visible with high
-          contrast
+        comment: Bars solid and sharp at whole-module widths; thinnest one-module
+          bars clearly visible at 3200 px
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black on near-white provides maximum contrast; color not used as
-          sole encoding signal
+        comment: Near-black on warm off-white gives maximum contrast; no color encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, gate passed; barcode well-centered with
-          generous margins
+        comment: 'autosize fit with padding=10: the symbol fills the 3200x1800 canvas
+          with balanced margins; the dark-theme tile is centred with equal quiet zones'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; no axis labels needed (appropriately hidden
-          for barcode)
+        comment: 'N/A: no axes on a barcode (permitted by the spec); title present'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Outer canvas uses PAGE_BG (theme-adaptive) but configure_view(fill=''#FAF8F1'')
-          hardcodes inner chart fill regardless of theme; bar/text colors hardcoded
-          to #1A1A17 rather than INK token. Functionally justified by spec''s ''high
-          contrast black bars on white'' requirement.'
+        passed: true
+        comment: 'Page #FAF8F1 / #1A1A17 per theme; dark bars on a light tile in both
+          themes as the spec''s ''white tile in the dark theme'' permission allows;
+          title in INK flips correctly'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured functional design; monospace font for barcode text
-          is appropriate; clean professional appearance but inherently limited by
-          barcode domain
+        comment: Bold monospace human-readable line mirrors real label typography
+          and balances the bar block; beyond baseline by a little
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Axes fully hidden (appropriate), no grid, explicit quiet zones, generous
-          whitespace — above default for purposeful minimal-chrome execution
+        comment: nice=False scales give exactly symmetric quiet zones and a tile with
+          even margins around bars and text
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Barcode + human-readable text + tooltip provides basic context, but
-          no visual hierarchy or emphasis beyond functional display
+        comment: 'Default: the symbol is displayed, no hierarchy chosen beyond the
+          Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128B barcode rendered from scratch using proper encoding
-          tables
+        comment: Correct Code 128 linear barcode
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones, START_B pattern, check digit via modulo 103, STOP pattern,
-          human-readable text below — all present
+        comment: Start B, data characters, mod-103 check character, stop pattern,
+          quiet zones and human-readable text below are all present (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bar widths correctly correspond to Code 128B patterns; x positions
-          accumulate with quiet zone offsets
+        comment: Bars at module positions from the encoding; exact domains (nice=False)
+          keep quiet zones symmetric
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'barcode-code128 · python · altair · anyplot.ai'; no legend
-          needed
+        comment: Title 'barcode-code128 · python · altair · anyplot.ai' correct; no
+          legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -172,24 +161,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete Code 128B barcode: start, encoded characters, check digit,
-          stop, quiet zones, human-readable text'
+        comment: 'Every part of the symbol shown: quiet zones, start, data, check,
+          stop, human-readable line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''SHIP-2024-ABC123'' is a realistic shipping label code in a logistics
-          context'
+        comment: '''SHIP-2024-ABC123'' is a plausible, neutral shipping-label code'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 characters well within recommended 48-char limit; bar widths follow
-          Code 128 proportions correctly
+        comment: 'Checked: 16 characters (under 48); checksum 104+Σ(value·pos) mod
+          103 = 31 computed in code; symbol 211 modules = 11·18+13 as the standard
+          requires; quiet zone about 21 modules (>=10)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -197,61 +186,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: no functions or classes defined'
+        comment: 'Flat script, no functions or classes, # Data and # Plot markers
+          present'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: hardcoded content string, no randomness'
+        comment: 'Deterministic: fixed content string'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL.Image — all used
+        comment: 'os, altair, pandas: all used'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Large lookup tables unavoidable for Code 128; remaining logic is
-          clean and idiomatic
+        passed: false
+        comment: CHECK_PATTERNS repeats the 95 subset-B patterns already in CODE128_PATTERNS
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png at scale_factor=4 and plot-{THEME}.html; current
+          Altair 6 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Layer composition with mark_rect + mark_text using + operator; proper
-          alt.X, alt.Y, alt.Scale, alt.Title; configure_view and configure_title applied
-          correctly
+        passed: false
+        comment: Layered chart with shared alt.Scale objects, mark_rect with x/x2/y/y2
+          intervals for bars and tile, autosize fit
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Layer composition, explicit domain control via alt.Scale(domain=...),
-          interactive tooltip showing encoded content, .interactive() for pan/zoom
+        comment: Native Vega-Lite tooltip on the bars in the HTML output; otherwise
+          nothing beyond the mandated pattern
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
+  rendered_at: '2026-11-26T11:14:51Z'
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
