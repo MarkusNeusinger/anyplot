@@ -1,7 +1,7 @@
 """ anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -135,11 +135,13 @@ START_B = 104
 CODE_C = 99  # switch to Code C (digit-pair encoding)
 STOP = 106
 
-# Content: alpha prefix in Code B, digit suffix in Code C (demonstrates subset switching)
+# Data: replace this block with your own content to encode
+# Alpha prefix in Code B, digit suffix in Code C (demonstrates subset switching)
 alpha_part = "SHIP-"
 digit_part = "20240101"
 content = alpha_part + digit_part
 
+# Plot
 # Encode: START_B → Code B chars → CODE_C switch → digit pairs → checksum → STOP
 raw_values = [START_B]
 for ch in alpha_part:
