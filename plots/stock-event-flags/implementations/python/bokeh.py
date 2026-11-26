@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-27
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import base64
