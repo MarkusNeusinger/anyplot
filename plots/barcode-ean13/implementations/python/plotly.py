@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -6,6 +6,7 @@ Quality: 83/100 | Updated: 2026-11-26
 
 import os
 import sys
+from itertools import groupby
 
 
 # Prevent this file (plotly.py) from shadowing the installed plotly package
@@ -61,14 +62,16 @@ quiet = QUIET_MODULES * module
 total_width = 2 * quiet + len(pattern) * module
 
 fig = go.Figure()
-for i, bit in enumerate(pattern):
-    if bit == "1":
-        x0 = quiet + i * module
+for is_bar, run in groupby(enumerate(pattern), key=lambda m: m[1] == "1"):
+    if is_bar:
+        # One rectangle per bar (a run of consecutive 1-modules); guards never touch digit bars
+        modules = [i for i, _ in run]
+        x0 = quiet + modules[0] * module
         fig.add_shape(
             type="rect",
             x0=x0,
-            x1=x0 + module,
-            y0=guard_bottom if i in guards else bar_bottom,
+            x1=x0 + len(modules) * module,
+            y0=guard_bottom if modules[0] in guards else bar_bottom,
             y1=bar_top,
             fillcolor=INK,
             line={"width": 0},
