@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:58:00Z'
-updated: '2026-11-26T14:22:16Z'
+updated: '2026-11-26T14:29:46Z'
 generated_by: claude-sonnet
-workflow_run: 45837214518
+workflow_run: 45838504019
 issue: 3752
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,37 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Drawdown computed from the running maximum with zero at the top of the axis and
-    a semi-transparent Imprint-red ribbon, readable in both themes
-  - 'Statistics stay truthful to the data: recovery time is reported as ''not yet
-    reached'' for the still-open maximum drawdown'
-  - Max-drawdown label placed clear of the curve; page-colored halos lift both markers
-    off the line
-  - 'Idiomatic plotnine grammar: geom_ribbon ymin/ymax, per-layer data= subsets, scale_x_datetime
-    with date_breaks/date_labels'
+  - 'Drawdown computed with pandas cummax and drawn as a geom_ribbon between the curve
+    and zero, with Imprint red #AE3030 as the semantic loss color and a theme-dependent
+    alpha (0.30 light / 0.55 dark) that keeps the fill equally present on both surfaces'
+  - 'Maximum drawdown and the recovery point are both marked with page-colored-halo
+    markers and direct labels (''Max Drawdown: -45.2%'', ''New high''), so no legend
+    is needed'
+  - 'All three statistics the Notes ask for sit in a muted labs(caption=) and match
+    the curve: -45.2%, 315 days, recovery not yet reached'
+  - Per-layer data= subsets, scale_x_datetime(date_breaks, date_labels) and an asymmetric
+    scale expand that gives the recovery label its own headroom
   weaknesses:
-  - 'SC-04 (both): the green recovery diamond at 0 % in June 2022 has no key or direct
-    label, so a reader cannot tell what it marks → a short direct label such as ''New
-    high'' next to it, or name it in the caption. Likely cause: geom_point for recovery_df
-    without any accompanying text.'
+  - 'Suggestion: ''Max Drawdown: -45.2%'' appears both beside the marker and in the
+    caption; the caption alone could carry duration and recovery time, or the marker
+    label could drop the repeated figure.'
   - 'Suggestion: the caption statistics at 7 pt in INK_MUTED are the quietest text
     on the canvas; at the 8 pt tick size they would read as equal to the axis text.'
-  - 'Suggestion: the secondary price series the Notes allow would show what the drawdown
-    is measured against.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and panel.
-      Chrome: title 'drawdown-basic · python · plotnine · anyplot.ai' dark, axis titles 'Date' and 'Drawdown (%)', ticks every 5 % from 0 to -45 and quarterly dates rotated 45°, muted caption with 'Max Drawdown: -45.2% | Max Duration: 315 days | Recovery Time: not yet reached' — all readable.
-      Data: Imprint-red drawdown line with light-red semi-transparent ribbon to a dark dashed zero line; first dip to ~-31 % (Mar 2022) recovers in June 2022, marked by a green #009E73 diamond; second dip to the -45.2 % trough (Sep 2022) marked by a red halo'd circle with label 'Max Drawdown: -45.2%' to its lower left, clear of the curve; curve ends open at ~-23 %.
+      Background: warm off-white #FAF8F1 across plot and panel.
+      Chrome: title 'drawdown-basic · python · plotnine · anyplot.ai' in dark ink, about 50 % of the width; axis titles 'Date' and 'Drawdown (%)', ticks 0 to -45 every 5 and Jan 2022 to Apr 2023 every 3 months rotated 45°; L-shaped axis line; subtle major and minor grid; muted caption bottom right with the three statistics. All readable.
+      Data: Imprint red #AE3030 drawdown line over a translucent red ribbon to a dashed dark-grey zero line; a first ~31 % dip recovers to a green #009E73 diamond labelled 'New high' (June 2022), then a deep drawdown to a red circle at -45.2 % (late Sep 2022) labelled 'Max Drawdown: -45.2%' below-left, still open at about -23 % at the end. Headroom above zero carries the 'New high' label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and ticks in light ink, light dashed zero line, muted light-grey caption — no dark-on-dark text.
-      Data: same red line and green diamond as light (identical categorical colors); ribbon is a deeper red at higher alpha; max-drawdown label in light ink.
+      Chrome: title, axis titles and annotation labels in light ink, ticks and caption in soft/muted light grey, dashed light-grey zero line; no dark-on-dark text.
+      Data: same #AE3030 line and #009E73 diamond as the light render (categorical colors identical); ribbon at a higher alpha reads deep red; marker halos switch to the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,35 +53,37 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, caption at the 7 pt base
-          size; all readable in both themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks 8, caption 7, annotations
+          9); all text readable in both themes, light text on the dark surface
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Max-drawdown label sits below and left of the trough, clear of the
-          curve
+        comment: Max-drawdown label sits below-left of its marker clear of the curve;
+          'New high' label sits above the diamond in the headroom; caption clear of
+          the axis
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1.0 line for 500 daily points; max-drawdown circle and recovery diamond
-          prominent with page-colored halos
+        comment: 1.0 line over a 0.30/0.55 alpha ribbon; marker circle and diamond
+          prominent with page-colored halos in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red loss line plus green recovery marker; shape (circle vs diamond)
-          also separates them, no red-green sole signal
+        comment: Red loss and green recovery are also told apart by shape (circle
+          vs diamond) and by direct labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 3200x1800, plot fills the canvas, nothing cut off
+        comment: 3200x1800 landscape, canvas gate passed; the panel fills the canvas,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -95,9 +96,9 @@ review:
         max: 2
         passed: true
         comment: 'Imprint red #AE3030 used semantically for losses, Imprint green
-          #009E73 for recovery; backgrounds #FAF8F1/#1A1A17, chrome flips correctly'
+          #009E73 for the new high; backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,25 +107,25 @@ review:
         max: 8
         passed: false
         comment: 'Above baseline: muted INK_MUTED caption sets the statistics a step
-          below the chart text, theme-dependent ribbon alpha (0.30/0.55) keeps the
-          fill''s weight equal across themes'
+          below the chart text; theme-dependent ribbon alpha keeps the fill''s weight
+          equal across themes'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: 'Above baseline: page-colored halos (stroke in PAGE_BG) lift the
-          max-drawdown circle and recovery diamond off the line; dashed INK_SOFT zero
+        comment: 'Above baseline: page-colored halos lift both markers off the line;
+          top expand gives the ''New high'' label its own headroom above the zero
           line'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Max drawdown marker and label are what the Notes prescribe; no hierarchy
-          chosen beyond them
+        comment: Red-loss / green-new-high semantic pairing chosen beyond the Notes;
+          otherwise the focal points are those the Notes prescribe
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,23 +139,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes met: drawdown formula, semi-transparent red fill, dashed
-          zero line, max-drawdown marker + label, recovery diamond, all three statistics
-          in the caption'
+        comment: Drawdown formula, semi-transparent red fill, dashed zero line, max-drawdown
+          marker and label, labelled recovery diamond, all three statistics in the
+          caption (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, drawdown % on y with zero at the top, breaks every 5 points
-          fitted to the data's depth
+        comment: Date on x, drawdown % on y with zero as the top tick and losses downward;
+          breaks every 5 points fitted to the depth; marks at their data values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; the green recovery diamond has no key or direct
-          label (defect line)
+        passed: true
+        comment: Title format correct; both markers directly labelled, single series
+          needs no legend
     data_quality:
       score: 15
       max: 15
@@ -164,8 +165,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a full drawdown-and-recovery cycle, a deeper still-open drawdown,
-          sharp drops and slow climbs
+        comment: A full drawdown-and-recovery cycle, a deeper still-open drawdown,
+          sharp drops and slow climbs, shallow dips at zero
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -178,10 +179,10 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: caption max drawdown -45.2% matches the marker on the axis;
-          315-day duration matches the open episode Jul 2022 to May 2023; recovery
-          time ''not yet reached'' matches a curve that never returns to zero after
-          the trough'
+        comment: 'Checked: caption -45.2% matches the marker on the axis and is computed
+          via idxmin; 315-day duration matches the open episode Jul 2022 to May 2023;
+          ''not yet reached'' matches a curve that never returns to zero after the
+          trough. No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -209,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Compact pandas groupby/shift episode logic; no hand-rolled loops
+        comment: cummax and groupby/shift episode logic, no hand-rolled loops
       - id: CQ-05
         name: Output & API
         score: 1
@@ -217,35 +218,39 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png, current plotnine 0.15 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: 'Above default: per-layer data= for the marker subsets, geom_ribbon
-          ymin/ymax, scale_x_datetime(date_breaks=''3 months'', date_labels=...) grammar'
+        passed: true
+        comment: 'Above default: per-layer data= for marker subsets, geom_ribbon ymin/ymax,
+          scale_x_datetime(date_breaks, date_labels), asymmetric scale expand'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
+        comment: labs(caption=) for the statistics and geom_text nudge_y for the direct
+          label
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-4bf8b8efdf
-  rendered_at: '2026-11-26T14:18:22Z'
+  rendered_at: '2026-11-26T14:26:07Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - area-fill
+  - reference-line
   patterns:
   - data-generation
+  - columns-constants
   dataprep:
-  - cumulative-sum
+  - cumulative
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - minimal-chrome

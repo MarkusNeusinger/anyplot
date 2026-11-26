@@ -1,7 +1,7 @@
 """ anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-26
 """
 
 import os
@@ -18,6 +18,7 @@ from plotnine import (
     geom_line,
     geom_point,
     geom_ribbon,
+    geom_text,
     ggplot,
     labs,
     scale_x_datetime,
@@ -122,7 +123,7 @@ plot = (
     )
     + labs(x=DATE, y=DRAWDOWN, title="drawdown-basic · python · plotnine · anyplot.ai", caption=stats_label)
     + scale_x_datetime(date_breaks="3 months", date_labels="%b %Y")
-    + scale_y_continuous(breaks=y_breaks)
+    + scale_y_continuous(breaks=y_breaks, expand=(0.05, 0, 0.12, 0))
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -142,8 +143,14 @@ plot = (
 
 # Mark recovery points (new highs after a drawdown) with green diamonds
 if len(recovery_df) > 0:
-    plot = plot + geom_point(
-        aes(x=DATE, y=ZERO), data=recovery_df, color=PAGE_BG, fill=RECOVERY_COLOR, size=5, shape="D", stroke=1.0
+    plot = (
+        plot
+        + geom_point(
+            aes(x=DATE, y=ZERO), data=recovery_df, color=PAGE_BG, fill=RECOVERY_COLOR, size=5, shape="D", stroke=1.0
+        )
+        + geom_text(
+            aes(x=DATE, y=ZERO), data=recovery_df, label="New high", nudge_y=2.5, size=9, color=INK, va="bottom"
+        )
     )
 
 # Save
