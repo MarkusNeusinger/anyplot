@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-27
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -38,7 +38,21 @@ sns.set_theme(
     },
 )
 
-# Data: Simulated bird species observation locations in Pacific Northwest
+# imprint_seq: Imprint sequential ramp (fields stops) for colored cells
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)
+
+# Columns
+LONGITUDE = "Longitude"  # role: lon
+LATITUDE = "Latitude"  # role: lat
+RICHNESS = "Species Richness"  # role: value
+
+# Data
+# Simulated bird species observation locations in Pacific Northwest
 np.random.seed(42)
 n_points = 7000
 center_lon, center_lat = -121.5, 46.8
@@ -72,24 +86,22 @@ richness[idx1] += np.random.uniform(1.5, 2.0, len(idx1))  # Seattle: high richne
 richness[idx2] += np.random.uniform(1.0, 1.5, len(idx2))  # Portland: moderate-high
 richness = np.clip(richness, 1.0, 5.0)
 
-df = pd.DataFrame({"Longitude": lon, "Latitude": lat, "Richness": richness})
+df = pd.DataFrame({LONGITUDE: lon, LATITUDE: lat, RICHNESS: richness})
 
-# imprint_seq: green (low richness) → blue (high richness) — anyplot sequential colormap
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
-
-# Plot — seaborn jointplot; square canvas: height=6, dpi=400 → 2400×2400 px
+# Plot
+# seaborn jointplot; square canvas: height=6, dpi=400 → 2400×2400 px
 # Mean aggregation per hexbin cell (count: omit C/reduce_C_function; sum: np.sum)
 g = sns.jointplot(
     data=df,
-    x="Longitude",
-    y="Latitude",
+    x=LONGITUDE,
+    y=LATITUDE,
     kind="hex",
     cmap=imprint_seq,
     mincnt=1,
     gridsize=28,
     marginal_kws={"bins": 30, "color": "#009E73", "edgecolor": PAGE_BG, "alpha": 0.75},
     joint_kws={
-        "C": df["Richness"].values,
+        "C": df[RICHNESS].values,
         "reduce_C_function": np.mean,
         "alpha": 0.88,
         "edgecolors": PAGE_BG,
@@ -111,6 +123,9 @@ g.ax_marg_y.set_facecolor(PAGE_BG)
 ax.set_xlim(-126.5, -116.5)
 ax.set_ylim(43.0, 51.0)
 
+# Label boxes keep text readable over hexbins
+bbox_props = {"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.80}
+
 # --- Simplified Pacific NW geographic reference layer ---
 geo_kw = {"color": INK_SOFT, "alpha": 0.55, "lw": 1.0, "zorder": 3, "solid_capstyle": "round"}
 
@@ -121,7 +136,7 @@ ax.plot(coast_lon, coast_lat, **geo_kw)
 
 # US-Canada border (49°N)
 ax.plot([-126.5, -124.6], [49.0, 49.0], linestyle="--", **geo_kw)
-ax.text(-125.2, 49.2, "Canada", fontsize=7, color=INK_MUTED, ha="center", va="bottom")
+ax.text(-125.6, 49.15, "Canada", fontsize=8, color=INK_SOFT, ha="center", va="bottom", bbox=bbox_props, zorder=10)
 
 # WA-OR border (Columbia River, simplified west to east)
 wa_or_lon = [-124.1, -123.5, -122.9, -122.3, -121.5, -120.5, -119.7, -118.5, -116.9]
@@ -129,8 +144,8 @@ wa_or_lat = [46.2, 46.0, 45.6, 45.5, 45.6, 45.7, 45.9, 46.0, 46.1]
 ax.plot(wa_or_lon, wa_or_lat, linestyle="--", **geo_kw)
 
 # State labels (in sparse-data areas east of main cluster)
-ax.text(-119.0, 48.5, "WA", fontsize=9, color=INK_MUTED, ha="center", fontweight="medium")
-ax.text(-119.0, 44.5, "OR", fontsize=9, color=INK_MUTED, ha="center", fontweight="medium")
+ax.text(-119.0, 48.5, "WA", fontsize=9, color=INK_SOFT, ha="center", fontweight="medium", bbox=bbox_props, zorder=10)
+ax.text(-119.0, 44.5, "OR", fontsize=9, color=INK_SOFT, ha="center", fontweight="medium", bbox=bbox_props, zorder=10)
 
 # Spines
 ax.spines["top"].set_visible(False)
@@ -144,13 +159,15 @@ ax.set_ylabel("Latitude (°N)", fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Colorbar
-cbar = plt.colorbar(ax.collections[0], ax=ax, shrink=0.65, pad=0.02, aspect=22)
-cbar.set_label("Mean Species Richness", fontsize=9, color=INK, labelpad=8)
+g.figure.subplots_adjust(top=0.91, right=0.84)
+pos = ax.get_position()
+cax = g.figure.add_axes([0.875, pos.y0 + 0.2 * pos.height, 0.018, 0.6 * pos.height])
+cbar = g.figure.colorbar(ax.collections[0], cax=cax)
+cbar.set_label("Mean Species Richness", fontsize=9, color=INK, labelpad=6)
 cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 # City labels with ELEVATED_BG background for readability over hexbins
-bbox_props = {"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.80}
 ax.text(-122.33, 47.83, "Seattle", fontsize=8, color=INK, ha="center", fontstyle="italic", bbox=bbox_props, zorder=10)
 ax.text(-122.68, 45.27, "Portland", fontsize=8, color=INK, ha="center", fontstyle="italic", bbox=bbox_props, zorder=10)
 
@@ -159,6 +176,5 @@ title = "hexbin-map-geographic · python · seaborn · anyplot.ai"
 n = len(title)
 title_fontsize = max(8, round(12 * (67 / n if n > 67 else 1.0)))
 g.figure.suptitle(title, fontsize=title_fontsize, color=INK, fontweight="medium")
-g.figure.subplots_adjust(top=0.91)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
