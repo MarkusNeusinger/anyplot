@@ -1,7 +1,7 @@
 """ anyplot.ai
 donut-nested: Nested Donut Chart
 Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 94/100 | Updated: 2026-08-18
+Quality: 80/100 | Updated: 2026-08-18
 """
 
 import colorsys
