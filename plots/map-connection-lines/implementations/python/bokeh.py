@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-connection-lines: Connection Lines Map (Origin-Destination)
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-26
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -410,7 +410,52 @@ routes = [
     ("CDG", "HND", 1.1),
 ]
 
-# Build curved arc data (parabolic perpendicular offset in lat/lon space)
+
+# Build great-circle arcs (spherical interpolation); arcs crossing the antimeridian are split at +-180
+def great_circle(lat1, lon1, lat2, lon2, n=80):
+    """Points along the great circle from (lat1, lon1) to (lat2, lon2), in degrees, lon unwrapped."""
+    p1 = np.array(
+        [
+            np.cos(np.radians(lat1)) * np.cos(np.radians(lon1)),
+            np.cos(np.radians(lat1)) * np.sin(np.radians(lon1)),
+            np.sin(np.radians(lat1)),
+        ]
+    )
+    p2 = np.array(
+        [
+            np.cos(np.radians(lat2)) * np.cos(np.radians(lon2)),
+            np.cos(np.radians(lat2)) * np.sin(np.radians(lon2)),
+            np.sin(np.radians(lat2)),
+        ]
+    )
+    omega = np.arccos(np.clip(p1 @ p2, -1, 1))
+    t = np.linspace(0, 1, n)[:, None]
+    pts = (np.sin((1 - t) * omega) * p1 + np.sin(t * omega) * p2) / np.sin(omega)
+    lons = np.degrees(np.unwrap(np.arctan2(pts[:, 1], pts[:, 0])))
+    lats = np.degrees(np.arcsin(np.clip(pts[:, 2], -1, 1)))
+    return lons, lats
+
+
+def split_at_antimeridian(lons, lats):
+    """Wrap lons into [-180, 180] and cut the line wherever it crosses the antimeridian."""
+    wraps = np.floor((lons + 180) / 360)
+    segments, cur_x, cur_y = [], [lons[0] - 360 * wraps[0]], [lats[0]]
+    for i in range(1, len(lons)):
+        if wraps[i] != wraps[i - 1]:
+            going_east = wraps[i] > wraps[i - 1]
+            boundary = 360 * max(wraps[i], wraps[i - 1]) - 180
+            share = (boundary - lons[i - 1]) / (lons[i] - lons[i - 1])
+            lat_b = lats[i - 1] + share * (lats[i] - lats[i - 1])
+            cur_x.append(180.0 if going_east else -180.0)
+            cur_y.append(lat_b)
+            segments.append((cur_x, cur_y))
+            cur_x, cur_y = [-180.0 if going_east else 180.0], [lat_b]
+        cur_x.append(lons[i] - 360 * wraps[i])
+        cur_y.append(lats[i])
+    segments.append((cur_x, cur_y))
+    return segments
+
+
 line_xs, line_ys, line_widths, line_alphas = [], [], [], []
 route_labels, passenger_volumes = [], []
 volumes = [r[2] for r in routes]
@@ -419,26 +464,15 @@ min_vol, max_vol = min(volumes), max(volumes)
 for origin, dest, volume in routes:
     o_lat, o_lon = airports[origin]
     d_lat, d_lon = airports[dest]
-    t = np.linspace(0, 1, 60)
-    arc_lons = o_lon + (d_lon - o_lon) * t
-    arc_lats = o_lat + (d_lat - o_lat) * t
-    dx, dy = d_lon - o_lon, d_lat - o_lat
-    dist = np.sqrt(dx**2 + dy**2)
-    mid_offset = dist * 0.15
-    curve = 4 * t * (1 - t) * mid_offset
-    if dist > 0:
-        perp_x, perp_y = -dy / dist, dx / dist
-    else:
-        perp_x, perp_y = 0.0, 0.0
-    arc_lons = arc_lons + perp_x * curve
-    arc_lats = arc_lats + perp_y * curve
-    line_xs.append(arc_lons.tolist())
-    line_ys.append(arc_lats.tolist())
+    arc_lons, arc_lats = great_circle(o_lat, o_lon, d_lat, d_lon)
     normalized = (volume - min_vol) / (max_vol - min_vol) if max_vol > min_vol else 0.5
-    line_widths.append(5 + normalized * 9)
-    line_alphas.append(0.5 + normalized * 0.2)
-    route_labels.append(f"{origin} → {dest}")
-    passenger_volumes.append(f"{volume}M pax/year")
+    for seg_x, seg_y in split_at_antimeridian(arc_lons, arc_lats):
+        line_xs.append(list(seg_x))
+        line_ys.append(list(seg_y))
+        line_widths.append(5 + normalized * 9)
+        line_alphas.append(0.5 + normalized * 0.2)
+        route_labels.append(f"{origin} → {dest}")
+        passenger_volumes.append(f"{volume}M pax/year")
 
 # Airport marker data
 airport_names = list(airports.keys())
@@ -447,9 +481,9 @@ airport_lats = [airports[a][0] for a in airport_names]
 
 # Per-airport label offsets — push European cluster apart to prevent overlap
 LABEL_OFFSETS = {
-    "LHR": (-65, 8),  # west of dot; avoids CDG/AMS cluster to the right
+    "LHR": (-70, 44),  # below-left of dot, clear of the arcs arriving from the west
     "AMS": (14, -26),  # above-right; AMS is the northernmost hub (positive y_offset moves down)
-    "CDG": (-78, 34),  # below-left; CDG is the southwestern hub
+    "CDG": (-4, 50),  # directly below its dot
     "FRA": (20, 20),  # below-right of its dot
 }
 airport_x_offsets = [LABEL_OFFSETS.get(a, (14, 8))[0] for a in airport_names]
@@ -540,20 +574,31 @@ p.text(
     text_font_style="bold",
 )
 
-# Manual legend (upper-left Pacific — clear of all route clusters)
-lx0, lx1 = -175, -147
-ly_title, ly = 77, [71, 65, 59]
-p.multi_line(xs=[[lx0, lx1]], ys=[[ly[0], ly[0]]], line_width=4, line_color=BRAND, line_alpha=0.4)
-p.multi_line(xs=[[lx0, lx1]], ys=[[ly[1], ly[1]]], line_width=9, line_color=BRAND, line_alpha=0.55)
-p.multi_line(xs=[[lx0, lx1]], ys=[[ly[2], ly[2]]], line_width=14, line_color=BRAND, line_alpha=0.7)
-p.text(x=[lx1 + 2], y=[ly[0]], text=["Low (~1M pax/yr)"], text_font_size="24pt", text_color=INK, text_baseline="middle")
-p.text(
-    x=[lx1 + 2], y=[ly[1]], text=["Med (~2.5M pax/yr)"], text_font_size="24pt", text_color=INK, text_baseline="middle"
+# Width key: three sample lines (no data) collected in a Legend
+legend_items = []
+for label, width, alpha in (("Low (~1M)", 5, 0.5), ("Medium (~2.5M)", 9, 0.6), ("High (~4.5M)", 14, 0.7)):
+    sample = p.line(x=[0, 1], y=[1000, 1000], line_width=width, line_alpha=alpha, line_color=BRAND, line_cap="round")
+    legend_items.append(LegendItem(label=label, renderers=[sample]))
+width_key = Legend(
+    items=legend_items,
+    title="Passengers per year",
+    location="top_left",
+    label_text_font_size="24pt",
+    title_text_font_size="26pt",
+    title_text_font_style="bold",
+    label_text_color=INK,
+    title_text_color=INK,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
+    border_line_color=INK_SOFT,
+    glyph_width=60,
+    glyph_height=30,
+    label_standoff=16,
+    spacing=10,
+    padding=18,
+    margin=24,
 )
-p.text(
-    x=[lx1 + 2], y=[ly[2]], text=["High (~4.5M pax/yr)"], text_font_size="24pt", text_color=INK, text_baseline="middle"
-)
-p.text(x=[lx0], y=[ly_title], text=["Passenger Volume"], text_font_size="26pt", text_color=INK, text_font_style="bold")
+p.add_layout(width_key)
 
 # Theme-adaptive chrome
 p.title.text_font_size = title_fs
