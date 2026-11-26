@@ -12,125 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 75
 review:
   strengths:
-  - 'Excellent theme-adaptive map styling: land/water colors adapt elegantly between
-    light (warm sage + soft blue) and dark (deep olive + navy) themes'
-  - 'Clean palette assignment: Music=#009E73 as position 1, canonical order maintained
-    throughout'
-  - Correct static interpretation of an interactive spec — grid-based clustering produces
-    a convincing clustered-marker snapshot without fake interactivity
-  - scale_size_area ensures perceptually accurate bubble sizing with area proportional
-    to venue count
-  - 'Perfect code quality: clean KISS structure, set.seed(42) reproducibility, modern
-    ggplot2 API (linewidth= not size=)'
+  - map_data('state') basemap with themed land/water fills and hairline state boundaries
+    stays quieter than the markers in both renders
+  - Cluster area proportional to count via scale_size_area makes NYC, Chicago, LA
+    and Texas stand out
+  - Each cluster takes its dominant category color, as the Notes ask
   weaknesses:
-  - Very small clusters (count=1,2) get near-zero-area bubbles from scale_size_area,
-    leaving count labels floating as white text with no visible backing circle — add
-    min_size=4 to scale_size_area() so every cluster has a visible marker
-  - Slight crowding in Northeast region with 5-6 bubbles close together — could use
-    slightly coarser grid_res (4.0 instead of 3.5) to reduce overlap
-  - Legend size reference breaks (5, 20, 50) don't cover the actual max cluster size
-    (64) — consider adding an 80 break to match data range
+  - 'VQ-01, SC-02 (light): the white ''1'' and ''2'' counts of the smallest clusters
+    overflow their near-invisible markers onto the pale land and water and barely
+    read → every count on its own filled marker. Likely cause: scale_size_area(max_size
+    = 18) with no minimum size.'
+  - 'VQ-03 (both): count-1/2 clusters shrink to near-zero-area dots, and the Venue
+    Type legend keys are tiny dots → a minimum marker size (scale_size(range = c(4,
+    18))) and legend keys at marker scale (guide_legend(override.aes = list(size =
+    5))). Likely cause: scale_size_area and the default fill-guide key size.'
+  - 'VQ-02 (both): the largest circles overlap their grid neighbours (64 over 15 and
+    19, 39 over 16) → keep adjacent clusters clear with a smaller max size or a coarser
+    grid. Likely cause: max_size = 18 against 3.5 deg grid spacing.'
+  - 'SC-02, SC-03 (both): clusters are drawn at fixed 3.5 deg grid nodes, not at the
+    center of their points, and single venues sit off their own coordinates, some
+    in the ocean → mean lat/lon of each cluster''s members and own positions for singletons.
+    Likely cause: aes(x = clon, y = clat).'
+  - 'VQ-07 (both): the neutral third category Arts uses matte red #AE3030 → Imprint
+    position 3 #4467A3. Likely cause: the IMPRINT vector.'
+  - 'VQ-06 (both): ''Longitude''/''Latitude'' without a unit → add (°). Likely cause:
+    labs().'
+  - 'Suggestion: a size-legend break near the largest cluster (64) would make the
+    top of the scale easier to read.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 outer plot background; light blue #CDDFF0 water panel; sage-green #E0EBD5 land fill
-      Chrome: Title "Venue Clusters · map-marker-clustered · r · ggplot2 · anyplot.ai" in dark ink — clearly readable. Axis labels "Longitude"/"Latitude" and tick labels in dark ink/INK_SOFT — all readable. Legend box with styled border, Venue Type and Venues legends visible.
-      Data: Cluster bubbles in green (#009E73 Music), purple (#9418DB Sports), red (#B71D27 Arts). White count labels inside bubbles. Large green 64-venue cluster near NYC dominant. Proportional sizing clear.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 page; map panel in pale blue water with pale green US states and thin grey state boundaries (map_data('state')).
+      Chrome: bold dark title 'Venue Clusters · map-marker-clustered · r · ggplot2 · anyplot.ai', axis titles Longitude/Latitude, grey ticks, subtle grid; legend cards Venue Type (tiny dots) and Venues (5/20/50 grey circles). Readable.
+      Data: cluster markers on a regular 3.5 deg grid sized by area (scale_size_area), Music #009E73, Sports #C475FD, Arts #AE3030, white bold counts; count-1/2 clusters shrink to near-invisible dots so their white '1'/'2' labels sit on the pale map and barely read.
+      Legibility verdict: PASS (chrome); small-cluster counts weak
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 outer; deep navy #101E2A water panel; dark olive-green #263322 land fill
-      Chrome: Title and axis labels flip to light (#F0EFE8/#B8B7B0) — all readable against dark background. No dark-on-dark text failures. Legend text is light-colored and readable.
-      Data: Bubble colors identical to light render (green/purple/red — only chrome flips). Minor issue: count=1/2 clusters have near-zero-area backing circles, leaving white count text appearing to float (visible near Pacific Northwest coast and Florida).
-      Legibility verdict: PASS (minor concern for very small count cluster labels)
+      Background: warm near-black #1A1A17 page, dark navy water, dark olive states with light boundaries.
+      Chrome: light title, axis titles, ticks, legend text; no dark-on-dark text.
+      Data: categorical colors identical to the light render; small-cluster white counts read better on the dark map but their markers are still near-invisible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=11, axis.title=10, axis.text=8).
-          Minor deduction: geom_text(size=2.5) for count labels in very small clusters
-          is hard to read when the bubble itself is near-invisible.'
+        comment: Chrome readable in both themes; white counts of count-1/2 clusters
+          overflow their tiny markers onto the pale map, and white on lavender has
+          low contrast
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels inside bubbles are generally well-separated. Some crowding
-          in Northeast region (64, 8, 12, 15, 19 bubbles in close proximity) but text
-          remains readable.
+        comment: Large circles overlap grid neighbours (64 over 15 and 19, 39 over
+          16)
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
-        passed: true
-        comment: Medium-to-large clusters prominently visible. Count=1 and count=2
-          clusters have near-zero-area bubbles from scale_size_area, leaving white
-          count text floating without visible backing circle.
+        passed: false
+        comment: Count-1/2 markers near zero area; Venue Type legend keys tiny
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is colorblind-safe. Size variation provides redundant
-          encoding beyond hue alone.
+        comment: Imprint hues, counts carried by text and size
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map fills canvas efficiently. Legend well-placed. Generous margins.
-          No content cut off. Canvas dimensions correct (3200x1800).
+        comment: Map fills the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Longitude and Latitude descriptive. Title format correct with descriptive
-          prefix.
+        passed: false
+        comment: Longitude/Latitude without degree unit
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Music=#009E73 (position 1), Sports=#9418DB (position 2), Arts=#B71D27
-          (position 3). Canonical order. PAGE_BG correct for both themes. All chrome
-          theme-adaptive.
+        passed: false
+        comment: 'Neutral third category Arts in matte red #AE3030 instead of #4467A3'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful theme-adaptive map styling with land/water color variants
-          per theme. Dual legend organized. Above generic defaults but not publication-exceptional.
+        comment: Themed land/water basemap with fine state boundaries, quiet behind
+          the markers
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Very subtle grid (linewidth=0.15), panel border appropriate for enclosed
-          map, styled legend box, thematic land/water fills. Above minimal defaults.
+        comment: Page-colored marker outlines, hairline boundaries, legend cards on
+          elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Bubble size creates clear visual hierarchy: 64-venue NYC and 42-venue
-          Chicago clusters immediately dominate. Geographic concentration story (Northeast/West
-          Coast) visible without annotations.'
+        comment: Size hierarchy as the spec asks; no focal point beyond it
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -138,56 +137,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geographic clustered marker map using grid-based spatial
-          aggregation as static snapshot. Appropriate ggplot2 interpretation.'
+        comment: Clustered marker map, static snapshot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Count labels on clusters, category color coding, US state basemap
-          all present. Interactive features (zoom, click-to-expand, hover spider lines)
-          correctly omitted per ggplot2 static-library rules.
+        passed: false
+        comment: C3, C4, C5 met; C1 missed for small clusters (count not legible on
+          its marker); C2 missed (grid-node placement)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y, coord_fixed(ratio=1.3) for geographic
-          proportions. All data visible within bounds.
+        comment: Single venues drawn at grid nodes, some in the ocean
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Venue Clusters · map-marker-clustered · r · ggplot2 · anyplot.ai''
-          correct format. Legend labels match data categories.'
+        comment: Title format correct, both legends named
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clusters of varying sizes (1-64), three venue categories, geographic
-          distribution across US metros. Legend size breaks (5,20,50) do not reach
-          actual max of 64.
+        comment: Clusters 1-64, singletons, three categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US venue locations (Music/Sports/Arts) across real metro areas with
-          realistic geographic coordinates. Neutral real-world scenario.
+        comment: Venues around real US metros, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Metro area coordinates accurate. NYC largest cluster (64) realistic.
-          Venue counts plausible per metro population.
+        comment: Metro coordinates accurate; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -197,55 +188,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: Imports -> Theme tokens -> Data -> Plot -> Save. No functions
-          or classes.'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top of script.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2, dplyr, ragg imported — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. No fake interactivity. Appropriate complexity for
-          the visualization.
+        comment: Concise; basemap from map_data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) with ragg::agg_png. Modern API (linewidth=
-          not size= for lines).
+        comment: plot-{THEME}.png via ragg
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent: geom_polygon for state boundaries, shape=21 fill/color
-          separation, scale_size_area for proportional bubbles, coord_fixed for geographic
-          proportionality, map_data(''state''), guide_legend(override.aes=...).'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: scale_size_area with area-proportional scaling, shape=21 with separate
-          fill/color aesthetics, guide_legend(override.aes=...) for legend customization.
-          Solid ggplot2-specific patterns, not exceptionally novel.
+        comment: map_data('state') with geom_polygon, scale_size_area, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond the library prompt's mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-9715f26d62
 impl_tags:
   dependencies: []
   techniques:
