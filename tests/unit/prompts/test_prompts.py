@@ -1011,8 +1011,10 @@ class TestLeanCode:
         assert "``CQ-04 (code): lines A–B" in cq04 and "→ `<call>` (<package>)" in cq04
         assert "Without a concrete replacement it is a `Suggestion:` line" in cq04
         assert "never takes CQ-04 to 0" in cq04
-        # The review names a call or a removal; CQ-01 no longer bans helpers, but a wrapper of the plot is never one.
-        assert "A replacement is a call or a removal" in cq04
+        # The defect line's target stays checkable (a call or a removal): a helper the review asks for is a suggestion.
+        assert (
+            "A CQ-04 defect's target is an existing library call or a removal, never extracting a custom helper" in cq04
+        )
         assert "A function that wraps the plot or the save is never a replacement" in cq04
         assert "never a new helper function" not in criteria
         assert "never credit a hand-roll for avoiding one" in cq04

@@ -247,7 +247,7 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| CQ-01 | KISS Structure | 3 | Reads top to bottom, cell by cell? No `main()`, class, function that wraps the plot or the save, or function inside a function? (A short helper above its first use, and a callback, formatter or component the library or the harness asks for, cost nothing: `quality-criteria.md` → CQ-01.) |
+| CQ-01 | KISS Structure | 3 | Reads top to bottom, cell by cell? No `main()`, Python class, function or callback that holds the plot or the save, or function inside a function outside the Data block? (A short helper above its first use costs nothing, and CQ-01 does not score what the library or the harness asks for: score by the 3/2/1/0 rows of `quality-criteria.md` → CQ-01.) |
 | CQ-02 | Reproducibility | 2 | Fixed seed or deterministic? |
 | CQ-03 | Clean Imports | 2 | Only used imports? (data utilities count as used) |
 | CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI elements? No over-engineering? No algorithm written out that an available call computes (`quality-criteria.md` → CQ-04 → Available to compute with)? |
@@ -265,7 +265,7 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 **Scoring defaults (start here, adjust up only with evidence beyond what the spec's Notes require and the library prompt mandates):**
 - LM-01 = 3 (correct usage). Raise to 5 only if expertly using high-level API.
 - LM-02 = 1 (generic usage). Raise only if using distinctive features.
-- A feature that is itself an addition the spec's variant excludes, such as range selector buttons on a `-basic` spec, raises neither (`quality-criteria.md` → LM-02 → "No credit for what the variant excludes").
+- A feature that is itself an addition the spec's variant excludes, such as range selector buttons or a range slider on a `-basic` spec that does not ask for them, raises neither (`quality-criteria.md` → LM-02 → "No credit for what the variant excludes").
 
 ### Step 7: Apply Score Caps
 
@@ -312,7 +312,7 @@ Both have ~5.76M pixels, so font size recommendations apply equally.
 - Crossfiltering
 - Animations
 
-These features **add significant value** in the HTML output. The PNG is just a static preview.
+These features **add significant value** in the HTML output. The PNG is just a static preview. The exception is a control that changes what the chart shows (range selector buttons, range sliders, dropdown or button menus) on a `-basic` spec that does not ask for it: it is an excluded addition, in the PNG or only in the HTML, and earns no LM credit (`quality-criteria.md` → LM-02); hover, tooltips, spike lines, zoom, interactive legends and the default toolbar stay strengths.
 
 **Only criticize** if:
 - Interactive features break the static rendering

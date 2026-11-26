@@ -647,9 +647,9 @@ The re-score tells the next regeneration what the live implementation lacks, but
 ```yaml
 review:
   last_kept:
-    pr: 14512
+    pr: 12345
     code: criterion_below
-    note: '#14512 was kept because it scored below the live version''s re-score on these criteria: CQ-01 2 < 3: Three helper functions skew_x, sat_vapour_pressure and add_ref. Do not score lower than the live version on them.'
+    note: '#12345 was kept because it scored below the live version''s re-score on these criteria: VQ-02 5 < 6: The peak label overlaps the line at its maximum in both renders. Do not score lower than the live version on them.'
 ```
 
 The note depends on the reason code:

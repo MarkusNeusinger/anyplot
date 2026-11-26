@@ -9,7 +9,7 @@ This file is the convention, in one place. `prompts/plot-generator.md` applies i
 A Python implementation has six zones, top to bottom:
 
 1. **Head.** The docstring header, the imports, the theme tokens, and the palette: the full 8-entry `IMPRINT_PALETTE` list in canonical order, the name the style guide and every library prompt use (the checker also accepts the short name `IMPRINT` for the same list), or `BRAND` alone for a single-series plot. Library setup goes here, never into the data block: `sns.set_theme(...)`, `LetsPlot.setup_html()`, `theme_set(...)`, an Altair theme. No figure is created and nothing is plotted here.
-2. **`# Constants`, optional.** Values of the plot type or the domain that stay true for any data: thresholds (RSI 30 and 70, a target the spec names), ordered scales (weekday names, Likert levels), and semantic color maps looked up with a palette fallback (`SEMANTIC.get(level, IMPRINT_PALETTE[i])`). Never sample categories, sample values or data coordinates. A short helper that the Data block and the plot code share goes here too (see "Short helpers").
+2. **`# Constants`, optional.** Values of the plot type or the domain that stay true for any data: thresholds (RSI 30 and 70, a target the spec names), ordered scales (weekday names, Likert levels), and semantic color maps looked up with a palette fallback (`SEMANTIC.get(level, IMPRINT_PALETTE[i])`). Never sample categories, sample values or data coordinates. A short helper that is a pure formula of the plot type or the domain goes here too, whether the Data block, the plot code or both call it (see "Short helpers").
 3. **Column constants.** One constant per spec `## Data` role the code uses: a domain name (`MONTH`, `SALES`, never `CATEGORY_COL`), the column name as its value, written the way the axis title should read with the unit included, and a trailing role comment: `SALES = "Sales (thousand USD)"  # role: value`. A variadic family (`y1, y2, ...`) gets one constant that holds a list. A column that no spec role names gets `# role: extra`.
 4. **Exactly one `# Data` block.** Everything that invents the example: the seed, random draws, literal lists, category names, the formulas behind synthetic data, a `sns.load_dataset` call. It ends in one tidy DataFrame `df`: one row per mark or observation, one column per role, keyed by the column constants. It binds nothing else that later code reads, and it holds no plotting or styling call and no theme token. The data stays synthetic and in memory; a CSV read appears only in the block's opening comment.
 5. **Plot code, below a `# Plot` marker.** Everything derived: pivots, statistics, fits, sorting, positions, widths, limits. It reads only `df`, the column constants, `# Constants`, the theme tokens and the palette.
@@ -19,13 +19,13 @@ The markers are comment lines at column 0: `# Data` and `# Plot`, the word alone
 
 ### Short helpers
 
-A short helper function (CQ-01 in `prompts/quality-criteria.md`: a few lines, at the top level, above its first use, never wrapping the plot or the save) goes in the zone of the code that calls it:
+A short helper function (CQ-01 in `prompts/quality-criteria.md`: a few lines, at the top level, above its first use, never wrapping the plot or the save) goes in one of three places:
 
-- **Called by the plot code only:** directly above its first use, below `# Plot`, such as an `add_ref(ax, value, label)` that draws each reference line. A formula of the plot type or the domain may sit under `# Constants` instead, such as the skew-T transform `skew_x(t, p)`.
-- **Called by the Data block and the plot code:** under `# Constants`, as a formula that stays true for any data, such as `sat_vapour_pressure(t)`.
-- **Called by the Data block only:** inside the block. It invents the example and goes when the block is replaced.
+- **Under `# Constants`: a pure formula only.** Arguments in, a value out: it reads no `df` and no column constant, and it draws nothing. Examples: the skew-T transform `skew_x(t, p)` and `sat_vapour_pressure(t)`. The Data block, the plot code or both may call it.
+- **Directly above its first use, below `# Plot`: every other helper the plot code calls,** such as an `add_ref(ax, value, label)` that draws each reference line or a helper that reads a column of `df`.
+- **Inside the Data block: a helper only the block calls.** It invents the example and goes when the block is replaced.
 
-The plot code never calls a helper that the Data block defines, because a user who replaces the block with a table also removes the helper. For Python, the static check refuses that read.
+The static check looks for typed column names only below the Data block: a helper under `# Constants` that typed one would pass unseen, and the same helper below `# Plot` is caught. The plot code never calls a helper that the Data block defines, because a user who replaces the block with a table also removes the helper. For Python, the static check refuses that read.
 
 ## Rules for the plot code
 

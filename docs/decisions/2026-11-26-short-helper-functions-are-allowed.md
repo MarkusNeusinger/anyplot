@@ -10,7 +10,10 @@
   short helper functions are allowed. His words, translated from German: "I just don't want it to
   say only 'run main' at the bottom, with the rest nested somehow; the whole thing should read
   cleanly from top to bottom, cell by cell. Short helper functions are, I think, no deterioration
-  there." The exact boundary is the agents' reading of his words: no class and no function that
-  wraps the plot or the save, while a helper of a few lines above its first use, which may draw one
-  small repeated step, costs nothing.
+  there." The exact boundary is the agents' reading of his words, with the fixes of a second
+  opinion that he adopted: four steps by how much of the drawing sits inside functions in total,
+  from a short helper above its first use, which costs nothing, to the whole plot inside a
+  `main()`, a builder, a class or a callback; a point for any Python class, because the agent
+  chat refuses classes; and no score for what the library or the harness asks for, such as the
+  muix component.
 - Where: `prompts/quality-criteria.md`
