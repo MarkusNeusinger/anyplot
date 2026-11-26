@@ -1,7 +1,7 @@
 """anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
