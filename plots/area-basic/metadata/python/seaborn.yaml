@@ -2,140 +2,121 @@ library: seaborn
 language: python
 specification_id: area-basic
 created: '2025-12-23T00:47:02Z'
-updated: '2026-05-28T05:43:35Z'
+updated: '2026-11-26T17:59:52Z'
 generated_by: claude-sonnet
-workflow_run: 26556600823
+workflow_run: 45871624248
 issue: 711
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - Layered gradient fill using seaborn light_palette creates excellent visual depth
-    — the three stacked fill_between layers at different y-fractions give the area
-    chart strong visual weight in both themes
-  - Maintenance annotation with curved arrow and average reference line provide clear
-    data storytelling focal points with minimal code
-  - 'Perfect canvas compliance: figsize=(8, 4.5) dpi=400 → 3200×1800, no bbox_inches=tight
-    in savefig'
-  - 'Full theme adaptation: all chrome elements (title, labels, ticks, annotation
-    text, arrow, avg label) use the correct INK/INK_SOFT/INK_MUTED tokens for both
-    renders'
-  - Comma-formatted y-axis ticks, rotated date labels, and y-only grid follow style-guide
-    recommendations
-  - Realistic website-visitor data with weekly patterns and a maintenance dip provides
-    genuine analytical context
+  - 'Theme tokens threaded through sns.set_theme rc: chrome readable in both renders,
+    brand green identical in both'
+  - Weekly Monday major ticks with daily minor ticks suit a 30-day daily series
+  - 'Value axis starts at zero and the solid #009E73 edge stays distinct above the
+    fill'
+  - Column constants and a single df block keep the data swappable
   weaknesses:
-  - In dark mode the gradient fill layers are less perceptually distinct because sns.light_palette()
-    generates light tints that read as muddy dark-greens at alpha=0.28 on the near-black
-    background — consider theme-branching the fill alpha or using a dark-tint palette
-    in dark mode for stronger layer separation
-  - sns.set_theme(style=\"white\") is used instead of the library-guide recommended
-    style=\"ticks\"; functionally identical after sns.despine() but deviates from
-    the canonical baseline
-  - Annotation fontsize=8 at mobile scale (~400 px wide) is at the lower legibility
-    threshold — bumping to 9pt would add safety margin
+  - 'SC-02 (both): the ''gradient'' is three hard-edged fill_between bands at 1/3,
+    2/3 and 1x of each value, so two inner contours trace the series'' shape at fractions
+    of it and read like a stacked area of extra series, and the opacity accumulates
+    to about 0.63 at the baseline, above the 0.3-0.5 the Notes ask → one fill at alpha
+    0.3-0.5 under the line, or a smooth gradient whose inner steps are invisible (C3).
+    Likely cause: the for i in range(3) loop of scaled fill_between calls.'
+  - 'Suggestion: drop the default x margin so the area starts at the y axis on Mar
+    01.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
-      Chrome: Title "area-basic · python · seaborn · anyplot.ai" in medium-weight dark ink (~12pt), spans ~70% of canvas width — expected for the mandated title length. Y-axis label "Visitors / day" and X-axis label "Date" both at 10pt in dark ink, balanced and readable. Tick labels at 8pt in INK_SOFT gray, x-axis labels rotated 30° (Mar 04, Mar 11, Mar 18, Mar 25). Comma-formatted y-axis ticks (0, 2,000 … 12,000). "Scheduled maintenance" annotation in dark semibold text with curved arrow pointing to the Mar 11 dip. "Avg: 8,055" italic label in INK_MUTED at right edge. All text is clearly readable against the light background — no light-on-light failures.
-      Data: Three stacked fill_between layers using sns.light_palette(#009E73) tints (alpha=0.28 each) create a layered gradient from bottom to line. The brand-green #009E73 line at linewidth=2.5 sits prominently on top. Dashed gray reference line at the mean (~8,055). Sharp dip around Mar 10-12 (maintenance window) visible at ~2,000 visitors. Upward trend and weekly weekend drops clearly visible.
-      Legibility verdict: PASS — all elements readable, no overflow or clipping observed.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'area-basic · python · seaborn · anyplot.ai' in dark ink, axis titles 'Date' and 'Visitors / day', comma-formatted y ticks 0-12,000, x ticks Mar 04/11/18/25 rotated 30 degrees with daily minor ticks; subtle y gridlines visible through the fill. All readable.
+      Data: solid #009E73 line over 30 days (weekly cycle, dip to about 2,000 on Mar 10-12, up to about 11,400), filled to zero with three stepped green tint bands whose inner edges follow the line at 1/3 and 2/3 height.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title rendered in light #F0EFE8 cream text — clearly readable against dark background. Axis labels in same light ink. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. "Scheduled maintenance" annotation in light cream text — readable. Arrow in medium-gray INK_SOFT — visible. "Avg: 8,055" italic label in #A8A79F muted — readable. No dark-on-dark failures observed; all chrome elements correctly use dark-mode tokens.
-      Data: Brand green #009E73 line is identical to the light render — bright teal on dark background with strong contrast. Fill layer colors are identical hex values but appear as darker muted greens on the near-black background (the light-palette tints absorb differently on dark). The three fill layers are still distinguishable but with less contrast separation than in the light render. Weekly pattern and maintenance dip remain clearly visible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures. Fill layer distinction is slightly reduced vs. light mode but does not impair chart readability.
+      Background: warm near-black #1A1A17.
+      Chrome: light title, axis titles and grey ticks, all readable; no dark-on-dark text. Gridlines subtle and visible.
+      Data: identical #009E73 line; the bands appear as darker-to-lighter green steps toward the baseline, same geometry as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt, labels 10pt, ticks 8pt,
-          annotation 8pt). Readable in both themes. Minor deduction: annotation at
-          8pt is at the lower mobile-legibility threshold.'
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions. Annotation positioned well clear of
-          other elements.
+        comment: No text collisions; nothing sits on the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Brand line clearly visible at 2.5 linewidth. Gradient fill creates
-          strong area visual weight. 30 data points at appropriate density.
+        comment: 30 daily points joined by a 2.5 pt line; fill clearly visible on
+          both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green with gray reference line. No red-green-only
-          signal.
+        comment: Single green series, strong contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. figsize=(8,4.5) dpi=400 → 3200x1800. No bbox_inches=tight.
-          Title ~70% width as expected for mandated title length. Proportions balanced.
+        comment: Plot fills the 3200x1800 canvas; ylim 1.08x max leaves modest headroom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Y-axis 'Visitors / day' has units. X-axis 'Date'
-          appropriate.
+        comment: '''Visitors / day'' carries its unit; ''Date'' for the time axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series BRAND #009E73. Fill layers derived from brand green
-          via light_palette. Backgrounds #FAF8F1 / #1A1A17. Both renders theme-correct.'
+        comment: 'Line #009E73, fills are tints of it; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Above default (4). Custom gradient fill via sns.light_palette layering
-          adds visual depth. Storytelling elements (annotation, avg line) add sophistication.
-          Not full marks as it remains largely standard area chart aesthetic.
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Above default (2). sns.despine removes top/right spines. Y-only grid
-          at alpha=0.15. Comma-formatted ticks. Rotated date labels. Clean professional
-          appearance.
+        comment: 'Weekly Monday major ticks over daily minor ticks: a tick density
+          chosen for a 30-day daily series'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Above default (2). Maintenance dip annotation with arrow creates
-          clear focal point. Average reference line provides analytical baseline.
-          Weekly pattern visible. Could add trend annotation or weekend shading.
+        passed: false
+        comment: Data displayed; the weekly rhythm and dip come from the data, no
+          hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,28 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart with fill_between from y=0 to data values.
+        comment: Single filled area, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Semi-transparent fill (alpha=0.28) ✓. Gridlines ✓. Axis labels with
-          units ✓. Gradient fill (spec suggested) ✓.
+        passed: false
+        comment: 'Stepped bands: the three fill_between layers at 1/3, 2/3 and 1x
+          of the values draw hard inner edges (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: daily dates (datetime), Y: visitor counts. 30 points in spec
-          range of 20-500.'
+        comment: Dates on x, visitors on y, y from zero, ticks comma-formatted
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''area-basic · python · seaborn · anyplot.ai'' — correct
-          format. No legend (single series, correct omission).'
+        comment: Title in mandated format; no legend for a single series (C5)
     data_quality:
       score: 15
       max: 15
@@ -174,23 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows area fill, trend, weekly pattern, maintenance dip, and average
-          reference line. Comprehensive coverage.
+        comment: Filled area, trend, weekly cycle and a dip all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visitor counts 8,000-11,000 realistic for medium-sized
-          site. Weekend dips and maintenance window are real-world plausible. Neutral
-          topic.
+        comment: Daily visitors of a medium website, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 days, visitor range ~2,000-11,500 with upward trend. Maintenance
-          window dip to ~2,000 is intentional and realistic.
+        comment: 'About 2,000 to 11,400 visitors per day: sensible; no Check values
+          in the spec'
     code_quality:
       score: 10
       max: 10
@@ -200,35 +176,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear top-to-bottom flow.
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 7 imports used: os, matplotlib.dates, matplotlib.pyplot, matplotlib.ticker,
-          numpy, pandas, seaborn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Gradient fill via 3-iteration loop is concise. No fake functionality.
+        comment: Concise; column constants keep the data block swappable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches=tight. Current seaborn
-          0.14+ API.
+        comment: Saves plot-{THEME}.png at 3200x1800
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,28 +210,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses sns.set_theme() for global styling, sns.lineplot() for line,
-          sns.despine() for spine removal. Proper axes-level API. Minor: uses style=''white''
-          instead of guide-recommended style=''ticks''.'
+        comment: sns.set_theme(style='ticks', rc=...) for the theme, sns.lineplot
+          for the edge, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: sns.light_palette(BRAND, n_colors=5) for gradient fill is a distinctive
-          seaborn feature — creatively adapted for area layering. sns.despine() is
-          idiomatic. Above default (1).
+        passed: false
+        comment: sns.light_palette(BRAND) derives the fill tints
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
+  rendered_at: '2026-11-26T17:56:42Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - time-series
   styling:
-  - alpha-blending
   - gradient-fill
-  - grid-styling
+  - alpha-blending
