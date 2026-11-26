@@ -1,7 +1,7 @@
 """ anyplot.ai
 raincloud-basic: Basic Raincloud Plot
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 86/100 | Updated: 2026-11-26
 """
 
 import os
@@ -72,15 +72,17 @@ stats["lower_w"] = np.maximum(stats["q1"] - 1.5 * iqr, stats["lo"])
 stats["upper_w"] = np.minimum(stats["q3"] + 1.5 * iqr, stats["hi"])
 stats["baseline"] = stats[CONDITION].map(baseline)
 
-x_lo, x_hi = df[REACTION_TIME].min(), df[REACTION_TIME].max()
-x_pad = (x_hi - x_lo) * 0.06
-x_domain = [round(x_lo - x_pad, -1), round(x_hi + x_pad, -1)]
+# Axis range reaches 3 standard deviations past each group, so every cloud tapers to near zero inside the axis
+spread = df.groupby(CONDITION)[REACTION_TIME].agg(["mean", "std"])
+x_lo = (spread["mean"] - 3 * spread["std"]).min()
+x_hi = (spread["mean"] + 3 * spread["std"]).max()
+x_domain = [float(np.floor(x_lo / 40) * 40), float(np.ceil(x_hi / 40) * 40)]
 y_domain = [JITTER[0] - 0.3, baseline[conditions[-1]] + 1.2]
 
 x_scale = alt.Scale(domain=x_domain)
 y_scale = alt.Scale(domain=y_domain)
 color = alt.Color(COND, type="nominal", scale=alt.Scale(domain=conditions, range=palette), legend=None)
-x_enc = alt.X(RT, type="quantitative", title=REACTION_TIME, scale=x_scale)
+x_enc = alt.X(RT, type="quantitative", title=REACTION_TIME, scale=x_scale, axis=alt.Axis(tickMinStep=40))
 
 # Category labels sit on the baselines
 label_expr = " : ".join(f"datum.value === {v} ? '{c}'" for c, v in baseline.items()) + " : ''"
