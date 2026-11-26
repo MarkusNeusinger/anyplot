@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-26
@@ -80,7 +80,7 @@ custom_style = Style(
     colors=(IMPRINT_PALETTE[4], IMPRINT_PALETTE[1], IMPRINT_PALETTE[0], INK_MUTED),
     title_font_size=66,
     label_font_size=56,
-    major_label_font_size=44,
+    major_label_font_size=56,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=3,
@@ -103,7 +103,8 @@ chart = pygal.Line(
     x_label_rotation=45,
     legend_at_bottom=True,
     truncate_legend=-1,
-    range=(np.nanmin(drawdown) * 1.1, -np.nanmin(drawdown) * 0.19),
+    legend_box_size=44,
+    range=(np.nanmin(drawdown) * 1.1, 0),
 )
 
 # X-axis labels — sparse for readability
@@ -127,7 +128,7 @@ if recovery_indices:
     recovery_data = [None] * len(drawdown)
     for idx in recovery_indices[:MAX_RECOVERY_MARKS]:
         recovery_data[idx] = 0.0
-    chart.add("Recovery Points", recovery_data, show_dots=True, dots_size=14)
+    chart.add("Recovery Points", recovery_data, show_dots=True, dots_size=14, stroke=False)
 
 # Save (theme-suffixed — pipeline runs this script twice)
 chart.render_to_file(f"plot-{THEME}.html")
