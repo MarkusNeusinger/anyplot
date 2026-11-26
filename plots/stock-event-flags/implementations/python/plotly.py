@@ -1,7 +1,7 @@
 """ anyplot.ai
 stock-event-flags: Stock Chart with Event Flags
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 81/100 | Updated: 2026-11-26
 """
 
 import os
@@ -23,7 +23,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Constants
 EVENT_SYMBOLS = ["star", "diamond", "triangle-up", "square", "circle", "cross", "hexagon", "pentagon"]
-FLAG_HEIGHTS = [0.07, 0.14, 0.10, 0.17, 0.11, 0.15, 0.08]  # share of the price range, cycled over the flags
+WINDOW_DAYS = 11  # trading days around an event that a flag must clear
+FLAG_HEIGHTS = [0.05, 0.13, 0.08, 0.16, 0.10, 0.14, 0.06]  # share of the price range, cycled over the flags
 
 # Columns: set these to your table's column names
 DATE = "Date"  # role: date
@@ -109,10 +110,12 @@ fig.add_trace(
 # Event flags with alternating heights to reduce visual clustering
 price_range = df[HIGH].max() - df[LOW].min()
 
-for i, (_, event) in enumerate(events.iterrows()):
+local_high = df[HIGH].rolling(WINDOW_DAYS, center=True, min_periods=1).max()  # highest high around each day
+
+for i, (row, event) in enumerate(events.iterrows()):
     event_day = event[DATE]
     price_at_event = event[HIGH]
-    flag_y = price_at_event + price_range * FLAG_HEIGHTS[i % len(FLAG_HEIGHTS)]
+    flag_y = local_high[row] + price_range * FLAG_HEIGHTS[i % len(FLAG_HEIGHTS)]
     color = event_colors[event[EVENT_TYPE]]
     symbol = event_symbols[event[EVENT_TYPE]]
 
