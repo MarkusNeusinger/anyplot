@@ -1,7 +1,7 @@
 """ anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-22
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
@@ -16,6 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_tile,
+    gggrid,
     ggplot,
     ggsave,
     ggsize,
@@ -71,7 +72,7 @@ plot = (
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid=element_blank(),
-        plot_title=element_text(size=14, color=INK),
+        plot_title=element_text(size=16, color=INK),
         axis_title=element_blank(),
         axis_text_x=element_text(size=12, color=INK_SOFT),
         axis_text_y=element_text(size=12, color=INK_SOFT),
@@ -80,8 +81,10 @@ plot = (
         panel_border=element_blank(),
         legend_position="none",
     )
-    + ggsize(600, 600)
 )
+
+# The fixed aspect leaves the canvas edges transparent: a one-panel grid paints the page color there
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 # Save as PNG and HTML with theme-suffixed filenames
 ggsave(plot, f"plot-{THEME}.png", scale=4)
