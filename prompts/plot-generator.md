@@ -532,7 +532,7 @@ ax.scatter(df[STUDY_HOURS], df[EXAM_SCORE],
 - Compute with the libraries listed under "Available Standard Packages", never by hand. When a call computes it (a KDE, histogram bins, quantiles or box statistics, an FFT or spectrogram, ACF/PACF, a regression or LOESS fit, smoothing, clustering and dendrogram linkage, hulls and Voronoi cells, survival curves, ROC), call it.
 - Write an algorithm out only when nothing available provides it, and keep it short.
 - Aim for the shortest version that reads as well as the longer one: no duplicated blocks, no dead code, no pass without a visible effect, and no code golf.
-- A replacement is a call or a removal, never a new helper function.
+- A replacement is a call, a loop over the repeated values, or a removal, never a new helper function (CQ-01). Removing duplicated blocks never justifies one.
 - Installed packages are not "dependencies" to avoid.
 
 ---
