@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
@@ -19,113 +19,123 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # pos 1 — fatigue test data & Basquin fit
-C_UTS = "#C475FD"  # pos 2 — Ultimate Tensile Strength
-C_YS = "#4467A3"  # pos 3 — Yield Strength
-C_EL = "#BD8233"  # pos 4 — Endurance Limit
+# Imprint palette: data and fit take position 1, the three reference lines positions 2-4
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — fatigue test results for medium-carbon steel specimens
-np.random.seed(42)
-A = 800  # Basquin coefficient (MPa)
-b = -0.12  # Basquin exponent
+# Constants: material properties of the medium-carbon steel, true for any test series
+REFERENCE_STRESS = {"UTS: 520 MPa": 520, "YS: 380 MPa": 380, "EL: 150 MPa": 150}
+ENDURANCE_LIMIT = REFERENCE_STRESS["EL: 150 MPa"]
+REGIONS = ["Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life"]
 
-stress_levels = np.array([450, 400, 350, 300, 275, 250, 225, 200, 180, 160])
-cycles_list, stress_list = [], []
+# Columns: set these to your table's column names
+CYCLES = "Cycles to Failure (N)"  # role: cycles
+STRESS = "Stress Amplitude (MPa)"  # role: stress
 
-for stress in stress_levels:
-    theoretical_cycles = (stress / A) ** (1 / b)
-    n_samples = np.random.randint(3, 6)
-    scatter = np.exp(np.random.normal(0, 0.3, n_samples))
-    cycles_list.extend(theoretical_cycles * scatter)
-    stress_list.extend([stress] * n_samples)
+# Data: replace this block with your own table, for example df = pd.read_csv("fatigue_tests.csv")
+rng = np.random.default_rng(42)
+basquin_a, basquin_b = 800, -0.12
+stress_levels = [450, 400, 350, 300, 275, 250, 225, 200, 180, 160]
+rows = []
+for level in stress_levels:
+    life = (level / basquin_a) ** (1 / basquin_b)
+    n_specimens = rng.integers(3, 6)
+    for cycles in life * np.exp(rng.normal(0, 0.3, n_specimens)):
+        rows.append((cycles, level))
+df = pd.DataFrame(rows, columns=[CYCLES, STRESS])
 
-df = pd.DataFrame({"cycles": cycles_list, "stress": stress_list})
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+CYC, STR = CYCLES.translate(ESCAPE), STRESS.translate(ESCAPE)
 
-# Basquin fit line (smooth curve through full cycle range)
-fit_cycles = np.logspace(2, 8, 100)
-fit_stress = A * fit_cycles**b
-fit_df = pd.DataFrame({"cycles": fit_cycles, "stress": fit_stress})
+# Axis domains from the data: cycles with a margin, stress from the endurance band to above the strength line
+x_domain = [df[CYCLES].min() * 0.6, df[CYCLES].max() * 3]
+y_domain = [min(df[STRESS].min(), ENDURANCE_LIMIT) * 0.75, max(df[STRESS].max(), *REFERENCE_STRESS.values()) * 1.45]
+x_scale = alt.Scale(type="log", domain=x_domain)
+y_scale = alt.Scale(type="log", domain=y_domain)
 
-# Material property reference lines
-ref_df = pd.DataFrame({"property": ["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], "stress": [520, 380, 150]})
+# Basquin fit: a straight line in log-log space through the specimens
+valid = df[[CYCLES, STRESS]].dropna().astype(float)
+slope, intercept = np.polyfit(np.log10(valid[CYCLES]), np.log10(valid[STRESS]), 1)
+fit_cycles = np.logspace(np.log10(df[CYCLES].min()), np.log10(df[CYCLES].max()), 100)
+fit_df = pd.DataFrame({CYCLES: fit_cycles, STRESS: 10**intercept * fit_cycles**slope})
 
-# Infinite-life design zone — subtle band below endurance limit
-band_df = pd.DataFrame({"y1": [100], "y2": [150]})
+ref_df = pd.DataFrame({"Property": list(REFERENCE_STRESS), STRESS: list(REFERENCE_STRESS.values())})
+band_df = pd.DataFrame({"low": [y_domain[0]], "high": [ENDURANCE_LIMIT]})
 
-# Region text labels — annotate the three fatigue life zones
+# Region labels sit at fractions of the log axis: the two fatigue regions at the top, infinite life in the band
+log_lo = np.log10(x_domain[0])
+span = np.log10(x_domain[1]) - log_lo
+top_stress = y_domain[1] / 1.12
 region_df = pd.DataFrame(
     {
-        "cycles": [700.0, 150000.0, 800000.0],
-        "stress": [580.0, 580.0, 125.0],
-        "label": ["Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life"],
+        CYCLES: [10 ** (log_lo + 0.03 * span), 10 ** (log_lo + 0.45 * span), 10 ** (log_lo + 0.72 * span)],
+        STRESS: [top_stress, top_stress, y_domain[0] * 1.25],
+        "Region": REGIONS,
     }
 )
 
-# Shared log scales
-x_scale = alt.Scale(type="log", domain=[100, 1e8])
-y_scale = alt.Scale(type="log", domain=[100, 750])
-
 TITLE = "sn-curve-basic · python · altair · anyplot.ai"
 
-# Infinite-life zone fill (band below endurance limit)
-band = alt.Chart(band_df).mark_rect(opacity=0.10, color=C_EL).encode(y=alt.Y("y1:Q", scale=y_scale), y2=alt.Y2("y2:Q"))
+band = (
+    alt.Chart(band_df)
+    .mark_rect(opacity=0.10, color=IMPRINT_PALETTE[3])
+    .encode(y=alt.Y("low:Q", scale=y_scale), y2=alt.Y2("high:Q"))
+)
 
-# Scatter: individual test specimens
 points = (
     alt.Chart(df)
-    .mark_point(size=180, filled=True, opacity=0.75, color=BRAND, stroke=PAGE_BG, strokeWidth=0.8)
+    .mark_point(size=180, filled=True, opacity=0.75, color=IMPRINT_PALETTE[0], stroke=PAGE_BG, strokeWidth=0.8)
     .encode(
-        x=alt.X("cycles:Q", scale=x_scale, title="Cycles to Failure (N)"),
-        y=alt.Y("stress:Q", scale=y_scale, title="Stress Amplitude (MPa)"),
-        tooltip=["cycles:Q", "stress:Q"],
+        x=alt.X(CYC, type="quantitative", scale=x_scale, title=CYCLES),
+        y=alt.Y(STR, type="quantitative", scale=y_scale, title=STRESS),
+        tooltip=[alt.Tooltip(CYC, title=CYCLES), alt.Tooltip(STR, title=STRESS)],
     )
 )
 
-# Basquin power-law fit line
 fit_line = (
     alt.Chart(fit_df)
-    .mark_line(strokeWidth=2.5, opacity=0.85, color=BRAND)
-    .encode(x=alt.X("cycles:Q", scale=x_scale), y=alt.Y("stress:Q", scale=y_scale))
+    .mark_line(strokeWidth=3, opacity=0.9, color=IMPRINT_PALETTE[0])
+    .encode(x=alt.X(CYC, type="quantitative", scale=x_scale), y=alt.Y(STR, type="quantitative", scale=y_scale))
 )
 
-# Reference horizontal rules — longer dash pattern to distinguish from grid
 ref_rules = (
     alt.Chart(ref_df)
     .mark_rule(strokeDash=[14, 6], strokeWidth=3)
     .encode(
-        y=alt.Y("stress:Q", scale=y_scale),
+        y=alt.Y(STR, type="quantitative", scale=y_scale),
         color=alt.Color(
-            "property:N",
-            scale=alt.Scale(domain=["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], range=[C_UTS, C_YS, C_EL]),
+            "Property:N",
+            scale=alt.Scale(domain=list(REFERENCE_STRESS), range=IMPRINT_PALETTE[1:4]),
             legend=alt.Legend(
-                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-right"
+                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="top-right"
             ),
         ),
     )
 )
 
-# Region text annotations — label the three fatigue life zones
 region_labels = (
     alt.Chart(region_df)
-    .mark_text(fontSize=12, fontStyle="italic", align="left", baseline="top", color=INK_SOFT)
-    .encode(x=alt.X("cycles:Q", scale=x_scale), y=alt.Y("stress:Q", scale=y_scale), text="label:N")
+    .mark_text(fontSize=11, fontStyle="italic", align="left", baseline="top", color=INK_SOFT)
+    .encode(
+        x=alt.X(CYC, type="quantitative", scale=x_scale),
+        y=alt.Y(STR, type="quantitative", scale=y_scale),
+        text="Region:N",
+    )
 )
 
-# Compose all layers — inner view 620×320 so vl-convert padding fits within 3200×1800
 chart = (
     (band + points + fit_line + ref_rules + region_labels)
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
         background=PAGE_BG,
-        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         title=alt.Title(TITLE, fontSize=16),
     )
-    .configure_view(fill=PAGE_BG, strokeOpacity=0, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, strokeOpacity=0)
     .configure_axis(
         domainColor=INK_SOFT,
-        domainOpacity=1,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.06,
@@ -134,8 +144,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
-    .configure_axisX(gridOpacity=0)
-    .configure_title(color=INK, fontWeight="bold", fontSize=16)
+    .configure_title(color=INK, fontWeight="bold")
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
@@ -143,24 +152,21 @@ chart = (
         titleColor=INK,
         titleFontSize=12,
         labelFontSize=10,
+        padding=8,
     )
 )
 
 # Save PNG and interactive HTML
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# PAD-only to exact 3200×1800 — raise if vl-convert overshoots (do NOT crop)
+# Scale to the exact canvas if vl-convert lands off target (never crop)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")
