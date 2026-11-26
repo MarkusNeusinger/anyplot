@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-20
@@ -34,51 +34,63 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - 252 trading days with slight fat tails (mixture of normals)
+# Constants
+TAIL_SIGMAS = 2  # tail regions start this many standard deviations from the mean
+N_BINS = 30
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+RETURNS = "Daily Returns (%)"  # role: returns
+
+# Data: replace this block with your own table, for example df = pd.read_csv("returns.csv")
 np.random.seed(42)
 n_days = 252
 normal_returns = np.random.normal(0.0005, 0.015, int(n_days * 0.9))
 fat_tail_returns = np.random.normal(0, 0.04, int(n_days * 0.1))
 returns = np.concatenate([normal_returns, fat_tail_returns])
 np.random.shuffle(returns)
-returns = returns[:n_days]
-returns_pct = returns * 100
+df = pd.DataFrame({DATE: pd.bdate_range("2024-01-02", periods=len(returns)), RETURNS: returns * 100})
 
-mean_ret = np.mean(returns_pct)
-std_ret = np.std(returns_pct)
-skewness = stats.skew(returns_pct)
-kurtosis = stats.kurtosis(returns_pct)
+# Plot: reads only df and the constants above
+returns_pct = df[RETURNS]
+mean_ret = returns_pct.mean()
+std_ret = returns_pct.std(ddof=0)
+lower_tail = mean_ret - TAIL_SIGMAS * std_ret
+upper_tail = mean_ret + TAIL_SIGMAS * std_ret
 
-lower_tail = mean_ret - 2 * std_ret
-upper_tail = mean_ret + 2 * std_ret
-
-df = pd.DataFrame({"returns": returns_pct})
-df["region"] = pd.cut(
-    df["returns"], bins=[-np.inf, lower_tail, upper_tail, np.inf], labels=["Left Tail", "Center", "Right Tail"]
+# Tail classification feeds the fill aesthetic
+REGION = "Region"
+df[REGION] = pd.cut(
+    returns_pct, bins=[-np.inf, lower_tail, upper_tail, np.inf], labels=["Left Tail", "Center", "Right Tail"]
 )
 
 # Normal distribution overlay (count scale to match histogram)
+NORMAL_FIT = "Normal fit (count)"
 x_range = np.linspace(returns_pct.min() - 1, returns_pct.max() + 1, 300)
-normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-bin_width = (returns_pct.max() - returns_pct.min()) / 30
-normal_scaled = normal_pdf * len(returns_pct) * bin_width
-df_normal = pd.DataFrame({"x": x_range, "y": normal_scaled})
+bin_width = (returns_pct.max() - returns_pct.min()) / N_BINS
+normal_scaled = stats.norm.pdf(x_range, mean_ret, std_ret) * len(returns_pct) * bin_width
+df_normal = pd.DataFrame({RETURNS: x_range, NORMAL_FIT: normal_scaled})
 
-stats_label = f"Mean: {mean_ret:.2f}%\nStd Dev: {std_ret:.2f}%\nSkewness: {skewness:.2f}\nExc. Kurtosis: {kurtosis:.2f}"
+stats_label = (
+    f"Mean: {mean_ret:.2f}%\nStd Dev: {std_ret:.2f}%\n"
+    f"Skewness: {stats.skew(returns_pct):.2f}\nExc. Kurtosis: {stats.kurtosis(returns_pct):.2f}"
+)
 
-# Okabe-Ito fill: center green (pos 1), both tails vermillion (pos 2)
-fill_colors = {"Left Tail": IMPRINT[1], "Center": IMPRINT[0], "Right Tail": IMPRINT[1]}
+# Imprint: center green (position 1), both tails purple (position 2)
+fill_colors = {"Left Tail": IMPRINT_PALETTE[1], "Center": IMPRINT_PALETTE[0], "Right Tail": IMPRINT_PALETTE[1]}
 
-# Plot
 plot = (
-    ggplot(df, aes(x="returns", fill="region"))
-    + geom_histogram(bins=30, color=PAGE_BG, alpha=0.85, size=0.3)
-    + geom_line(data=df_normal, mapping=aes(x="x", y="y"), color=IMPRINT[2], size=1.2, inherit_aes=False)
+    ggplot(df, aes(x=RETURNS, fill=REGION))
+    + geom_histogram(bins=N_BINS, color=PAGE_BG, alpha=0.85, size=0.3)
+    + geom_line(
+        data=df_normal, mapping=aes(x=RETURNS, y=NORMAL_FIT), color=IMPRINT_PALETTE[2], size=1.2, inherit_aes=False
+    )
     + geom_vline(xintercept=mean_ret, linetype="dashed", color=INK, size=0.8)
-    + geom_vline(xintercept=lower_tail, linetype="dotted", color=IMPRINT[1], size=0.8)
-    + geom_vline(xintercept=upper_tail, linetype="dotted", color=IMPRINT[1], size=0.8)
+    + geom_vline(xintercept=lower_tail, linetype="dotted", color=IMPRINT_PALETTE[1], size=0.8)
+    + geom_vline(xintercept=upper_tail, linetype="dotted", color=IMPRINT_PALETTE[1], size=0.8)
     + scale_fill_manual(values=fill_colors, name="Region")
     + annotate(
         "label",
@@ -93,9 +105,7 @@ plot = (
         label_size=0.3,
         label_padding=0.4,
     )
-    + labs(
-        x="Daily Returns (%)", y="Frequency", title="histogram-returns-distribution · python · plotnine · anyplot.ai"
-    )
+    + labs(x=RETURNS, y="Frequency", title="histogram-returns-distribution · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -108,9 +118,10 @@ plot = (
         plot_title=element_text(color=INK, size=12),
         axis_title=element_text(color=INK, size=10),
         axis_text=element_text(color=INK_SOFT, size=8),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=8),
-        legend_title=element_text(color=INK, size=8),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_text=element_text(color=INK_SOFT, size=9),
+        legend_title=element_text(color=INK, size=9),
         legend_position="right",
     )
 )
