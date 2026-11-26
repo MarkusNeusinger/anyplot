@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-23
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-26
 """
 
 import os
@@ -22,7 +22,6 @@ from plotnine import (
     geom_hline,
     geom_line,
     geom_point,
-    geom_ribbon,
     geom_text,
     ggplot,
     labs,
@@ -39,61 +38,59 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#AE3030", "#4467A3"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Constants
+BASE = 100  # every series is rebased to this value on its first date
+BENCHMARK = "SPY"  # the index the stocks are compared against, drawn heavier
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+SYMBOL = "Symbol"  # role: symbol
+PRICE = "Price (USD)"  # role: price
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 252
 dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
+# Every stock follows the market (SPY) through its own beta, plus a stock-specific drift and noise
+market_returns = np.random.normal(0.0006, 0.007, n_days)
+params = {"AAPL": (1.1, 0.0001, 0.009), "GOOGL": (1.0, 0.0000, 0.010), "MSFT": (1.2, -0.0003, 0.008)}
 
-symbols = ["AAPL", "GOOGL", "MSFT", "SPY"]
-params = [(0.0005, 0.013), (0.0003, 0.015), (0.0006, 0.012), (0.0004, 0.008)]
+frames = []
+for symbol, (beta, drift, vol) in params.items():
+    daily_returns = beta * market_returns + np.random.normal(drift, vol, n_days)
+    frames.append(pd.DataFrame({DATE: dates, SYMBOL: symbol, PRICE: 100 * np.exp(np.cumsum(daily_returns))}))
+frames.append(pd.DataFrame({DATE: dates, SYMBOL: BENCHMARK, PRICE: 100 * np.exp(np.cumsum(market_returns))}))
+df = pd.concat(frames, ignore_index=True)
 
-dfs = []
-for symbol, (drift, vol) in zip(symbols, params, strict=True):
-    daily_returns = np.random.normal(drift, vol, n_days)
-    prices = 100 * np.exp(np.cumsum(daily_returns))
-    dfs.append(pd.DataFrame({"date": dates, "symbol": symbol, "rebased": prices}))
+# Plot: reads only df and the constants above
+REBASED = "Rebased price (start = 100)"
+groups = df[SYMBOL].unique().tolist()
+df = df.sort_values([SYMBOL, DATE])
+df[REBASED] = df[PRICE] / df.groupby(SYMBOL, sort=False)[PRICE].transform("first") * BASE
 
-df = pd.concat(dfs, ignore_index=True)
+bench_df = df[df[SYMBOL] == BENCHMARK]
+others_df = df[df[SYMBOL] != BENCHMARK]
 
-# End-of-line annotation data
-last_df = df.groupby("symbol").apply(lambda g: g.iloc[-1]).reset_index(drop=True)
-last_df["label"] = last_df["rebased"].apply(lambda x: f"{x:.0f}")
-last_df["label_date"] = last_df["date"] + pd.Timedelta(days=7)
+# End-of-line markers and value labels, one per series
+LABEL, LABEL_DATE = "label", "label_date"
+last_df = df.groupby(SYMBOL, sort=False).tail(1).copy()
+last_df[LABEL] = last_df[SYMBOL] + " " + last_df[REBASED].map(lambda v: f"{v:.0f}")
+last_df[LABEL_DATE] = last_df[DATE] + pd.Timedelta(days=7)
 
-# SPY outperformance ribbon: shades the region where SPY beats the 100 baseline
-spy_df = df[df["symbol"] == "SPY"].copy()
-others_df = df[df["symbol"] != "SPY"].copy()
-spy_ribbon_df = spy_df[["date", "rebased"]].rename(columns={"rebased": "ymax"}).copy()
-spy_ribbon_df["ymin"] = 100.0
-spy_ribbon_df = spy_ribbon_df[spy_ribbon_df["ymax"] > 100]
+x_max = df[DATE].max() + pd.Timedelta(days=45)
 
-x_max = dates[-1] + pd.Timedelta(days=30)
-
-# Plot
 plot = (
-    ggplot(df, aes(x="date", y="rebased", color="symbol"))
-    + geom_ribbon(
-        data=spy_ribbon_df,
-        mapping=aes(x="date", ymin="ymin", ymax="ymax"),
-        fill=IMPRINT[3],
-        alpha=0.08,
-        inherit_aes=False,
-    )
-    + geom_hline(yintercept=100, linetype="dashed", color=INK_SOFT, size=0.6)
-    + geom_line(data=others_df, size=0.9)
-    + geom_line(data=spy_df, size=1.6)
+    ggplot(df, aes(x=DATE, y=REBASED, color=SYMBOL))
+    + geom_hline(yintercept=BASE, linetype="dashed", color=INK_SOFT, size=0.6)
+    + geom_line(data=others_df, size=1.1)
+    + geom_line(data=bench_df, size=1.7)
     + geom_point(data=last_df, size=2.5, show_legend=False)
-    + geom_text(data=last_df, mapping=aes(x="label_date", label="label"), size=7, ha="left", show_legend=False)
-    + scale_color_manual(values=IMPRINT)
-    + scale_x_date(date_labels="%b '%y", date_breaks="2 months", limits=[dates[0], x_max])
-    + labs(
-        x="Date",
-        y="Rebased Price (Start = 100)",
-        title="line-stock-comparison · python · plotnine · anyplot.ai",
-        color="Symbol",
-    )
+    + geom_text(data=last_df, mapping=aes(x=LABEL_DATE, label=LABEL), size=8, ha="left", show_legend=False)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=groups)
+    + scale_x_date(date_labels="%b '%y", date_breaks="2 months", limits=[df[DATE].min(), x_max])
+    + labs(title="line-stock-comparison · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -107,7 +104,8 @@ plot = (
         axis_text=element_text(color=INK_SOFT, size=8),
         axis_text_x=element_text(angle=45, ha="right"),
         plot_title=element_text(color=INK, size=12, fontweight="bold"),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_text=element_text(color=INK_SOFT, size=8),
         legend_title=element_text(color=INK, size=9),
     )
