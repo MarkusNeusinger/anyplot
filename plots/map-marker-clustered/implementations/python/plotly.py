@@ -69,7 +69,7 @@ fig = go.Figure()
 # Clustering runs per trace, so each category forms its own cluster at a city. Giving every
 # category a different cluster size stacks them as concentric rings (first category outermost),
 # so all category colors stay visible; ring size grows with the number of grouped stores.
-for i, (category, rows) in enumerate(df.groupby(CATEGORY, sort=False)):
+for category, rows in df.groupby(CATEGORY, sort=False):
     color = IMPRINT_PALETTE[categories.index(category)]
     ring = 22 + 8 * (len(categories) - 1 - categories.index(category))
     fig.add_trace(
