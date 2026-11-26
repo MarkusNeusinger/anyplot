@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-26
 """
 
 import os
