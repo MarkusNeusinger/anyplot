@@ -13,7 +13,7 @@
   #14424 that a fix adds no function, and a stored review line that only asks
   to inline a short helper binds a regeneration no longer. In the first
   catalogue batch of 2026-11-26, the regen gate kept 10 of 117 regenerations
-  only because a new helper cost CQ-01 a point.
+  only because a new helper cost CQ-01 a point. (#14701)
 
 ### Fixed
 
@@ -24,4 +24,4 @@
   such as range selector buttons or a range slider, in the PNG or only in the
   HTML; hover, tooltips and zoom stay creditable. A re-score had credited a
   wrong-variant area chart's range selector on LM-02, so the regen gate's
-  criterion floor kept it over an attempt that had removed the extras.
+  criterion floor kept it over an attempt that had removed the extras. (#14701)

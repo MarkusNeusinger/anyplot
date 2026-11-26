@@ -16,4 +16,4 @@
   `main()`, a builder, a class or a callback; a point for any Python class, because the agent
   chat refuses classes; and no score for what the library or the harness asks for, such as the
   muix component.
-- Where: `prompts/quality-criteria.md`
+- Where: #14701
