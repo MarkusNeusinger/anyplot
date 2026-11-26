@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -103,8 +103,8 @@ left_digits = code[1:7]
 right_digits = code[7:13]
 
 BAR_H = 1.0
-DATA_BOTTOM = 0.1  # digit bars stop above the guard bars, which reach down between the digit groups
-LABEL_Y = -0.14
+DATA_BOTTOM = 0.2  # digit bars stop above the guard bars, which reach down between the digit groups
+LABEL_Y = 0.09  # digits sit in the strip where only the guards continue
 ZONE_Y = BAR_H + 0.12
 
 # Build barcode bar data
@@ -174,7 +174,7 @@ df_zones = pd.DataFrame(
     ]
 )
 
-y_domain = [LABEL_Y - 0.14, ZONE_Y + 0.14]
+y_domain = [-0.06, ZONE_Y + 0.14]
 
 # Barcode bars chart
 bars_chart = (
