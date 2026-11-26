@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
 """
 
 import os
@@ -17,6 +16,7 @@ del _here
 
 import cairosvg
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -27,69 +27,77 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
-# Data: Trade flows between major European ports
-np.random.seed(42)
+# Constants
+LOW_MAX = 400  # flows below this many thousand people are the low tier
+HIGH_MIN = 600  # flows from this many thousand people are the high tier
+ARC_SEGMENTS = 20  # straight pieces per Bezier arc
 
-ports = {
-    "Rotterdam": (51.92, 4.48),
-    "Hamburg": (53.55, 9.99),
-    "Antwerp": (51.22, 4.40),
-    "London": (51.51, -0.13),
-    "Le Havre": (49.49, 0.11),
-    "Barcelona": (41.39, 2.17),
-    "Marseille": (43.30, 5.37),
-    "Genoa": (44.41, 8.93),
-    "Valencia": (39.47, -0.38),
-    "Lisbon": (38.72, -9.14),
-    "Piraeus": (37.94, 23.65),
-    "Copenhagen": (55.68, 12.57),
-    "Gdansk": (54.35, 18.65),
-    "Dublin": (53.35, -6.26),
+# Columns: set these to your table's column names
+ORIGIN_LAT = "origin_lat"  # role: origin_lat
+ORIGIN_LON = "origin_lon"  # role: origin_lon
+DEST_LAT = "dest_lat"  # role: dest_lat
+DEST_LON = "dest_lon"  # role: dest_lon
+FLOW = "Migrants (thousand people)"  # role: flow
+ORIGIN_NAME = "origin_name"  # role: origin_name
+DEST_NAME = "dest_name"  # role: dest_name
+
+# Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+capitals = {
+    "Germany": (52.52, 13.40),
+    "France": (48.86, 2.35),
+    "United Kingdom": (51.51, -0.13),
+    "Spain": (40.42, -3.70),
+    "Italy": (41.90, 12.50),
+    "Poland": (52.23, 21.01),
+    "Romania": (44.43, 26.10),
+    "Netherlands": (52.37, 4.90),
+    "Portugal": (38.72, -9.14),
+    "Greece": (37.98, 23.73),
+    "Ireland": (53.35, -6.26),
 }
 
 flow_pairs = [
-    ("Rotterdam", "Hamburg", 850),
-    ("Rotterdam", "Antwerp", 720),
-    ("Rotterdam", "London", 680),
-    ("Hamburg", "Copenhagen", 450),
-    ("Hamburg", "Gdansk", 380),
-    ("Antwerp", "Le Havre", 520),
-    ("Le Havre", "Barcelona", 340),
-    ("Barcelona", "Valencia", 420),
-    ("Barcelona", "Marseille", 480),
-    ("Marseille", "Genoa", 390),
-    ("Genoa", "Barcelona", 360),
-    ("Valencia", "Lisbon", 280),
-    ("Lisbon", "Le Havre", 310),
-    ("Piraeus", "Genoa", 290),
-    ("Piraeus", "Marseille", 250),
-    ("London", "Dublin", 410),
-    ("Rotterdam", "Copenhagen", 370),
-    ("Hamburg", "London", 320),
-    ("Antwerp", "Barcelona", 260),
-    ("Copenhagen", "Gdansk", 220),
+    ("Romania", "Italy", 850),
+    ("Poland", "Germany", 810),
+    ("Romania", "Germany", 740),
+    ("Romania", "Spain", 640),
+    ("Portugal", "France", 610),
+    ("Poland", "United Kingdom", 520),
+    ("Poland", "Ireland", 270),
+    ("Poland", "Netherlands", 330),
+    ("Italy", "Germany", 460),
+    ("Italy", "United Kingdom", 430),
+    ("Spain", "France", 410),
+    ("Spain", "Germany", 300),
+    ("Portugal", "United Kingdom", 350),
+    ("Greece", "Germany", 380),
+    ("Greece", "United Kingdom", 240),
+    ("Ireland", "United Kingdom", 420),
+    ("Romania", "France", 290),
+    ("Italy", "France", 360),
+    ("Netherlands", "Germany", 220),
+    ("Portugal", "Spain", 250),
 ]
 
-flow_data = []
-for origin, dest, flow in flow_pairs:
-    o_lat, o_lon = ports[origin]
-    d_lat, d_lon = ports[dest]
-    flow_data.append(
-        {
-            "origin_lat": o_lat,
-            "origin_lon": o_lon,
-            "dest_lat": d_lat,
-            "dest_lon": d_lon,
-            "flow": flow,
-            "origin_name": origin,
-            "dest_name": dest,
-        }
-    )
+df = pd.DataFrame(
+    {
+        ORIGIN_LAT: [capitals[o][0] for o, _, _ in flow_pairs],
+        ORIGIN_LON: [capitals[o][1] for o, _, _ in flow_pairs],
+        DEST_LAT: [capitals[d][0] for _, d, _ in flow_pairs],
+        DEST_LON: [capitals[d][1] for _, d, _ in flow_pairs],
+        FLOW: [f for _, _, f in flow_pairs],
+        ORIGIN_NAME: [o for o, _, _ in flow_pairs],
+        DEST_NAME: [d for _, d, _ in flow_pairs],
+    }
+)
 
-lat_min, lat_max = 35.0, 58.0
-lon_min, lon_max = -12.0, 28.0
+# Plot
+lat_min = min(df[ORIGIN_LAT].min(), df[DEST_LAT].min()) - 3
+lat_max = max(df[ORIGIN_LAT].max(), df[DEST_LAT].max()) + 3
+lon_min = min(df[ORIGIN_LON].min(), df[DEST_LON].min()) - 3
+lon_max = max(df[ORIGIN_LON].max(), df[DEST_LON].max()) + 2
 
 coastlines = [
     # Iberian Peninsula
@@ -210,30 +218,23 @@ coastlines = [
 ]
 
 
-def make_bezier_curves(flows, n_segments=20):
+def make_bezier_curves(flows):
     curves = []
-    for flow in flows:
-        o_lat, o_lon = flow["origin_lat"], flow["origin_lon"]
-        d_lat, d_lon = flow["dest_lat"], flow["dest_lon"]
-        magnitude = flow["flow"]
-        label = f"{flow['origin_name']} → {flow['dest_name']}: {magnitude} units"
-        mid_lon = (o_lon + d_lon) / 2
-        mid_lat = (o_lat + d_lat) / 2
+    for row in flows.itertuples(index=False):
+        o_lat, o_lon, d_lat, d_lon = row[0], row[1], row[2], row[3]
+        magnitude = row[4]
+        label = f"{row[5]} → {row[6]}: {magnitude:,} thousand people"
         dx, dy = d_lon - o_lon, d_lat - o_lat
-        length = np.sqrt(dx * dx + dy * dy)
-        if length > 0:
-            perp_x, perp_y = -dy / length, dx / length
-            offset = min(length * 0.2, 2.5)
-            ctrl_lon = mid_lon + perp_x * offset
-            ctrl_lat = mid_lat + perp_y * offset
-        else:
-            ctrl_lon, ctrl_lat = mid_lon, mid_lat
-        for i in range(n_segments + 1):
-            t = i / n_segments
+        length = np.hypot(dx, dy)
+        offset = min(length * 0.2, 2.5) / length
+        ctrl_lon = (o_lon + d_lon) / 2 - dy * offset
+        ctrl_lat = (o_lat + d_lat) / 2 + dx * offset
+        for i in range(ARC_SEGMENTS + 1):
+            t = i / ARC_SEGMENTS
             lon = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
             lat = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
             curves.append({"value": (lon, lat), "label": label})
-        curves.append({"value": (None, None)})
+        curves.append((None, None))
     return curves
 
 
@@ -244,7 +245,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(INK_SOFT,) + IMPRINT,
+    colors=(INK_SOFT,) + IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -261,8 +262,8 @@ chart = pygal.XY(
     height=1800,
     style=custom_style,
     title="flowmap-origin-destination · python · pygal · anyplot.ai",
-    x_title="Longitude",
-    y_title="Latitude",
+    x_title="Longitude (°)",
+    y_title="Latitude (°)",
     show_legend=True,
     legend_at_bottom=False,
     legend_box_size=40,
@@ -276,6 +277,7 @@ chart = pygal.XY(
     xrange=(lon_min, lon_max),
     show_dots=True,
     stroke=True,
+    allow_interruptions=True,
     dots_size=16,
     tooltip_border_radius=10,
     show_x_guides=True,
@@ -287,57 +289,46 @@ coastline_points = []
 for segment in coastlines:
     for lon, lat in segment:
         coastline_points.append({"value": (lon, lat), "label": "Coastline"})
-    coastline_points.append({"value": (None, None)})
+    coastline_points.append((None, None))
 
 chart.add("Coastlines", coastline_points, stroke=True, show_dots=False, stroke_style={"width": 2})
 
-# Sort by magnitude so high flows are drawn last (on top)
-sorted_flows = sorted(flow_data, key=lambda f: f["flow"])
-low_flows = [f for f in sorted_flows if f["flow"] < 400]
-medium_flows = [f for f in sorted_flows if 400 <= f["flow"] < 600]
-high_flows = [f for f in sorted_flows if f["flow"] >= 600]
+# Tiers by magnitude: thin arcs first, so the thickest are drawn last (on top)
+arc_cols = [ORIGIN_LAT, ORIGIN_LON, DEST_LAT, DEST_LON, FLOW, ORIGIN_NAME, DEST_NAME]
+flows_sorted = df.sort_values(FLOW)[arc_cols]
+tiers = [
+    (f"Low (under {LOW_MAX:,} thousand)", flows_sorted[flows_sorted[FLOW] < LOW_MAX], 6),
+    (
+        f"Medium ({LOW_MAX:,}–{HIGH_MIN - 1:,} thousand)",
+        flows_sorted[(flows_sorted[FLOW] >= LOW_MAX) & (flows_sorted[FLOW] < HIGH_MIN)],
+        14,
+    ),
+    (f"High ({HIGH_MIN:,}+ thousand)", flows_sorted[flows_sorted[FLOW] >= HIGH_MIN], 28),
+]
+for name, tier, width in tiers:
+    chart.add(
+        name, make_bezier_curves(tier), stroke=True, show_dots=False, stroke_style={"width": width, "linecap": "round"}
+    )
 
-chart.add(
-    "Low (220–399 units)",
-    make_bezier_curves(low_flows),
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 6, "linecap": "round"},
-)
-chart.add(
-    "Medium (400–599 units)",
-    make_bezier_curves(medium_flows),
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 14, "linecap": "round"},
-)
-chart.add(
-    "High (600–850 units)",
-    make_bezier_curves(high_flows),
-    stroke=True,
-    show_dots=False,
-    stroke_style={"width": 28, "linecap": "round"},
-)
+# Countries — drawn last (on top of all arcs), one dot per capital
+places = pd.concat(
+    [
+        df[[ORIGIN_NAME, ORIGIN_LON, ORIGIN_LAT]].set_axis(["name", "lon", "lat"], axis=1),
+        df[[DEST_NAME, DEST_LON, DEST_LAT]].set_axis(["name", "lon", "lat"], axis=1),
+    ]
+).drop_duplicates("name")
+city_points = [{"value": (p.lon, p.lat), "label": p.name} for p in places.itertuples()]
 
-# Port cities — drawn last (on top of all arcs)
-city_points = []
-drawn_locations = set()
-for flow in flow_data:
-    o_key = (round(flow["origin_lat"], 2), round(flow["origin_lon"], 2))
-    if o_key not in drawn_locations:
-        city_points.append({"value": (flow["origin_lon"], flow["origin_lat"]), "label": flow["origin_name"]})
-        drawn_locations.add(o_key)
-    d_key = (round(flow["dest_lat"], 2), round(flow["dest_lon"], 2))
-    if d_key not in drawn_locations:
-        city_points.append({"value": (flow["dest_lon"], flow["dest_lat"]), "label": flow["dest_name"]})
-        drawn_locations.add(d_key)
-
-chart.add("Port Cities", city_points, dots_size=18, stroke=False)
+chart.add("Countries (capital)", city_points, dots_size=18, stroke=False)
 
 # Save — inject arc transparency via CSS (pygal stroke_style doesn't expose opacity)
 svg_bytes = chart.render()
 svg_str = svg_bytes.decode("utf-8")
-arc_opacity = ".serie-1{opacity:0.6;}.serie-2{opacity:0.6;}.serie-3{opacity:0.6;}"
+# pygal's `.reactive` rule sets every path to 2.5 px, so the tier widths need !important
+arc_opacity = "".join(
+    f".serie-{i}{{opacity:0.6;}}.serie-{i} .reactive{{stroke-width:{width}px !important;}}"
+    for i, (_, _, width) in enumerate(tiers, start=1)
+)
 svg_str = svg_str.replace("</style>", arc_opacity + "</style>", 1)
 svg_out = svg_str.encode("utf-8")
 cairosvg.svg2png(bytestring=svg_out, write_to=f"plot-{THEME}.png")
