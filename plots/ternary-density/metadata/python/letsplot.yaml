@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: ternary-density
 created: '2026-01-11T21:17:48Z'
-updated: '2026-11-22T16:57:52Z'
+updated: '2026-11-26T11:17:44Z'
 generated_by: claude-sonnet
-workflow_run: 45045736764
+workflow_run: 45807755524
 issue: 3696
 language_version: 3.14.10
 library_version: 4.11.0
@@ -15,43 +15,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 quality_score: 86
 review:
   strengths:
-  - Smooth density surface via geom_raster at 360 cells across, confined to the triangle,
-    with contour lines computed by lets-plot's geom_contour from the same surface
-  - 'imprint_seq ramp (#009E73 -> #4467A3) with a wide horizontal colorbar in relative
-    units whose ticks line up with the 25/50/75 % contour levels'
-  - Ternary grid drawn in translucent white stays visible over the peaks and harmonizes
-    with the contours
-  - Theme tokens thread through title, vertex labels, outline and legend; both renders
-    read cleanly
-  - layer_tooltips on invisible sample points gives per-sample Sand/Silt/Clay percentages
-    in the interactive HTML
+  - Smooth KDE surface (scipy gaussian_kde, Scott bandwidth) drawn with geom_raster
+    at 360 cells across, with contour lines from lets-plot's geom_contour on the same
+    surface
+  - 'Full imprint_seq FIELDS ramp with its own stops per theme: light mint-to-navy
+    on the light page, dark-green-to-pale-blue on the dark page, so the peaks stand
+    out in both'
+  - Density normalized to its peak so the 25/50/75 % contours line up with colorbar
+    ticks
+  - Translucent white ternary grid stays visible over the peaks and harmonizes with
+    the white contours
+  - One-panel gggrid paints the page color across the whole fixed-aspect canvas; theme
+    tokens thread through title, vertex labels, outline and legend
+  - layer_tooltips on near-invisible sample points gives per-sample Sand/Silt/Clay
+    percentages in the interactive HTML
   weaknesses:
-  - 'VQ-03 (both): along the two slanted triangle edges the raster cells leave a stair-step
-    seam that shows as a dotted fringe of page-colored specks just inside the outline
-    → a clean, continuous edge between density and outline. Likely cause: cells kept
-    by a centre-inside test leave half-cell gaps that the size=1.2 geom_path does
-    not cover; widen the outline or keep cells whose area overlaps the triangle.'
-  - 'CQ-04 (code): lines 79-88 write the Gaussian KDE out by hand (Scott bandwidth,
-    separable kernel matrices) → scipy.stats.gaussian_kde(points[[''x'',''y'']].T.to_numpy())(np.vstack([X.ravel(),
-    Y.ravel()])). Likely cause: hand-rolled kernel instead of the available SciPy
-    call.'
+  - 'SC-02 (both): along the two slanted triangle edges the raster cells form a dotted,
+    sawtooth fringe of density color just outside the outline, breaking C2 (no density
+    color beyond the edges, smooth rather than tiled) → a clean edge with no cell
+    poking past the outline. Likely cause: the inside mask keeps cells within one
+    margin of the edge (margin = 2*SQRT3_2/GRID_RESOLUTION), and the size=1.6 geom_path
+    does not cover their outer corners; clip at the exact edge and widen the outline,
+    or mask with a page-colored polygon outside the triangle.'
   - 'Suggestion: percentage labels on the ternary grid lines (20/40/60/80 %) would
     let readers read compositions off the static PNG.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 (2400x2400 square); thin transparent strip at the very top and bottom edge from the export.
-      Chrome: bold dark title 'Sediment Composition · ternary-density · python · letsplot · anyplot.ai' at top (~85 % width); bold dark vertex labels Clay (top), Sand (bottom-left), Silt (bottom-right); dark triangle outline; horizontal colorbar 'Relative density (peak = 1)' with ticks 0.2-1 in a framed legend box below. All readable.
-      Data: smooth density surface from brand green #009E73 (low) to blue #4467A3 (high) filling the triangle; three peaks near Sand, Silt and Clay corners; white contour lines at 0.25/0.5/0.75 closed around the peaks or ending at the edges; translucent white ternary grid every 20 % visible over the peaks. Slight dotted seam along the slanted edges.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, no strips.
+      Chrome: bold dark title 'Sediment Composition · ternary-density · python · letsplot · anyplot.ai' (~85 % width); bold dark vertex labels Clay (top), Sand (bottom-left), Silt (bottom-right); thick dark triangle outline; framed horizontal colorbar 'Relative density (peak = 1)' with ticks 0.2-1 below. All readable.
+      Data: smooth density surface on the imprint_seq light field stops, light mint (#66E2B2) in the low-density interior through #009E73 and #4467A3 to navy #002850 at the three peaks near the Sand, Silt and Clay corners; white contours at 0.25/0.5/0.75 closed around the peaks or ending at the edges; translucent white ternary grid every 20 % visible over the peaks. A faint sawtooth fringe of density cells pokes out along the slanted edges.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, vertex labels and triangle outline in light ink #F0EFE8; legend box elevated #242420 with light title and soft-grey tick labels. No dark-on-dark text.
-      Data: density colors, contours and grid identical to the light render; only chrome flipped.
+      Background: warm near-black #1A1A17 across the whole canvas.
+      Chrome: title, vertex labels and triangle outline in light ink #F0EFE8; legend box elevated #242420 with light title and soft-grey ticks. No dark-on-dark text.
+      Data: density uses the dark field stops (#00573D low -> #009E73 -> pale blue #CDD9FF at the peaks), as a continuous ramp should; contours and grid white as in light. Same sawtooth fringe along the slanted edges.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,37 +61,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 13 pt bold, vertex labels geom_text size 9 bold, legend 12/11
-          pt; all readable in both themes.
+        comment: Title 13 pt bold, vertex labels geom_text size 9 bold, legend title
+          12 pt and ticks 11 pt; all readable in both themes, no dark-on-dark text.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; vertex labels sit outside the triangle, legend
-          below the panel.
+        comment: 'No text collisions: vertex labels sit outside the triangle corners,
+          colorbar below the panel.'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density, white contours and translucent white grid are all clearly
-          visible; the slanted triangle edges show a dotted fringe of raster-cell
-          seams (defect line).
+        comment: Density surface, white contours (size 1.2) and translucent white
+          grid all clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp is CVD-safe; white contours contrast with every
-          density level.
+        comment: Ramp ordered in lightness and green-to-blue, CVD-safe; white contours
+          contrast with every density level.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canonical 2400x2400 square; triangle fills the panel, horizontal
-          colorbar centred beneath it.
+        comment: Canonical 2400x2400 square; the triangle fills the panel and the
+          horizontal colorbar is centred beneath it.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,8 +103,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq via scale_fill_gradient(#009E73 -> #4467A3); backgrounds
-          #FAF8F1 / #1A1A17; outline and text flip with theme.'
+        comment: 'imprint_seq FIELDS stops per theme via scale_fill_gradientn (light:
+          #66E2B2 -> #009E73 -> #4467A3 -> #002850; dark: #00573D -> #009E73 -> #CDD9FF);
+          backgrounds #FAF8F1 / #1A1A17 across the whole canvas.'
     design_excellence:
       score: 11
       max: 20
@@ -113,26 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: bold, generously sized vertex labels as the axis
-          hierarchy and a long horizontal colorbar sized to the triangle width.'
+        comment: 'Beyond baseline: bold, large vertex labels form the axis hierarchy,
+          and the colorbar is sized to the triangle''s width.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid drawn in translucent white so it reads as part of the density
-          surface and harmonizes with the white contours; legend placed below to balance
-          the square.
+        comment: Grid in translucent white reads as part of the surface and harmonizes
+          with the white contours; legend placed below to balance the square.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Density normalized to the peak so contour levels (0.25/0.5/0.75)
-          coincide with colorbar ticks, letting the reader read each ring's level
-          directly.
+        comment: 'Density normalized to its peak so the 0.25/0.5/0.75 contour levels
+          line up with colorbar ticks: each ring''s level can be read directly.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -140,29 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot.
+        comment: 'Correct ternary density plot: KDE surface in ternary coordinates,
+          no individual points.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'C1-C5 met: equilateral triangle with labeled vertices, smooth density
-          confined to the triangle, perceptually ordered ramp with colorbar, grid
-          visible over the peaks, closed contours ending at edges.'
+        comment: C1, C3, C4, C5 met (labeled equilateral triangle, imprint ramp with
+          colorbar, grid visible over peaks, closed contours ending at edges); C2
+          broken by a dotted fringe of raster cells along the slanted edges (defect
+          line).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Ternary-to-Cartesian mapping correct (Sand bottom-left, Silt bottom-right,
-          Clay top); peaks sit at the Dirichlet cluster centres.
+          Clay top); peaks sit at the three Dirichlet cluster centres.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'Sediment Composition · ternary-density · python · letsplot
-          · anyplot.ai' correct; legend title readable.
+          · anyplot.ai' correct; colorbar title reads for a reader.
     data_quality:
       score: 15
       max: 15
@@ -172,8 +174,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three separate modes plus low-density interior show the full range
-          of the plot type.
+        comment: Three separate modes plus a low-density interior show the plot type's
+          full range.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -185,10 +187,10 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Components are Dirichlet proportions x100 summing to 100 %; no Check
-          values in the spec.
+        comment: 'Checked: Dirichlet proportions x100 sum to 100 % per sample (lines
+          79-80); no Check values in the spec.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -196,7 +198,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script; the only function is the ramp_color helper the library
+          prompt mandates.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,14 +211,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported lets_plot symbols are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Gaussian KDE written out by hand (lines 79-88) where scipy.stats.gaussian_kde
-          computes it (defect line).
+        comment: KDE via scipy.stats.gaussian_kde; ramp sampling per the library prompt;
+          appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,7 +226,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; current API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -231,26 +234,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_raster for the surface and geom_contour computing contour lines
-          from the same surface via lets-plot's stat; guide_colorbar sizing.
+        comment: geom_raster for the surface and geom_contour computing contours from
+          the same surface through lets-plot's contour stat; guide_colorbar sizing.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips on invisible sample points gives per-sample Sand/Silt/Clay
-          percentages in the HTML; native contour stat.
+        passed: false
+        comment: layer_tooltips on near-invisible sample points gives per-sample Sand/Silt/Clay
+          percentages in the HTML output.
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-552d806a59
-  rendered_at: '2026-11-22T16:53:38Z'
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
+  rendered_at: '2026-11-26T11:13:43Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
   - layer-composition
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -258,6 +262,7 @@ impl_tags:
   - kde
   - normalization
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
   - alpha-blending
+  - grid-styling
