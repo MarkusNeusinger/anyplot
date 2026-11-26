@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -103,7 +103,10 @@ for _, row in df.iterrows():
                 y2=0,
             ),
         )
-        .encode(x=alt.X("t:Q", axis=None), y=alt.Y("v:Q", axis=None, scale=alt.Scale(domain=[0, 100])))
+        .encode(
+            x=alt.X("t:Q", axis=None, scale=alt.Scale(domain=[0, len(values) - 1], nice=False)),
+            y=alt.Y("v:Q", axis=None, scale=alt.Scale(domain=[0, 100])),
+        )
         .properties(width=TILE_WIDTH, height=SPARK_HEIGHT)
     )
 
@@ -117,7 +120,8 @@ for _, row in df.iterrows():
 
     tile = alt.vconcat(sparkline, change_row, spacing=4).properties(
         title=alt.Title(
-            text=[display_val, row[METRIC_NAME]],
+            text=display_val,
+            subtitle=row[METRIC_NAME],
             fontSize=36,
             subtitleFontSize=16,
             subtitleColor=INK_SOFT,
