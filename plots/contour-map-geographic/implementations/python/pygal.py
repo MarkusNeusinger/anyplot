@@ -1,19 +1,19 @@
 """ anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-26
 """
 
+import math
 import os
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 
 sys.path = [p for p in sys.path if p != str(Path(__file__).parent)]
 
 import cairosvg  # noqa: E402
-import matplotlib.cm as mpl_cm  # noqa: E402
-import matplotlib.colors as mpl_colors  # noqa: E402
 import numpy as np  # noqa: E402
 import pygal as pygal_lib  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -121,10 +121,29 @@ coastlines = [
     ],
 ]
 
-# Pressure colormap: viridis sequential (perceptually uniform, style-guide compliant)
+# Pressure colormap: Imprint sequential ramp (fields stops: colored cells fill the plot)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
 p_min_cb, p_max_cb = 996, 1032
 n_colors = 10
-pressure_colors = [mpl_colors.to_hex(mpl_cm.viridis(i / (n_colors - 1))) for i in range(n_colors)]
+pressure_colors = [ramp_color(SEQ_FIELDS, i / (n_colors - 1)) for i in range(n_colors)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -132,11 +151,12 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    guide_stroke_color="rgba(128,128,128,0.15)",
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="",
     colors=(INK_MUTED,) * (len(coastlines) + 1),
-    title_font_size=52,
-    label_font_size=56,
+    title_font_size=50,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -169,13 +189,14 @@ chart = pygal_lib.XY(
 for coords in coastlines:
     chart.add(None, coords, stroke=True, dots_size=0, show_dots=False, fill=False)
 
-# Plot area pixel coordinates (matching pygal internal layout)
-plot_x = 240
-plot_y = 160
-plot_width = 3200 - 240 - 260
-plot_height = 1800 - 160 - 160
+# Plot area pixel coordinates as pygal lays them out (read from the rendered SVG's
+# plot group and background rect) so the overlay lines up with the axis ticks
+plot_x = 362
+plot_y = 220
+plot_width = 2577
+plot_height = 1306
 
-svg_parts = []
+svg_parts = ['<g opacity="0.55">']
 
 # Filled pressure cells
 cell_w = plot_width / (n_grid - 1)
@@ -191,8 +212,10 @@ for i in range(n_grid - 1):
         py = plot_y + plot_height - (lat_grid[i + 1] - lat_min) / (lat_max - lat_min) * plot_height
         svg_parts.append(
             f'<rect x="{px:.1f}" y="{py:.1f}" width="{cell_w + 1:.1f}" '
-            f'height="{cell_h + 1:.1f}" fill="{color}" fill-opacity="0.55" stroke="none"/>'
+            f'height="{cell_h + 1:.1f}" fill="{color}" stroke="none"/>'
         )
+
+svg_parts.append("</g>")
 
 # Isobar contour lines via marching squares
 for level in contour_levels:
@@ -229,10 +252,10 @@ for level in contour_levels:
             t_top = 0.5 if abs(z11 - z10) < 1e-10 else (level - z10) / (z11 - z10)
             t_bottom = 0.5 if abs(z01 - z00) < 1e-10 else (level - z00) / (z01 - z00)
 
-            left = (x0, y0 - cell_h * t_left)
-            right = (x1, y1 + cell_h * t_right)
-            top = (x0 + cell_w * t_top, y0 - cell_h)
-            bottom = (x0 + cell_w * t_bottom, y0)
+            left = (x0, y1 - cell_h * t_left)
+            right = (x1, y1 - cell_h * t_right)
+            top = (x0 + cell_w * t_top, y0)
+            bottom = (x0 + cell_w * t_bottom, y1)
 
             if case in [1, 14]:
                 all_segments.append((left, bottom))
@@ -314,12 +337,12 @@ for lon_l, lat_l, pval in label_positions:
         px = plot_x + (lon_l - lon_min) / (lon_max - lon_min) * plot_width
         py = plot_y + plot_height - (lat_l - lat_min) / (lat_max - lat_min) * plot_height
         svg_parts.append(
-            f'<rect x="{px - 48}" y="{py - 22}" width="96" height="40" '
+            f'<rect x="{px - 58}" y="{py - 29}" width="116" height="50" '
             f'fill="{ELEVATED_BG}" fill-opacity="0.90" rx="5" stroke="{INK_MUTED}" stroke-width="1"/>'
         )
         svg_parts.append(
-            f'<text x="{px}" y="{py + 7}" text-anchor="middle" fill="{INK}" '
-            f'style="font-size:30px;font-weight:bold;font-family:sans-serif">{pval}</text>'
+            f'<text x="{px}" y="{py + 13}" text-anchor="middle" fill="{INK}" '
+            f'style="font-size:38px;font-weight:bold;font-family:sans-serif">{pval}</text>'
         )
 
 # Colorbar
@@ -343,17 +366,17 @@ for i, val in enumerate(cb_vals):
     label_y = cb_y + i * seg_h + seg_h / 2 + 11
     svg_parts.append(
         f'<text x="{cb_x + cb_width + 12}" y="{label_y:.1f}" fill="{INK}" '
-        f'style="font-size:30px;font-family:sans-serif">{val}</text>'
+        f'style="font-size:38px;font-family:sans-serif">{val}</text>'
     )
 
 svg_parts.append(
     f'<text x="{cb_x + cb_width / 2}" y="{cb_y - 22}" text-anchor="middle" fill="{INK}" '
-    f'style="font-size:32px;font-weight:bold;font-family:sans-serif">hPa</text>'
+    f'style="font-size:40px;font-weight:bold;font-family:sans-serif">hPa</text>'
 )
 
 # Pressure center labels (H/L): data-encoding colors, domain-conventional
-HIGH_COLOR = "#C475FD"  # Okabe-Ito vermillion — high pressure
-LOW_COLOR = "#4467A3"  # Okabe-Ito blue — low pressure
+HIGH_COLOR = "#C475FD"  # Imprint violet — high pressure
+LOW_COLOR = "#4467A3"  # Imprint blue — low pressure
 centers = [(200, 35, "H", HIGH_COLOR), (185, 53, "L", LOW_COLOR), (145, 45, "L", LOW_COLOR)]
 for lon_c, lat_c, label, color in centers:
     if lon_min <= lon_c <= lon_max and lat_min <= lat_c <= lat_max:
