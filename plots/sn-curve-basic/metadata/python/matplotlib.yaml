@@ -2,12 +2,12 @@ library: matplotlib
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:45:39Z'
-updated: '2026-05-20T17:32:03Z'
+updated: '2026-11-26T09:29:37Z'
 generated_by: claude-sonnet
-workflow_run: 26178047708
+workflow_run: 45791393380
 issue: 3826
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
@@ -15,122 +15,119 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required elements (log-log axes, three material
-    property reference lines, Basquin fit, three fatigue regions) implemented correctly'
-  - Correct Okabe-Ito palette across all five data series (brand green first, then
-    positions 2–5 in order)
-  - 'Full theme adaptation: all chrome elements (text, spines, grid, legend, annotation
-    boxes) correctly use INK/INK_SOFT/INK_MUTED/ELEVATED_BG tokens — dark render has
-    no dark-on-dark failures'
-  - 'Follows canvas rules strictly: figsize=(8, 4.5), dpi=400, no bbox_inches=''tight'''
-  - Region shading + italic annotations create genuine data storytelling beyond a
-    basic scatter+line plot
+  - Every specimen at its own cycle count and stress on log-log axes, with LogLocator(subs=(1,2,3,5))
+    and a plain-number FuncFormatter giving readable MPa ticks
+  - Basquin fit computed by np.polyfit on log values and cut where it meets the endurance
+    limit, so the line ends at the knee instead of running through the Infinite Life
+    band
+  - 'Full theme threading: INK/INK_SOFT/INK_MUTED/ELEVATED_BG on all text, spines,
+    grid and legend; shading alpha raised on the dark page so the three bands stay
+    visible'
+  - Region labels placed with blended_transform_factory (axes-x, data-y), so they
+    follow the reference values when the data changes
+  - 'Adaptable structure: column constants, a Data block ending in df, limits and
+    fit range derived from the data'
   weaknesses:
-  - Region shadings (axhspan, alpha=0.05–0.07) are nearly imperceptible on the dark
-    render — consider using a theme-adaptive alpha (e.g., 0.07 light / 0.11 dark)
-    so the three fatigue zones remain visible in both themes
-  - The Basquin fit line extends below the endurance limit (200 MPa) toward ~130 MPa
-    at 10^8 cycles, implying the material fails at infinite-life stress levels — consider
-    clipping the fit line at the endurance limit (y≥200 MPa) to avoid physically misleading
-    extrapolation
-  - Minor marker overlap in the low-cycle fatigue region (~10^3–5×10^3 cycles) where
-    2–3 data points overlap; acceptable for realistic scatter but could reduce marker
-    size slightly (s=80) with alpha=0.7 to reveal the full distribution
+  - 'Suggestion: the ''Low-Cycle Fatigue'' and ''High-Cycle Fatigue'' labels both
+    sit in the top band above ultimate strength while the shading is split by stress
+    level; placing each label over the data it names would tie labels and bands together.'
+  - 'Suggestion: the y axis shows only the 100/200/300 MPa ticks; adding the 150 and
+    250 MPa subs would make values between the reference lines easier to read off.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "sn-curve-basic · python · matplotlib · anyplot.ai" in dark medium-weight text, clearly readable. X-axis label "Number of Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" both at 10pt in dark ink. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Legend in upper-right with rounded frame (ELEVATED_BG fill), text in INK_SOFT. Three italic region annotations ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") with transparent bbox are readable.
-      Data: Teal/green scatter points (#009E73, first series, brand green). Orange/vermillion Basquin fit line (#D55E00). Blue dashed horizontal at 500 MPa (#0072B2). Pink dashed at 350 MPa (#CC79A7). Golden dashed at 200 MPa (#E69F00). Three very subtle region shadings (alpha=0.05-0.07) barely visible but present.
+      Background: warm off-white #FAF8F1, with three faint stress bands (green below 80 MPa, purple 80-280 MPa, blue above 280 MPa)
+      Chrome: title 'sn-curve-basic · python · matplotlib · anyplot.ai' in dark ink; axis titles 'Number of Cycles to Failure (N)' and 'Stress Amplitude (MPa)'; log x ticks 10^2-10^8, y ticks 100/200/300; legend lower left on an elevated frame; italic muted region labels 'Low-Cycle Fatigue', 'High-Cycle Fatigue' (top band) and 'Infinite Life' (below the endurance line) - all readable
+      Data: ~30 #009E73 points falling from 250 MPa at ~5e2 cycles to ~88 MPa at ~1.2e7 cycles; purple #C475FD Basquin fit ending at the endurance limit near 6e7 cycles; dashed blue Ultimate Strength 330 MPa, ochre Yield Strength 280 MPa, thicker red Endurance Limit 80 MPa
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all axis labels flip to light colors (#F0EFE8 / #B8B7B0), clearly readable against dark background. Tick labels are light-colored — no dark-on-dark failures. Legend frame uses dark elevated background (#242420). Region annotation text ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") visible in INK_MUTED (#A8A79F).
-      Data: Scatter points remain #009E73 (identical to light render). Basquin fit remains #D55E00. Reference lines retain their blue/pink/golden Okabe-Ito colors — all identical to light render. Region shadings (axhspan) are nearly imperceptible at alpha=0.05-0.07 on the dark background.
-      Legibility verdict: PASS — all text readable; region shadings near-invisible but not a legibility failure
+      Background: warm near-black #1A1A17 with the same three bands, slightly stronger
+      Chrome: title and axis titles in light ink, ticks and legend text in light soft ink, legend frame #242420; region labels light muted - no dark-on-dark
+      Data: point, fit and reference-line colors identical to the light render; points edged in the dark page color
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; minor deduction
-          for 'Infinite Life' annotation tight near y-axis lower bound at y=182 (below
-          200 MPa endurance limit line)
+        comment: Title 12 pt, axis titles 10 pt, ticks/legend/region labels 8 pt,
+          all explicitly set; readable in both themes, no dark-on-dark
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Scatter points cluster in low-cycle fatigue region (~10^3-5*10^3
-          cycles), several points overlap; acceptable for realistic fatigue scatter
-          but slightly crowded
+        comment: No text collisions; the legend sits in the empty lower-left area
+          clear of points and the fit line; partial overlap of specimens at one stress
+          level is permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All primary elements (markers, fit line, reference lines) clearly
-          visible; region shadings (axhspan, alpha=0.05-0.07) nearly imperceptible
-          on dark render
+        comment: ~30 points at s=100 with alpha 0.75 and a page-colored edge; fit
+          and reference lines clearly visible; legend glyphs match the marks in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette, CVD-safe, no red-green sole signals
+        comment: Green points, purple fit, blue/ochre/red dashed reference lines;
+          distinguishable by hue, lightness and line style; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct landscape 3200x1800 canvas, no bbox_inches='tight', good
-          whitespace and proportions, no overflow or clipping
+        comment: 3200x1800 canvas, plot fills it with balanced margins; nothing cut
+          off or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: '''Number of Cycles to Failure (N)'' and ''Stress Amplitude (MPa)''
-          are descriptive with units; title format correct'
+          with units; correct title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; multi-series follows Okabe-Ito order; backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) correct'
+        comment: 'Imprint positions 1-5 in canonical order (#009E73 first); backgrounds
+          #FAF8F1 / #1A1A17; categorical colors identical across themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Intentional design: region shadings, italic fatigue regime labels
-          with bbox annotations, styled legend frame — above the default; deliberate
-          hierarchy but not exceptional'
+        comment: Clean style-guide baseline with italic muted region labels; nothing
+          typographically beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, y-only subtle grid, annotation boxes with
-          rounded corners and alpha fill, tick label styling via INK_SOFT token
+        comment: 'Raised by one: only major y grid with minor y ticks suppressed for
+          a log axis spanning under one decade, x grid off, region labels on a soft
+          page-colored box'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three-region narrative (low-cycle / high-cycle / infinite life) clearly
-          communicated through shading + labels + reference lines; viewer guided from
-          high-stress to endurance limit
+        comment: 'Raised by one: the fit is cut where it meets the endurance limit,
+          so the knee into infinite life is the visual end of the curve; region shading
+          made stronger on the dark page so the three bands stay legible'
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +137,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N curve on log-log axes with scatter data and fit line
+        comment: Correct S-N scatter with Basquin fit on log-log axes; reference lines,
+          fit and region labels/shading are all asked for or allowed by the spec (C5);
+          no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log scales, all three reference lines (Ultimate, Yield, Endurance),
-          three fatigue regions, Basquin fit line — all present
+        comment: Log-log axes (C1), all three named reference lines at 330/280/80
+          MPa (C2), Basquin fit through the middle of the scatter stopping at the
+          endurance limit (C3), points falling toward the endurance limit (C4), single
+          material (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on x-axis, stress amplitude on y-axis, full range displayed
+        comment: Cycles on x, stress on y; every specimen at its own value; limits
+          derived from the data (10^2-10^8, 60-462 MPa); log ticks readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'sn-curve-basic · python · matplotlib · anyplot.ai';
-          legend labels match all data series
+        comment: Title 'sn-curve-basic · python · matplotlib · anyplot.ai'; legend
+          names every series and reference line with its value
     data_quality:
       score: 15
       max: 15
@@ -170,22 +172,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter test data, Basquin fit, all three material property lines,
-          region shading, region annotations — complete coverage
+        comment: Repeated specimens at nine stress levels with scatter, fit, three
+          property lines and three regions; data reaches just above the endurance
+          limit at ~10^7 cycles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Structural steel fatigue, stress 200-500 MPa, cycle range 10^2-10^8
-          are all realistic and domain-neutral
+        comment: Aluminium-alloy coupon fatigue tests, neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log-log scale appropriate; y-axis 120-650 MPa captures all reference
-          values; x-axis 10^2-10^8 spans engineering-relevant regime
+        comment: 'Checked: Basquin A=480 MPa, b=0.1 gives N≈680 at 250 MPa and ≈1.5e7
+          at 92 MPa, matching the render; UTS 330 / yield 280 MPa plausible for a
+          6xxx alloy'
     code_quality:
       score: 10
       max: 10
@@ -195,33 +198,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, no functions or classes, logically organized sections
+        comment: Flat Imports → Constants → Data (ends in df) → Plot → Save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, FixedLocator, FuncFormatter — all used
+        comment: All imports used (os, plt, np, pd, FuncFormatter, LogLocator, blended_transform_factory)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, clear variable names
+        comment: Fit via np.polyfit on log values; appropriate complexity, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: savefig(f'plot-{THEME}.png', dpi=400) without bbox_inches='tight'
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -229,28 +235,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Axes methods throughout (ax.scatter, ax.plot, ax.axhline, ax.axhspan);
-          FixedLocator + FuncFormatter for precise log-scale tick control
+        comment: 'Raised by one: Axes API throughout, LogLocator with subs and FuncFormatter
+          for readable log ticks, axhspan/axhline for bands and limits'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: ax.axhspan for region shading (distinctive matplotlib feature), FuncFormatter
-          for custom tick labels, ax.annotate with bbox styling; solid usage but stops
-          short of more advanced matplotlib capabilities
+        passed: false
+        comment: 'Raised by one: blended_transform_factory places region labels in
+          axes-x / data-y coordinates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
+  rendered_at: '2026-11-26T09:25:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep:
   - regression
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
