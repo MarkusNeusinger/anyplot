@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-21
@@ -39,75 +39,87 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — positions 1-6 in order
-C_TEMP = "#009E73"  # position 1: temperature profile (primary series)
-C_DEWPT = "#C475FD"  # position 2: dewpoint profile
-C_DRY = "#AE3030"  # position 5: dry adiabats (background reference)
-C_MOIST = "#BD8233"  # position 4: moist adiabats (background reference)
-C_MIX = "#2ABCCD"  # position 6: mixing ratio lines (background reference)
+# Imprint palette (all eight positions, canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+C_TEMP = IMPRINT_PALETTE[0]  # temperature profile (primary series)
+C_DEWPT = IMPRINT_PALETTE[1]  # dewpoint profile
+C_DRY = IMPRINT_PALETTE[4]  # dry adiabats (background reference)
+C_MOIST = IMPRINT_PALETTE[3]  # moist adiabats (background reference)
+C_MIX = IMPRINT_PALETTE[5]  # mixing ratio lines (background reference)
 
-# Atmospheric sounding data (synthetic radiosonde profile)
-np.random.seed(42)
+# Constants
+SKEW_FACTOR = 40  # x shift per decade of pressure: gives the 45-degree isotherms
+ISOTHERM_TEMPS = np.arange(-80, 50, 10)  # degC
+DRY_ADIABAT_THETAS = np.arange(250, 450, 20)  # K
+MOIST_ADIABAT_THETA_E = np.arange(280, 360, 10)  # K
+MIXING_RATIOS = [1, 2, 4, 7, 10, 15, 20]  # g/kg
 
-pressure = np.array([1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100])
-temperature = np.array([25, 22, 18, 14, 10, 6, 2, -3, -8, -14, -21, -29, -38, -47, -55, -58, -56, -55, -56])
-dewpoint = np.array([18, 16, 12, 8, 4, 0, -5, -12, -20, -28, -35, -42, -50, -58, -65, -70, -72, -75, -78])
+# Columns: set these to your table's column names
+PRESSURE = "Pressure (hPa)"  # role: pressure
+TEMPERATURE = "Temperature (°C)"  # role: temperature
+DEWPOINT = "Dewpoint (°C)"  # role: dewpoint
 
-# Skew-T coordinate transformation: x_plot = T + skew_factor * log10(p0/p)
-p0 = 1000
-skew_factor = 40
+# Data: replace this block with your own table, for example df = pd.read_csv("sounding.csv")
+df = pd.DataFrame(
+    {
+        PRESSURE: [1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100],
+        TEMPERATURE: [25, 22, 18, 14, 10, 6, 2, -3, -8, -14, -21, -29, -38, -47, -55, -58, -56, -55, -56],
+        DEWPOINT: [18, 16, 12, 8, 4, 0, -5, -12, -20, -28, -35, -42, -50, -58, -65, -70, -72, -75, -78],
+    }
+)
 
-log_pressure = np.log10(p0 / pressure)
-temp_skewed = temperature + skew_factor * log_pressure
-dewpoint_skewed = dewpoint + skew_factor * log_pressure
+# Plot: reads only df and the constants above
+# Skew-T coordinate transformation: x_plot = T + SKEW_FACTOR * log10(p0 / p)
+p0 = df[PRESSURE].max()
+p_top = df[PRESSURE].min()
+p_range = np.array([p0, p_top])
+p_levels = np.linspace(p0, p_top, 50)
+skew_span = SKEW_FACTOR * np.log10(p0 / p_top)  # skew shift at the top of the diagram
 
-# Include original values for interactive tooltips
-df_temp = pd.DataFrame({"pressure": pressure, "temp": temperature, "value": temp_skewed})
-df_dewpoint = pd.DataFrame({"pressure": pressure, "dewpt": dewpoint, "value": dewpoint_skewed})
+df_temp = pd.DataFrame(
+    {
+        "pressure": df[PRESSURE],
+        "temp": df[TEMPERATURE],
+        "value": df[TEMPERATURE] + SKEW_FACTOR * np.log10(p0 / df[PRESSURE]),
+    }
+)
+df_dewpoint = pd.DataFrame(
+    {"pressure": df[PRESSURE], "dewpt": df[DEWPOINT], "value": df[DEWPOINT] + SKEW_FACTOR * np.log10(p0 / df[PRESSURE])}
+)
 
-# Generate isotherms (skewed 45-degree temperature reference lines)
-isotherm_temps = np.arange(-80, 50, 10)
-p_range = np.array([1000, 100])
+# Isotherms (skewed 45-degree temperature reference lines)
 isotherm_data = []
-for t in isotherm_temps:
-    log_p_vals = np.log10(p0 / p_range)
-    t_skewed = t + skew_factor * log_p_vals
+for t in ISOTHERM_TEMPS:
+    t_skewed = t + SKEW_FACTOR * np.log10(p0 / p_range)
     isotherm_data.append({"x_start": t_skewed[0], "x_end": t_skewed[1], "y_start": p_range[0], "y_end": p_range[1]})
 df_isotherms = pd.DataFrame(isotherm_data)
 
-# Generate dry adiabats (constant potential temperature lines)
-dry_adiabat_thetas = np.arange(250, 450, 20)
-p_levels = np.linspace(1000, 100, 50)
+# Dry adiabats (constant potential temperature lines)
 dry_adiabat_data = []
-for theta in dry_adiabat_thetas:
+for theta in DRY_ADIABAT_THETAS:
     temps = (theta * (p_levels / p0) ** 0.286) - 273.15
-    log_p_vals = np.log10(p0 / p_levels)
-    temps_skewed = temps + skew_factor * log_p_vals
+    temps_skewed = temps + SKEW_FACTOR * np.log10(p0 / p_levels)
     for i in range(len(p_levels)):
         dry_adiabat_data.append({"pressure": p_levels[i], "temp_skewed": temps_skewed[i], "theta": theta})
 df_dry_adiabats = pd.DataFrame(dry_adiabat_data)
 
-# Generate moist adiabats (equivalent potential temperature lines)
-moist_adiabat_theta_e = np.arange(280, 360, 10)
+# Moist adiabats (equivalent potential temperature lines)
 moist_adiabat_data = []
-for theta_e in moist_adiabat_theta_e:
+for theta_e in MOIST_ADIABAT_THETA_E:
     t_surface = theta_e - 273.15
     for p in p_levels:
         height_factor = np.log(p0 / p) * 2.5
         t_moist = t_surface - 6.5 * height_factor * 0.8
-        log_p_val = np.log10(p0 / p)
-        t_skewed = t_moist + skew_factor * log_p_val
+        t_skewed = t_moist + SKEW_FACTOR * np.log10(p0 / p)
         moist_adiabat_data.append({"pressure": p, "temp_skewed": t_skewed, "theta_e": theta_e})
 df_moist_adiabats = pd.DataFrame(moist_adiabat_data)
 
-# Generate mixing ratio lines (constant water vapor mixing ratio)
-mixing_ratios = [1, 2, 4, 7, 10, 15, 20]
+# Mixing ratio lines (constant water vapor mixing ratio)
 mixing_data = []
-for ws in mixing_ratios:
+for ws in MIXING_RATIOS:
     for p in p_levels[::5]:
         t = 35 * np.log10(ws * p / 622) - 20
-        log_p_val = np.log10(p0 / p)
-        t_skewed = t + skew_factor * log_p_val
+        t_skewed = t + SKEW_FACTOR * np.log10(p0 / p)
         mixing_data.append({"pressure": p, "temp_skewed": t_skewed, "ws": ws})
 df_mixing = pd.DataFrame(mixing_data)
 
@@ -140,7 +152,7 @@ plot = (
         alpha=0.5,
         tooltips="none",
     )
-    # Dry adiabats — Okabe-Ito orange dashed
+    # Dry adiabats — dashed
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="theta"),
         data=df_dry_adiabats,
@@ -150,7 +162,7 @@ plot = (
         linetype="dashed",
         tooltips="none",
     )
-    # Moist adiabats — Okabe-Ito reddish purple dotdash
+    # Moist adiabats — dotdash
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="theta_e"),
         data=df_moist_adiabats,
@@ -160,7 +172,7 @@ plot = (
         linetype="dotdash",
         tooltips="none",
     )
-    # Mixing ratio lines — Okabe-Ito sky blue dotted
+    # Mixing ratio lines — dotted
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="ws"),
         data=df_mixing,
@@ -170,7 +182,7 @@ plot = (
         linetype="dotted",
         tooltips="none",
     )
-    # Temperature profile — Okabe-Ito green solid (primary series, position 1)
+    # Temperature profile — green solid (primary series)
     + geom_path(
         aes(x="value", y="pressure"),
         data=df_temp,
@@ -178,7 +190,7 @@ plot = (
         size=2.0,
         tooltips=layer_tooltips().line("Temperature: @temp°C").line("Pressure: @pressure hPa"),
     )
-    # Dewpoint profile — Okabe-Ito vermillion dashed (secondary series, position 2)
+    # Dewpoint profile — dashed (secondary series)
     + geom_path(
         aes(x="value", y="pressure"),
         data=df_dewpoint,
@@ -204,22 +216,22 @@ plot = (
     )
     # Logarithmic inverted pressure axis
     + scale_y_log10()
-    + scale_y_reverse(limits=[1000, 100])
-    + labs(x="Temperature (°C)", y="Pressure (hPa)", title="skewt-logp-atmospheric · python · letsplot · anyplot.ai")
+    + scale_y_reverse(limits=[p0, p_top])
+    + labs(x=TEMPERATURE, y=PRESSURE, title="skewt-logp-atmospheric · python · letsplot · anyplot.ai")
     + ggsize(800, 450)
     + anyplot_theme
 )
 
-# Manual legend (positioned upper-right in skewed coordinate space)
-legend_x_start = 95
-legend_x_end = 112
-legend_text_x = 114
+# Manual legend (positioned upper-right in skewed coordinate space, from the diagram's own extent)
+legend_x_start = skew_span * 2.375
+legend_x_end = skew_span * 2.8
+legend_text_x = skew_span * 2.85
 legend_entries = [
-    {"label": "Temperature", "color": C_TEMP, "linetype": "solid", "size": 2.0, "y": 110},
-    {"label": "Dewpoint", "color": C_DEWPT, "linetype": "dashed", "size": 2.0, "y": 145},
-    {"label": "Dry Adiabat", "color": C_DRY, "linetype": "dashed", "size": 1.2, "y": 190},
-    {"label": "Moist Adiabat", "color": C_MOIST, "linetype": "dotdash", "size": 1.2, "y": 250},
-    {"label": "Mixing Ratio", "color": C_MIX, "linetype": "dotted", "size": 1.2, "y": 330},
+    {"label": "Temperature", "color": C_TEMP, "linetype": "solid", "size": 2.0, "y": p_top * 1.1},
+    {"label": "Dewpoint", "color": C_DEWPT, "linetype": "dashed", "size": 2.0, "y": p_top * 1.45},
+    {"label": "Dry Adiabat", "color": C_DRY, "linetype": "dashed", "size": 1.2, "y": p_top * 1.9},
+    {"label": "Moist Adiabat", "color": C_MOIST, "linetype": "dotdash", "size": 1.2, "y": p_top * 2.5},
+    {"label": "Mixing Ratio", "color": C_MIX, "linetype": "dotted", "size": 1.2, "y": p_top * 3.3},
 ]
 
 for entry in legend_entries:
@@ -231,7 +243,7 @@ for entry in legend_entries:
         linetype=entry["linetype"],
         tooltips="none",
     )
-    plot = plot + geom_text(x=legend_text_x, y=entry["y"], label=entry["label"], color=INK, size=10, hjust=0)
+    plot = plot + geom_text(x=legend_text_x, y=entry["y"], label=entry["label"], color=INK, size=6, hjust=0)
 
 # Save PNG and HTML for both themes
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
