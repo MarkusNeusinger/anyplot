@@ -1731,3 +1731,29 @@ class TestTextSizeIsJudgedAtFullSize:
             library["id"] for library in LIBRARIES_METADATA if spelled.get(library["id"], library["id"]) not in sizes
         ]
         assert not missing, missing
+
+
+class TestGeneratorSelfChecks:
+    """What the generator checks on its own file before it commits, beyond the picture.
+
+    Three gaps the review does not close: a lets-plot figure with a fixed aspect that the canvas
+    wrap paints but leaves small, library-prompt lines that a regeneration carries over only when
+    something checks them, and labels, legends or structures that contradict the plot's own data,
+    which a review of the picture cannot recompute.
+    """
+
+    LETSPLOT = LIBRARY_PROMPTS_DIR / "letsplot.md"
+
+    def test_letsplot_lets_a_fixed_aspect_panel_fill_the_canvas(self) -> None:
+        """The wrap paints the strips; the legend below, the canvas and a map's span make the panel fill them."""
+        canvas = self.LETSPLOT.read_text()
+        canvas = canvas[canvas.index("## Canvas") : canvas.index("## Figure Size")]
+        assert "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color." in canvas
+        fill = canvas[canvas.index("**Then let a fixed-aspect panel fill the canvas.**") :]
+        assert "**The legend goes below the panel** (`theme(legend_position='bottom')`)" in fill
+        assert "**The canvas suits the figure with its title and legend below it**, not only its equal axes." in fill
+        assert "**A map fills the panel through its span.**" in fill
+        assert "never a typed number" in fill
+        assert "plot = plot + theme(legend_position='bottom')\nplot = gggrid([plot])" in fill
+        # The old sentence kept whatever canvas Step 0 picked, whatever the figure's shape.
+        assert "Keep the canvas Step 0 picks for the plot" not in canvas

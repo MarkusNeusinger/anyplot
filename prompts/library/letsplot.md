@@ -49,12 +49,21 @@ Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, wel
 
 **Paint the whole canvas.** lets-plot paints `plot_background` only behind the plot box it draws, so two kinds of figure leave strips at the canvas edges:
 
-- **A fixed aspect** (`coord_fixed`, `coord_polar`, `coord_map`) narrows the plot box to that aspect and leaves the rest of the canvas **transparent**: strips at the left and right (polar: also top and bottom), 15 to 230 px wide on the square canvas and over 700 px on the landscape one. Keep the canvas Step 0 picks for the plot, and wrap the finished plot in a one-panel `gggrid` of that size that carries the page color.
+- **A fixed aspect** (`coord_fixed`, `coord_polar`, `coord_map`) narrows the plot box to that aspect and leaves the rest of the canvas **transparent**: strips at the left and right (polar: also top and bottom), 15 to 230 px wide on the square canvas and over 700 px on the landscape one. Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color.
 - **A composite** (`gggrid`, `ggbunch`) fills the space around its panels with opaque **white**, about 24 px at each edge in both themes. Give the composite itself the page color.
 
+**Then let a fixed-aspect panel fill the canvas.** The wrap paints the strips but leaves them empty: a panel that keeps its aspect is only as large as the narrower side of the space left for it allows, and the rest of the canvas becomes blank bands. Three choices decide how large it gets:
+
+- **The legend goes below the panel** (`theme(legend_position='bottom')`), or inside it where the figure leaves an empty corner. A legend beside the panel takes width that the panel needs, and the panel then shrinks on both axes and leaves bands above and below it. The title already sits above, so a legend below costs the panel least.
+- **The canvas suits the figure with its title and legend below it**, not only its equal axes. A figure about as tall as wide (a chord, radar or polar chart, a tile grid, a map of a region about as tall as wide) fills the square canvas once its legend is below. A figure that stays clearly wider than tall with all of that (a world map, a hemicycle) suits Step 0's landscape pair.
+- **A map fills the panel through its span.** Widen the shorter of the two coordinate ranges in `coord_fixed(xlim=..., ylim=...)` or `coord_map(xlim=..., ylim=...)` until the panel's shape matches the space the canvas leaves for it: the map shows more of its surroundings instead of empty bands. Both ranges come from the data, as above: the widened one is the data's range with a margin, never a typed number.
+
+Step 4's canvas question checks the result: blank bands on two opposite sides of a fixed-aspect figure mean that one of these three choices is still open.
+
 ```python
-# Fixed aspect: the one-panel grid paints the canvas, the plot keeps its aspect.
+# Fixed aspect: the legend below the panel, then the one-panel grid paints the canvas and the plot keeps its aspect.
 # ggsize is the canvas Step 0 picks, never a third size:
+plot = plot + theme(legend_position='bottom')
 plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # square
 plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # landscape
 
