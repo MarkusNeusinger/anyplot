@@ -1,7 +1,7 @@
 """ anyplot.ai
 curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-28
+Quality: 79/100 | Updated: 2026-05-28
 """
 
 import os
