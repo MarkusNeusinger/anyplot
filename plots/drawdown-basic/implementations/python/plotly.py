@@ -1,7 +1,7 @@
 """ anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-26
 """
 
 import os
@@ -36,8 +36,9 @@ PRICE = "Price (index, start = 100)"  # role: price
 np.random.seed(42)
 n_days = 500
 returns = np.random.normal(0.0003, 0.015, n_days)
-returns[100:150] -= 0.008  # market correction
-returns[300:350] -= 0.012  # larger drawdown period
+returns[60:110] -= 0.012  # market correction
+returns[110:260] += 0.004  # rally to a new high
+returns[330:380] -= 0.012  # second correction, still open at the end
 df = pd.DataFrame({DATE: pd.date_range("2022-01-01", periods=n_days, freq="B"), PRICE: 100 * np.cumprod(1 + returns)})
 
 # Plot
@@ -50,9 +51,14 @@ max_dd_idx = df[DRAWDOWN].idxmin()
 max_dd_value = df.loc[max_dd_idx, DRAWDOWN]
 max_dd_date = df.loc[max_dd_idx, DATE]
 
-# Recovery points: drawdown returns to zero after being negative
-recovery_mask = (df[DRAWDOWN] == 0) & (df[DRAWDOWN].shift(1) < 0)
+# Recovery points: a new high that ends a drawdown deeper than 5%
+episode_depth = df[DRAWDOWN].groupby((df[DRAWDOWN] == 0).cumsum()).transform("min")
+recovery_mask = (df[DRAWDOWN] == 0) & (episode_depth.shift(1) < -5)
 recovery_dates = df.loc[recovery_mask, DATE]
+
+# Recovery time of the maximum drawdown: rows from its trough to the next new high
+later_highs = df.loc[(df.index > max_dd_idx) & (df[DRAWDOWN] == 0)]
+recovery_text = f"{later_highs.index[0] - max_dd_idx} days" if len(later_highs) else "not yet reached"
 
 # Longest run of consecutive days below the previous peak
 under_water = df[DRAWDOWN] < 0
@@ -96,7 +102,7 @@ if len(recovery_dates) > 0:
             x=recovery_dates,
             y=[0] * len(recovery_dates),
             mode="markers",
-            marker=dict(size=16, color=RECOVERY_GREEN, symbol="triangle-up"),
+            marker=dict(size=12, color=RECOVERY_GREEN, symbol="triangle-up"),
             name="Recovery (New High)",
             hovertemplate="Recovery<br>Date: %{x|%Y-%m-%d}<extra></extra>",
         )
@@ -107,6 +113,7 @@ stats_text = (
     f"<b>Drawdown Statistics</b><br>"
     f"Max Drawdown: {max_dd_value:.2f}%<br>"
     f"Max Duration: {max_dd_duration} days<br>"
+    f"Recovery Time: {recovery_text}<br>"
     f"Recovery Points: {len(recovery_dates)}"
 )
 
@@ -114,9 +121,9 @@ fig.add_annotation(
     text=stats_text,
     xref="paper",
     yref="paper",
-    x=0.02,
-    y=0.04,
-    xanchor="left",
+    x=0.98,
+    y=0.02,
+    xanchor="right",
     yanchor="bottom",
     showarrow=False,
     font=dict(size=10, color=INK_SOFT),
@@ -147,6 +154,7 @@ fig.update_layout(
         title=dict(text=DRAWDOWN, font=dict(size=12, color=INK)),
         tickfont=dict(size=10, color=INK_SOFT),
         ticksuffix="%",
+        range=[max_dd_value * 1.4, -max_dd_value * 0.05],
         showgrid=True,
         gridcolor=GRID,
         linecolor=INK_SOFT,

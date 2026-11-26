@@ -2,130 +2,120 @@ library: bokeh
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:46Z'
-updated: '2026-05-23T11:15:07Z'
+updated: '2026-11-26T14:10:25Z'
 generated_by: claude-sonnet
-workflow_run: 26330605633
+workflow_run: 45835195998
 issue: 3752
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Semantic Imprint palette usage: red for financial loss, green for recovery —
-    meaningful color storytelling within palette rules'
-  - Complete spec compliance with all required features implemented and working
-  - 'Perfect code quality: clean, reproducible, idiomatic bokeh with proper output
-    artifacts'
-  - 'Excellent data quality: realistic 3-year portfolio simulation with multiple stress
-    periods'
-  - Expert bokeh idiomatic usage (varea, Span, ColumnDataSource, HoverTool with datetime
-    formatter)
+  - Stats block wrapped in an ELEVATED_BG callout with INK_SOFT border, placed in
+    screen units in empty fill area clear of the curve
+  - Recovery triangles sit exactly on the zero baseline at each return to a new high
+  - Theme-aware fill alpha keeps the red loss field readable on the dark page
+  - 'Idiomatic bokeh: ColumnDataSource from the tidy df, varea, Span, Label in screen
+    units, HoverTool with datetime formatter for the HTML artifact'
+  - Statistics computed from the data (max DD, duration, 'not yet reached' recovery)
+    and match the curve
   weaknesses:
-  - 'Dark render: 35% alpha red fill over #1A1A17 produces very dark brownish-red
-    with minimal contrast from background — the drawdown filled area barely registers
-    visually; increase fill_alpha to ~0.55-0.60 for dark theme to restore visual impact'
-  - Stats block (Max DD, Duration, Recovery) floats as raw text directly in the red-filled
-    data area without a background box — readability and visual separation suffer;
-    wrapping in a small callout box with ELEVATED_BG fill and INK_SOFT border would
-    improve clarity and polish
+  - 'Suggestion: the max-drawdown value appears three times (legend entry, point label,
+    stats box); dropping it from the legend entry would declutter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "drawdown-basic · python · bokeh · anyplot.ai" fully visible in dark ink; Y-axis label "Drawdown (%)" and X-axis label "Date" in dark ink; tick labels in INK_SOFT — all readable against light background
-      Data: Red (#B71D27) semi-transparent fill + red line for drawdown; green (#009E73) triangles for recovery/new highs at zero line; sky-blue (#16B8F3) circle at max drawdown point; stats block (Max DD, Duration, Recovery) floats over red fill in center-right
+      Background: warm off-white #FAF8F1
+      Chrome: title 'drawdown-basic · python · bokeh · anyplot.ai' bold dark ink, 'Drawdown (%)' and 'Date' in INK, ticks in INK_SOFT; all readable; subtle grid; legend lower left in elevated box with 40 px glyphs
+      Data: #AE3030 red line with 35% red fill to a dark zero Span; #4467A3 circle with '-44.2%' label at the May 2024 trough; #009E73 triangles on the zero line at Jan 2022 and Aug 2023; boxed stats 'Max DD: -44.2% / Duration: 246 days / Recovery: not yet reached' upper right, clear of the curve
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all render in light cream/off-white (#F0EFE8 / #B8B7B0) — readable against dark background; no dark-on-dark text failures detected
-      Data: Red, green, sky-blue data colors are identical to light render. Red fill at 35% alpha over #1A1A17 creates very dark brownish-red with low contrast — fill area is barely distinguishable from background; red line on top remains the primary visible data element
-      Legibility verdict: PASS (with note: filled area has low contrast in dark mode — alpha too low for dark surface)
+      Background: warm near-black #1A1A17
+      Chrome: light title, labels and ticks, light zero line, dark elevated legend and stats box with light text; no dark-on-dark
+      Data: identical red, blue, green to light; fill at 55% alpha reads clearly as dark red
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks); readable in both themes; 30pt annotation label slightly generous
+        comment: All text set explicitly (50/42/34 pt, stats 28 pt, label 30 pt) and
+          readable in both themes; INK/INK_SOFT tokens threaded through
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap; stats block floats in red-filled data area
-          without background boxes, reducing separation from data layer
+        comment: No text collisions; stats callout sits on the fill but clear of the
+          curve; legend in an empty lower-left corner
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Light render clear. Dark render: 35% alpha red fill over #1A1A17
-          produces very dark brownish-red with low contrast; line visible but fill
-          area lacks impact'
+        comment: Line width 3 for 750 points, 20 px max-DD circle and 24 px recovery
+          triangles; legend glyphs at 40 px match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette; red/green/blue used for distinct semantic roles,
-          not as sole distinguishing signals in direct comparison
+        comment: Red loss fill, blue trough marker, green recovery triangles differ
+          by shape and lightness as well as hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, min_border properly set; stats block floating in
-          data area without background boxes slightly clutters layout
+        comment: Plot area fills the 3200x1800 canvas with balanced borders; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Drawdown (%) with units; X-axis Date adequate; title format
-          correct
+        comment: '''Drawdown (%)'' with unit and ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exceptions applied: #B71D27 (red pos3) for loss, #009E73
-          (green pos1) for recovery, #16B8F3 (sky blue pos4) for max DD; backgrounds
-          correct for both themes'
+        comment: 'Imprint colors only (red #AE3030 as semantic loss, #4467A3, #009E73);
+          backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful semantic color assignments above defaults; stats annotations
-          add context; floating stats text without callout boxes reduces polish
+        comment: 'Style-guide baseline: Imprint tokens, explicit fonts, elevated legend;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid at 10% alpha subtle; outline transparent removes box border;
-          legend has elevated-background styling; good refinement above defaults
+        comment: Stats callout boxed in ELEVATED_BG with INK_SOFT border and per-theme
+          fill alpha (0.35 / 0.55) chosen so the fill registers on the dark page
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point at max drawdown; stats block provides context;
-          visual hierarchy from fill to line to markers to annotations; coherent financial
-          risk narrative
+        comment: Blue trough marker as the single contrasting accent against the red
+          field draws the eye to the maximum drawdown
     spec_compliance:
       score: 15
       max: 15
@@ -135,30 +125,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct drawdown chart: filled area below zero baseline, time on
-          X, percentage on Y'
+        comment: Correct drawdown area chart, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements: running max drawdown calc, semi-transparent
-          fill, max DD marker+annotation, recovery markers, stats block (max DD%,
-          duration, recovery time), zero baseline Span'
+        comment: Running-max drawdown, semi-transparent red fill, visible zero Span,
+          max-DD marker+label, recovery triangles, stats block (max DD, duration,
+          recovery) - all C1-C5 shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on X, drawdown % on Y; all data visible across full 3-year
-          range
+        comment: Dates on x, drawdown on y with 0 at the top; recovery markers sit
+          exactly on 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels Drawdown/Max DD/New High are
-          meaningful
+        comment: Title in mandated format; legend entries Drawdown / Max DD / New
+          High match the marks
     data_quality:
       score: 15
       max: 15
@@ -168,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple drawdown periods of varying depth and duration; clear max
-          DD; recovery transitions; key statistics shown
+        comment: Several drawdowns of different depth, flat stretches near zero, a
+          still-open final drawdown (permitted)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic 3-year synthetic portfolio with seeded random returns and
-          deliberately stressed periods; plausible investment scenario
+        comment: Plausible seeded 3-year daily portfolio NAV in USD with stress periods
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Max drawdown -44.2% and duration 246 days realistic for volatile
-          portfolio; return magnitudes factually plausible
+        comment: Max DD -44.2% read off the axis matches the computed label; 246-day
+          duration from Aug 2023 peak to May 2024 trough matches the curve
     code_quality:
       score: 10
       max: 10
@@ -193,59 +181,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no functions/classes'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; loop for stats block appropriate; sys.path fix
-          documented
+        comment: Vectorized cummax and shift-based recovery detection
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for interactive
-          bokeh library
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current bokeh 3
+          API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ColumnDataSource, varea, Span, Label, HoverTool with
-          datetime formatter; follows bokeh recommended patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: varea, Span, Label models, HoverTool with @date{%F} datetime format
-          string, CDP screenshot for exact pixel dims — clearly bokeh-specific features
+        comment: ColumnDataSource built from the tidy df with column-name constants,
+          varea between columns, Span baseline
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool with datetime formatter on spaced column names; Label in
+          screen units with background/border
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  rendered_at: '2026-11-26T14:07:21Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource

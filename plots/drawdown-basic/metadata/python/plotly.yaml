@@ -2,9 +2,9 @@ library: plotly
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:06Z'
-updated: '2026-11-26T14:05:30Z'
+updated: '2026-11-26T14:14:06Z'
 generated_by: claude-sonnet
-workflow_run: 45834190152
+workflow_run: 45835708058
 issue: 3752
 language_version: 3.14.10
 library_version: 7.1.0
@@ -12,56 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
   - Drawdown computed from df with cummax() as (price − running max) / running max
-    × 100; the curve stays at or below zero, and zero sits at the top of the axis
+    × 100; the curve stays at or below zero, touches zero only at new highs, and zero
+    sits at the top of the axis
   - 'Idiomatic plotly area: fill=''tozeroy'' with a semi-transparent Imprint matte
     red (#AE3030) fill under a solid red line, and a 2 px zeroline in INK_SOFT that
     stays clearly visible in both themes'
   - 'Semantic colors from the Imprint palette: matte red for loss, brand green #009E73
     triangles for new highs, kept apart by shape (line, diamond, triangle) as well
     as by hue'
-  - The max-drawdown diamond's label and the statistics panel use theme tokens (INK,
-    INK_SOFT on ELEVATED_BG), so all annotation text reads well on both surfaces
+  - The statistics panel reports max drawdown, max duration and the recovery time
+    computed from df, all matching the curve, on ELEVATED_BG with theme tokens so
+    it reads on both surfaces
+  - The generated series shows a full drawdown-to-new-high cycle, a shallow second
+    episode and a final open drawdown, so every recovery marker and statistic has
+    something to say
   - 'Library-native interactivity: hovertemplates with %{x|%Y-%m-%d} date formatting
     on every trace, plus an HTML export next to the PNG'
-  - 'Adaptable code: column constants with role comments and one tidy df; everything
-    below the Data block is derived from df (groupby run-length trick for the duration)'
   weaknesses:
-  - 'SC-02 (both): the statistics panel lists the maximum drawdown, the maximum duration
-    and the number of recovery points, but not the recovery time that the Notes and
-    the fourth ''A good version shows'' bullet ask for → add a recovery-time line
-    computed from df (here ''Recovery: not yet reached'', because the deepest drawdown
-    is still open). Likely cause: stats_text has no recovery-time entry.'
-  - 'VQ-02 (both): the three recovery triangles in early January 2022 merge into one
-    green blob on the zero line, so a reader can neither count nor place the individual
-    new highs → triangles that stand apart: new highs spaced out in the generated
-    data, or smaller markers (size 16 → about 10, −6). Likely cause: the seeded series
-    reaches its only three new highs within its first two weeks; marker size=16.'
-  - 'DQ-01 (both): after the first two weeks the series holds one drawdown that never
-    recovers, so the recovery markers say almost nothing and no drawdown-to-new-high
-    cycle is visible → a return series with at least one full drawdown that recovers
-    to a new high before the final open one. Likely cause: returns[100:150] -= 0.008
-    and returns[300:350] -= 0.012 against a 0.0003 daily drift.'
-  - 'Suggestion: label the duration as trading days, because the dates are business
-    days (freq="B").'
+  - 'Suggestion: label the duration and recovery time as trading days, because the
+    dates are business days (freq="B") and the counts are rows.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1, not pure white. Canvas 3200x1800 landscape.
-      Chrome: Title "drawdown-basic · python · plotly · anyplot.ai" centred in dark INK, with a clear gap above the horizontal legend box (Drawdown red line and fill swatch, green "Recovery (New High)" triangle) on an ELEVATED_BG fill with an INK_SOFT frame. Y axis "Drawdown (%)" with ticks 0% to −60%, x axis "Date" with quarterly ticks from Jan 2022 to Oct 2023, all in INK/INK_SOFT and readable. Grid subtle. The bold 2 px zero line in INK_SOFT is clearly visible.
-      Data: A matte red (#AE3030) drawdown line with a semi-transparent red fill up to zero; the curve falls from 0% in January 2022 to about −46% (Aug 2022), recovers to about −33%, then drops to the max drawdown of −63.4% (May 2023, red diamond labelled "Max DD: -63.4%" in dark ink below it) and stays around −55 to −62% to the end. Three green #009E73 triangles at 0% in early January 2022 merge into one blob. The statistics box at bottom left ("Drawdown Statistics / Max Drawdown: -63.44% / Max Duration: 490 days / Recovery Points: 3") sits clear of the curve.
+      Chrome: Title "drawdown-basic · python · plotly · anyplot.ai" centred in dark INK above a horizontal legend box (red Drawdown line with fill swatch, green "Recovery (New High)" triangle) on ELEVATED_BG with an INK_SOFT frame. Y axis "Drawdown (%)" with ticks 0% to −70% (range down to about −79%), x axis "Date" with quarterly ticks Apr 2022 to Oct 2023; all readable. Grid subtle; the bold 2 px zero line in INK_SOFT is clearly visible.
+      Data: Matte red #AE3030 drawdown line with a semi-transparent red fill up to zero. The curve falls from 0% in January 2022 to the max drawdown of −56.8% (June 2022, red diamond labelled "Max DD: -56.8%" in INK below it), recovers to a new high at the end of December 2022 (green #009E73 triangle), dips to about −10%, makes a second new high in mid-March 2023 (second triangle, clearly apart from the first), then drops to about −45% and stays open to the end. A statistics panel at the bottom right ("Drawdown Statistics / Max Drawdown: -56.76% / Max Duration: 249 days / Recovery Time: 149 days / Recovery Points: 2") sits in empty space below the curve.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17, not pure black.
-      Chrome: Title in light INK, tick labels and legend text in light INK_SOFT, legend and stats box on the dark ELEVATED_BG with light frames; the zero line is a light grey line. No dark-on-dark text anywhere.
-      Data: Same matte red line and green triangles as in the light render (categorical colors identical); the 30 % red fill reads as a dark maroon area that is still clearly distinct from the page. The "Max DD: -63.4%" label is in light INK and fully readable.
+      Chrome: Title in light INK, ticks and legend text in light INK_SOFT, legend and statistics panel on the dark ELEVATED_BG with light frames; the zero line is a light grey line. No dark-on-dark text.
+      Data: Same matte red line, red diamond and green triangles as the light render (categorical colors identical); the 30 % red fill reads as a dark maroon area clearly distinct from the page. The "Max DD: -56.8%" label is in light INK and readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,50 +57,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16, axis titles 12, ticks/legend/annotations 10 (library reference
-          sizes); every label readable in both themes, Max DD label in INK
+        comment: Title 16, axis titles 12, ticks, legend and annotations 10 (the plotly
+          reference sizes); every label readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Three recovery triangles merge into one blob at the zero line (defect
-          line); no text collisions
+        passed: true
+        comment: No text collisions; the two recovery triangles stand apart; the statistics
+          panel sits in empty space below the curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 2 on 500 points, 14 px diamond and 16 px triangles all
-          clearly visible; legend swatches match the marks in both themes
+        comment: Line width 2 on 500 points, 14 px diamond and 12 px triangles clearly
+          visible; legend swatches match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red loss and green recovery are separated by shape (line/diamond
-          vs triangle) as well as hue; good contrast on both surfaces
+        comment: Red loss and green new highs are also separated by shape (line/diamond
+          vs triangle); good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, autosize=False, explicit margins; the plot fills
-          the canvas and nothing is cut off
+        comment: 3200x1800 canvas, autosize=False, explicit margins; the y range is
+          extended to about −79 % to give the statistics panel room below the curve;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Drawdown (%)'' with % tick suffix and ''Date''; title in the mandated
-          format'
+        comment: '''Drawdown (%)'' with a % tick suffix and ''Date''; descriptive
+          for a reader'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Semantic exception: Imprint matte red #AE3030 for loss, brand green
-          #009E73 for new highs; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive'
+          #009E73 for new highs; backgrounds #FAF8F1 / #1A1A17; chrome theme-adaptive'
     design_excellence:
       score: 8
       max: 20
@@ -121,25 +110,25 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: theme tokens, explicit font sizes, elevated
           panels; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
-        passed: true
-        comment: Spine and grid rules met (subtle grid, bold zero line the spec asks
-          for); no refinement beyond them
+        passed: false
+        comment: Spine and grid rules met (subtle grid, the bold zero line the spec
+          asks for); no refinement beyond them
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: The max-drawdown diamond and statistics are what the Notes prescribe;
-          no hierarchy chosen beyond them
+        passed: false
+        comment: The max-drawdown diamond, recovery markers and statistics are what
+          the Notes prescribe; no hierarchy chosen beyond them
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,54 +136,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct drawdown area chart, single series; only the Notes' marker,
-          recovery points and statistics added
+        comment: Correct drawdown area chart with a single series; only the Notes'
+          max-DD marker, recovery points and statistics added
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Drawdown formula, fill, zero line, max-DD marker and recovery markers
-          present; statistics lack the recovery time (defect line)
+        passed: true
+        comment: Drawdown formula, semi-transparent red fill, visible zero line, max-DD
+          diamond, recovery triangles and all three statistics (max drawdown, duration,
+          recovery time) present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date, Y = drawdown % from the running maximum; zero at the top
-          of an automatic axis, all 500 points shown at their values
+        comment: X = date, Y = drawdown % from the running maximum (cummax); zero
+          at the top of the axis, deeper losses further down; all 500 points at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the format; legend entries 'Drawdown' and 'Recovery
-          (New High)' match the marks, the max-drawdown marker is labelled directly
+        comment: Title in the mandated format; legend entries 'Drawdown' and 'Recovery
+          (New High)' match the marks; the max-DD diamond is labelled directly
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Only one drawdown episode after the first two weeks, never recovered;
-          no visible drawdown-to-new-high cycle (defect line)
+        passed: true
+        comment: 'A full drawdown-to-new-high cycle (Jan–Dec 2022), a shallow second
+          episode recovering in Mar 2023, and a final open drawdown: every aspect
+          of the plot type shows'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral simulated equity price index over two years of business days
+        comment: Neutral simulated equity price index (start = 100) over two years
+          of business days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily returns mean 0.03 %, sd 1.5 %; max drawdown −63.44 % read off
-          the axis matches the stats panel and the diamond; no Check values in the
-          spec
+        comment: 'No Check values in the spec. Checked by eye: max drawdown −56.76
+          % matches the axis trough and the diamond; recovery time 149 trading days
+          fits mid-Jun to late Dec 2022; max duration 249 trading days fits the Jan–Dec
+          2022 episode'
     code_quality:
       score: 10
       max: 10
@@ -204,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script in the six zones: column constants, one tidy df, everything
+        comment: 'Linear script: theme tokens, column constants, one tidy df, everything
           else derived from df'
       - id: CQ-02
         name: Reproducibility
@@ -223,14 +217,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: cummax(), idxmin() and a groupby run-length for the duration; no
-          hand-written algorithm a call replaces
+        comment: cummax(), idxmin() and groupby run-lengths for episode depth and
+          duration; no hand-written algorithm a call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image plot-{THEME}.png at 800x450 scale 4 and write_html plot-{THEME}.html
+        comment: write_image plot-{THEME}.png at 800x450 scale 4 (3200x1800) and write_html
+          plot-{THEME}.html
     library_mastery:
       score: 6
       max: 10
@@ -239,30 +234,30 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: fill='tozeroy', ticksuffix, yaxis zeroline styling and paper-referenced
-          add_annotation are idiomatic graph-objects usage
+        passed: false
+        comment: fill='tozeroy', yaxis ticksuffix and zeroline styling, and paper-referenced
+          add_annotation are idiomatic graph_objects usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
+        passed: false
         comment: Library-native hovertemplates with %{x|%Y-%m-%d} formatting on every
-          trace and HTML export
+          trace, plus the HTML export
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
-  rendered_at: '2026-11-26T14:01:37Z'
+  rendered_at: '2026-11-26T14:10:32Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
+  - cumulative-sum
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
