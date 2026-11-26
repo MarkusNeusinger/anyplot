@@ -12,147 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 71
 review:
   strengths:
-  - 'Correct Imprint palette assignment: price line uses brand green (#009E73), event
-    types use positions 2-5 in canonical order with semantic red for split — no custom
-    hexes.'
-  - Variable connector line widths (earnings=3, split=4, news/dividend=2) create visual
-    emphasis on high-significance events — a design detail beyond spec requirements.
-  - 'Correct theme-adaptive chrome: background, foreground, foreground_subtle all
-    derived from ANYPLOT_THEME env var for both light (#FAF8F1) and dark (#1A1A17)
-    renders.'
-  - Event markers use large dots_size=18 which makes flags visually prominent and
-    easy to spot against the price line.
-  - Connector dashed lines (dasharray='6,4') per event with color matching the event
-    type creates clear visual linkage between flag and price level.
-  - HTML output correctly included alongside PNG — leverages pygal's interactive JavaScript
-    capabilities.
-  - Compact, flat script with no unnecessary functions or classes — clean KISS structure.
-  - 'Reproducible: np.random.seed(999) set; realistic financial data with plausible
-    price range, event labels, and dates.'
+  - 'Imprint palette: price #009E73, event types in positions 2-5, identical in both
+    themes'
+  - Dashed connectors per event in the event's color link each flag to its date
+  - Per-point dict values with labels feed pygal's native HTML tooltips
   weaknesses:
-  - Event value labels rendered at value_font_size=36 are noticeably smaller than
-    legend (44) and tick labels (44) — borderline at mobile scale. Increase to 40-44
-    to match hierarchy.
-  - Flag heights are fixed per event type (earnings always at 0.12, dividend at 0.20,
-    news at 0.28, split at 0.36 above max price) rather than using alternating or
-    smart placement per-occurrence. The spec explicitly requests 'alternating heights
-    or smart placement' — when two earnings events are near in time, their flags stack
-    at the same Y level.
-  - x_labels in a pygal XY chart (9 evenly-spaced month labels over 200 trading-day
-    numeric indices) creates approximate rather than precise month alignment. The
-    month label at index 22 (approx Aug) may not correspond exactly to the first Aug
-    trading day. Consider using exact index positions computed from the DataFrame
-    for more accurate tick placement.
-  - Spines are fully visible — pygal doesn't expose a spine-removal API, but setting
-    foreground_subtle closer to PAGE_BG or using chart border styling could reduce
-    visual weight of the chart frame.
+  - 'VQ-01 (both): flag labels print at about 18 px in the light render and in near-black
+    on #1A1A17 in the dark render, where they cannot be read → about 44-48 in the
+    theme INK. Likely cause: value_font_size=36 for print_labels and no value_colors/value_label_font_size
+    in the Style.'
+  - 'VQ-07 (dark): wrong-theme chrome: flag labels and the y grid stay near-black
+    on the dark page → labels in INK, grid from INK_MUTED. Likely cause: no value_colors
+    and no guide_stroke_color/major_guide_stroke_color in the Style.'
+  - 'SC-02 (both): C4 missed: the flags'' short labels are not legible in both themes
+    → readable labels on every flag. Likely cause: the same value label settings.'
+  - 'SC-03 (both): nine month labels are spread evenly over the axis, so ''Dec ''23''
+    sits under the Nov 16 dividend and April is missing → ticks at the first trading
+    day of each month. Likely cause: chart.x_labels as a string list on pygal.XY.'
+  - 'VQ-05 (both): the y axis shows two tick sizes, 300 and 400 at 44 beside the others
+    at 56 → one size. Likely cause: label_font_size=56 vs major_label_font_size=44.'
+  - 'Suggestion: alternate the flag heights per occurrence instead of one band per
+    event type.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white.
-      Chrome: Title "Tech Stock 2023 · stock-event-flags · python · pygal · anyplot.ai" is dark ink on off-white, clearly readable. Axis labels "Date" and "Stock Price ($)" are dark and legible. Monthly tick labels (Jul '23 through Mar '24) are dark and readable. Legend at the bottom (Price, Earnings, Dividend, News, Split) is clearly readable in dark ink.
-      Data: Price line in brand green (#009E73) traces ~200 trading days from ~$240 up to ~$340-400 range. Nine event markers (large dots, dots_size=18) are positioned above the price range with dashed vertical connector lines. Earnings in lavender (#C475FD), Dividend in blue (#4467A3), News in ochre (#BD8233), Split in red (#AE3030). Event labels (e.g. "Q2 Beat", "$0.22", "Partnership", "FDA Approval") appear as small value labels (value_font_size=36) near each marker — readable at full resolution but borderline small.
-      Legibility verdict: PASS — all primary text is readable. Value labels on event markers are small (36px) but present.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'Tech Stock 2023 · stock-event-flags · python · pygal · anyplot.ai', axis titles 'Date' and 'Stock Price ($)', y ticks 240-400 and x ticks Jul '23 to Mar '24 in dark ink, readable; y ticks 300 and 400 smaller than the others; nine month labels spread evenly, ending at about 80 % of the axis with no April label; legend Price/Earnings/Dividend/News/Split at the bottom; dotted grid in near-black.
+      Data: green #009E73 close-price line over 200 trading days ($236-$363); nine flag dots above the price in per-type bands (earnings lavender, dividend blue, news ochre, split red) with dashed connectors to the price; flag labels ('Q2 Beat', '$0.22', ...) printed at about 18 px, tiny.
+      Legibility verdict: PASS for chrome, flag labels barely readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title, axis labels ("Date", "Stock Price ($)"), tick labels, and legend text all render in light cream (#F0EFE8 / foreground_strong=INK), clearly readable against the dark background. No dark-on-dark issues observed. Connector lines are slightly less visible on the dark background (light muted tone) but still distinguishable.
-      Data: Data colors are identical to the light render — brand green price line, lavender/blue/ochre/red event markers. The connector dashed lines are in matching event type colors and visible against the dark background. No color identity shift between themes.
-      Legibility verdict: PASS — all chrome text is readable. Event value labels are similarly small (36px) as in light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink, readable; the grid stays near-black and almost disappears; the flag labels render in near-black on the dark background and cannot be read.
+      Data: price and event colors identical to the light render.
+      Legibility verdict: FAIL (flag labels dark-on-dark).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
-        passed: true
-        comment: Title, axis labels, tick labels, and legend are all readable in both
-          themes. Event value labels (value_font_size=36) are functional but small
-          relative to the 3200px canvas — borderline at mobile scale.
+        passed: false
+        comment: Flag labels about 18 px in light and dark-on-dark in the dark render
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant text overlap. Fixed-height placement by event type
-          means same-type events always appear at the same Y level — minor crowding
-          risk when events are temporally close, but spacing is adequate for this
-          dataset.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line in brand green is clearly visible. Event markers (dots_size=18)
-          are prominent and easy to spot. Connector dashed lines are distinguishable
-          in both themes.
+        comment: Price line, flag dots and connectors visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Imprint palette which is CVD-optimized. No red-green as sole
-          distinguishing signal — earnings uses lavender, split uses red, price line
-          uses green (distinct roles).
+        comment: Imprint positions, distinct hues
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas is correct 3200x1800. Margins=60, legend at bottom with 5
-          columns looks clean. Top area is slightly compressed with 4 flag height
-          levels above max_price — minor visual crowding but no clipping.
+        comment: Two y tick sizes, 300 and 400 smaller (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis ''Stock Price ($)'' has units. X-axis ''Date'' is appropriate.
-          Title follows optional-prefix format: ''Tech Stock 2023 · stock-event-flags
-          · python · pygal · anyplot.ai''.'
+        comment: '''Stock Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series (price) = #009E73. Event types use canonical positions
-          2-5: #C475FD, #4467A3, #BD8233, #AE3030. Backgrounds #FAF8F1 / #1A1A17.
-          Data colors identical between light and dark.'
+        passed: false
+        comment: 'Dark render chrome wrong-theme: near-black flag labels and grid
+          (defect line)'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above generic defaults: semantic color assignment, variable connector
-          widths for event emphasis, correctly derived theme tokens. Not exceptional
-          but clearly intentional design choices.'
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: true
+        comment: The grid rules met, nothing beyond
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Correct backgrounds, subtle y-axis grid, no x-guides, legend cleanly
-          positioned at bottom. Spines remain visible (pygal limitation). Modest refinement
-          overall.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Clear hierarchy between price narrative (green line) and corporate
-          events (colored flags). Semantic colors (red for split, ochre for news)
-          guide interpretation. Variable line widths add emphasis to significant events.
+        comment: Heavier connectors for earnings and split emphasise significant events
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -160,60 +128,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stock price chart with event flags: price line + flag markers
-          + dashed connector lines.'
+        comment: Price line with flags
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: 'Has: connector lines, colored flags by event type, 4 event types,
-          event labels. Missing: spec requests ''alternating heights or smart placement''
-          — implementation uses fixed heights per event type rather than per-occurrence
-          alternation.'
+        passed: false
+        comment: 'C4 missed: flag labels not legible in both themes (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X-axis maps trading dates (monthly labels), Y-axis maps close price.
-          Events mapped to correct date positions.
+        passed: false
+        comment: Month tick labels evenly spread, not at month starts (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Tech Stock 2023 · stock-event-flags · python · pygal ·
-          anyplot.ai'' — correct format with optional descriptive prefix. Legend shows
-          all 5 series with correct colors.'
+        comment: Mandated title format, legend matches
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows price line, 4 event types (earnings/dividend/news/split), connector
-          lines, event labels, and legend. No OHLC candlesticks (optional per spec)
-          and no background regions for extended events (optional per spec).
+        comment: Four event types, nine events
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Tech company stock over 2023-2024. Plausible price range $240-$400.
-          Realistic events: quarterly earnings beats/misses, quarterly dividends ($0.22-$0.26),
-          news partnership and FDA approval, 2:1 stock split. Neutral content.'
+        comment: Plausible corporate events, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 trading days (~10 months), 9 events (3 earnings + 3 dividends
-          + 2 news + 1 split), seed=999 for reproducibility. All values in realistic
-          domain.
+        comment: Plausible price and dividend values; no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -223,58 +178,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no classes or functions. Clear linear flow
-          from data generation to chart construction to save.
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(999) set.
+        comment: Seeded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, pygal, pygal.style — all used.
+        comment: All used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Dictionaries for event colors and stroke
-          widths are clean. No fake UI.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal 3.1.0
-          API.
+        comment: PNG + HTML per theme
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Correct use of pygal.XY, Style object, render_to_png, render().
-          Uses dict form {value: ..., label: ...} for labeled points, stroke_style
-          with dasharray, show_dots=False for connectors, truncate_label=-1. Minor:
-          x_labels in XY chart produce evenly-spaced labels rather than data-aligned
-          month positions.'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML interactive output (pygal's key feature), stroke_style dasharray
-          for dashed connectors, print_labels=True for event labels, legend_at_bottom_columns.
-          Uses pygal's SVG-based rendering pipeline well. Does not exploit pygal-specific
-          tooltip customization for richer hover detail.
+        comment: pygal.XY, Style, stroke_style dasharray; x_labels string list on
+          an XY chart instead of positioned ticks
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: print_labels with per-point labels that feed pygal's HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
 impl_tags:
   dependencies: []
   techniques:
