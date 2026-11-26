@@ -12,97 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 78
 review:
   strengths:
-  - 'Full spec compliance: all 4 required curves (Bias², Variance, Irreducible Error,
-    Total Error), optimal point marker, zone shading, formula annotation, and direct
-    curve labels all present'
-  - 'Excellent Bokeh-idiomatic usage: BoxAnnotation for zone shading, Span for optimal
-    vertical line, multiple Label overlays, ColumnDataSource, dual HTML+PNG output'
-  - Theme adaptation correct and complete in both renders — no dark-on-dark failures,
-    backgrounds match anyplot spec
-  - 'Strong educational narrative: underfitting/overfitting zone shading guides the
-    viewer through the key ML concept'
-  - Clean flat code structure with proper seed and all required output artifacts
+  - Optimal complexity computed from the data (argmin) and marked with a bokeh Span
+    plus a dot at the total-error minimum
+  - Uses bokeh's native BoxAnnotation for the light underfitting/overfitting zones
+  - 'Clear weight hierarchy: thick green total curve, thinner components, dashed neutral
+    noise floor'
+  - Theme tokens threaded through all chrome; both renders readable with identical
+    data colors
   weaknesses:
-  - (High Bias) and (High Variance) sub-labels at 20pt are slightly small relative
-    to the 3200x1800 canvas; raise to 24pt to match the Underfitting/Overfitting labels
-  - Top-left text stack (formula at y=4.88, Underfitting at y=4.55, (High Bias) at
-    y=4.17) is tight — marginally crowded; add 0.15–0.2 units vertical separation
-  - Optimal annotation blends into surrounding text rather than standing out as the
-    key insight — consider a callout box or bolder styling to make the minimum-error
-    point the visual hero
+  - 'VQ-02 (both): the end of the formula ''Total Error = Bias² + Variance + Irreducible
+    Error'' runs into the dotted optimal-complexity line → end the text at least a
+    few px left of the guide. Likely cause: the formula Label at x=0.3, y=4.88 with
+    24pt text reaching the Span at x ≈ 2.7.'
+  - 'VQ-01 (both): annotations are below the 34pt tick-label reference and read small:
+    zone sub-labels at 20pt (−14 pt), formula and zone labels at 24pt (−10 pt), Irreducible
+    Error at 22pt (−12 pt) → about 34pt. Likely cause: the Label text_font_size values.'
+  - 'VQ-03 (both): the legend keys are bokeh''s default 20 px specks beside the 34pt
+    labels → glyph_width and glyph_height about 40 px (+20 px). Likely cause: p.legend.glyph_width
+    / glyph_height not set.'
+  - 'VQ-05 (dark): a 1 px light line runs along the top and left edge of the canvas
+    → page color to the edge. Likely cause: the browser page is not painted in PAGE_BG
+    before the screenshot.'
+  - 'SC-02 (both): the Bias² label sits beside the Total Error curve, and the Total
+    Error label floats about 1.5 units above its own curve, so not every label is
+    next to its curve (C2) → place each label from its curve''s value at the label''s
+    x. Likely cause: hard-coded Label coordinates (0.7, 2.85) and (5.8, 3.85).'
+  - 'SC-02 (both): Bias², Variance and Total Error are all solid, so the four curves
+    lack distinct line styles (C2) → own dash patterns for Bias² and Variance. Likely
+    cause: line_dash only on the irreducible line.'
+  - 'Suggestion: give the optimum annotation more weight so the minimum reads as the
+    key point.'
+  - 'Suggestion: loosen the vertical spacing of the formula and zone-label stack in
+    the top-left.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "curve-bias-variance-tradeoff · python · bokeh · anyplot.ai" bold dark INK, clearly readable. Axis labels "Model Complexity" / "Prediction Error" in INK at 42pt, readable. Tick labels in INK_SOFT at 34pt, readable. All annotations readable.
-      Data: Total Error = #009E73 (brand green, thickest line), Bias² = #4467A3 (blue, decreasing), Variance = #C475FD (purple, increasing), Irreducible Error = INK_SOFT dashed (neutral reference). Blue-tinted underfitting zone and purple-tinted overfitting zone. Optimal marker (green scatter, size=20). Formula annotation top-left.
+      Background: warm off-white #FAF8F1 with a faint blue tint over the underfitting zone and a faint purple tint over the overfitting zone.
+      Chrome: bold title "curve-bias-variance-tradeoff · python · bokeh · anyplot.ai" in dark ink; italic axis titles Model Complexity / Prediction Error; INK_SOFT ticks; horizontal grid only; legend top-right on an elevated box with tiny keys. All readable.
+      Data: green #009E73 U-shaped Total Error with a minimum dot and dotted vertical guide at complexity ≈ 2.7; blue #4467A3 Bias² falling; purple #C475FD Variance rising; dashed grey floor at 0.5. Labels: Bias² sits beside the Total Error curve rather than its own, Total Error floats about 1.5 units above its curve, Variance between the variance and total curves, plain 'Optimal' near the minimum. The italic formula's end runs into the dotted optimal line. Zone sub-labels at 20pt read small.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title, axis labels, tick labels all rendered in light tokens (#F0EFE8 / #B8B7B0). All readable against dark background. No dark-on-dark failures detected.
-      Data: Colors IDENTICAL to light render — green, blue, purple, dashed grey. Zone shading colors retained. Brand green #009E73 clearly visible on dark background.
+      Background: warm near-black #1A1A17 with the same zone tints; a 1 px light line along the top and left canvas edge.
+      Chrome: title, axis titles, ticks and legend in light tokens; no dark-on-dark text.
+      Data: curve colors identical to the light render; brand green clearly visible; blue labels dimmer but readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: 50pt title, 42pt axis labels, 34pt ticks per bokeh guide; all readable
-          in both themes; minor deduction for 20pt zone sub-labels being slightly
-          small
+        comment: Title, axis titles, ticks and legend at the bokeh reference sizes;
+          annotations at 20-28pt well below the 34pt tick reference, the 20pt zone
+          sub-labels read small
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Formula/zone label stack is tight but non-overlapping; no data-text
-          collisions
+        comment: The end of the formula runs into the dotted optimal-complexity line
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 4 curves clearly visible with 4-7px line widths; optimal marker
-          size=20 prominent; dashed style differentiates irreducible error
+        comment: Curves and optimum dot clear; legend keys at bokeh's 20 px default
+          are specks beside the 34pt labels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot CVD-safe palette; dashed linestyle provides redundant encoding
-          for irreducible error
+        comment: CVD-safe Imprint colors plus a dashed neutral line
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); min_border_* correct; no clipping
-          on either render
+        comment: Canvas fills well and nothing is cut off; a 1 px light line runs
+          along the top and left edge of the dark render
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Model Complexity and Prediction Error are descriptive; title matches
-          required format
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Total Error = #009E73 first series; blue/purple swap semantically
-          justified for ML education context; irreducible error uses INK_SOFT neutral;
-          backgrounds correct'
+        comment: 'Total Error #009E73, Imprint positions 2-3 for the components, neutral
+          floor; correct backgrounds in both themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -110,24 +120,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Zone shading, direct curve labels, formula annotation, and optimal-point
-          marker show deliberate design intent above defaults
+        comment: Weight hierarchy of a 7 px total over 5 px components and a dashed
+          floor, bold colored curve labels, subdued italic formula
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Hard-coded label positions drift away from their curves; the formula
+          meets the optimal guide
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Y-grid only at alpha=0.12, outline_line_color=None, elevated-bg legend
-          — clean restrained chrome
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Zone shading creates narrative structure; optimal point clearly marked;
-          formula reinforces mathematical relationship
+        comment: The thick green total curve with its minimum dot is the chosen focal
+          point
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -135,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line chart for bias-variance tradeoff
+        comment: Four theoretical error curves over model complexity
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: All 4 curves, optimal marker, vertical line, direct labels, formula,
-          zone shading all present
+        passed: false
+        comment: 'C1, C3, C4, C5 met; C2 missed twice: Bias² label sits beside the
+          Total Error curve and Total Error floats far above its curve, and three
+          of the four curves share one solid line style'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Model Complexity, Y: Prediction Error; curves mathematically
-          correct'
+        comment: Correct mapping, zero baseline, readable ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels all 4 curves
+        comment: Mandated title format; legend matches the curves
     data_quality:
       score: 15
       max: 15
@@ -165,20 +175,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 4 curves, optimal point, zone annotations, formula'
+        comment: All four curve behaviours and the minimum visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard ML education domain, neutral and plausible
+        comment: Canonical ML-education decomposition, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y 0-5.5 covers all data; X 0-10.5 for model complexity; plausible
-          theoretical values
+        comment: 'Checked: total = bias² + variance + 0.5; optimum from argmin at
+          ≈ 2.7 matches the dot and guide'
     code_quality:
       score: 10
       max: 10
@@ -188,35 +198,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat sequential script
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation necessary due to bokeh.py
-          filename conflict
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable code at appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; uses Selenium
-          pattern per bokeh guide
+        comment: Saves plot-{THEME}.html and .png
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,16 +232,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, BoxAnnotation, Span, Label all used correctly;
-          min_border_* properly set; Selenium export follows bokeh guide
+        comment: ColumnDataSource, legend_label glyphs, annotation models
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: BoxAnnotation for zone shading, Span for vertical line, Label overlays,
-          dual HTML+PNG output — strong use of Bokeh-specific models
+        comment: BoxAnnotation zones and Span optimum guide
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
 impl_tags:
   dependencies:
   - selenium
