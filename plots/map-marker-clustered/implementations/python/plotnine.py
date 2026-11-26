@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -140,7 +140,10 @@ state_boundaries = pd.concat(
 
 # City reference labels for geographic orientation
 city_label_df = pd.DataFrame(
-    [{"lat": lat + 0.65, "lon": lon, "name": city} for city, (lat, lon) in city_centers.items()]
+    [
+        {"lat": lat, "lon": lon + (-1.0 if lon > -120 else 1.0), "name": city, "ha": "right" if lon > -120 else "left"}
+        for city, (lat, lon) in city_centers.items()
+    ]
 )
 
 # Plot
@@ -156,7 +159,7 @@ plot = (
     + geom_path(
         data=state_boundaries, mapping=aes(x="lon", y="lat", group="state"), color=INK_SOFT, size=0.4, alpha=0.5
     )
-    + geom_text(data=city_label_df, mapping=aes(x="lon", y="lat", label="name"), color=INK_MUTED, size=8.5, va="bottom")
+    + geom_text(data=city_label_df, mapping=aes(x="lon", y="lat", label="name", ha="ha"), color=INK_MUTED, size=8.5)
     + geom_point(aes(size="count", color="category"), alpha=0.85, stroke=1.2)
     + geom_text(aes(label="label"), size=8, color="white", fontweight="bold")
     + scale_color_manual(values=CATEGORY_COLORS, name="Category")
@@ -165,7 +168,7 @@ plot = (
     + coord_fixed(ratio=0.7, xlim=(-125.5, -116.5), ylim=(31.5, 50.5))
     + labs(title="map-marker-clustered · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°N)")
     + theme(
-        figure_size=(8, 4.5),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
@@ -176,7 +179,8 @@ plot = (
         axis_line=element_blank(),
         axis_ticks=element_blank(),
         plot_title=element_text(color=INK, size=12),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_text=element_text(color=INK_SOFT, size=8),
         legend_title=element_text(color=INK, size=9),
         legend_position="right",
@@ -188,4 +192,4 @@ plot = (
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
