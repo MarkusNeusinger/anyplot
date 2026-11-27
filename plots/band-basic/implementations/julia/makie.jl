@@ -1,13 +1,12 @@
 # anyplot.ai
 # band-basic: Basic Band Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-05-29
+# Quality: pending | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
+using DataFrames
 using Random
-
-Random.seed!(42)
 
 # Theme tokens
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
@@ -28,18 +27,25 @@ const IMPRINT_PALETTE = [
 ]
 
 # Theme-adaptive band alpha: higher in dark mode for contrast
-const BAND_ALPHA = THEME == "light" ? 0.25f0 : 0.35f0
+const BAND_ALPHA = THEME == "light" ? 0.25f0 : 0.45f0
 
-# Data — 60-day temperature forecast with widening 95% confidence interval
-n = 60
-days = Float64.(1:n)
+# Columns: set these to your table's column names
+const DAY = "Forecast day"            # role: x
+const LOWER = "Lower 95% bound (°C)"  # role: lower
+const UPPER = "Upper 95% bound (°C)"  # role: upper
+const CENTER = "Forecast mean (°C)"   # role: center
 
-y_center = 14.0 .+ 0.06 .* days .+ 3.0 .* sin.(2π .* days ./ 30)
-sigma = 0.5 .+ 0.05 .* days
-y_lower = y_center .- 1.96 .* sigma
-y_upper = y_center .+ 1.96 .* sigma
-
-hist_mean = 15.0
+# Data: 60-day temperature forecast with a widening 95% confidence interval
+Random.seed!(42)
+days = 1:60
+center = 14.0 .+ 0.06 .* days .+ 3.0 .* sin.(2π .* days ./ 30)
+halfwidth = 1.96 .* (0.5 .+ 0.05 .* days)
+df = DataFrame(
+    DAY => collect(days),
+    LOWER => center .- halfwidth,
+    UPPER => center .+ halfwidth,
+    CENTER => center,
+)
 
 # Plot
 fig = Figure(
@@ -54,7 +60,7 @@ ax = Axis(
     titlesize          = 20,
     titlecolor         = INK,
     titlefont          = :bold,
-    xlabel             = "Forecast Day",
+    xlabel             = DAY,
     ylabel             = "Temperature (°C)",
     xlabelsize         = 14,
     ylabelsize         = 14,
@@ -77,38 +83,20 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
-# Historical mean reference — hlines! is idiomatic Makie for horizontal reference
-hlines!(ax, [hist_mean];
-    color     = (IMPRINT_PALETTE[3], 0.65),
-    linewidth = 1.5,
-    linestyle = :dash)
-
 # 95% confidence interval band (semi-transparent Imprint brand green)
-band!(ax, days, y_lower, y_upper;
+band!(ax, df[!, DAY], df[!, LOWER], df[!, UPPER];
     color = (IMPRINT_PALETTE[1], BAND_ALPHA))
 
 # Central forecast line
-lines!(ax, days, y_center;
+lines!(ax, df[!, DAY], df[!, CENTER];
     color     = IMPRINT_PALETTE[1],
     linewidth = 2.5)
-
-# Makie bracket! annotation: shows CI width at forecast horizon (day 60)
-bracket_x = Float64(n + 3)
-ci_label = "±$(round(1.96 * sigma[end], digits=1))°C"
-bracket!(ax, bracket_x, y_lower[end], bracket_x, y_upper[end];
-    text      = ci_label,
-    color     = INK_SOFT,
-    textcolor = INK_SOFT,
-    fontsize  = 11)
-
-xlims!(ax, 0, n + 16)
 
 # Legend
 axislegend(ax,
     [PolyElement(color = (IMPRINT_PALETTE[1], BAND_ALPHA), strokewidth = 0),
-     LineElement(color = IMPRINT_PALETTE[1], linewidth = 2.5),
-     LineElement(color = (IMPRINT_PALETTE[3], 0.65), linewidth = 1.5, linestyle = :dash)],
-    ["95% CI", "Forecast mean", "Historical mean ($(Int(hist_mean))°C)"],
+     LineElement(color = IMPRINT_PALETTE[1], linewidth = 2.5)],
+    ["95% CI", "Forecast mean"],
     position         = :lt,
     backgroundcolor  = ELEVATED_BG,
     framecolor       = INK_SOFT,
