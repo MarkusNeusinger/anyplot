@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -112,6 +112,22 @@ label_side = np.where(np.cos(angle) >= 0, 1.0, -1.0)
 pts["x"] = radius * np.cos(angle)
 pts["y"] = radius * np.sin(angle)
 
+
+def marker_hits(i, side):
+    """Count the other markers that a label of item i would run over on the given side."""
+    reach = 0.125 * len(pts[NAME][i])
+    lo = pts["x"][i] + 0.32 if side > 0 else pts["x"][i] - 0.32 - reach
+    near = (pts["x"] + 0.25 > lo) & (pts["x"] - 0.25 < lo + reach) & ((pts["y"] - pts["y"][i]).abs() < 0.3)
+    return int(near.sum()) - int(near[i])
+
+
+# A label goes to the other side of its marker when that side is clear of markers and this one is not
+for i in range(len(pts)):
+    far_edge = pts["x"][i] - label_side[i] * (0.32 + 0.125 * len(pts[NAME][i]))
+    stays_outside = far_edge * pts["x"][i] > 0 and abs(far_edge) > 1.0  # never across the hub and the ring names
+    if stays_outside and marker_hits(i, label_side[i]) > marker_hits(i, -label_side[i]):
+        label_side[i] = -label_side[i]
+
 # Sector headers sit outside the outer ring at the middle of their sector
 sec_mid = start_angle + (np.arange(n_sectors) + 0.5) * sector_arc
 head_x = (r_max + 1.0) * np.cos(sec_mid)
@@ -119,21 +135,30 @@ head_y = (r_max + 1.0) * np.sin(sec_mid)
 
 # Labels only: push overlapping text apart vertically (headers stay put), the markers stay at their cells
 n_pts = len(pts)
-text_x = np.concatenate([pts["x"].to_numpy() + label_side * 0.32, head_x])
-text_y = np.concatenate([pts["y"].to_numpy(), head_y])
-text_w = np.concatenate([0.125 * pts[NAME].str.len().to_numpy(), 0.16 * np.array([len(s) for s in sectors])])
+# Markers join the pass as fixed obstacles, so a label also keeps clear of every neighbouring marker
+text_x = np.concatenate([pts["x"].to_numpy() + label_side * 0.32, head_x, pts["x"].to_numpy()])
+text_y = np.concatenate([pts["y"].to_numpy(), head_y, pts["y"].to_numpy()])
+n_head = n_pts + n_sectors
+text_w = np.concatenate(
+    [0.125 * pts[NAME].str.len().to_numpy(), 0.16 * np.array([len(s) for s in sectors]), np.full(n_pts, 0.5)]
+)
 text_lo = np.concatenate(
-    [np.where(label_side > 0, text_x[:n_pts], text_x[:n_pts] - text_w[:n_pts]), head_x - text_w[n_pts:] / 2]
+    [
+        np.where(label_side > 0, text_x[:n_pts], text_x[:n_pts] - text_w[:n_pts]),
+        head_x - text_w[n_pts:n_head] / 2,
+        pts["x"].to_numpy() - 0.25,
+    ]
 )
 text_hi = text_lo + text_w
 movable = np.arange(len(text_x)) < n_pts
 min_gap = 0.32
-for _ in range(60):
+for _ in range(600):
     for i in range(len(text_x)):
         for j in range(i + 1, len(text_x)):
             gap = abs(text_y[i] - text_y[j])
-            if text_lo[i] < text_hi[j] and text_lo[j] < text_hi[i] and gap < min_gap and (movable[i] or movable[j]):
-                push = min_gap - gap + 0.01
+            need = min_gap if movable[i] and movable[j] else 0.27  # a label only needs to clear a marker's height
+            if text_lo[i] < text_hi[j] and text_lo[j] < text_hi[i] and gap < need and (movable[i] or movable[j]):
+                push = need - gap + 0.01
                 up, down = (i, j) if text_y[i] >= text_y[j] else (j, i)
                 if movable[up] and movable[down]:
                     text_y[up] += push / 2
@@ -216,7 +241,13 @@ points = (
         x=x_enc,
         y=y_enc,
         color=alt.Color(SECTOR.translate(ESCAPE), type="nominal", title=SECTOR, scale=color_scale),
-        shape=alt.Shape(RING.translate(ESCAPE), type="nominal", title=RING, scale=shape_scale),
+        shape=alt.Shape(
+            RING.translate(ESCAPE),
+            type="nominal",
+            title=RING,
+            scale=shape_scale,
+            legend=alt.Legend(symbolFillColor=INK_SOFT),
+        ),
         size=alt.condition(hover, alt.value(380), alt.value(230)),
         tooltip=[
             alt.Tooltip(NAME.translate(ESCAPE), title=NAME),
