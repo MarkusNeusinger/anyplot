@@ -30,7 +30,7 @@ targets = [90, 85, 75, 88, 55]
 n = length(labels)
 
 # --- Plot -------------------------------------------------------------------
-title_str  = "Sales KPI Dashboard · bullet-basic · julia · makie · anyplot.ai"
+title_str  = "Quarterly KPI Dashboard · bullet-basic · julia · makie · anyplot.ai"
 title_size = length(title_str) > 67 ? round(Int, 20 * 67 / length(title_str)) : 20
 
 fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
@@ -86,8 +86,7 @@ end
 
 ax.yticks    = (Float64.(1:n), labels)
 ax.xticks    = [0, 25, 50, 75, 100]
-ax.yreversed = true
-xlims!(ax, -2.0, 112.0)
+xlims!(ax, -2.0, 106.0)
 ylims!(ax, 0.3, Float64(n) + 0.7)
 
 Legend(
@@ -105,7 +104,7 @@ Legend(
     padding         = (8, 8, 8, 8),
 )
 
-colsize!(fig.layout, 2, Relative(0.20))
+colsize!(fig.layout, 2, Relative(0.13))
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
