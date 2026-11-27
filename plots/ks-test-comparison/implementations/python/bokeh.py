@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-29
@@ -16,6 +16,7 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path[:] = [p for p in sys.path if os.path.abspath(p) != _here]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import (
     Band,
@@ -46,30 +47,41 @@ COLOR_GOOD = "#009E73"  # position 1, brand green — semantic: good/pass
 COLOR_BAD = "#AE3030"  # position 5, matte red — semantic: bad/fail
 COLOR_KS = "#4467A3"  # position 3, blue — neutral emphasis for the distance measurement
 
-# Data — Credit scoring: Good vs Bad customer score distributions
+# Constants
+BAND_HALF_WIDTH = 15  # score units either side of the maximum divergence that the shaded band covers
+
+# Columns: set these to your table's column names
+GOOD = "Good Customers"  # role: sample1
+BAD = "Bad Customers"  # role: sample2
+SCORE = "Credit Score"  # role: extra
+CUM = "Cumulative Proportion"  # role: extra
+UPPER = "Upper ECDF"  # role: extra
+LOWER = "Lower ECDF"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# Credit scoring: Good vs Bad customer score distributions (samples may differ in size)
 np.random.seed(42)
 good_scores = np.random.beta(5, 2, 400) * 600 + 300  # Good customers: higher scores
 bad_scores = np.random.beta(2, 4, 350) * 600 + 300  # Bad customers: lower scores
+df = pd.concat([pd.Series(good_scores, name=GOOD), pd.Series(bad_scores, name=BAD)], axis=1)
 
-# Compute ECDFs
-good_sorted = np.sort(good_scores)
+# Plot: reads only df and the constants above
+good_sorted = np.sort(df[GOOD].dropna().to_numpy())
+bad_sorted = np.sort(df[BAD].dropna().to_numpy())
 good_ecdf = np.arange(1, len(good_sorted) + 1) / len(good_sorted)
-bad_sorted = np.sort(bad_scores)
 bad_ecdf = np.arange(1, len(bad_sorted) + 1) / len(bad_sorted)
 
 # K-S test
-ks_stat, p_value = stats.ks_2samp(good_scores, bad_scores)
+ks_stat, p_value = stats.ks_2samp(good_sorted, bad_sorted)
 
 # Find point of maximum divergence
-all_values = np.sort(np.concatenate([good_scores, bad_scores]))
+all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
 good_ecdf_at = np.searchsorted(good_sorted, all_values, side="right") / len(good_sorted)
 bad_ecdf_at = np.searchsorted(bad_sorted, all_values, side="right") / len(bad_sorted)
 max_idx = np.argmax(np.abs(good_ecdf_at - bad_ecdf_at))
 max_x = all_values[max_idx]
-max_y_good = good_ecdf_at[max_idx]
-max_y_bad = bad_ecdf_at[max_idx]
-ks_y_lower = min(max_y_good, max_y_bad)
-ks_y_upper = max(max_y_good, max_y_bad)
+ks_y_lower = min(good_ecdf_at[max_idx], bad_ecdf_at[max_idx])
+ks_y_upper = max(good_ecdf_at[max_idx], bad_ecdf_at[max_idx])
 
 # Build step function arrays — interleave x,y pairs for step rendering
 good_x_step = np.concatenate([[good_sorted[0]], np.repeat(good_sorted, 2)[1:]])
@@ -77,15 +89,18 @@ good_y_step = np.concatenate([[0], np.repeat(good_ecdf, 2)[:-1]])
 bad_x_step = np.concatenate([[bad_sorted[0]], np.repeat(bad_sorted, 2)[1:]])
 bad_y_step = np.concatenate([[0], np.repeat(bad_ecdf, 2)[:-1]])
 
-good_source = ColumnDataSource(data={"x": good_x_step, "y": good_y_step})
-bad_source = ColumnDataSource(data={"x": bad_x_step, "y": bad_y_step})
+good_source = ColumnDataSource(data={SCORE: good_x_step, CUM: good_y_step})
+bad_source = ColumnDataSource(data={SCORE: bad_x_step, CUM: bad_y_step})
 
 # Shaded band near max divergence for visual storytelling (distinctive Bokeh Band model)
-band_mask = (all_values >= max_x - 15) & (all_values <= max_x + 15)
-band_x = all_values[band_mask]
-band_upper = np.maximum(good_ecdf_at[band_mask], bad_ecdf_at[band_mask])
-band_lower = np.minimum(good_ecdf_at[band_mask], bad_ecdf_at[band_mask])
-band_source = ColumnDataSource(data={"x": band_x, "upper": band_upper, "lower": band_lower})
+band_mask = (all_values >= max_x - BAND_HALF_WIDTH) & (all_values <= max_x + BAND_HALF_WIDTH)
+band_source = ColumnDataSource(
+    data={
+        SCORE: all_values[band_mask],
+        UPPER: np.maximum(good_ecdf_at[band_mask], bad_ecdf_at[band_mask]),
+        LOWER: np.minimum(good_ecdf_at[band_mask], bad_ecdf_at[band_mask]),
+    }
+)
 
 # Plot — canonical 3200×1800 landscape canvas; toolbar_location=None avoids toolbar height offset
 title = "ks-test-comparison · python · bokeh · anyplot.ai"
@@ -93,8 +108,8 @@ p = figure(
     width=3200,
     height=1800,
     title=title,
-    x_axis_label="Credit Score",
-    y_axis_label="Cumulative Proportion",
+    x_axis_label=SCORE,
+    y_axis_label=CUM,
     y_range=Range1d(-0.03, 1.08),
     toolbar_location=None,
     min_border_bottom=160,
@@ -105,25 +120,26 @@ p = figure(
 
 # Shaded band between ECDFs at max divergence
 band = Band(
-    base="x", upper="upper", lower="lower", source=band_source, fill_color=COLOR_KS, fill_alpha=0.14, line_color=None
+    base=SCORE, upper=UPPER, lower=LOWER, source=band_source, fill_color=COLOR_KS, fill_alpha=0.14, line_color=None
 )
 p.add_layout(band)
 
 # ECDF step lines — solid green (Good) vs dashed red (Bad)
-good_line = p.line(x="x", y="y", source=good_source, line_width=5, line_color=COLOR_GOOD, alpha=0.9)
-bad_line = p.line(x="x", y="y", source=bad_source, line_width=5, line_color=COLOR_BAD, alpha=0.9, line_dash=[14, 7])
+good_line = p.line(x=SCORE, y=CUM, source=good_source, line_width=5, line_color=COLOR_GOOD, alpha=0.9)
+bad_line = p.line(x=SCORE, y=CUM, source=bad_source, line_width=5, line_color=COLOR_BAD, alpha=0.9, line_dash=[14, 7])
 
 # HoverTool for HTML artifact — shows exact ECDF values at cursor position
-hover = HoverTool(tooltips=[("Score", "@x{0.0}"), ("Cum. Proportion", "@y{0.000}")], renderers=[good_line, bad_line])
+hover = HoverTool(
+    tooltips=[(SCORE, f"@{{{SCORE}}}{{0.0}}"), (CUM, f"@{{{CUM}}}{{0.000}}")], renderers=[good_line, bad_line]
+)
 p.add_tools(hover)
 
 # K-S segment — vertical line at maximum divergence
-ks_segment_source = ColumnDataSource(data={"x0": [max_x], "y0": [ks_y_lower], "x1": [max_x], "y1": [ks_y_upper]})
-ks_line = p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=ks_segment_source, line_width=7, line_color=COLOR_KS)
+ks_source = ColumnDataSource(data={SCORE: [max_x, max_x], CUM: [ks_y_lower, ks_y_upper]})
+ks_line = p.line(x=SCORE, y=CUM, source=ks_source, line_width=7, line_color=COLOR_KS)
 
 # Diamond markers at K-S segment endpoints
-ks_marker_source = ColumnDataSource(data={"x": [max_x, max_x], "y": [ks_y_lower, ks_y_upper]})
-p.scatter(x="x", y="y", source=ks_marker_source, size=26, color=COLOR_KS, marker="diamond")
+p.scatter(x=SCORE, y=CUM, source=ks_source, size=26, color=COLOR_KS, marker="diamond")
 
 # Annotation — K-S statistic and p-value, prominently sized with theme-adaptive background
 p_text = "p < 0.001" if p_value < 0.001 else f"p = {p_value:.4f}"
@@ -150,8 +166,8 @@ p.add_layout(max_div_span)
 # Legend — canonical 34pt size from bokeh.md, theme-adaptive fill
 legend = Legend(
     items=[
-        LegendItem(label="Good Customers (ECDF)", renderers=[good_line]),
-        LegendItem(label="Bad Customers (ECDF)", renderers=[bad_line]),
+        LegendItem(label=f"{GOOD} (ECDF)", renderers=[good_line]),
+        LegendItem(label=f"{BAD} (ECDF)", renderers=[bad_line]),
         LegendItem(label="Max Distance (K-S Stat)", renderers=[ks_line]),
     ],
     location="top_left",
@@ -223,6 +239,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme colour so no white edge line shows through the canvas anti-aliasing
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
