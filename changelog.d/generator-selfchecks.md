@@ -13,7 +13,7 @@
   re-running the check record-only. A regeneration had carried a line that a
   gate checks into nearly every file, but a line that is only read into
   about half: 9 of 16 replaced bokeh files painted the page, 7 of 16 pygal
-  files set both tick sizes alike.
+  files set both tick sizes alike. (#14702)
 - **The generator recomputes what its plot claims.** Step 4 of the generate
   prompt now lists every claim the plot states that its data or structure
   can confirm (printed numbers and words, two parts showing one quantity,
@@ -23,7 +23,7 @@
   fix round. The result goes into a `Claims self-check:` line. The review
   reads the picture and can't recompute it, so sealed mazes, a "Mercator"
   title over another projection and change indicators that contradict their
-  sparkline had passed it.
+  sparkline had passed it. (#14702)
 
 ### Fixed
 
@@ -33,4 +33,4 @@
   blank bands are (below a panel with bands above and below it), picks the
   canvas by the figure with its title and legend, and widens a map's shorter
   span from the data. On scratch renders this took the blank share of two
-  square maps from about a quarter of the height to a twentieth.
+  square maps from about a quarter of the height to a twentieth. (#14702)
