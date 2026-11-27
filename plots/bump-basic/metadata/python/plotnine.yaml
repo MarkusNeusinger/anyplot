@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:24Z'
-updated: '2026-11-27T20:37:20Z'
+updated: '2026-11-27T20:45:28Z'
 generated_by: claude-sonnet
-workflow_run: 46064022072
+workflow_run: 46064998725
 issue: 982
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,58 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Clean basic bump chart: six lines at equal weight, every one passing through
-    its rank at all eight quarters with a centered dot marker in its line''s color'
-  - scale_y_reverse with breaks taken from the data's rank range puts rank 1 on top
-    with ticks only at whole ranks
+  - 'Clean basic bump chart: six equal-weight lines, each passing through its rank
+    at all eight quarters with a centered dot marker in its line''s color'
+  - scale_y_reverse with breaks from the data's rank range puts rank 1 on top with
+    ticks only at whole ranks
   - Direct end labels via a per-layer data= subset on geom_text identify every entity
-    without a legend box; labels sit on distinct ranks and never collide
-  - 'scale_color_manual with limits taken from df keeps the data order, so StreamVue
-    gets #009E73 and the Imprint palette runs in canonical order, identical in both
-    themes'
+    without a legend box, at 8 pt to match the tick labels, never colliding
+  - 'scale_color_manual with limits from df keeps data order, so StreamVue gets #009E73
+    and Imprint runs in canonical order, identical in both themes'
   - Theme tokens threaded through title, axis titles, ticks, grid and labels; both
     renders pass legibility
   - Column constants and a self-contained Data block ending in df make the file adaptable
     to a user's own table
   weaknesses:
-  - 'VQ-01 (both): the direct end labels (WavePlay … EchoTV) render at about 6 pt,
-    below the 8 pt tick-label reference, and read small beside the 8 pt tick labels
-    although they are the only entity key → 8 pt (+2). Likely cause: geom_text(size=6).'
   - 'Suggestion: tightening the right x-limit slightly would trim the empty band to
     the right of the end labels.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: bold dark title "bump-basic · python · plotnine · anyplot.ai" centered at ~50% width; y-axis title "Market share rank", x-axis title "Quarter" in dark ink; tick labels 1–6 (inverted, 1 at top) and Q1'24–Q4'25 in INK_SOFT; subtle horizontal grid only. Direct end labels in dark ink right of the Q4'25 markers, one per rank, no collisions.
-      Data: six equal-weight lines with dot markers at every quarter — StreamVue #009E73 (1→4), WavePlay #C475FD (2→1), CloudCast #4467A3, PixelFlix #BD8233, SonicNet #AE3030, EchoTV #2ABCCD (flat at 6). Crossings at Q3→Q4'24, Q1→Q2'25, Q3→Q4'25 clearly visible.
+      Chrome: bold dark title "bump-basic · python · plotnine · anyplot.ai" centered at about half the width; axis titles "Market share rank" and "Quarter" in dark ink; ticks 1-6 (inverted, 1 at top) and Q1'24-Q4'25 in INK_SOFT; subtle horizontal grid only. Direct end labels in dark ink at about the tick-label size right of the Q4'25 markers, one per rank, no collisions.
+      Data: six lines with dot markers at every quarter: StreamVue #009E73 (1->4), WavePlay #C475FD (2->1), CloudCast #4467A3, PixelFlix #BD8233, SonicNet #AE3030, EchoTV #2ABCCD (flat at 6). Crossings at Q3->Q4'24, Q1->Q2'25 and Q3->Q4'25 clearly visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles and ticks in light ink; end labels in light ink; grid subtle but visible. No dark-on-dark text.
-      Data: the six categorical colors are identical to the light render; all lines and markers stand out clearly, brand green visible.
+      Chrome: title, axis titles, ticks and end labels in light ink; grid subtle but visible. No dark-on-dark text.
+      Data: categorical colors identical to the light render; all lines and markers stand out, brand green visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes set and readable in both themes; end labels at ~6 pt read
-          small against the 8 pt reference (defect line)
+        comment: All sizes set and readable in both themes; end labels now 8 pt, matching
+          the tick labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; end labels on separate ranks
+        comment: No text collisions; end labels sit on separate ranks
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -76,7 +72,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Imprint colors plus direct labels, so color is never the sole signal
+        comment: Imprint colors plus direct labels, color never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -112,13 +108,13 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: Legend box replaced by rank-aligned direct end labels with reserved
+        comment: Legend box replaced by rank-aligned direct end labels with a reserved
           right margin
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
+        passed: false
         comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
@@ -136,13 +132,13 @@ review:
         max: 4
         passed: true
         comment: Inverted y, distinct colors + labels, dot markers, lines across all
-          periods (C1–C5 met)
+          periods (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their ranks; whole-number ticks
+        comment: Marks at their ranks; whole-number ticks only
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -158,7 +154,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Overtakes, a decline 1→4, a rise to 1, a late surge, a stable entity
+        comment: Overtakes, a decline 1->4, a rise to 1, a late surge, a stable entity
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -170,8 +166,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 6 entities ranked 1–6 without ties per quarter, 8 quarters (spec
-          range)
+        comment: 6 entities ranked 1-6 without ties per quarter, 8 quarters (spec
+          range); no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -181,7 +177,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → Data → Plot → Save, no functions
+        comment: Imports -> tokens -> Data -> Plot -> Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,18 +212,18 @@ review:
         max: 5
         passed: true
         comment: Grammar layering with scale_y_reverse, mapped period positions relabelled
-          via scale_x_continuous, per-layer data= for labels
+          via scale_x_continuous
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
+        passed: false
         comment: Per-layer data= subset on geom_text for end labels, a grammar-of-graphics
           idiom
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
-  rendered_at: '2026-11-27T20:33:49Z'
+  rendered_at: '2026-11-27T20:42:57Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -235,7 +231,8 @@ impl_tags:
   - layer-composition
   - manual-ticks
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - grid-styling
+  - alpha-blending
