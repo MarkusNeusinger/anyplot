@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-impurity-comparison: Gini Impurity vs Entropy Comparison
 # Library: makie 0.24.16 | Julia 1.13.4
-# Quality: 78/100 | Updated: 2026-11-27
+# Quality: pending | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
