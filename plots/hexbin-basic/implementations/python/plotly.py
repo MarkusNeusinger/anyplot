@@ -1,184 +1,161 @@
 """ anyplot.ai
 hexbin-basic: Basic Hexbin Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-29
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Created: 2026-11-27
 """
 
 import os
-import sys
-
-
-# Prevent self-shadowing: remove this script's directory from sys.path so
-# 'import plotly' resolves to the installed package, not this file.
-_here = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if p and os.path.abspath(p) != _here]
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint sequential colorscale for continuous density data
-imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+# Imprint palette (full list, canonical order) and the sequential field ramp for hexbin cells
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+SEQ_FIELDS = (
+    [[0.0, "#66E2B2"], [0.369, "#009E73"], [0.803, "#024582"], [1.0, "#351E45"]]
+    if THEME == "light"
+    else [[0.0, "#404C02"], [0.487, "#009E73"], [1.0, "#CDD9FF"]]
+)
 
-# Data - ride-share pickup density across a metro area
-np.random.seed(42)
+# Constants
+GRIDSIZE = 28  # hexagons across the plot width, as in matplotlib's hexbin
+CANVAS_W, CANVAS_H = 800, 450  # logical canvas; write_image scales it x4 to 3200 x 1800
+MARGINS = {"l": 80, "r": 130, "t": 60, "b": 60}
 
-# Three pickup hotspots: Downtown (dense hub), Airport (tight cluster), University (diffuse)
-clusters = [(-4, 1.0, 1.3, 4000), (1.5, 3.5, 0.9, 3500), (6, 1.5, 1.1, 2500)]
+# Columns: set these to your table's column names
+TEMPERATURE = "Bearing temperature (°C)"  # role: x
+VIBRATION = "Vibration (mm/s)"  # role: y
 
-x_all, y_all = [], []
-for cx, cy, spread, n in clusters:
-    x_all.extend(np.random.randn(n) * spread + cx)
-    y_all.extend(np.random.randn(n) * spread + cy)
+# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
+# Factory sensor readings from a milling spindle: idle, normal load and overload operating modes
+rng = np.random.default_rng(42)
+modes = [
+    # temperature mean, vibration mean, temperature sd, vibration sd, correlation, readings
+    (42.0, 1.2, 3.0, 0.35, 0.3, 4500),
+    (68.0, 3.4, 4.5, 0.80, 0.6, 5500),
+    (86.0, 6.8, 3.5, 1.30, 0.5, 2000),
+]
+frames = []
+for t_mean, v_mean, t_sd, v_sd, rho, n in modes:
+    cov = [[t_sd**2, rho * t_sd * v_sd], [rho * t_sd * v_sd, v_sd**2]]
+    t_v = rng.multivariate_normal([t_mean, v_mean], cov, size=n)
+    frames.append(pd.DataFrame({TEMPERATURE: t_v[:, 0], VIBRATION: t_v[:, 1]}))
+df = pd.concat(frames, ignore_index=True)
 
-x = np.array(x_all)
-y = np.array(y_all)
+# Plot: reads only df and the constants above
+x_lo, x_hi = df[TEMPERATURE].min(), df[TEMPERATURE].max()
+y_lo, y_hi = df[VIBRATION].min(), df[VIBRATION].max()
+x_pad, y_pad = (x_hi - x_lo) * 0.04, (y_hi - y_lo) * 0.04
+x_range = [x_lo - x_pad, x_hi + x_pad]
+y_range = [y_lo - y_pad, y_hi + y_pad]
 
-# Hexagonal binning (manual — plotly lacks a native hexbin trace)
-gridsize = 25
-x_min, x_max = x.min() - 0.5, x.max() + 0.5
-y_min, y_max = y.min() - 0.5, y.max() + 0.5
+# Hexagons are binned in pixel space of the plot area so they stay regular on screen
+plot_w = CANVAS_W - MARGINS["l"] - MARGINS["r"]
+plot_h = CANVAS_H - MARGINS["t"] - MARGINS["b"]
+sx = plot_w / (x_range[1] - x_range[0])
+sy = plot_h / (y_range[1] - y_range[0])
+radius = plot_w / (GRIDSIZE * np.sqrt(3))  # circumradius of a pointy-top hexagon, in px
 
-hex_size = (x_max - x_min) / (gridsize * 2)
-hex_w = hex_size * np.sqrt(3)
-hex_h = hex_size * 2
-vert_spacing = hex_h * 0.75
+u = (df[TEMPERATURE].to_numpy() - x_range[0]) * sx
+v = (df[VIBRATION].to_numpy() - y_range[0]) * sy
+q_frac = (np.sqrt(3) / 3 * u - v / 3) / radius
+r_frac = (2 / 3 * v) / radius
+s_frac = -q_frac - r_frac
+q, r, s = np.round(q_frac), np.round(r_frac), np.round(s_frac)
+dq, dr, ds = np.abs(q - q_frac), np.abs(r - r_frac), np.abs(s - s_frac)
+fix_q = (dq > dr) & (dq > ds)
+fix_r = ~fix_q & (dr > ds)
+q = np.where(fix_q, -r - s, q)
+r = np.where(fix_r, -q - s, r)
 
-hex_bins = {}
-for xi, yi in zip(x, y, strict=True):
-    row = int((yi - y_min) / vert_spacing)
-    offset = (row % 2) * hex_w * 0.5
-    col = int((xi - x_min - offset) / hex_w)
-    hx = x_min + col * hex_w + offset + hex_w / 2
-    hy = y_min + row * vert_spacing + hex_h / 2
-    key = (col, row)
-    if key not in hex_bins:
-        hex_bins[key] = [hx, hy, 0]
-    hex_bins[key][2] += 1
+cells, counts = np.unique(np.column_stack([q, r]), axis=0, return_counts=True)
+hex_x = (radius * np.sqrt(3) * (cells[:, 0] + cells[:, 1] / 2)) / sx + x_range[0]
+hex_y = (radius * 1.5 * cells[:, 1]) / sy + y_range[0]
 
-hex_x = np.array([v[0] for v in hex_bins.values()])
-hex_y = np.array([v[1] for v in hex_bins.values()])
-counts = np.array([v[2] for v in hex_bins.values()])
+# Log color mapping: the densest hexagons hold far more readings than the fringe
+log_counts = np.log10(counts)
+tick_counts = [c for c in (1, 3, 10, 30, 100, 300, 1000) if c <= counts.max()]
+if counts.max() > 1.3 * tick_counts[-1]:
+    tick_counts.append(int(counts.max()))
 
-# Sort by count so dense hexagons render on top at overlaps
+# Densest hexagons last, so edge overlaps never hide them
 order = np.argsort(counts)
-hex_x, hex_y, counts = hex_x[order], hex_y[order], counts[order]
-
-# Log-scale color mapping for wide density range — spec recommendation
-log_counts = np.log1p(counts)
-log_max = float(log_counts.max())
-
-# Colorbar ticks at meaningful count thresholds, displayed in raw count space
-tick_vals_counts = [v for v in [1, 5, 10, 25, 50, 100, 200] if v <= int(counts.max())]
-tick_vals_counts.append(int(counts.max()))
-tick_vals_log = [float(np.log1p(v)) for v in tick_vals_counts]
-tick_text = [str(v) for v in tick_vals_counts]
-
-# Marker size calibrated to logical canvas (800×450) for seamless tessellation
-margins = {"l": 80, "r": 125, "t": 80, "b": 60}
-plot_w = 800 - margins["l"] - margins["r"]
-plot_h = 450 - margins["t"] - margins["b"]
-ax_x_range = (hex_x.max() + hex_w) - (hex_x.min() - hex_w)
-ax_y_range = (hex_y.max() + hex_h) - (hex_y.min() - hex_h)
-px_per_unit = min(plot_w / ax_x_range, plot_h / ax_y_range)
-marker_size = 2 * hex_size * px_per_unit * 1.85
-
-title = "hexbin-basic · python · plotly · anyplot.ai"
+marker_size = 2 * radius * 1.1
 
 fig = go.Figure(
     go.Scatter(
-        x=hex_x,
-        y=hex_y,
+        x=hex_x[order],
+        y=hex_y[order],
         mode="markers",
         marker={
             "symbol": "hexagon2",
             "size": marker_size,
-            "color": log_counts,
-            "colorscale": imprint_seq,
+            "color": log_counts[order],
+            "colorscale": SEQ_FIELDS,
             "cmin": 0,
-            "cmax": log_max,
+            "cmax": log_counts.max(),
+            "line": {"width": 0},
             "colorbar": {
-                "title": {"text": "Pickups", "font": {"size": 12, "color": INK_SOFT}},
+                "title": {
+                    "text": "Readings per hexagon (log scale)",
+                    "font": {"size": 12, "color": INK},
+                    "side": "right",
+                },
                 "tickfont": {"size": 10, "color": INK_SOFT},
-                "tickcolor": INK_SOFT,
-                "tickvals": tick_vals_log,
-                "ticktext": tick_text,
+                "tickvals": [float(np.log10(c)) for c in tick_counts],
+                "ticktext": [str(c) for c in tick_counts],
                 "outlinewidth": 0,
                 "thickness": 16,
-                "len": 0.7,
-                "x": 1.01,
-                "bgcolor": ELEVATED_BG,
+                "len": 0.9,
             },
-            "line": {"width": 1, "color": log_counts, "colorscale": imprint_seq, "cmin": 0, "cmax": log_max},
         },
-        customdata=counts,
-        hovertemplate="East: %{x:.1f} km<br>North: %{y:.1f} km<br>Pickups: %{customdata}<extra></extra>",
+        customdata=counts[order],
+        hovertemplate=(
+            f"{TEMPERATURE}: %{{x:.1f}}<br>{VIBRATION}: %{{y:.2f}}<br>Readings: %{{customdata}}<extra></extra>"
+        ),
         showlegend=False,
     )
 )
 
 fig.update_layout(
     autosize=False,
-    width=800,
-    height=450,
+    width=CANVAS_W,
+    height=CANVAS_H,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin=margins,
+    margin=MARGINS,
     font={"color": INK},
-    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "hexbin-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Distance East (km)", "font": {"size": 12, "color": INK}},
+        "title": {"text": TEMPERATURE, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
         "linecolor": INK_SOFT,
-        "linewidth": 1,
-        "range": [hex_x.min() - hex_w, hex_x.max() + hex_w],
+        "range": x_range,
     },
     yaxis={
-        "title": {"text": "Distance North (km)", "font": {"size": 12, "color": INK}},
+        "title": {"text": VIBRATION, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
         "linecolor": INK_SOFT,
-        "linewidth": 1,
-        "scaleanchor": "x",
-        "scaleratio": 1,
-        "range": [hex_y.min() - hex_h, hex_y.max() + hex_h],
+        "range": y_range,
     },
-    hoverlabel={"bgcolor": ELEVATED_BG, "font": {"size": 10, "color": INK}, "bordercolor": INK_SOFT},
 )
 
-# Annotate cluster hotspots for spatial narrative
-for label, cx, cy, ax_offset, ay_offset in [
-    ("Downtown", -4, 1.0, -45, 55),
-    ("Airport", 1.5, 3.5, 35, -50),
-    ("University", 6, 1.5, 45, 55),
-]:
-    fig.add_annotation(
-        x=cx,
-        y=cy,
-        text=f"<b>{label}</b>",
-        showarrow=True,
-        arrowhead=0,
-        arrowwidth=1.5,
-        arrowcolor=INK_MUTED,
-        ax=ax_offset,
-        ay=ay_offset,
-        font={"size": 11, "color": INK},
-        bgcolor=ELEVATED_BG,
-        borderpad=8,
-        bordercolor=INK_SOFT,
-        borderwidth=0.5,
-    )
-
-fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=CANVAS_W, height=CANVAS_H, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
