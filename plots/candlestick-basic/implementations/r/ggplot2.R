@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' candlestick-basic: Basic Candlestick Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 91/100 | Created: 2026-05-30
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(scales)
@@ -15,6 +15,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID        <- alpha(INK, 0.15)  # INK at 15 %, the style guide grid tone
 
 # Imprint palette — semantic finance mapping (position 1: gain, position 5: loss)
 BULL_COLOR <- "#009E73"  # bullish / gain
@@ -60,10 +61,6 @@ df$body_bottom <- pmin(df$open, df$close)
 df$xmin        <- df$x - 0.38
 df$xmax        <- df$x + 0.38
 
-# Closing price trend line (linear fit) for visual storytelling
-trend_fit <- lm(close ~ x, data = df)
-trend_y   <- fitted(trend_fit)
-
 # --- X-axis breaks -----------------------------------------------------------
 break_idx    <- seq(1, n, by = 5)
 break_labels <- format(trade_dates[break_idx], "%b %d")
@@ -74,13 +71,6 @@ p <- ggplot(df) +
     geom_segment(
         aes(x = x, xend = x, y = low, yend = high, color = direction),
         linewidth = 0.45, show.legend = FALSE
-    ) +
-    # Subtle trend overlay (closing prices)
-    geom_line(
-        data = data.frame(x = df$x, close = trend_y),
-        aes(x = x, y = close),
-        color = INK_SOFT, linewidth = 0.5, linetype = "dashed",
-        inherit.aes = FALSE, alpha = 0.55
     ) +
     # Open-close bodies
     geom_rect(
@@ -116,7 +106,7 @@ p <- ggplot(df) +
     theme(
         plot.background    = element_rect(fill = PAGE_BG,     color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG,     color = NA),
-        panel.grid.major.y = element_line(color = INK_SOFT,   linewidth = 0.2),
+        panel.grid.major.y = element_line(color = GRID,       linewidth = 0.3),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         axis.title         = element_text(color = INK,        size = 10),
@@ -126,8 +116,7 @@ p <- ggplot(df) +
         axis.ticks         = element_line(color = INK_SOFT,   linewidth = 0.3),
         plot.title         = element_text(color = INK,        size = 12,
                                           margin = margin(b = 8)),
-        legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                          linewidth = 0.3),
+        legend.background  = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text        = element_text(color = INK_SOFT,   size = 8),
         legend.key.size    = unit(0.9, "lines"),
         legend.position    = "top",
