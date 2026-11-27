@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-29
@@ -16,9 +16,11 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 from bokeh.plotting import figure
+from PIL import Image
 from scipy.stats import gaussian_kde
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -35,30 +37,25 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — canonical order, position 1 always first series
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Salary distributions by department (realistic scenario)
-np.random.seed(42)
-categories = ["Engineering", "Marketing", "Sales", "Support"]
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: category
+SALARY = "Annual Salary (USD)"  # role: value
 
-# Engineering: normal, high mean — represents typical salaried professionals
-eng = np.random.normal(85000, 15000, 150)
+# Data: replace this block with your own table, for example df = pd.read_csv("salaries.csv")
+rng = np.random.default_rng(42)
+eng = rng.normal(85000, 15000, 150)
+mkt = rng.normal(65000, 12000, 150)
+sales = np.clip(rng.exponential(15000, 150) + 45000, 30000, 150000)
+support = np.concatenate([rng.normal(42000, 5000, 90), rng.normal(62000, 6000, 60)])
+df = pd.DataFrame(
+    {
+        DEPARTMENT: ["Engineering"] * 150 + ["Marketing"] * 150 + ["Sales"] * 150 + ["Support"] * 150,
+        SALARY: np.concatenate([eng, mkt, sales, support]),
+    }
+)
 
-# Marketing: normal, mid-range
-mkt = np.random.normal(65000, 12000, 150)
-
-# Sales: right-skewed — most earn base salary, some earn high commissions
-sales_base = np.random.exponential(15000, 150) + 45000
-sales = np.clip(sales_base, 30000, 150000)
-
-# Support: bimodal — junior vs senior tiers with distinct pay bands
-support_junior = np.random.normal(42000, 5000, 90)
-support_senior = np.random.normal(62000, 6000, 60)
-support = np.concatenate([support_junior, support_senior])
-
-data = {"Engineering": eng, "Marketing": mkt, "Sales": sales, "Support": support}
-
-# Visual hierarchy: emphasize non-normal distributions to guide the viewer
-alphas = [0.55, 0.55, 0.85, 0.85]
-dist_labels = ["normal", "normal", "right-skewed", "bimodal"]
+# Plot
+categories = [str(c) for c in df[DEPARTMENT].dropna().unique()]
 
 # Title (42 chars < 67 baseline — no scaling needed, use default 50pt)
 title = "violin-basic · python · bokeh · anyplot.ai"
@@ -68,8 +65,8 @@ p = figure(
     width=3200,
     height=1800,
     title=title,
-    x_axis_label="Department",
-    y_axis_label="Annual Salary (USD)",
+    x_axis_label=DEPARTMENT,
+    y_axis_label=SALARY,
     x_range=categories,
     toolbar_location=None,
     min_border_bottom=160,
@@ -99,6 +96,7 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 p.axis.minor_tick_line_color = None
+p.axis.major_tick_line_color = None
 
 # Currency formatting on y-axis
 p.yaxis.formatter = NumeralTickFormatter(format="$0,0")
@@ -107,29 +105,26 @@ p.yaxis.formatter = NumeralTickFormatter(format="$0,0")
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_dash = "dashed"
 
 # Clean outer border
 p.outline_line_color = None
 
 # Tighten y-axis to data range (reduced padding to avoid unused vertical space)
-all_values = np.concatenate(list(data.values()))
-y_range = all_values.max() - all_values.min()
-y_pad = y_range * 0.08
-p.y_range.start = all_values.min() - y_pad
-p.y_range.end = all_values.max() + y_pad * 0.5
+y_pad = (df[SALARY].max() - df[SALARY].min()) * 0.06
+p.y_range.start = df[SALARY].min() - y_pad
+p.y_range.end = df[SALARY].max() + y_pad
 
 # Violin width scaling
 violin_width = 0.4
 
 # Draw violins for each category
 for i, cat in enumerate(categories):
-    values = data[cat]
-    color = IMPRINT_PALETTE[i]
+    values = df.loc[df[DEPARTMENT] == cat, SALARY].dropna().to_numpy(dtype=float)
+    color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
 
     # Compute KDE using scipy (robust bandwidth selection)
     kde = gaussian_kde(values)
-    y_grid = np.linspace(values.min() - np.std(values) * 0.5, values.max() + np.std(values) * 0.5, 100)
+    y_grid = np.linspace(values.min(), values.max(), 100)
     density = kde(y_grid)
     density_scaled = density / density.max() * violin_width
 
@@ -138,16 +133,7 @@ for i, cat in enumerate(categories):
     xs_right = [(cat, float(d)) for d in density_scaled[::-1]]
 
     violin_source = ColumnDataSource(data={"x": xs_left + xs_right, "y": list(y_grid) + list(y_grid[::-1])})
-    p.patch(
-        x="x",
-        y="y",
-        source=violin_source,
-        fill_color=color,
-        fill_alpha=alphas[i],
-        line_color=color,
-        line_alpha=min(alphas[i] + 0.15, 1.0),
-        line_width=3,
-    )
+    p.patch(x="x", y="y", source=violin_source, fill_color=color, fill_alpha=0.7, line_color=color, line_width=3)
 
     # Quartiles and median
     q1, median, q3 = np.percentile(values, [25, 50, 75])
@@ -181,13 +167,7 @@ for i, cat in enumerate(categories):
 
     hover = HoverTool(
         renderers=[box_renderer],
-        tooltips=[
-            ("Department", "@dept"),
-            ("Median", "@median_val"),
-            ("Q1", "@q1_val"),
-            ("Q3", "@q3_val"),
-            ("N", "@n"),
-        ],
+        tooltips=[(DEPARTMENT, "@dept"), ("Median", "@median_val"), ("Q1", "@q1_val"), ("Q3", "@q3_val"), ("N", "@n")],
     )
     p.add_tools(hover)
 
@@ -219,21 +199,6 @@ for i, cat in enumerate(categories):
     )
     p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=cap_source, line_color=INK, line_width=3)
 
-# Distribution type annotations — more prominent for better readability
-annotation_y = all_values.min() - y_pad * 0.6
-ann_source = ColumnDataSource(data={"x": categories, "y": [annotation_y] * len(categories), "text": dist_labels})
-p.text(
-    x="x",
-    y="y",
-    text="text",
-    source=ann_source,
-    text_font_size="26pt",
-    text_font_style="italic",
-    text_color=INK_SOFT,
-    text_align="center",
-    text_baseline="top",
-)
-
 # Save HTML artifact
 output_file(f"plot-{THEME}.html")
 save(p)
@@ -256,16 +221,16 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Pin saved PNG to exact target dims so the post-render gate always passes
-from PIL import Image as _PILImage
-
-
-_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (W, H):
-    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (W, H):
+    canvas = Image.new("RGB", (W, H), PAGE_BG)
+    canvas.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
+    canvas.save(f"plot-{THEME}.png")
