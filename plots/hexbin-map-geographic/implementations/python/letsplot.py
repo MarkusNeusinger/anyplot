@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-27
@@ -75,17 +75,17 @@ LON = "lon"  # role: lon
 np.random.seed(42)
 n_points = 15000
 
-manhattan_lat = np.random.normal(40.758, 0.025, n_points // 2)
+manhattan_lat = np.random.normal(40.764, 0.018, n_points // 2)
 # the island runs north-north-east, so the cluster's longitude follows its latitude
-manhattan_lon = -73.987 + 0.5 * (manhattan_lat - 40.758) + np.random.normal(0, 0.006, n_points // 2)
+manhattan_lon = -73.976 + 0.5 * (manhattan_lat - 40.764) + np.random.normal(0, 0.006, n_points // 2)
 
 midtown_lat = np.random.normal(40.752, 0.018, n_points // 4)
-midtown_lon = -73.985 + 0.5 * (midtown_lat - 40.752) + np.random.normal(0, 0.006, n_points // 4)
+midtown_lon = -73.980 + 0.5 * (midtown_lat - 40.752) + np.random.normal(0, 0.006, n_points // 4)
 
 jfk_lat = np.random.normal(40.641, 0.012, n_points // 6)
 jfk_lon = np.random.normal(-73.778, 0.015, n_points // 6)
 
-lga_lat = np.random.normal(40.773, 0.008, n_points // 12)
+lga_lat = np.random.normal(40.765, 0.008, n_points // 12)
 lga_lon = np.random.normal(-73.872, 0.010, n_points // 12)
 
 latitude = np.concatenate([manhattan_lat, midtown_lat, jfk_lat, lga_lat])
