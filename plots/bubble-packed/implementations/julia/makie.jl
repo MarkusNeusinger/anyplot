@@ -111,7 +111,7 @@ half_ext = max(x_max - x_min, y_max - y_min) / 2
 # Title — 66 chars, within 67-char baseline → no fontsize reduction needed
 title_str  = "World Population 2023 · bubble-packed · julia · makie · anyplot.ai"
 n_title    = length(title_str)
-title_size = max(14, round(Int, 20 * min(1.0, 67.0 / n_title)))
+title_size = max(14, round(Int, 22 * min(1.0, 67.0 / n_title)))
 
 # Figure — square 1200×1200 × px_per_unit=2 → 2400×2400 final PNG
 fig = Figure(
@@ -153,8 +153,11 @@ end
 # Country labels inside circles (white text, scaled to circle size)
 for i in 1:n
     r = radii[i]
+    # Name size follows the circle, capped so the name's width fits inside it
+    fit = 1.7 * r / (0.55 * length(labels[i]))
+    name_fs = min(clamp(r / 4.0, 10.0, 30.0), fit)
     if r >= 55
-        fs = clamp(round(Int, r / 6.0), 11, 20)
+        fs = round(Int, name_fs)
         # Country name shifted up to make room for population annotation
         text!(ax, positions_x[i], positions_y[i] + r * 0.18;
             text     = labels[i],
@@ -169,14 +172,14 @@ for i in 1:n
         text!(ax, positions_x[i], positions_y[i] - r * 0.18;
             text     = pop_str,
             align    = (:center, :center),
-            fontsize = Float32(clamp(round(Int, fs * 0.72), 9, 11)),
-            color    = RGBAf(1f0, 1f0, 1f0, 0.85f0),
+            fontsize = Float32(clamp(round(Int, fs * 0.8), 11, 22)),
+            color    = RGBAf(1f0, 1f0, 1f0, 0.9f0),
         )
-    elseif r >= 38
+    elseif r >= 28 && name_fs >= 10
         text!(ax, positions_x[i], positions_y[i];
             text     = labels[i],
             align    = (:center, :center),
-            fontsize = 10.0f0,
+            fontsize = Float32(name_fs),
             color    = colorant"#FFFFFF",
         )
     end
