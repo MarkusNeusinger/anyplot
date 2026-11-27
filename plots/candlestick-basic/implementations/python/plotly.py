@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-30
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -11,136 +11,56 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme tokens (Imprint palette chrome)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint semantic colors: finance gain→green, loss→red
-BULL_COLOR = "#009E73"  # Imprint position 1
-BEAR_COLOR = "#AE3030"  # Imprint position 5
+# Imprint palette: rising = position 1, falling = position 5 (finance gain/loss semantics)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+RISING_COLOR = IMPRINT_PALETTE[0]
+FALLING_COLOR = IMPRINT_PALETTE[4]
 
-# Data — 30 trading days of ACME Corp simulated prices
-np.random.seed(42)
-dates = pd.date_range(start="2024-01-02", periods=30, freq="B")
+# Columns: set these to your table's column names
+DATE = "Time (UTC)"  # role: date
+OPEN = "Open (USD)"  # role: open
+HIGH = "High (USD)"  # role: high
+LOW = "Low (USD)"  # role: low
+CLOSE = "Close (USD)"  # role: close
 
-price = 150.0
-drift = [0.4] * 8 + [-0.5] * 12 + [0.6] * 10  # rally, pullback, stronger recovery
-opens, highs, lows, closes = [], [], [], []
+# Data: replace this block with your own table, for example df = pd.read_csv("eth_usd_hourly.csv")
+rng = np.random.default_rng(42)
+n_periods = 60
+times = pd.date_range("2025-03-10 00:00", periods=n_periods, freq="h")
+closes = 3200 * np.exp(np.cumsum(rng.normal(0.0002, 0.006, n_periods)))
+opens = np.concatenate([[3200.0], closes[:-1]])
+spread = opens * 0.003
+highs = np.maximum(opens, closes) + np.abs(rng.normal(0, 1, n_periods)) * spread
+lows = np.minimum(opens, closes) - np.abs(rng.normal(0, 1, n_periods)) * spread
+df = pd.DataFrame({DATE: times, OPEN: opens, HIGH: highs, LOW: lows, CLOSE: closes})
 
-for i in range(30):
-    open_price = price
-    change = np.random.randn() * 2.5 + drift[i]
-    close_price = open_price + change
-    high_price = max(open_price, close_price) + abs(np.random.randn()) * 1.8
-    low_price = min(open_price, close_price) - abs(np.random.randn()) * 1.8
-    opens.append(open_price)
-    highs.append(high_price)
-    lows.append(low_price)
-    closes.append(close_price)
-    price = close_price
-
-df = pd.DataFrame({"date": dates.strftime("%Y-%m-%d"), "open": opens, "high": highs, "low": lows, "close": closes})
-peak_idx = df["high"].idxmax()
-low_idx = df["low"].idxmin()
-
-# Title with length-scaled fontsize (default 16px at 67 chars)
-title_text = "ACME Corp Daily Prices · candlestick-basic · python · plotly · anyplot.ai"
-title_fs = max(round(16 * 67 / len(title_text)), 11)
-
-# Candlestick trace
+# Plot: reads only df and the constants above
+title_text = "ETH/USD Hourly Price · candlestick-basic · python · plotly · anyplot.ai"
 fig = go.Figure(
-    data=[
-        go.Candlestick(
-            x=df["date"],
-            open=df["open"],
-            high=df["high"],
-            low=df["low"],
-            close=df["close"],
-            increasing={"line": {"color": BULL_COLOR, "width": 2}, "fillcolor": BULL_COLOR},
-            decreasing={"line": {"color": BEAR_COLOR, "width": 2}, "fillcolor": BEAR_COLOR},
-            hovertemplate=(
-                "<b>%{x|%b %d, %Y}</b><br>"
-                "Open: $%{open:.2f}<br>"
-                "High: $%{high:.2f}<br>"
-                "Low: $%{low:.2f}<br>"
-                "Close: $%{close:.2f}<br>"
-                "<extra></extra>"
-            ),
-        )
-    ]
-)
-
-# Key price annotations
-ann_font = {"size": 10, "color": INK, "family": "Arial"}
-fig.add_annotation(
-    x=df.loc[peak_idx, "date"],
-    y=df.loc[peak_idx, "high"],
-    text=f"Rally Peak<br>${df.loc[peak_idx, 'high']:.0f}",
-    showarrow=True,
-    arrowhead=0,
-    arrowwidth=1.5,
-    arrowcolor=INK_SOFT,
-    ax=40,
-    ay=-45,
-    font=ann_font,
-    bgcolor=ELEVATED_BG,
-    bordercolor=INK_SOFT,
-    borderwidth=1,
-    borderpad=5,
-)
-fig.add_annotation(
-    x=df.loc[low_idx, "date"],
-    y=df.loc[low_idx, "low"],
-    text=f"Pullback Low<br>${df.loc[low_idx, 'low']:.0f}",
-    showarrow=True,
-    arrowhead=0,
-    arrowwidth=1.5,
-    arrowcolor=INK_SOFT,
-    ax=-40,
-    ay=50,
-    font=ann_font,
-    bgcolor=ELEVATED_BG,
-    bordercolor=INK_SOFT,
-    borderwidth=1,
-    borderpad=5,
-)
-
-# Market phase shaded regions
-phase_font = {"size": 10, "color": INK_SOFT, "family": "Arial"}
-date_strs = df["date"].tolist()
-fig.add_vrect(
-    x0=date_strs[0],
-    x1=date_strs[7],
-    fillcolor=BULL_COLOR,
-    opacity=0.05,
-    line_width=0,
-    annotation_text="Rally",
-    annotation_position="top left",
-    annotation_font=phase_font,
-)
-fig.add_vrect(
-    x0=date_strs[8],
-    x1=date_strs[19],
-    fillcolor=BEAR_COLOR,
-    opacity=0.05,
-    line_width=0,
-    annotation_text="Pullback",
-    annotation_position="top left",
-    annotation_font=phase_font,
-)
-fig.add_vrect(
-    x0=date_strs[20],
-    x1=date_strs[29],
-    fillcolor=BULL_COLOR,
-    opacity=0.05,
-    line_width=0,
-    annotation_text="Recovery",
-    annotation_position="top left",
-    annotation_font=phase_font,
+    go.Candlestick(
+        x=df[DATE],
+        open=df[OPEN],
+        high=df[HIGH],
+        low=df[LOW],
+        close=df[CLOSE],
+        increasing={"line": {"color": RISING_COLOR, "width": 1.5}, "fillcolor": RISING_COLOR},
+        decreasing={"line": {"color": FALLING_COLOR, "width": 1.5}, "fillcolor": FALLING_COLOR},
+        whiskerwidth=0,
+        hovertemplate=(
+            "<b>%{x|%b %d, %H:%M}</b><br>"
+            "Open: $%{open:,.2f}<br>"
+            "High: $%{high:,.2f}<br>"
+            "Low: $%{low:,.2f}<br>"
+            "Close: $%{close:,.2f}<extra></extra>"
+        ),
+    )
 )
 
 fig.update_layout(
@@ -149,35 +69,31 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"family": "Arial", "color": INK},
-    title={
-        "text": title_text,
-        "font": {"size": title_fs, "color": INK, "family": "Arial"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    showlegend=False,
+    title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Date", "font": {"size": 12, "color": INK, "family": "Arial"}},
-        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
-        "tickformat": "%b %d",
+        "title": {"text": DATE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickformat": "%b %d<br>%H:%M",
+        "dtick": 6 * 3600 * 1000,
         "rangeslider": {"visible": False},
-        "rangebreaks": [{"bounds": ["sat", "mon"]}],
         "showgrid": False,
-        "showline": False,
-        "zeroline": False,
+        "showline": True,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK, "family": "Arial"}},
-        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
+        "title": {"text": "Price (USD)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickprefix": "$",
+        "tickformat": ",.0f",
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
         "showline": False,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
-    hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 10, "bordercolor": INK_SOFT},
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
+    hoverlabel={"font_size": 10},
 )
 
-# Save — 3200×1800 landscape (width=800 × scale=4)
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
