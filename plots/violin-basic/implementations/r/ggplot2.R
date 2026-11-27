@@ -1,85 +1,69 @@
 #' anyplot.ai
 #' violin-basic: Basic Violin Plot
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 85/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
 
-set.seed(42)
-
 # Theme tokens
-THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
-INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID     <- alpha(INK, 0.15)
 
-# Imprint palette — 4 series for 4 class groups
-IMPRINT_PALETTE <- c(
-  "#009E73",  # 1 — brand green
-  "#C475FD",  # 2 — lavender
-  "#4467A3",  # 3 — blue
-  "#BD8233"   # 4 — ochre
+# Imprint palette: all eight positions, one per class group in order
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+CLASS_GROUP <- "Class group"  # role: category
+TEST_SCORE  <- "Test score"   # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("scores.csv", check.names = FALSE)
+set.seed(42)
+class_a <- rnorm(120, mean = 72, sd = 10)                                  # average, symmetric
+class_b <- c(rnorm(60, mean = 60, sd = 5), rnorm(60, mean = 86, sd = 5))  # bimodal
+class_c <- rnorm(120, mean = 83, sd = 6)                                   # high-performing
+class_d <- pmax(50, pmin(100, 58 + rexp(120, rate = 0.10)))                # low, right-skewed
+df <- tibble::tibble(
+  !!CLASS_GROUP := rep(c("Algebra I", "Biology", "Chemistry", "World History"), each = 120),
+  !!TEST_SCORE  := c(class_a, class_b, class_c, class_d)
 )
 
-# Data: test scores (50–100) across 4 class groups with distinct distribution shapes
-class_a <- rnorm(120, mean = 72, sd = 10)                                        # average, symmetric
-class_b <- c(rnorm(60, mean = 60, sd = 5), rnorm(60, mean = 86, sd = 5))        # bimodal
-class_c <- rnorm(120, mean = 83, sd = 6)                                         # high-performing
-class_d <- pmax(50, pmin(100, 58 + rexp(120, rate = 0.10)))                      # low, right-skewed
+# Plot: reads only df and the constants above
+df[[CLASS_GROUP]] <- factor(df[[CLASS_GROUP]], levels = unique(df[[CLASS_GROUP]]))
 
-scores <- tibble::tibble(
-  class = rep(c("Class A", "Class B", "Class C", "Class D"),
-              times = c(length(class_a), length(class_b), length(class_c), length(class_d))),
-  score = c(class_a, class_b, class_c, class_d)
-)
-scores$class <- factor(scores$class, levels = c("Class A", "Class B", "Class C", "Class D"))
-
-# Alpha: emphasize the bimodal Class B distribution
-ALPHA_VALUES <- c("Class A" = 0.62, "Class B" = 0.88, "Class C" = 0.62, "Class D" = 0.62)
-
-# Grid color at ~25% opacity to keep lines subtle
-GRID_COLOR <- adjustcolor(INK_SOFT, alpha.f = 0.25)
-
-# Plot
-p <- ggplot(scores, aes(x = class, y = score, fill = class, alpha = class)) +
+p <- ggplot(df, aes(x = .data[[CLASS_GROUP]], y = .data[[TEST_SCORE]], fill = .data[[CLASS_GROUP]])) +
   geom_violin(
-    trim           = FALSE,
-    color          = PAGE_BG,   # quantile lines appear as PAGE_BG cuts through the fill
-    linewidth      = 0.5,
-    draw_quantiles = c(0.25, 0.5, 0.75)
-  ) +
-  annotate(
-    "text",
-    x = "Class B", y = 104,
-    label    = "bimodal",
-    color    = INK_SOFT,
-    size     = 2.8,
-    fontface = "italic"
+    trim              = TRUE,
+    color             = INK_SOFT,
+    linewidth         = 0.3,
+    quantiles         = c(0.25, 0.5, 0.75),
+    quantile.linetype = 1,
+    quantile.colour   = INK,
+    quantile.linewidth = 0.6
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE, guide = "none") +
-  scale_alpha_manual(values = ALPHA_VALUES, guide = "none") +
-  scale_y_continuous(breaks = seq(50, 100, by = 10)) +
-  coord_cartesian(ylim = c(25, 108)) +
   labs(
     title = "violin-basic · r · ggplot2 · anyplot.ai",
-    x     = "Class Group",
-    y     = "Test Score"
+    x     = CLASS_GROUP,
+    y     = TEST_SCORE
   ) +
   theme_minimal(base_size = 8) +
   theme(
-    plot.background    = element_rect(fill = PAGE_BG,    color = PAGE_BG),
-    panel.background   = element_rect(fill = PAGE_BG,    color = NA),
-    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.25),
+    plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background   = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.major.y = element_line(color = GRID, linewidth = 0.3),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
     panel.border       = element_blank(),
-    axis.line.x        = element_line(color = INK_SOFT,  linewidth = 0.4),
-    axis.line.y        = element_line(color = INK_SOFT,  linewidth = 0.4),
-    axis.title         = element_text(color = INK,       size = 10),
-    axis.text          = element_text(color = INK_SOFT,  size = 8),
-    plot.title         = element_text(color = INK,       size = 12, margin = margin(b = 12)),
+    axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.line.y        = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.title         = element_text(color = INK, size = 10),
+    axis.text          = element_text(color = INK_SOFT, size = 8),
+    plot.title         = element_text(color = INK, size = 12, margin = margin(b = 12)),
     plot.margin        = margin(t = 20, r = 20, b = 16, l = 16)
   )
 
