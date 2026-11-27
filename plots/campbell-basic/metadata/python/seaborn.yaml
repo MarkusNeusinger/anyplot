@@ -2,62 +2,67 @@ library: seaborn
 language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:08:27Z'
-updated: '2026-05-28T15:40:32Z'
+updated: '2026-11-27T16:44:26Z'
 generated_by: claude-sonnet
-workflow_run: 26583428520
+workflow_run: 46035112049
 issue: 4241
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 80
 review:
   strengths:
-  - 'Complete Campbell diagram with all required elements: 5 mode shapes, 3 engine
-    order lines (1x/2x/3x), critical speed markers, and direct mode labeling on the
-    right edge'
-  - Excellent data quality — realistic rotordynamics data with correct physics (engine
-    order line slope = order/60, gyroscopic stiffening/softening on individual modes)
-  - 'Clear visual hierarchy: single large red critical-speed marker in the operating
-    range vs. small muted gray circles outside creates an immediate focal point communicating
-    the engineering risk'
-  - Amber operating range shading uses the correct semantic anchor (#DDCC77) for caution/warning;
-    paired with dashed boundary lines and 'Operating Range' annotation for context
-  - Theme-adaptive chrome correctly implemented in both renders — dark render shows
-    no dark-on-dark failures; all text, labels, and legend entries remain readable
-  - Clean code structure (KISS pattern) with all sizes explicitly set and no fake
-    interactivity
+  - 'Complete Campbell diagram: five named modes (two rising bending/torsional, falling
+    2nd Bending and Axial), three dashed 1x/2x/3x lines from the origin with slope
+    order/60, and markers at the interpolated crossings'
+  - Colour-matched direct mode labels at the curve ends, kept apart by a computed
+    minimum gap
+  - 'Idiomatic seaborn: melt to long form, sns.lineplot with hue/hue_order/palette,
+    sns.scatterplot on data frames, set_theme rc and despine'
+  - Theme tokens threaded through all chrome; both renders fully readable
+  - Legend row below the axes now tells natural-frequency curves from engine order
+    lines
   weaknesses:
-  - Spec requires 'a clean legend distinguishing natural frequency curves from engine
-    order lines' — current legend only covers critical speed status and operating
-    range; modes are labeled directly on the right edge and engine order lines are
-    labeled inline. The direct labeling is better UX but misses the explicit spec
-    requirement.
-  - Seaborn's distinctive features (statistical aggregation, built-in CI bands, FacetGrid,
-    violin/kde) are not leveraged — seaborn serves primarily as a thin multi-series
-    lineplot/scatterplot wrapper over matplotlib; the bulk of visualization elements
-    (operating range shading, EO lines, annotations) are pure matplotlib
-  - AE3030 (#AE3030) is used for both the '3rd Bending' mode curve and the 'Critical
-    (in range)' legend patch, which could cause initial ambiguity between mode identity
-    and marker status — consider using a more distinct color (e.g., amber or a bright
-    accent) for the in-range critical speed marker
+  - 'SC-01 (both): on a -basic id the plot adds an amber operating-range band (2800-4200
+    RPM) with two dashed boundary lines and an ''Operating Range'' callout, and splits
+    the critical markers into in-range red and outside grey; C5 excludes further highlighted
+    bands, reference lines and callouts → remove the band, its boundary lines, the
+    callout and its legend entry, and draw every critical speed with the same marker.
+    Likely cause: ax.axvspan/axvline/ax.text for OPERATING_RANGE and the cs_in_df/cs_out_df
+    split.'
+  - 'SC-04 (both): #AE3030 colours both the 3rd Bending curve and the in-range critical
+    markers, so the two markers at ~3900 RPM read as belonging to that mode → give
+    the critical markers a colour no mode curve uses (or a distinct marker shape with
+    an ink outline). Likely cause: color=IMPRINT_PALETTE[4] on the critical-speed
+    scatterplot while MODE_COLS also takes palette position 5.'
+  - 'VQ-03 (both): the legend draws the critical speeds as rectangular patches although
+    they are circles on the plot, and ''Natural frequency mode'' as a single INK line
+    no curve has → use circular Line2D markers (marker=''o'', linestyle=''none'')
+    for the critical speeds and a neutral but representative sample for the modes.
+    Likely cause: mpatches.Patch handles in legend_handles.'
+  - 'DQ-01 (both): the data yields 17 critical-speed markers against the spec''s 6-10
+    → tune the mode curves or the speed range so 6-10 crossings fall in range. Likely
+    cause: five modes at 15-95 Hz crossing all three orders below 6000 RPM.'
+  - 'Suggestion: a 100 Hz tick at the top of the y axis would close the frequency
+    scale (the 5 % headroom leaves the top tick unlabeled).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "campbell-basic · python · seaborn · anyplot.ai" in dark ink at top — fully readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark ink, both with units. Tick labels in dark secondary ink, 8pt — readable. L-shaped spine (top/right removed). Subtle grid at low alpha.
-      Data: Five natural frequency curves in Imprint palette order — 1st Bending (#009E73 green, nearly flat ~15–26 Hz), 2nd Bending (#C475FD lavender, declining ~44–28 Hz), 1st Torsional (#4467A3 blue, rising ~52–73 Hz), Axial (#BD8233 ochre, nearly flat ~68–63 Hz), 3rd Bending (#AE3030 red, rising ~82–100 Hz). Three dashed gray engine order lines (3x, 2x, 1x) with rounded box labels. Amber (#DDCC77) shaded band from 2800–4200 RPM with "Operating Range" annotation. One large red circle marks the critical speed in the operating range (~4000 RPM / 65 Hz); several small muted gray circles mark out-of-range critical speeds. Mode labels on right edge outside the axis frame, each colored to match its curve.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'campbell-basic · python · seaborn · anyplot.ai' dark ink at top; 'Rotational Speed (RPM)' and 'Frequency (Hz)' axis titles, 0-6000 / 0-80 ticks in INK_SOFT; L-spine, subtle grid. All readable.
+      Data: five mode curves in Imprint order — 1st Bending #009E73 (15->25 Hz), 2nd Bending #C475FD (45->28 Hz falling), 1st Torsional #4467A3 (52->73), Axial #BD8233 (68->62 falling), 3rd Bending #AE3030 (82->95); colour-matched bold labels right of the axis. Three grey dashed engine order lines from the origin with boxed 3x/2x/1x labels; 2x and 3x leave through the top. Amber operating-range band 2800-4200 RPM with dashed edges and 'Operating Range' text; two large red circles at ~3900 RPM / 65 Hz (1x with Torsional and Axial), 15 small grey circles at the other crossings. Legend row below the axes: Natural frequency mode, Engine order line, Critical (in range), Critical (outside), Operating (2800-4200 RPM).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title, axis labels, tick labels all render in light off-white ink (#F0EFE8 / #B8B7B0) — fully readable against the dark background. Legend box uses elevated dark fill (#242420) with light text. Engine order label boxes use elevated dark fill, clearly visible. No dark-on-dark failures detected.
-      Data: All five mode curve colors are identical to the light render — green, lavender, blue, ochre, red — confirming data palette is theme-independent. Amber operating range shading remains visible. Critical speed markers unchanged (red in-range, muted gray outside). Mode labels on right edge appear in their respective line colors, all readable on dark background.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark text failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, legend on elevated #242420 with light text; no dark-on-dark text.
+      Data: mode colours identical to light; EO lines lighter grey, amber band visible as a dim olive band, grey out-of-range markers lighter; red in-range markers unchanged; #009E73 reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,148 +70,134 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, tick
-          labels 8pt, annotations 7-8pt). All text readable in both themes. No overflow,
-          no clipping. Mode labels on right edge well-spaced with y_offsets applied.
+        comment: Title 12 pt, axis titles 10 pt, ticks/labels 8 pt, all explicit;
+          every text readable in both themes, no dark-on-dark.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Mode labels, engine order box labels, operating
-          range annotation, and legend all have clear separation.
+        comment: 'No text collisions: mode labels at the right edge spaced apart,
+          EO labels boxed clear of curves, legend below the axes.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Mode curves at linewidth=2.0 clearly visible. EO lines at linewidth=1.2,
-          alpha=0.65 appropriately subdued. Critical in-range marker at s=120 prominent;
-          out-of-range at s=30, alpha=0.7 intentionally smaller.
+        passed: false
+        comment: Curves at 2.0 and EO lines at 1.2 are clear, but the legend shows
+          the circular critical-speed markers as rectangles and the modes as one black/white
+          line none of the curves has (defect line).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 Imprint palette colors span distinct hue families. Engine order
-          lines use INK_SOFT (gray), clearly distinct from colored mode curves. Red
-          vs muted gray for critical speed status is distinguishable by both color
-          and size.
+        comment: Five distinct Imprint hues plus grey dashed EO lines; nothing relies
+          on red-green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Canvas: figsize=(8, 4.5), dpi=400 → 3200×1800. No bbox_inches=tight.
-          subplots_adjust(left=0.08, right=0.80, top=0.92, bottom=0.12) — right 20%
-          reserved for mode labels, balanced margins.'
+        comment: 3200x1800 canvas well used; right margin holds the mode labels, legend
+          row below the axis; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Rotational Speed (RPM)'', Y: ''Frequency (Hz)'' — both descriptive
-          with units. Title in correct format.'
+        comment: '''Rotational Speed (RPM)'' and ''Frequency (Hz)'' with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (1st Bending) = #009E73. Modes use Imprint palette
-          positions 1-5 in canonical order. Amber operating range uses #DDCC77 semantic
-          anchor correctly. Backgrounds #FAF8F1 light / #1A1A17 dark. Theme chrome
-          correct in both renders.'
+        comment: 'First mode #009E73, Imprint order 1-5, #FAF8F1 / #1A1A17 backgrounds,
+          chrome correct in both renders.'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above well-configured defaults. Intentional design: amber operating
-          range, direct mode labeling, rounded-box EO labels, differentiated critical
-          marker sizes. Not quite FiveThirtyEight-level.'
+        passed: false
+        comment: Raised one for colour-matched direct mode labels at the curve ends
+          and boxed order labels on the lines; otherwise the baseline.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed via sns.despine. Grid at alpha=0.12 (subtle). Differentiated
-          line weights (2.0 vs 1.2) and alphas. Right-margin whitespace for labels.
-          Some refinement clearly above minimum defaults.
+        passed: false
+        comment: Raised one for the hierarchy of line weights (modes 2.0 solid vs
+          EO 1.2 dashed at alpha 0.65) and a legend row kept off the data.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Operating range highlight + single prominent red critical speed
-          marker at ~4000 RPM creates clear focal point: ''this resonance in the operating
-          zone is the engineering concern.'' Visual hierarchy through size and color
-          contrast communicates the diagnostic story.'
+        passed: false
+        comment: The only focal point (operating-range band with enlarged in-range
+          markers) is an addition the basic variant excludes and earns no credit.
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Correct Campbell/interference diagram: natural frequency curves
-          + engine order lines + critical speed markers.'
+        passed: false
+        comment: Correct Campbell diagram, but on a -basic id it adds an operating-range
+          band with boundary lines and an 'Operating Range' callout, plus a derived
+          in/out-of-range split of the critical markers (defect line).
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 5 modes, 3 EO lines (1x/2x/3x), critical speed markers, mode labels,
-          EO line labels all present. Spec required 'clean legend distinguishing natural
-          frequency curves from engine order lines' — current legend covers only critical
-          speed status and operating range; modes/EOs are labeled directly. Better
-          UX but misses spec requirement.
+        comment: Mode names, 1x/2x/3x labels, distinct critical markers and a legend
+          telling mode curves from engine order lines (C1-C4) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=RPM, Y=Frequency(Hz). EO lines from origin with slope=order/60.
-          All axes show full data range.
+        comment: X = RPM, Y = Hz; EO lines from origin with slope order/60; markers
+          at the interpolated crossings; axes fitted from zero.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''campbell-basic · python · seaborn · anyplot.ai'' — correct
-          format. Legend labels descriptive.'
+        passed: false
+        comment: 'Title format correct; but #AE3030 colours both the 3rd Bending curve
+          and the in-range critical markers, so the marker reads as part of that mode
+          (defect line).'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 5 mode shapes (exceeds spec's 4-5 minimum), 3 EO lines, multiple
-          critical speed intersections, both in-range and outside-range speeds, operating
-          range zone.
+        passed: false
+        comment: 5 modes rising and falling, 3 EO lines; but 17 critical-speed markers
+          against the spec's 6-10 (defect line).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard turbomachinery rotordynamics scenario. Realistic mode names,
-          RPM range 0-6000, operating range 2800-4200 RPM, frequencies 15-100 Hz.
+        comment: Plausible rotor with named bending/torsional/axial modes, 0-6000
+          RPM, 15-95 Hz.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EO line slopes = order/60 (correct Hz-per-RPM physics). Gyroscopic
-          effects modeled (some modes rise, some fall with speed). Critical speeds
-          at physically plausible intersections.
+        comment: 'Checked: 1x line reaches 100 Hz at 6000 RPM, 2x at 3000 RPM (slope
+          order/60); markers lie on both lines in the render.'
     code_quality:
       score: 10
       max: 10
@@ -216,70 +207,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot setup → elements → labels
-          → save. No functions or classes.'
+        comment: Top-to-bottom, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Fully deterministic (no random draws).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os, matplotlib.patches, matplotlib.pyplot, numpy,
-          pandas, seaborn.'
+        comment: All imports used (mpatches, Line2D, pd, np, sns, plt, os).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Critical speed detection via sign-change + linear
-          interpolation is appropriate domain logic. No over-engineering, no fake
-          UI.
+        comment: Crossing detection by sign change + linear interpolation is compact;
+          wide-to-long via df.melt.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
-          API.
+        comment: Saves plot-{THEME}.png at dpi 400, no bbox_inches='tight'.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: sns.lineplot with hue/palette for multi-series mode curves, sns.scatterplot
-          for critical speed markers split by status, sns.set_theme with rc dict,
-          sns.despine — all idiomatic. Split scatterplot pattern for different marker
-          styles is clean.
+        passed: false
+        comment: 'Raised one: tidy long-form via melt feeding sns.lineplot hue/hue_order/palette,
+          sns.scatterplot on data frames, sns.set_theme rc, sns.despine.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Seaborn's distinctive statistical features (CI bands, KDE, FacetGrid,
-          violin) are not leveraged — the plot type doesn't call for them. Seaborn
-          acts mainly as a styled lineplot/scatterplot layer; most visualization elements
-          are matplotlib primitives.
+        comment: Nothing distinctively seaborn beyond lineplot/scatterplot wrappers.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-27T16:40:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - interpolation
+  - wide-to-long
   styling:
   - alpha-blending
   - grid-styling
+  - minimal-chrome
