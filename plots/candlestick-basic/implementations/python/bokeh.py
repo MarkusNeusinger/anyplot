@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -18,7 +18,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, NumeralTickFormatter, Range1d, Span
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -35,7 +35,14 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 COLOR_BULL = "#009E73"  # Imprint position 1 — bullish (gain/up)
 COLOR_BEAR = "#AE3030"  # Imprint position 5 — bearish (loss/down)
 
-# Data — 30 trading days of OHLC data for ACME Corp
+# Column names, written the way the axis titles read
+DATE = "date"  # role: date
+OPEN = "open"  # role: open
+HIGH = "high"  # role: high
+LOW = "low"  # role: low
+CLOSE = "close"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=["date"])
 np.random.seed(42)
 n_days = 30
 start_price = 150.0
@@ -65,12 +72,11 @@ for i, close in enumerate(prices):
     low_prices.append(low)
     close_prices.append(close)
 
-df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low": low_prices, "close": close_prices})
-df["bullish"] = df["close"] >= df["open"]
-df["date_str"] = df["date"].dt.strftime("%b %d, %Y")
+df = pd.DataFrame({DATE: dates, OPEN: open_prices, HIGH: high_prices, LOW: low_prices, CLOSE: close_prices})
 
-bullish_df = df[df["bullish"]].copy()
-bearish_df = df[~df["bullish"]].copy()
+# Plot
+bullish_df = df[df[CLOSE] >= df[OPEN]]
+bearish_df = df[df[CLOSE] < df[OPEN]]
 source_bullish = ColumnDataSource(bullish_df)
 source_bearish = ColumnDataSource(bearish_df)
 
@@ -92,21 +98,21 @@ p = figure(
 )
 
 # Tighten x-range
-x_pad = pd.Timedelta(days=1)
-p.x_range = Range1d(start=dates[0] - x_pad, end=dates[-1] + x_pad)
+step = df[DATE].diff().median()
+p.x_range = Range1d(start=df[DATE].min() - step, end=df[DATE].max() + step)
 
-# Candle width — 75% of one business day in milliseconds
-candle_width = 0.75 * 24 * 60 * 60 * 1000
+# Candle width — 75% of the typical period, in milliseconds
+candle_width = 0.75 * step.total_seconds() * 1000
 
 # Wicks — colored to match candle bodies, visibly thinner than bodies
-p.segment(x0="date", y0="high", x1="date", y1="low", source=source_bullish, color=COLOR_BULL, line_width=3)
-p.segment(x0="date", y0="high", x1="date", y1="low", source=source_bearish, color=COLOR_BEAR, line_width=3)
+p.segment(x0=DATE, y0=HIGH, x1=DATE, y1=LOW, source=source_bullish, color=COLOR_BULL, line_width=3)
+p.segment(x0=DATE, y0=HIGH, x1=DATE, y1=LOW, source=source_bearish, color=COLOR_BEAR, line_width=3)
 
 # Candle bodies
 bull_bars = p.vbar(
-    x="date",
-    top="close",
-    bottom="open",
+    x=DATE,
+    top=CLOSE,
+    bottom=OPEN,
     width=candle_width,
     source=source_bullish,
     fill_color=COLOR_BULL,
@@ -115,14 +121,14 @@ bull_bars = p.vbar(
     legend_label="Bullish",
 )
 bear_bars = p.vbar(
-    x="date",
-    top="open",
-    bottom="close",
+    x=DATE,
+    top=OPEN,
+    bottom=CLOSE,
     width=candle_width,
     source=source_bearish,
     fill_color=PAGE_BG,  # hollow body — CVD-safe: solid=bullish, hollow=bearish
     line_color=COLOR_BEAR,
-    line_width=2,
+    line_width=3,
     legend_label="Bearish",
 )
 
@@ -130,36 +136,16 @@ bear_bars = p.vbar(
 hover = HoverTool(
     renderers=[bull_bars, bear_bars],
     tooltips=[
-        ("Date", "@date_str"),
-        ("Open", "@open{$0.00}"),
-        ("High", "@high{$0.00}"),
-        ("Low", "@low{$0.00}"),
-        ("Close", "@close{$0.00}"),
+        ("Date", f"@{DATE}{{%b %d, %Y}}"),
+        ("Open", f"@{OPEN}{{$0.00}}"),
+        ("High", f"@{HIGH}{{$0.00}}"),
+        ("Low", f"@{LOW}{{$0.00}}"),
+        ("Close", f"@{CLOSE}{{$0.00}}"),
     ],
+    formatters={f"@{DATE}": "datetime"},
     mode="vline",
 )
 p.add_tools(hover)
-
-# Reversal annotation — mark the Jan 22 trend-change pivot for active storytelling
-reversal_ts = int(pd.Timestamp("2024-01-22").timestamp() * 1000)
-p.add_layout(
-    Span(
-        location=reversal_ts, dimension="height", line_color=INK_SOFT, line_dash="dashed", line_width=2, line_alpha=0.6
-    )
-)
-p.add_layout(
-    Label(
-        x=reversal_ts,
-        y=df["high"].max() * 0.99,
-        x_units="data",
-        y_units="data",
-        text="  Trend Reversal",
-        text_color=INK_SOFT,
-        text_font_size="28pt",
-        text_baseline="top",
-        text_align="left",
-    )
-)
 
 # Typography — 3200×1800 sizing (title 65 chars → full 50pt)
 p.title.text_font_size = "50pt"
@@ -198,13 +184,16 @@ p.border_fill_color = PAGE_BG
 
 # Legend — bull/bear guide for viewers unfamiliar with candlestick conventions
 p.legend.location = "top_left"
-p.legend.label_text_font_size = "28pt"
+p.legend.label_text_font_size = "34pt"
+p.legend.glyph_height = 40
+p.legend.glyph_width = 40
+p.legend.label_standoff = 16
 p.legend.label_text_color = INK_SOFT
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.margin = 20
-p.legend.padding = 16
-p.legend.spacing = 10
+p.legend.padding = 20
+p.legend.spacing = 12
 
 # Save HTML (interactive with hover tooltips)
 output_file(f"plot-{THEME}.html")
@@ -227,6 +216,9 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
