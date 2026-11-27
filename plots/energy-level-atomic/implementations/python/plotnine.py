@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -39,138 +39,159 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic spectral mapping (UV=lavender, visible=matte red)
-LYMAN_COLOR = "#C475FD"  # Imprint position 2 — lavender → UV spectral region
-BALMER_COLOR = "#AE3030"  # Imprint position 5 — matte red → visible light anchor
-IONIZATION_COLOR = "#009E73"  # Imprint position 1 — brand green for ionization limit
-SERIES_COLORS = {"Lyman (UV)": LYMAN_COLOR, "Balmer (Visible)": BALMER_COLOR}
-# Dark theme: Balmer labels over dark brownish-red band have ~2.7:1 contrast; use INK_SOFT instead
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Semantic spectral mapping (UV=lavender, visible=matte red); brand green marks the ionization limit
+LYMAN_COLOR = IMPRINT_PALETTE[1]
+BALMER_COLOR = IMPRINT_PALETTE[4]
+IONIZATION_COLOR = IMPRINT_PALETTE[0]
+# Dark theme: Balmer labels over the dark brownish-red band have ~2.7:1 contrast; use INK_SOFT instead
 BALMER_LABEL_COLOR = BALMER_COLOR if THEME == "light" else INK_SOFT
+BAND_LYMAN = "#EDE9FE" if THEME == "light" else "#2A1A40"
+BAND_BALMER = "#FEE2E2" if THEME == "light" else "#3C1A1A"
 
-# Data — Hydrogen atom energy levels (En = -13.6/n² eV)
-n_values = np.arange(1, 7)
-energies = -13.6 / n_values**2
+# Constants
+IONIZATION_ENERGY = 0.0  # a bound level approaches 0 eV, the ionization limit
+HC_EV_NM = 1239.84  # h*c in eV·nm, turns an energy gap into a wavelength
+X_LEFT, X_RIGHT = 0.15, 0.78  # schematic horizontal extent of every level line
+X_LABEL = 0.91  # schematic x of the level labels on the right
+X_ARROW_FIRST, X_ARROW_LAST = 0.28, 0.70  # schematic span of the arrow columns
+LABEL_MIN_GAP = 0.24  # minimum vertical gap between right-hand level labels (sqrt-eV units)
+TICKED_LEVELS = 4  # the lowest levels get an energy tick; the crowded upper ones are labelled at the right
+SERIES_STYLE = [
+    (LYMAN_COLOR, BAND_LYMAN, LYMAN_COLOR),
+    (BALMER_COLOR, BAND_BALMER, BALMER_LABEL_COLOR),
+]  # per series, in order of appearance: arrow, band, label
 
-# Nonlinear visual transform: sign(E)*sqrt(|E|) spreads crowded upper levels
-# and compresses the large n=1→n=2 gap (spec: "consider nonlinear scale")
-vis_e = np.sign(energies) * np.sqrt(np.abs(energies))
+# Columns: set these to your table's column names
+LEVEL = "Level n"  # role: level
+ENERGY = "Energy (eV)"  # role: energy
+TO_LEVEL = "To level"  # role: transitions
+SERIES = "Series"  # role: extra
+LINE_NAME = "Line"  # role: extra
 
-# Energy level lines (partial-width per spec)
-levels = pd.DataFrame({"y": vis_e, "x_start": 0.15, "x_end": 0.78})
+# Data: replace this block with your own table, for example df = pd.read_csv("levels.csv")
+# Hydrogen atom, E_n = -13.6 / n² eV. One row per emission line (from LEVEL down to TO_LEVEL);
+# a level with no line (n=1, n=6) has one row with empty transition columns.
+rows = [
+    (2, 1, "Lyman (UV)", "Ly-α"),
+    (3, 1, "Lyman (UV)", "Ly-β"),
+    (4, 1, "Lyman (UV)", "Ly-γ"),
+    (3, 2, "Balmer (Visible)", "Hα"),
+    (4, 2, "Balmer (Visible)", "Hβ"),
+    (5, 2, "Balmer (Visible)", "Hγ"),
+    (1, np.nan, None, None),
+    (6, np.nan, None, None),
+]
+df = pd.DataFrame(rows, columns=[LEVEL, TO_LEVEL, SERIES, LINE_NAME])
+df[ENERGY] = -13.6 / df[LEVEL] ** 2
 
-# Endpoint dots at each end of level lines
-endpoints = pd.DataFrame({"x": [0.15] * 6 + [0.78] * 6, "y": list(vis_e) * 2})
+# Plot: reads only df and the constants above
+# Nonlinear visual transform sign(E)*sqrt(|E|) spreads the crowded upper levels
+# and compresses the large n=1→n=2 gap (spec: "consider a nonlinear scale")
+levels = df.drop_duplicates(LEVEL).sort_values(LEVEL).reset_index(drop=True)
+levels["vis"] = np.sign(levels[ENERGY]) * np.sqrt(np.abs(levels[ENERGY]))
+vis_of = dict(zip(levels[LEVEL], levels["vis"], strict=True))
+energy_of = dict(zip(levels[LEVEL], levels[ENERGY], strict=True))
+transitions = df.dropna(subset=[TO_LEVEL]).reset_index(drop=True).rename(columns={LEVEL: "from_level"})
+transitions[TO_LEVEL] = transitions[TO_LEVEL].astype(int)
 
-# Right-side labels — slight vertical nudge for n=5,6 to prevent overlap
-label_y = list(vis_e[:4]) + [vis_e[4] + 0.08, vis_e[5] + 0.20]
-labels_df = pd.DataFrame(
-    {"y": label_y, "label": [f"n = {n}  ({e:.2f} eV)" for n, e in zip(n_values, energies, strict=True)], "x": 0.91}
-)
+# Level lines, their endpoint dots and the right-hand labels
+levels = levels.assign(x_start=X_LEFT, x_end=X_RIGHT, x_c1=X_RIGHT + 0.01, x_c2=X_LABEL - 0.02, x_lab=X_LABEL)
+endpoints = pd.concat([levels.assign(x=X_LEFT), levels.assign(x=X_RIGHT)])
+ion_vis = IONIZATION_ENERGY
 
-# Thin connector lines from level endpoints to spread labels
-connectors = pd.DataFrame({"x1": [0.79] * 6, "x2": [0.89] * 6, "y1": list(vis_e), "y2": label_y})
+# Right-hand labels keep a minimum gap from the label below them, so crowded upper levels stay legible
+label_y = []
+for y in levels["vis"]:
+    label_y.append(y if not label_y else max(y, label_y[-1] + LABEL_MIN_GAP))
+levels["label_y"] = label_y
+levels["label"] = [f"n = {n}  ({e:.2f} eV)" for n, e in zip(levels[LEVEL], levels[ENERGY], strict=True)]
+ion_label_y = ion_vis + LABEL_MIN_GAP * 0.67
 
-# Ionization limit at 0 eV
-ion_y = 0.0
-ion_label_y = 0.16
+# Transition arrows: columns spread evenly, wavelength from the energy gap
+transitions["x_pos"] = np.linspace(X_ARROW_FIRST, X_ARROW_LAST, len(transitions))
+transitions["y_start"] = transitions["from_level"].map(vis_of) - 0.04
+transitions["y_end"] = transitions[TO_LEVEL].map(vis_of) + 0.08
+# Label sits in the lower third of its arrow, where it clears the intermediate level lines
+transitions["label_y"] = transitions["y_end"] + 0.3 * (transitions["y_start"] - transitions["y_end"])
+gap_ev = transitions["from_level"].map(energy_of) - transitions[TO_LEVEL].map(energy_of)
+transitions["label"] = transitions[LINE_NAME] + "\n" + (HC_EV_NM / gap_ev).round().astype("Int64").astype(str) + " nm"
 
-# Transitions — grouped by Lyman (UV) and Balmer (Visible) series
-energy_lookup = dict(zip(n_values, vis_e, strict=True))
-transitions = pd.DataFrame(
+# Shaded band and title per series, from the arrows each series holds
+by_series = transitions.groupby(SERIES, sort=False)
+series_info = pd.DataFrame(
     {
-        "from_n": [2, 3, 4, 3, 4, 5],
-        "to_n": [1, 1, 1, 2, 2, 2],
-        "x_pos": [0.28, 0.36, 0.44, 0.54, 0.62, 0.70],
-        "series": ["Lyman (UV)"] * 3 + ["Balmer (Visible)"] * 3,
-        "label": ["Ly-α\n122 nm", "Ly-β\n103 nm", "Ly-γ\n97 nm", "Hα\n656 nm", "Hβ\n486 nm", "Hγ\n434 nm"],
+        "xmin": by_series["x_pos"].min() - 0.05,
+        "xmax": by_series["x_pos"].max() + 0.05,
+        "ymin": by_series[TO_LEVEL].min().map(vis_of) - 0.12,
+        "ymax": by_series["from_level"].max().map(vis_of) + 0.08,
     }
-)
-transitions["y_start"] = transitions["from_n"].map(energy_lookup) - 0.04
-transitions["y_end"] = transitions["to_n"].map(energy_lookup) + 0.08
-transitions["label_y"] = (transitions["y_start"] + transitions["y_end"]) / 2
+).reset_index()
+style_of = [SERIES_STYLE[i % len(SERIES_STYLE)] for i in range(len(series_info))]
+SERIES_COLORS = {s: style[0] for s, style in zip(series_info[SERIES], style_of, strict=True)}
+series_info["fill"] = [style[1] for style in style_of]
+series_info["x"] = (series_info["xmin"] + series_info["xmax"]) / 2
+series_info["y"] = ion_vis + 0.30
+series_info["label"] = series_info[SERIES].str.replace(" (", " Series (", regex=False)
 
-# Series group labels above the diagram (serve as inline legend)
-series_labels = pd.DataFrame(
-    {
-        "x": [0.36, 0.62],
-        "y": [0.30, 0.30],
-        "label": ["Lyman Series (UV)", "Balmer Series (Visible)"],
-        "series": ["Lyman (UV)", "Balmer (Visible)"],
-    }
-)
+# Y-axis: real eV values at the transformed tick positions of the lowest levels, plus the limit
+y_breaks = [*levels["vis"][:TICKED_LEVELS], ion_vis]
+y_labels = [*(f"{e:.3g}" for e in levels[ENERGY][:TICKED_LEVELS]), "0"]
 
-# Shaded bands behind each series (theme-adaptive fill)
-band_fill_lyman = "#EDE9FE" if THEME == "light" else "#2A1A40"
-band_fill_balmer = "#FEE2E2" if THEME == "light" else "#3C1A1A"
-series_bands = pd.DataFrame(
-    {
-        "xmin": [0.23, 0.49],
-        "xmax": [0.49, 0.75],
-        "ymin": [vis_e[0] - 0.12, vis_e[1] - 0.12],
-        "ymax": [vis_e[3] + 0.08, vis_e[4] + 0.08],
-        "fill": [band_fill_lyman, band_fill_balmer],
-    }
-)
-
-# Y-axis: real eV values at transformed tick positions
-y_breaks = [vis_e[0], vis_e[1], vis_e[2], vis_e[3], 0.0]
-y_labels = ["-13.6", "-3.4", "-1.51", "-0.85", "0"]
-
-# Title (51 chars — under 67 baseline, default 12pt applies)
 title = "energy-level-atomic · python · plotnine · anyplot.ai"
+first_series = series_info[SERIES].iloc[0]
+lyman = transitions[transitions[SERIES] == first_series]
+balmer = transitions[transitions[SERIES] != first_series]
 
-# Build plot — layered grammar: bands → levels → ionization → connectors → labels → arrows
+# Layers: bands → levels → ionization → connectors → labels → arrows
 plot = (
     ggplot()
-    # Background shaded bands for series grouping
     + geom_rect(
-        data=series_bands, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), alpha=0.40
+        data=series_info, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), alpha=0.40
     )
     + scale_fill_identity()
-    # Energy level lines (structural — INK_SOFT, partial width per spec)
-    + geom_segment(data=levels, mapping=aes(x="x_start", xend="x_end", y="y", yend="y"), color=INK_SOFT, size=1.8)
-    # Endpoint dots for level lines
-    + geom_point(data=endpoints, mapping=aes(x="x", y="y"), color=INK_SOFT, size=2.5)
-    # Ionization limit (dashed reference line + label) — brand green structural marker
-    + annotate("segment", x=0.15, xend=0.78, y=ion_y, yend=ion_y, color=IONIZATION_COLOR, size=1.2, linetype="dashed")
+    # Energy level lines (partial width per spec) with endpoint dots
+    + geom_segment(data=levels, mapping=aes(x="x_start", xend="x_end", y="vis", yend="vis"), color=INK_SOFT, size=1.8)
+    + geom_point(data=endpoints, mapping=aes(x="x", y="vis"), color=INK_SOFT, size=2.5)
+    # Ionization limit: dashed reference line, connector and label in brand green
     + annotate(
-        "text", x=0.91, y=ion_label_y, label="Ionization\nlimit (0 eV)", size=3, ha="left", color=IONIZATION_COLOR
+        "segment", x=X_LEFT, xend=X_RIGHT, y=ion_vis, yend=ion_vis, color=IONIZATION_COLOR, size=1.2, linetype="dashed"
     )
-    # Connector lines from level endpoints to spread labels
-    + geom_segment(data=connectors, mapping=aes(x="x1", xend="x2", y="y1", yend="y2"), color=INK_MUTED, size=0.4)
-    # Ionization connector
-    + annotate("segment", x=0.79, xend=0.89, y=ion_y, yend=ion_label_y, color=IONIZATION_COLOR, size=0.4)
-    # Level labels (right side, primary ink)
-    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=3, ha="left", color=INK)
-    # Transition arrows (emission = downward, colored by series via scale_color_manual)
+    + annotate(
+        "text", x=X_LABEL, y=ion_label_y, label="Ionization\nlimit (0 eV)", size=3.5, ha="left", color=IONIZATION_COLOR
+    )
+    + annotate(
+        "segment", x=X_RIGHT + 0.01, xend=X_LABEL - 0.02, y=ion_vis, yend=ion_label_y, color=IONIZATION_COLOR, size=0.4
+    )
+    # Connector lines from level endpoints to the spread labels, then the labels
+    + geom_segment(data=levels, mapping=aes(x="x_c1", xend="x_c2", y="vis", yend="label_y"), color=INK_MUTED, size=0.4)
+    + geom_text(data=levels, mapping=aes(x="x_lab", y="label_y", label="label"), size=3.5, ha="left", color=INK)
+    # Transition arrows (emission = downward), colored by series
     + geom_segment(
         data=transitions,
-        mapping=aes(x="x_pos", xend="x_pos", y="y_start", yend="y_end", color="series"),
+        mapping=aes(x="x_pos", xend="x_pos", y="y_start", yend="y_end", color=SERIES),
         size=1.2,
         arrow=arrow(length=0.08, type="closed"),
     )
-    # Transition wavelength labels — split by series for theme-adaptive Balmer contrast
+    # Wavelength labels, split by series for theme-adaptive Balmer contrast
     + geom_text(
-        data=transitions[transitions["series"] == "Lyman (UV)"],
-        mapping=aes(x="x_pos", y="label_y", label="label"),
-        size=2.8,
-        nudge_x=-0.045,
-        color=LYMAN_COLOR,
+        data=lyman, mapping=aes(x="x_pos", y="label_y", label="label"), size=3.2, nudge_x=-0.045, color=LYMAN_COLOR
     )
     + geom_text(
-        data=transitions[transitions["series"] == "Balmer (Visible)"],
+        data=balmer,
         mapping=aes(x="x_pos", y="label_y", label="label"),
-        size=2.8,
+        size=3.2,
         nudge_x=-0.045,
         color=BALMER_LABEL_COLOR,
     )
-    # Series group labels at the top (inline legend, series-matched color)
-    + geom_text(data=series_labels, mapping=aes(x="x", y="y", label="label", color="series"), size=3.5)
-    # Named color scale — idiomatic plotnine: data-driven aesthetic mapping
-    + scale_color_manual(values=SERIES_COLORS)
+    # Series group labels above the diagram (inline legend, series-matched color)
+    + geom_text(data=series_info, mapping=aes(x="x", y="y", label="label", color=SERIES), size=4)
+    + scale_color_manual(values=SERIES_COLORS, limits=list(SERIES_COLORS))
     + scale_x_continuous(limits=(0.0, 1.18), expand=(0, 0))
-    + scale_y_continuous(name="Energy (eV)", breaks=y_breaks, labels=y_labels)
-    + coord_cartesian(ylim=(vis_e[0] - 0.25, 0.52))
+    + scale_y_continuous(name=ENERGY, breaks=y_breaks, labels=y_labels)
+    + coord_cartesian(ylim=(levels["vis"].min() - 0.25, ion_vis + 0.52))
     + labs(title=title, subtitle="Hydrogen Atom Emission Spectrum  —  Lyman (UV) & Balmer (Visible) Series", x="")
     + theme_minimal()
     + theme(
