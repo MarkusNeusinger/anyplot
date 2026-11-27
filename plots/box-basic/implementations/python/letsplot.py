@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-27
@@ -73,7 +73,7 @@ plot = (
         alpha=0.85,
         size=1.2,
         fatten=1.5,
-        outlier_size=2.5,
+        outlier_size=1.5,
         outlier_shape=21,
         outlier_color=INK_SOFT,
         width=0.78,
