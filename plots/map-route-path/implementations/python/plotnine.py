@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -45,9 +45,9 @@ CONTOUR_COLOR = "#8FB894" if THEME == "light" else "#4A7A50"
 TRAIL_COLOR = "#B59A6A" if THEME == "light" else "#7A6A4A"
 # Imprint sequential ramp for marks (colored lines on the page)
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Constants
