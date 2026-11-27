@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' hexbin-basic: Basic Hexbin Plot
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
