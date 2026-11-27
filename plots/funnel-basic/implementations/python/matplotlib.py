@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: pending | Updated: 2026-04-26
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
