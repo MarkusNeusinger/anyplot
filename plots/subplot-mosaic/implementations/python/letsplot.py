@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -37,6 +37,7 @@ LAYOUT = "AAA;BBC;DEF"
 ROW_WEIGHTS = [0.9, 1.1, 1.0]  # relative row heights, one per row of LAYOUT
 GAP = 0.02  # spacing between panels, as a share of the canvas
 TITLE_SHARE = 0.05  # top share of the canvas reserved for the main title
+LABEL_WIDTH = 5  # y tick labels of the left-hand panels are padded to this width so their plot boxes start flush
 
 # Columns: set these to your table's column names
 PANEL = "Panel"  # role: extra
@@ -87,22 +88,6 @@ def ramp_color(stops, t):
     )
 
 
-def regions_from_layout(layout):
-    """One (x, y, width, height) region per letter, in ggbunch's canvas fractions."""
-    rows = layout.split(";")
-    n_cols = len(rows[0])
-    edges = np.concatenate([[0], np.cumsum(ROW_WEIGHTS)]) / np.sum(ROW_WEIGHTS)
-    out = {}
-    for letter in sorted({c for c in layout if c.isalpha()}):
-        cells = [(r, c) for r, row in enumerate(rows) for c, ch in enumerate(row) if ch == letter]
-        r0, r1 = min(r for r, _ in cells), max(r for r, _ in cells)
-        c0, c1 = min(c for _, c in cells), max(c for _, c in cells)
-        top = TITLE_SHARE + edges[r0] * (1 - TITLE_SHARE)
-        bottom = TITLE_SHARE + edges[r1 + 1] * (1 - TITLE_SHARE)
-        out[letter] = (c0 / n_cols + GAP / 2, top + GAP / 2, (c1 + 1 - c0) / n_cols - GAP, bottom - top - GAP)
-    return out
-
-
 base_theme = theme_minimal() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
@@ -125,20 +110,27 @@ plots = []
 # A: primary panel, the revenue trend over time
 if len(frames) > 0:
     data_a = frames[0]
+    ticks_a = np.linspace(0, data_a[Y].max(), 5)
     plots.append(
         ggplot(data_a, aes(x=X, y=Y))
         + geom_area(fill=IMPRINT_PALETTE[0], alpha=0.3)
         + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
-        + scale_y_continuous(limits=[0, float(data_a[Y].max()) * 1.05])
+        + scale_y_continuous(
+            limits=[0, float(data_a[Y].max()) * 1.05],
+            breaks=ticks_a,
+            labels=[f"{t:,.0f}".rjust(LABEL_WIDTH, " ") for t in ticks_a],
+        )
         + labs(x=X, y="Revenue ($)", title="Daily Revenue Overview")
         + base_theme
     )
 
 # B: sales per product
 if len(frames) > 1:
+    ticks_b = np.linspace(0, frames[1][Y].max(), 5)
     plots.append(
         ggplot(frames[1], aes(x=CATEGORY, y=Y))
         + geom_bar(stat="identity", fill=IMPRINT_PALETTE[0], color=INK_SOFT, size=0.3, alpha=0.9)
+        + scale_y_continuous(breaks=ticks_b, labels=[f"{t:,.0f}".rjust(LABEL_WIDTH, " ") for t in ticks_b])
         + labs(x="Product", y="Units Sold", title="Sales by Product")
         + base_theme
     )
@@ -155,9 +147,11 @@ if len(frames) > 2:
 
 # D: histogram
 if len(frames) > 3:
+    ticks_d = np.linspace(0, np.histogram(frames[3][X].dropna(), bins=25)[0].max(), 5).round()
     plots.append(
         ggplot(frames[3], aes(x=X))
         + geom_histogram(bins=25, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
+        + scale_y_continuous(breaks=ticks_d, labels=[f"{t:,.0f}".rjust(LABEL_WIDTH, " ") for t in ticks_d])
         + labs(x="Performance Score", y="Frequency", title="Score Distribution")
         + base_theme
     )
@@ -199,8 +193,18 @@ if len(frames) > 5:
         + theme(legend_position="none")
     )
 
-placement = regions_from_layout(LAYOUT)
-boxes = [placement[letter] for letter in sorted(placement)][: len(plots)]
+# Layout: one (x, y, width, height) region per letter, in ggbunch's canvas fractions
+rows = LAYOUT.split(";")
+edges = np.concatenate([[0], np.cumsum(ROW_WEIGHTS)]) / np.sum(ROW_WEIGHTS)
+boxes = []
+for letter in sorted({ch for ch in LAYOUT if ch.isalpha()}):
+    cells = [(r, c) for r, row in enumerate(rows) for c, ch in enumerate(row) if ch == letter]
+    r0, r1 = min(r for r, _ in cells), max(r for r, _ in cells)
+    c0, c1 = min(c for _, c in cells), max(c for _, c in cells)
+    top = TITLE_SHARE + edges[r0] * (1 - TITLE_SHARE)
+    bottom = TITLE_SHARE + edges[r1 + 1] * (1 - TITLE_SHARE)
+    boxes.append((c0 / len(rows[0]) + GAP / 2, top + GAP / 2, (c1 + 1 - c0) / len(rows[0]) - GAP, bottom - top - GAP))
+boxes = boxes[: len(plots)]
 final_plot = (
     ggbunch(plots=plots, regions=boxes)
     + ggsize(800, 450)
