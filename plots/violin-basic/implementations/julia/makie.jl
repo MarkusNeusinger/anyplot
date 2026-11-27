@@ -5,41 +5,51 @@
 
 using CairoMakie
 using Colors
+using DataFrames
 using Random
-
-Random.seed!(42)
 
 # Theme tokens — Imprint palette
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
+# Imprint palette
 const IMPRINT_PALETTE = [
-    colorant"#009E73",  # 1 — brand green
-    colorant"#C475FD",  # 2 — lavender
-    colorant"#4467A3",  # 3 — blue
-    colorant"#BD8233",  # 4 — ochre
+    colorant"#009E73",
+    colorant"#C475FD",
+    colorant"#4467A3",
+    colorant"#BD8233",
+    colorant"#AE3030",
+    colorant"#2ABCCD",
+    colorant"#954477",
+    colorant"#99B314",
 ]
 
-# Data — test scores (50–100) across 4 class groups with distinct distribution shapes
-n = 200
+# Columns: set these to your table's column names
+const MODE     = "Transport mode"          # role: category
+const DURATION = "Commute duration (min)"  # role: value
 
-scores_a = clamp.(randn(n) .* 8.0 .+ 74.0, 50.0, 100.0)          # roughly normal
-scores_b = clamp.(vcat(randn(n ÷ 2) .* 5.0 .+ 63.0,
-                       randn(n ÷ 2) .* 5.0 .+ 87.0), 50.0, 100.0) # bimodal
-scores_c = clamp.(50.0 .+ 50.0 .* rand(n) .^ 2, 50.0, 100.0)     # right-skewed
-scores_d = clamp.(randn(n) .* 3.5 .+ 91.0, 50.0, 100.0)           # narrow, high-performing
+# Data: replace this block with your own table, for example df = CSV.read("commutes.csv", DataFrame)
+Random.seed!(42)
+n = 250
+modes = ["Walk", "Bike", "Bus", "Car"]
+durations = [
+    clamp.(randn(n) .* 4.0 .+ 18.0, 4.0, Inf),                                  # walk: narrow
+    clamp.(randn(n) .* 7.0 .+ 24.0, 4.0, Inf),                                  # bike: roughly normal
+    clamp.(10.0 .+ 55.0 .* rand(n) .^ 2.5, 4.0, Inf),                           # bus: right-skewed
+    clamp.(vcat(randn(n ÷ 2) .* 4.0 .+ 16.0, randn(n ÷ 2) .* 8.0 .+ 48.0), 4.0, Inf), # car: bimodal
+]
+df = DataFrame(
+    MODE => repeat(modes; inner = n),
+    DURATION => vcat(durations...),
+)
 
-groups = vcat(fill(1, n), fill(2, n), fill(3, n), fill(4, n))
-values = vcat(scores_a, scores_b, scores_c, scores_d)
+# Plot: reads only df and the constants above
+categories = unique(df[!, MODE])
+x = [findfirst(==(m), categories) for m in df[!, MODE]]
+values = df[!, DURATION]
 
-group_labels = ["Group A", "Group B", "Group C", "Group D"]
-dist_labels  = ["normal", "bimodal ★", "right-skewed", "narrow"]
-
-# Plot
 fig = Figure(
     size            = (1600, 900),
     fontsize        = 14,
@@ -51,14 +61,14 @@ ax = Axis(
     title              = "violin-basic · julia · makie · anyplot.ai",
     titlesize          = 22,
     titlecolor         = INK,
-    xlabel             = "Class Group",
-    ylabel             = "Test Score",
-    xlabelsize         = 14,
-    ylabelsize         = 14,
+    xlabel             = MODE,
+    ylabel             = DURATION,
+    xlabelsize         = 18,
+    ylabelsize         = 18,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 12,
-    yticklabelsize     = 12,
+    xticklabelsize     = 16,
+    yticklabelsize     = 16,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -72,52 +82,27 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     yminorgridvisible  = false,
     xminorgridvisible  = false,
-    xticks             = (1:4, group_labels),
+    xticks             = (eachindex(categories), categories),
 )
 
-# Draw one violin per group with Imprint palette color
-for (i, col) in enumerate(IMPRINT_PALETTE)
-    mask = groups .== i
-    violin!(ax, groups[mask], values[mask];
-        color       = (col, 0.75),
-        strokewidth = 1.0,
-        strokecolor = INK_SOFT,
-    )
-end
+# One violin per category, one Imprint color each; tails end at the data range
+violin!(ax, x, values;
+    color       = [RGBAf(c, 0.75) for c in IMPRINT_PALETTE[x]],
+    datalimits  = extrema,
+    strokewidth = 1.0,
+    strokecolor = INK_SOFT,
+)
 
-# Overlay narrow boxplot to show quartiles and median
-boxplot!(ax, groups, values;
-    color        = (:white, 0.0),
-    strokecolor  = INK,
-    strokewidth  = 1.5,
-    mediancolor  = INK,
-    width        = 0.12,
-    whiskerwidth = 0.5,
+# Quartile box and median line inside each violin
+boxplot!(ax, x, values;
+    color         = (:white, 0.0),
+    strokecolor   = INK,
+    strokewidth   = 1.5,
+    mediancolor   = INK,
+    whiskercolor  = INK,
+    width         = 0.12,
+    whiskerwidth  = 0.5,
     show_outliers = false,
-)
-
-# Callout annotation — draw viewer's eye to the bimodal shape in Group B
-text!(ax, 2.0, 96.5;
-    text     = "bimodal",
-    color    = IMPRINT_PALETTE[2],
-    fontsize = 12,
-    font     = :bold,
-    align    = (:center, :bottom),
-)
-
-# Custom Legend with per-group color swatches and distribution type labels
-legend_elements = [PolyElement(color = (IMPRINT_PALETTE[i], 0.75),
-                               strokecolor = INK_SOFT, strokewidth = 1.0)
-                   for i in eachindex(group_labels)]
-legend_labels   = ["$(group_labels[i]): $(dist_labels[i])" for i in eachindex(group_labels)]
-Legend(fig[1, 2], legend_elements, legend_labels, "Distribution Shape";
-    framevisible    = false,
-    backgroundcolor = PAGE_BG,
-    labelcolor      = INK_SOFT,
-    titlecolor   = INK,
-    titlesize    = 13,
-    labelsize    = 12,
-    padding      = (6, 6, 6, 6),
 )
 
 # Save
