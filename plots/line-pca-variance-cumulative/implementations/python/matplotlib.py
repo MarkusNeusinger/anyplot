@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-29
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -17,6 +17,7 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
+import pandas as pd
 from sklearn.datasets import load_wine
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -33,29 +34,35 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — 8 hues, hybrid-v3 sort order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]  # cumulative variance line
-LAVENDER = IMPRINT_PALETTE[1]  # 90% threshold
-BLUE = IMPRINT_PALETTE[2]  # 95% threshold
 
-# Data — scikit-learn wine dataset (13 features → 13 PCA components)
+# Constants
+THRESHOLDS = [0.90, 0.95]  # share of variance a reader wants to preserve
+
+# Columns: set these to your table's column names
+N_COMPONENTS = "Number of Components"  # role: n_components
+VARIANCE_RATIO = "Individual variance"  # role: explained_variance_ratio
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pca_variance.csv")
 wine = load_wine()
-X = StandardScaler().fit_transform(wine.data)
-pca = PCA().fit(X)
+pca = PCA().fit(StandardScaler().fit_transform(wine.data))
+df = pd.DataFrame(
+    {N_COMPONENTS: np.arange(1, len(pca.explained_variance_ratio_) + 1), VARIANCE_RATIO: pca.explained_variance_ratio_}
+)
 
-variance = pca.explained_variance_ratio_
+# Plot: reads only df and the constants above
+components = df[N_COMPONENTS].to_numpy()
+variance = df[VARIANCE_RATIO].to_numpy()
 cumulative = np.cumsum(variance)
-components = np.arange(1, len(cumulative) + 1)
 
 # Elbow detection via maximum curvature in second discrete difference
-diffs = np.diff(cumulative)
-diffs2 = np.diff(diffs)
-elbow_idx = int(np.argmin(diffs2)) + 1  # shifted by one from double-diff
-elbow_component = elbow_idx + 1  # 1-indexed
+curvature = np.diff(cumulative, n=2)
+elbow_idx = int(np.argmin(curvature)) + 1 if len(curvature) else 0
+elbow_component = components[elbow_idx]
 
 # Threshold crossings
-thresholds = [(0.90, "90%", LAVENDER), (0.95, "95%", BLUE)]
-n_at_threshold = [int(np.argmax(cumulative >= t)) + 1 for t, _, _ in thresholds]
+n_at_threshold = [int(components[np.argmax(cumulative >= t)]) for t in THRESHOLDS]
 
-# Canvas — hard rule: 3200 × 1800 px (landscape 16:9)
+# Canvas: 3200 × 1800 px (landscape 16:9)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
@@ -68,7 +75,7 @@ ax.bar(
     width=0.6,
     edgecolor=BRAND,
     linewidth=0.4,
-    label="Individual variance",
+    label=VARIANCE_RATIO,
     zorder=2,
 )
 
@@ -92,7 +99,9 @@ ax.plot(
 )
 
 # Threshold horizontal lines + crossing annotations
-for i, ((t, label, color), n_comp) in enumerate(zip(thresholds, n_at_threshold, strict=True)):
+for i, (t, n_comp) in enumerate(zip(THRESHOLDS, n_at_threshold, strict=True)):
+    color = IMPRINT_PALETTE[i + 1]
+    label = f"{t:.0%}"
     ax.axhline(y=t, color=color, linestyle="--", linewidth=1.2, alpha=0.75, label=f"{label} threshold", zorder=4)
     ax.plot(n_comp, t, marker="D", color=color, markersize=7, zorder=6, markeredgecolor=PAGE_BG, markeredgewidth=0.9)
     # Annotation: place to the left of the crossing point
@@ -138,13 +147,13 @@ title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=8, color=INK)
 
 # Axis labels
-ax.set_xlabel("Number of Components", fontsize=10, labelpad=5, color=INK)
+ax.set_xlabel(N_COMPONENTS, fontsize=10, labelpad=5, color=INK)
 ax.set_ylabel("Explained Variance", fontsize=10, labelpad=5, color=INK)
 
 # Ticks
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_xticks(components)
-ax.set_xlim(0.3, len(components) + 0.7)
+ax.set_xlim(components.min() - 0.7, components.max() + 0.7)
 ax.set_ylim(0, 1.08)
 
 # Percentage formatter on y-axis
@@ -162,14 +171,14 @@ ax.yaxis.grid(True, which="major", alpha=0.15, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
 # Legend
-handles, labels_list = ax.get_legend_handles_labels()
-if len(handles) > 1:
+if len(ax.get_legend_handles_labels()[0]) > 1:
     leg = ax.legend(fontsize=8, loc="lower right", framealpha=0.95, fancybox=True, borderpad=0.7, handlelength=2.0)
     if leg:
         leg.get_frame().set_facecolor(ELEVATED_BG)
         leg.get_frame().set_edgecolor(INK_SOFT)
         leg.get_frame().set_linewidth(0.5)
-        plt.setp(leg.get_texts(), color=INK_SOFT)
+        for text in leg.get_texts():
+            text.set_color(INK_SOFT)
 
-plt.tight_layout(pad=1.0)
-plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+fig.tight_layout(pad=1.0)
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

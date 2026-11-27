@@ -12,46 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 83
 review:
   strengths:
-  - Complete KS test visualization with correct ECDF step functions, D statistic,
-    p-value annotation, and maximum-divergence marker — all spec requirements fulfilled
-  - 'Semantic Imprint palette: brand green #009E73 for Good Customers, lavender #C475FD
-    for Bad Customers, matte red #AE3030 for the KS divergence region — intentional
-    and appropriate'
-  - Shaded divergence band plus dashed vertical line and thick KS segment create a
-    clear focal point that guides the viewer directly to the key insight
-  - All theme tokens correctly wired — both light (#FAF8F1) and dark (#1A1A17) renders
-    are readable with full chrome adaptation (title, labels, ticks, grid, legend box)
-  - Inline KS statistic computation (D and asymptotic p-value) in idiomatic Julia
-    using dot-broadcast operators — no external stats package dependency
-  - Clean title-size scaling formula ensures the mandated anyplot title fits without
-    overflow
+  - 'Complete K-S display: both ECDFs as step functions on a 0-1 axis, dashed vertical
+    line plus a thick red gap segment at the maximum-distance x, and D/p-value placed
+    in the gap where it covers neither curve'
+  - D and the asymptotic p-value fall out of the inline two-sample computation (searchsortedlast
+    over the pooled sample); the reported D 0.658 matches the gap read off the axis
+  - Theme tokens threaded through every chrome element; both renders are fully readable
+    with the Imprint green/lavender pair identical across themes
+  - Translucent band! between the curves gives the divergence region a quiet focal
+    emphasis without hiding either line
   weaknesses:
-  - ecdf_step helper function departs from KISS structure (CQ-01) — the two-call step-function
-    construction could be inlined to remove the function definition
-  - 'Shaded divergence band on dark render creates a large dark brownish-red region
-    (transparent #AE3030 over #1A1A17) that is visually heavy and slightly mutes the
-    elegance of the dark theme'
-  - LM-02 could be strengthened — the implementation uses Makie band!/axislegend but
-    misses opportunities to leverage distinctively Makie-specific features like Layout
-    composition with colorbars or statistical recipe integration
-  - 'DE-01 is above a configured default but not publication-ready: the chart is clean
-    and professional but lacks a distinctive typographic hierarchy or compositional
-    flourish that would push it to FiveThirtyEight quality'
+  - 'CQ-04 (code): lines 59-71 write out the ECDF step coordinates (the ecdf_step
+    helper and its two calls, about 13 lines) → `ecdfplot!(ax, good_scores; color
+    = IMPRINT_PALETTE[1], linewidth = 2.5, label = "Good Customers")` and the same
+    for bad_scores (Makie). Likely cause: a hand-built step function instead of Makie''s
+    ECDF recipe.'
+  - 'Suggestion: y-axis ticks at 0.0/0.5/1.0 only; ticks every 0.2 would let a reader
+    read both ECDF values at the gap endpoints.'
+  - 'Suggestion: the band and the dashed marker share the red of the gap segment;
+    a neutral band would leave red to the statistic alone.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
-      Chrome: Title "ks-test-comparison · julia · makie · anyplot.ai" in dark INK text, ~50-55% of plot width, clearly readable. "Credit Score" x-label and "Cumulative Proportion" y-label in dark INK, proportional size. Tick labels in muted INK_SOFT gray, clearly legible. Top and right spines removed. Subtle grid at 12% alpha.
-      Data: Green (#009E73) step-function ECDF for "Good Customers"; lavender (#C475FD) step-function ECDF for "Bad Customers". Semi-transparent red (#AE3030 at 12% alpha) shaded band fills the divergence region between the two ECDFs. Dashed red vertical line marks the KS maximum at ~score 540. Thick solid red segment shows the D-statistic gap. Annotation "D = 0.658 / p < 0.001" in dark INK text positioned to the right of the KS marker. Legend in bottom-right with elevated background frame, both labels readable.
-      Legibility verdict: PASS — all text elements are clearly readable against the light background. No light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold title 'ks-test-comparison · julia · makie · anyplot.ai' (~27% of width, at the reference size) in dark INK at top; 'Credit Score' x-label and 'Cumulative Proportion' y-label in dark INK; smaller tick labels 300-700 at the reference size and 0.0/0.5/1.0 in INK_SOFT; top/right spines removed; subtle grid. Legend in the lower right on an elevated box with thin frame.
+      Data: green #009E73 step ECDF 'Good Customers' (~445-770), lavender #C475FD step ECDF 'Bad Customers' (~300-655); pale translucent red band fills the region between them; dashed red vertical line at x≈553 and a thick red segment between the two curves there (≈0.15 to ≈0.81); 'D = 0.658 / p < 0.001' in INK to the right of the segment inside the band, touching neither curve.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
-      Chrome: Title in light INK (#F0EFE8) text, clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Grid lines subtle. Top and right spines absent. Legend with elevated dark background (#242420) and subtle frame.
-      Data: Data colors are identical to the light render — green (#009E73) for Good Customers and lavender (#C475FD) for Bad Customers are unchanged (only chrome flipped). The divergence band (semi-transparent #AE3030 at 12% alpha over dark bg) renders as a dark brownish-red region covering the central portion of the plot — visually heavy but the ECDF lines remain distinguishable on top. Annotation "D = 0.658 / p < 0.001" appears in light INK text and is readable.
-      Legibility verdict: PASS — no dark-on-dark failures. All text elements are readable. The shaded band is darker on the dark bg than on light, but does not obscure critical text or data lines.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis labels in light INK #F0EFE8, ticks in INK_SOFT #B8B7B0, legend box #242420 with light frame and light text; grid subtle. No dark-on-dark text.
+      Data: green and lavender lines identical to the light render; the band reads as a dark maroon tint; red marker and segment visible; annotation in light INK readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,84 +56,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, labels=14, ticks=12,
-          annotation=16). Well-proportioned at canvas size. Both themes fully readable.
-          Title at ~55% width, appropriate.
+        comment: All sizes explicit at the Makie reference (title 20, axis titles
+          14, ticks 12, legend 12, annotation 16); readable in both themes; title
+          ~27% of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Annotation positioned to the right of KS marker
-          without colliding with ECDFs. Legend in bottom-right does not overlap data.
+        comment: No text collisions; the D/p annotation sits in the band between the
+          curves and touches neither; legend clear of the data in the lower right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both ECDF lines clearly visible at linewidth=2.5. KS segment at linewidth=4
-          is prominent. Shaded band and dashed line provide supporting context without
-          obscuring data.
+        comment: Both 400-point step lines at linewidth 2.5 are clearly traceable
+          in both themes; the 4 px red gap segment stands out; legend line samples
+          match the lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender — CVD-safe pairing. Red KS annotation is semantic-only,
-          not used as a distinguishing signal between the two main series.
+        comment: Green vs lavender differ strongly in hue and lightness; red only
+          marks the statistic
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills canvas well with good margins. Legend
-          placement bottom-right is appropriate. No overflow or clipping detected
-          in either render.
+        comment: Canvas gate passed; axes reach to the canvas edges with balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Credit Score'' (descriptive, domain-appropriate). Y: ''Cumulative
-          Proportion'' (descriptive with implicit unit 0–1). Title matches exact anyplot
-          format.'
+        comment: '''Credit Score'' and ''Cumulative Proportion'' are descriptive;
+          both quantities are unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for Good Customers. Second series
-          #C475FD (lavender) for Bad Customers. KS annotation uses #AE3030 (semantic
-          red anchor for bad/loss/error — appropriate). Light bg #FAF8F1, dark bg
-          #1A1A17. Chrome fully theme-adaptive. Data colors identical across themes.'
+        comment: 'First series #009E73, second #C475FD (Imprint order); #AE3030 for
+          the statistic; backgrounds #FAF8F1 / #1A1A17; chrome correct in both themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above a well-configured default: intentional semantic red for KS
-          annotation, shaded divergence band, clean two-color ECDF pairing. Not yet
-          publication-ready — lacks a typographic flourish or compositional distinction.'
+        passed: false
+        comment: Style-guide baseline (Imprint, theme tokens, explicit sizes) and
+          nothing decided clearly beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed, grid at 12% alpha (subtle), elevated legend
-          background with frame, well-calibrated INK tokens. Clearly refined beyond
-          defaults.
+        passed: false
+        comment: 'Spines removed and a subtle grid: the baseline, nothing beyond'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Shaded divergence band + dashed line + thick KS segment + D/p annotation
-          create a clear focal point. The credit scoring narrative (Good vs Bad customers)
-          is immediately understandable. Guides the viewer to the KS statistic.
+        passed: false
+        comment: 'A focal point the implementation chose beyond the Notes: the translucent
+          red divergence band plus the thick red gap segment pull the eye to the maximum
+          distance'
     spec_compliance:
       score: 15
       max: 15
@@ -149,31 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Two-sample KS plot correctly implemented with ECDF step functions
-          for both distributions.
+        comment: Two-sample K-S plot with both ECDFs as step functions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs as step functions, KS statistic value prominently displayed,
-          maximum divergence highlighted with vertical line+segment, p-value from
-          KS test, both distributions labeled in legend.
+        comment: 'All Notes and C1-C4 met: step ECDFs on 0-1 axis, distinct colors
+          with legend, dashed vertical line plus gap segment at the max-distance x,
+          D and p shown off the curves'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: credit scores (~300-750, realistic range). Y: cumulative proportion
-          (0-1). Both ECDFs correctly computed and mapped.'
+        comment: Score on x, cumulative proportion on y (0-1 with small padding);
+          all data visible; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ks-test-comparison · julia · makie · anyplot.ai'' — exact
-          anyplot format. Legend: ''Good Customers'' / ''Bad Customers'' — descriptive
-          and correct.'
+        comment: Title 'ks-test-comparison · julia · makie · anyplot.ai' exact; legend
+          'Good Customers' / 'Bad Customers'
     data_quality:
       score: 15
       max: 15
@@ -183,85 +168,84 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all KS plot aspects: two distinct ECDFs, shaded divergence
-          region, D statistic, p-value, point of maximum divergence. Data (400 samples
-          per group) is sufficient for reliable KS inference.'
+        comment: Two clearly different distributions, a located maximum gap, D and
+          p-value
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring model validation — Good vs Bad customers. Real-world
-          business use case, neutral topic, plausible distribution parameters (mean
-          620/490, sd 60/70).
+        comment: Credit-scoring Good vs Bad customers, the spec's own example application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores in ~300-750 range (realistic FICO-like). D=0.658 represents
-          a large separation appropriate for a credit risk model. p<0.001 expected
-          with n=400 per group and this effect size.
+        comment: 'Checked: at the marker (x≈553) Bad ECDF ≈0.81 and Good ≈0.15 read
+          off the axis, gap ≈0.66 = reported D 0.658; D falls out of the searchsortedlast
+          computation; p<0.001 consistent with n=400 per group'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'One helper function defined: ecdf_step(sv) called twice. Minor KISS
-          violation but justified by the duplication it avoids. Otherwise clean linear
-          structure.'
+        comment: Top to bottom; one short helper ecdf_step above its first use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set at top.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used. No unused imports.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Julia code with idiomatic dot-broadcast for KS computation.
-          No fake UI elements. Appropriate complexity.
+        passed: false
+        comment: ECDF step coordinates written out (ecdf_step, lines 59-71) where
+          Makie's ecdfplot! computes them (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
-          Makie API). No deprecated functions.
+        comment: Saves plot-$(THEME).png with px_per_unit=2; size= keyword; current
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: band!, vlines!, lines!, text!, axislegend — all high-level Makie
-          primitives used correctly. RGBAf for transparent colors, colorant strings
-          — idiomatic. Theme token pattern is proper Makie/anyplot usage.
+        passed: false
+        comment: Correct high-level primitives (lines!, band!, vlines!, text!, axislegend)
+          but the ECDF is hand-built instead of the ecdfplot! recipe
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Uses band! for divergence region fill (Makie-specific), axislegend
-          for legend placement. Julia dot-broadcast operators for vectorized ECDF
-          computation. Could be strengthened with more uniquely Makie features (Layout
-          composition, colorbars, statistical recipes).
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; band!/vlines! are
+          generic equivalents
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d8fa00e2b0
+  last_kept:
+    pr: 14869
+    code: no_visible_improvement
+    note: '#14869 was kept because the review saw no visible improvement over the
+      live version.'
 impl_tags:
   dependencies: []
   techniques:
