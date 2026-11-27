@@ -1,7 +1,7 @@
 # anyplot.ai
 # bullet-basic: Basic Bullet Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-05-29
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 81/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
@@ -77,11 +77,10 @@ for i in 1:n
     lines!(ax, [target, target], [y - band_h / 2 - 0.05, y + band_h / 2 + 0.05];
            color = INK, linewidth = 4.0)
 
-    exceeds = actuals[i] > targets[i]
     text!(ax, actual + 1.5, y;
           text    = "$(actuals[i])%",
-          color   = exceeds ? BRAND : INK_SOFT,
-          fontsize = exceeds ? 13 : 11,
+          color   = INK,
+          fontsize = 13,
           align   = (:left, :center))
 end
 

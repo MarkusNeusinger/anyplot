@@ -2,50 +2,44 @@ library: seaborn
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:08:43Z'
-updated: '2026-05-29T17:25:53Z'
+updated: '2026-11-27T21:39:02Z'
 generated_by: claude-sonnet
-workflow_run: 26651405841
+workflow_run: 46070940619
 issue: 979
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - 'Excellent use of seaborn''s statistical estimation API: errorbar=("pi", 95) on
-    a long-format 200-member ensemble is the idiomatic way to build a band plot in
-    seaborn'
-  - 'Perfect spec compliance and data quality: all required band-plot features present,
-    realistic meteorological domain, correct scales'
-  - 'Flawless theme adaptation: all chrome tokens (background, text, grid, legend
-    box) correctly switch between light and dark; data colors stay identical across
-    themes'
-  - Clean KISS code structure with seed, no functions, and correct savefig API usage
+  - 'Theme tokens threaded through sns.set_theme rc: both renders theme-correct with
+    identical Imprint data colors'
+  - Column constants above a self-contained Data block; sns.lineplot reads df directly
+  - Bounds computed from 150 simulated replicates with np.percentile, so the band
+    falls out of the data
+  - plt.tight_layout() fills the fixed 3200x1800 canvas without trimming it
   weaknesses:
-  - Band is somewhat narrow relative to the dominant 12°C diurnal swing, making the
-    uncertainty feature less visually prominent; a wider ensemble drift (e.g. 0.12
-    σ instead of 0.08) would make the PI more visible while staying realistic
-  - 'DE-01 ceiling at 4/8: plot reads as a well-configured default; adding intentional
-    typographic hierarchy (e.g. bolder title weight, slightly larger mean line) would
-    lift it toward publication-ready'
+  - 'Suggestion: the band could be drawn with seaborn''s own interval estimation (sns.lineplot
+    errorbar=(''pi'', 95)) on a long-format replicate table if the adaptable shape
+    allows it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "band-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Forecast Horizon (days)" and "Temperature (°C)" in dark ink; tick labels in #4A4A44 (INK_SOFT); legend in upper-left with elevated-bg frame
-      Data: Band fill in #009E73 (Imprint position 1) with alpha≈0.25; center line in #4467A3 (Imprint position 3) at linewidth=2.5; diurnal temperature cycle over 7 days with 95% prediction interval
-      Legibility verdict: PASS — all text readable against light background
+      Background: warm off-white #FAF8F1, correct
+      Chrome: title 'band-basic · python · seaborn · anyplot.ai' in dark ink; axis titles 'Substrate concentration (mM)' and 'Reaction rate (µmol/min)'; INK_SOFT ticks; subtle y-grid visible through the band; legend lower right on elevated background
+      Data: semi-transparent #009E73 band (2.5-97.5 percentile of 150 replicates) rising and widening along a Michaelis-Menten saturation curve; #4467A3 mean line at 2.5 lw on top
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and axis labels in light off-white (#F0EFE8); tick labels in #B8B7B0 (INK_SOFT dark); legend box in #242420 (ELEVATED_BG dark) — all readable
-      Data: Band fill still #009E73 with alpha (appears darker on dark surface, as expected); center line still #4467A3 — identical data colors to light render; only chrome has flipped
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text clearly visible against dark background
+      Background: warm near-black #1A1A17, correct
+      Chrome: title, axis titles and legend text light; ticks #B8B7B0; grid subtle; legend frame #242420 — no dark-on-dark text
+      Data: same #009E73 band (darker look from alpha on the dark page, still distinct) and same #4467A3 line — identical data colors
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,50 +47,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 12pt, axes 10pt, ticks 8pt; both
-          renders readable; title spans ~70% width as expected for long mandated format'
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, all set explicitly;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; legend in upper-left avoids data region
+        comment: No text collisions; legend sits in the empty lower-right corner below
+          the band
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Band and center line visible; band is slightly narrow relative to
-          12°C diurnal swing amplitude, reducing prominence of the uncertainty feature
+        comment: 60-point mean line at 2.5 lw stands clearly on top of the band; band
+          distinct from the page in both themes; legend swatch matches the fill
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue line and green band are CVD-safe (distinct under deuteranopia/protanopia);
-          redundant encoding via legend
+        comment: Blue line over green band is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200×1800, good margins, plot fills canvas well, no overflow
-          or clipping
+        comment: plt.tight_layout() fills the 3200x1800 canvas; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Forecast Horizon (days) and Temperature (°C) both include units
+        comment: Substrate concentration (mM) and Reaction rate (µmol/min) carry units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Band fill=#009E73 (Imprint pos 1), center line=#4467A3 (Imprint
-          pos 3); backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+        comment: 'Band #009E73 (Imprint 1), line #4467A3 (Imprint 3); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,23 +97,19 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured with Imprint palette and theme tokens; intentional
-          but reads as polished library default rather than exceptional custom design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed via sns.despine(), subtle y-axis grid (alpha=0.15),
-          legend framealpha=0.9; visible refinement above defaults
+        passed: false
+        comment: Spine and grid rules met (despine, y-grid at 0.15); nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Growing forecast uncertainty with diurnal cycle tells clear meteorological
-          story; blue-on-green hierarchy guides eye to the mean; uncertainty-grows-with-horizon
-          message readable without annotation
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot with filled region and central trend line in contrasting
-          color
+        comment: 'Correct band plot: one band and its central line, no additions'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.25), central contrasting line, smooth
-          interpolation all present
+        comment: Semi-transparent fill (alpha 0.25), contrasting central line on top,
+          straight segments through every value; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=forecast day, Y=temperature; all data visible across full x-range
+        comment: x = substrate, band = 2.5/97.5 percentiles, line = mean; marks at
+          their values; readable ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'band-basic · python · seaborn · anyplot.ai'; legend labels
-          'Ensemble Mean' and '95% Prediction Interval' are accurate
+        comment: Mandated title format; legend '95% interval across replicates' /
+          'Mean rate' matches the marks
     data_quality:
       score: 15
       max: 15
@@ -161,22 +150,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows band boundaries, central mean, widening uncertainty over time
-          — all band-basic features represented
+        comment: Band widens with the saturating rate (multiplicative noise), boundaries
+          follow real-looking replicate spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 200-member ensemble weather forecast is a canonical real-world use
-          case for band plots
+        comment: Michaelis-Menten enzyme assay with 150 replicates is a realistic,
+          neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 9-25°C range with 6°C diurnal amplitude and 2.8°C 7-day trend are
-          plausible for continental mid-latitude summer forecast
+        comment: Vmax 95 µmol/min, Km 2.2 mM; mean at 10 mM reads ~78 on the axis,
+          matching 95*10/12.2 ≈ 77.9 (x1.007 lognormal mean)
     code_quality:
       score: 10
       max: 10
@@ -186,59 +175,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → theme tokens → data → plot → save; no functions or classes
+        comment: Imports -> tokens -> column constants -> Data -> Plot -> Save, no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path fix for local filename collision is documented
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic; post-hoc ax.lines[0].set_color() reassignment
-          is a minor hack but well-commented
+        comment: np.percentile and mean compute the bounds; fill_between for a given-bounds
+          band; no excess code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with no bbox_inches=tight
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'; current API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: sns.lineplot with estimator=mean and errorbar=(pi, 95) on long-format
-          16000-row data; sns.set_theme + sns.set_context + sns.despine all used correctly
+        comment: sns.set_theme / set_context / despine and sns.lineplot from df with
+          column constants; the band itself is matplotlib fill_between — default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: 'errorbar=(pi, 95) with 200-member ensemble is distinctively seaborn:
-          automatic percentile interval from long-format data in a single call'
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-27T21:35:48Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  - explicit-figure
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
