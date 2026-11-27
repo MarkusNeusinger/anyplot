@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-27
@@ -19,7 +19,7 @@ from plotnine import (
     geom_polygon,
     ggplot,
     labs,
-    scale_fill_gradient,
+    scale_fill_gradientn,
     theme,
     theme_minimal,
 )
@@ -32,191 +32,144 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-WATER_COLOR = "#C5D9EF" if THEME == "light" else "#1A2535"
-LAND_COLOR = "#DEDAD2" if THEME == "light" else "#2C2C27"
-LAND_EDGE = "#9A9A92" if THEME == "light" else "#4A4A42"
+# Base-map tokens: neighbouring terrain behind the state, the state itself, its border
+OUTSIDE_COLOR = "#E4E1D8" if THEME == "light" else "#222220"
+STATE_COLOR = "#F4F1E8" if THEME == "light" else "#34342F"
+STATE_EDGE = "#8A8980" if THEME == "light" else "#6A6962"
 
-# Data — NYC taxi pickup clusters (denser hotspots for full gradient utilization)
-np.random.seed(42)
+# Imprint palette (positions are used by the continuous field ramp below)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-downtown_lon = np.random.normal(-73.99, 0.012, 2500)
-downtown_lat = np.random.normal(40.75, 0.010, 2500)
+# Imprint sequential ramp for fields (colored cells that fill the plot), as (position, hex) stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-midtown_lon = np.random.normal(-73.97, 0.015, 2200)
-midtown_lat = np.random.normal(40.78, 0.012, 2200)
+# Constants
+HEX_COLUMNS = 26  # hexagons across the width of the data: larger number = smaller cells
+BASE_MAP_PAD = 0.6  # degrees of map around the state outline
 
-airport_lon = np.random.normal(-73.79, 0.010, 1500)
-airport_lat = np.random.normal(40.65, 0.008, 1500)
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°)"  # role: lon
+LATITUDE = "Latitude (°)"  # role: lat
 
-brooklyn_lon = np.random.normal(-73.95, 0.015, 900)
-brooklyn_lat = np.random.normal(40.67, 0.010, 900)
-
-scatter_lon = np.random.uniform(-74.05, -73.70, 400)
-scatter_lat = np.random.uniform(40.60, 40.85, 400)
-
-lon = np.concatenate([downtown_lon, midtown_lon, airport_lon, brooklyn_lon, scatter_lon])
-lat = np.concatenate([downtown_lat, midtown_lat, airport_lat, brooklyn_lat, scatter_lat])
-
-# Optional value: simulated trip duration (min) — airport trips notably longer
-value = np.concatenate(
+# Data: replace this block with your own table, for example df = pd.read_csv("strikes.csv")
+# Simulated cloud-to-ground lightning strikes over Texas, clustered along storm corridors
+rng = np.random.default_rng(42)
+# (centre lon, centre lat, spread lon, spread lat, strikes)
+storm_zones = [
+    (-95.2, 29.8, 0.60, 0.45, 3200),  # Houston and the Gulf coast
+    (-97.0, 32.8, 0.50, 0.40, 2400),  # Dallas-Fort Worth
+    (-94.8, 31.6, 0.50, 0.60, 1400),  # East Texas piney woods
+    (-98.4, 30.0, 0.60, 0.45, 1600),  # Hill Country and San Antonio
+    (-101.8, 35.2, 0.70, 0.50, 1100),  # Panhandle supercells
+    (-102.0, 31.4, 0.90, 0.70, 500),  # West Texas, scattered
+]
+df = pd.concat(
     [
-        np.random.normal(11, 3, 2500),  # downtown — short rides
-        np.random.normal(13, 3, 2200),  # midtown
-        np.random.normal(38, 6, 1500),  # airport — long rides
-        np.random.normal(10, 3, 900),  # brooklyn
-        np.random.normal(15, 5, 400),  # scattered
-    ]
+        pd.DataFrame({LONGITUDE: rng.normal(lon0, sd_lon, n), LATITUDE: rng.normal(lat0, sd_lat, n)})
+        for lon0, lat0, sd_lon, sd_lat, n in storm_zones
+    ],
+    ignore_index=True,
 )
 
-# Hexagonal bin polygon construction
-gridsize = 30
-LON_MIN, LON_MAX = -74.20, -73.55
-LAT_MIN, LAT_MAX = 40.52, 40.92
+# Plot
+# Texas outline as base map: Red River, Sabine, Gulf coast, Rio Grande, New Mexico line
+outline = pd.DataFrame(
+    [
+        (-103.04, 36.50), (-100.00, 36.50), (-100.00, 34.56), (-99.20, 34.21), (-98.10, 34.14),
+        (-97.10, 33.75), (-96.50, 33.82), (-95.50, 33.88), (-94.50, 33.64), (-94.04, 33.55),
+        (-94.04, 32.40), (-93.90, 31.90), (-93.55, 31.18), (-93.70, 30.50), (-93.70, 29.75),
+        (-94.70, 29.35), (-95.30, 28.90), (-96.40, 28.35), (-97.20, 27.70), (-97.40, 26.90),
+        (-97.15, 25.96), (-98.20, 26.05), (-99.10, 26.40), (-99.50, 27.50), (-100.30, 28.30),
+        (-100.70, 29.10), (-101.40, 29.77), (-102.30, 29.88), (-102.70, 29.70), (-103.10, 29.00),
+        (-104.00, 29.30), (-104.70, 30.00), (-105.00, 30.70), (-106.50, 31.78), (-106.62, 32.00),
+        (-103.06, 32.00),
+    ],
+    columns=[LONGITUDE, LATITUDE],
+)  # fmt: skip
+outline["region"] = "state"
 
-hex_width = (LON_MAX - LON_MIN) / gridsize
-hex_radius = hex_width / np.sqrt(3)
-row_height = hex_radius * 1.5
+# Hexagons are regular on screen: bin in x = lon * cos(mid-latitude), then map the corners back
+mid_lat = df[LATITUDE].mean()
+stretch = np.cos(np.radians(mid_lat))
+x = df[LONGITUDE] * stretch
+y = df[LATITUDE]
+hex_radius = (x.max() - x.min()) / HEX_COLUMNS / np.sqrt(3)
 
-centers = []
-row = 0
-y_pos = LAT_MIN
-while y_pos <= LAT_MAX:
-    x_offset = (hex_width / 2) if row % 2 else 0
-    x_pos = LON_MIN + x_offset
-    while x_pos <= LON_MAX:
-        centers.append((x_pos, y_pos))
-        x_pos += hex_width
-    y_pos += row_height
-    row += 1
+# Cube-round each strike to its hexagon (pointy-top grid) and count strikes per cell
+q = (np.sqrt(3) / 3 * x - y / 3) / hex_radius
+r = (2 / 3 * y) / hex_radius
+cx, cy, cz = q, -q - r, r
+rx, ry, rz = np.round(cx), np.round(cy), np.round(cz)
+dx, dy, dz = (rx - cx).abs(), (ry - cy).abs(), (rz - cz).abs()
+rx = np.where((dx > dy) & (dx > dz), -ry - rz, rx)
+rz = np.where((dx <= dy) | (dx <= dz), np.where(dy > dz, rz, -rx - ry), rz)
+cells = pd.DataFrame({"q": rx, "r": rz}).value_counts().rename("count").reset_index()
+cells["hex_id"] = np.arange(len(cells))
+centre_x = hex_radius * np.sqrt(3) * (cells["q"] + cells["r"] / 2)
+centre_y = hex_radius * 1.5 * cells["r"]
 
-points = np.column_stack([lon, lat])
-records = []
-hex_id = 0
+corners = np.radians(np.arange(6) * 60 + 30)
+hexes = cells.loc[cells.index.repeat(6)].reset_index(drop=True)
+hexes[LONGITUDE] = (np.repeat(centre_x.to_numpy(), 6) + hex_radius * np.tile(np.cos(corners), len(cells))) / stretch
+hexes[LATITUDE] = np.repeat(centre_y.to_numpy(), 6) + hex_radius * np.tile(np.sin(corners), len(cells))
 
-for cx, cy in centers:
-    dx = np.abs(points[:, 0] - cx)
-    dy = np.abs(points[:, 1] - cy)
-    in_hex = (
-        (dy <= hex_radius)
-        & (dx <= hex_width / 2)
-        & (hex_radius * hex_width / 2 >= dx * hex_radius + dy * hex_width / 4)
-    )
-    count = np.sum(in_hex)
-    if count > 0:
-        mean_value = np.mean(value[in_hex])  # mean aggregation of optional value field
-        angles = np.arange(6) * np.pi / 3 + np.pi / 6
-        for angle in angles:
-            records.append(
-                {
-                    "lon": cx + hex_radius * np.cos(angle),
-                    "lat": cy + hex_radius * np.sin(angle),
-                    "hex_id": hex_id,
-                    "count": count,
-                    "mean_value": mean_value,
-                }
-            )
-        hex_id += 1
-
-hex_df = pd.DataFrame(records)
-
-# Hotspot label positions for direct annotation
-labels_df = pd.DataFrame(
-    {"lon": [-73.99, -73.97, -73.79], "lat": [40.762, 40.793, 40.661], "label": ["Downtown", "Midtown", "JFK Airport"]}
+# Direct labels for the three busiest storm zones, set above their cores
+labels = pd.DataFrame(
+    {
+        LONGITUDE: [-95.2, -97.0, -101.8],
+        LATITUDE: [30.5, 33.5, 35.9],
+        "label": ["Houston", "Dallas–Fort Worth", "Panhandle"],
+    }
 )
 
-# NYC-like coastline boundary
-coast_lon = [
-    -74.20,
-    -74.12,
-    -74.05,
-    -74.00,
-    -73.95,
-    -73.88,
-    -73.80,
-    -73.72,
-    -73.62,
-    -73.55,
-    -73.55,
-    -73.60,
-    -73.68,
-    -73.75,
-    -73.82,
-    -73.88,
-    -73.94,
-    -74.00,
-    -74.06,
-    -74.12,
-    -74.18,
-    -74.20,
-]
-coast_lat = [
-    40.52,
-    40.50,
-    40.51,
-    40.54,
-    40.57,
-    40.61,
-    40.66,
-    40.70,
-    40.76,
-    40.81,
-    40.92,
-    40.93,
-    40.92,
-    40.90,
-    40.88,
-    40.85,
-    40.81,
-    40.76,
-    40.68,
-    40.61,
-    40.56,
-    40.52,
-]
-df_coastline = pd.DataFrame({"region": "land", "order": range(len(coast_lon)), "lon": coast_lon, "lat": coast_lat})
+lon_lim = (outline[LONGITUDE].min() - BASE_MAP_PAD, outline[LONGITUDE].max() + BASE_MAP_PAD)
+lat_lim = (outline[LATITUDE].min() - BASE_MAP_PAD, outline[LATITUDE].max() + BASE_MAP_PAD)
 
 title = "hexbin-map-geographic · python · plotnine · anyplot.ai"
 
-# sqrt transform spreads color across the right-skewed count distribution —
-# a ggplot2 grammar-of-graphics feature that replaces manual data normalization
+# sqrt transform spreads the ramp across the right-skewed strike counts
 plot = (
     ggplot()
     + geom_polygon(
-        aes(x="lon", y="lat", group="region"), data=df_coastline, fill=LAND_COLOR, color=LAND_EDGE, size=0.5, alpha=0.9
+        aes(x=LONGITUDE, y=LATITUDE, group="region"), data=outline, fill=STATE_COLOR, color=STATE_EDGE, size=0.6
     )
     + geom_polygon(
-        aes(x="lon", y="lat", group="hex_id", fill="count"), data=hex_df, color=PAGE_BG, size=0.15, alpha=0.88
+        aes(x=LONGITUDE, y=LATITUDE, group="hex_id", fill="count"), data=hexes, color=PAGE_BG, size=0.15, alpha=0.88
     )
     + geom_label(
-        aes(x="lon", y="lat", label="label"),
-        data=labels_df,
+        aes(x=LONGITUDE, y=LATITUDE, label="label"),
+        data=labels,
         color=INK,
         fill=ELEVATED_BG,
-        size=3,
+        size=4.5,
         label_padding=0.2,
         label_size=0.3,
     )
-    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pickups", trans="sqrt")
-    + coord_fixed(ratio=1.0, xlim=(-74.20, -73.55), ylim=(40.52, 40.92))
-    + labs(title=title, x="Longitude (°)", y="Latitude (°)")
+    + scale_fill_gradientn(colors=[c for _, c in SEQ_FIELDS], values=[p for p, _ in SEQ_FIELDS], trans="sqrt")
+    + coord_fixed(ratio=1 / stretch, xlim=lon_lim, ylim=lat_lim)
+    + labs(title=title, x=LONGITUDE, y=LATITUDE, fill="Strikes")
     + theme_minimal()
     + theme(
-        figure_size=(8, 4.5),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=WATER_COLOR),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
+        panel_background=element_rect(fill=OUTSIDE_COLOR, color="none"),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         plot_title=element_text(size=12, color=INK),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
         legend_title=element_text(size=8, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_position="right",
-        axis_line=element_line(color=INK_SOFT, size=0.3),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
