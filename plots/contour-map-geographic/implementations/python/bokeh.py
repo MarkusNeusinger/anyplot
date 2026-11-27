@@ -1,7 +1,7 @@
 """ anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -31,9 +31,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for fields (cells that fill the plot), low -> high
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -67,8 +67,8 @@ n_points = 50
 lon_grid, lat_grid = np.meshgrid(np.linspace(lon_min, lon_max, n_points), np.linspace(lat_min, lat_max, n_points))
 
 base_elevation = (lon_grid - lon_min) / (lon_max - lon_min) * 1000  # rises west -> east
-cascade_height = np.exp(-((lon_grid + 121.5) ** 2) / 2)  # Cascade Range ridge
-cascade_elevation = cascade_height * 3000 * (1 + 0.3 * np.sin(lat_grid * 2))
+cascade_height = np.exp(-((lon_grid + 121.5) ** 2) / (2 * 0.7**2))  # Cascade Range ridge
+cascade_elevation = cascade_height * 1700 * (1 + 0.3 * np.sin(lat_grid * 2))
 
 terrain_noise = rng.standard_normal((n_points, n_points)) * 100
 for _ in range(3):
@@ -158,7 +158,8 @@ for level in levels:
         if path is None or len(path) < 5:
             continue
         line_width = 3.5 if level % MAJOR_STEP == 0 else 2.0
-        p.line(x=path[:, 0], y=path[:, 1], line_color=INK_SOFT, line_width=line_width, line_alpha=0.85)
+        p.line(x=path[:, 0], y=path[:, 1], line_color=PAGE_BG, line_width=line_width + 3, line_alpha=0.55)
+        p.line(x=path[:, 0], y=path[:, 1], line_color=INK, line_width=line_width, line_alpha=0.9)
         if level % LABEL_STEP == 0 and len(path) > 20:
             cx, cy = path[len(path) // 2]
             too_close = any(
