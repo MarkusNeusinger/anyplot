@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: pending | Updated: 2026-05-30
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
