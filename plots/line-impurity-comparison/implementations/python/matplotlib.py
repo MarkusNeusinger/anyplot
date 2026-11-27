@@ -1,7 +1,7 @@
 """anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 88/100 | Updated: 2026-11-27
+Quality: pending | Updated: 2026-11-27
 """
 
 import os
