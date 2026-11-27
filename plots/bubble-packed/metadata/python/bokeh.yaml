@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:17:14Z'
-updated: '2026-11-27T22:15:02Z'
+updated: '2026-11-27T22:25:23Z'
 generated_by: claude-sonnet
-workflow_run: 46074543920
+workflow_run: 46075580111
 issue: 992
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
   - 'Area-correct sizing: radii are sqrt-scaled so circle area is proportional to
@@ -29,73 +29,70 @@ review:
     layers, HoverTool on the circle renderers and a hide-on-click legend in the HTML
     artifact'
   weaknesses:
-  - 'VQ-01 (both): the department names and values inside the circles, the plot''s
-    main content, are set at 18/14/12 pt (names) and 14/12/9 pt (values), and the
-    legend labels at 22 pt, against the 34 pt tick and legend reference of the bokeh
-    prompt; the 9 pt values in Legal ($8M) and Security ($6M) and the 12 pt names
-    in IT, QA and HR read small inside their circles → about 34/28/22 pt names and
-    28/22/16 pt values (roughly +12 to +16 pt), legend labels 34 pt (+12 pt), keeping
-    labels only in circles large enough to hold them. Likely cause: the `brackets`
-    font sizes and `p.legend.label_text_font_size = "22pt"`.'
-  - 'VQ-03 (both): the legend keys render as dots of about 12 px beside the 22 pt
-    labels, a speck next to the 40 px glyph box that is set → keys about as tall as
-    the label. Likely cause: `p.circle(radius=...)` in data units draws its legend
-    glyph at a tiny scaled radius; use a separate size-based `scatter` renderer per
-    tier for the legend, or `LegendItem` with a fixed-size glyph.'
+  - 'VQ-01 (both): the smallest label bracket sets the values in Legal ($8M) and Security
+    ($6M) at 16 pt and their names at 20 pt; inside the 34/28 pt hierarchy of the
+    large circles these values read small → about 20 pt values and 24 pt names in
+    the smallest bracket (+4 pt), which still fit those circles. Likely cause: the
+    third `brackets` row ("20pt", "16pt").'
+  - 'VQ-03 (both): the legend keys render as dots of about 20 px beside the 34 pt
+    (~45 px) labels, still a speck in the 48 px glyph box → keys about as tall as
+    the label. Likely cause: the off-canvas `p.scatter(size=44)` key renderers are
+    scaled down inside the legend glyph box; draw the key with a larger marker size
+    (or a `glyph_height`/`glyph_width` that the marker fills).'
   - 'Suggestion: cluster circles by tier with small gaps between the groups, the optional
     grouping the Notes allow, so the tier structure reads from position as well as
     color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, edge to edge; a thin INK_SOFT outline frames the plot area
-      Chrome: title 'Department Budgets by Spending Tier · bubble-packed · python · bokeh · anyplot.ai' in near-black bold across ~90% of the width; legend top right on #FFFDF6 with near-black labels >$35M, $20–$35M, $10–$19M, <$10M; no axes or grid
-      Data: 15 packed circles — green #009E73 (Engineering, R&D, Sales), lavender #C475FD (Marketing, Product, Operations, IT, Data Science), blue #4467A3 (Finance, Design, Customer Support, HR, QA), ochre #BD8233 (Legal, Security); page-colored outlines; bold name plus value inside each circle, white on green/blue, near-black on lavender/ochre. Legend keys are small dots
-      Legibility verdict: PASS — everything readable; the 9 pt values in Legal and Security and the 12 pt names in smaller circles read small
+      Background: warm off-white #FAF8F1 edge to edge, square 2400x2400; thin INK_SOFT frame around the plot area
+      Chrome: title 'Department Budgets by Spending Tier · bubble-packed · python · bokeh · anyplot.ai' in near-black bold across ~90% of the width, fully visible; legend top right on #FFFDF6 with 34 pt near-black labels >$35M, $20–$35M, $10–$19M, <$10M; keys are small dots; no axes or grid
+      Data: 15 packed circles — green #009E73 (Engineering, R&D, Sales), lavender #C475FD (Marketing, Product, Operations, IT, Data Science), blue #4467A3 (Finance, Design, Customer Support, HR, QA), ochre #BD8233 (Legal, Security); page-colored outlines; bold name over value inside each circle, white on green/blue, near-black on lavender/ochre; names now 34/26/20 pt
+      Legibility verdict: PASS — all readable; the 16 pt values in Legal and Security read small
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 edge to edge
       Chrome: title and legend labels in light #F0EFE8; legend on #242420 with INK_SOFT border; no dark-on-dark text
       Data: same 15 circles in the same Imprint fills and positions as the light render; in-circle label colors unchanged and readable on their fills
-      Legibility verdict: PASS — same small-label caveat as light
+      Legibility verdict: PASS — same small-value caveat as light
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 7
         max: 8
         passed: false
-        comment: All sizes set explicitly and readable in both themes, but the in-circle
-          labels (18–9 pt) and legend (22 pt) sit well below the 34 pt reference;
-          9 pt values read small (defect line)
+        comment: Names 34/26/20 pt, values 28/22/16 pt, legend 34 pt, all readable
+          in both themes; the 16 pt values in Legal and Security still read small
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides; circles separated by the packing gap and the page-colored
+        comment: No text collides; circles separated by the packing gap and a page-colored
           outline
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: false
-        comment: All 15 circles clearly visible; legend keys are tiny dots (defect
-          line)
+        comment: All 15 circles clearly visible; legend keys still dots of about 20
+          px beside 34 pt labels (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint tiers are CVD-safe; label color follows fill luminance
+        comment: Imprint tiers are CVD-safe; label color follows each fill's luminance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Cluster uses the square canvas well; empty corners are permitted
+        comment: Square canvas; the cluster fills the frame, empty corners are permitted
           by the spec
       - id: VQ-06
         name: Axis Labels & Title
@@ -120,7 +117,7 @@ review:
         max: 8
         passed: false
         comment: 'Above baseline: two-level label typography (bold name over a softer
-          value at 0.85 alpha) and label size scaled to circle size'
+          0.85-alpha value) sized by circle bracket'
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -133,8 +130,8 @@ review:
         score: 3
         max: 6
         passed: false
-        comment: The spending-tier color grouping, ordered big to small in the legend,
-          makes the three >$35M departments the focal point
+        comment: Legend ordered by each tier's largest member, so the three >$35M
+          departments read first
     spec_compliance:
       score: 15
       max: 15
@@ -150,14 +147,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled radii (C1), compact packed cluster without axes or grid
-          (C2), color identified by legend (C3), labels inside circles (C5)
+        comment: Area-scaled radii (C1), one compact cluster without axes or grid
+          (C2), color identified by legend (C3), labels only inside circles (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value → area via sqrt, all 15 items shown; packing positions are
+        comment: value -> area via sqrt, all 15 items shown; packing positions are
           layout, not data
       - id: SC-04
         name: Title & Legend
@@ -175,7 +172,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 items spanning $6M–$45M, four tiers, labeled large and small circles
+        comment: 15 items with a 7.5x value range show large and small circles and
+          four tiers
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -187,8 +185,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Budgets in $M plausible for a mid-size company; no Check values in
-          the Notes
+        comment: Budgets of $6M-$45M plausible for a mid-size company; no Check values
+          in the Notes
     code_quality:
       score: 10
       max: 10
@@ -216,8 +214,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; force packing hand-written because bokeh
-          has no packing call, which the spec asks for
+        comment: Force packing written out because bokeh has no packing call, which
+          the spec asks for
       - id: CQ-05
         name: Output & API
         score: 1
@@ -233,8 +231,8 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: ColumnDataSource per tier built straight from the DataFrame, LabelSet
-          driven by sources, data-unit radius circles on equal ranges
+        comment: ColumnDataSource per tier from the DataFrame, source-driven LabelSet
+          layers, data-unit radius circles on equal ranges, explicit Legend/LegendItem
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -245,22 +243,21 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
-  rendered_at: '2026-11-27T22:11:05Z'
+  rendered_at: '2026-11-27T22:22:13Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - custom-legend
   - hover-tooltips
   - html-export
   - annotations
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep:
-  - normalization
-  - binning
+  - force-simulation
   styling:
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
