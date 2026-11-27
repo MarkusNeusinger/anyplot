@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-26
+Quality: 81/100 | Updated: 2026-11-27
 """
 
 import math
@@ -27,9 +27,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for fields (colored cells that fill the plot), as (position, hex) stops
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -117,7 +117,8 @@ plot = (
     + geom_text(aes(label=REGION, color="label_color"), size=6, fontface="bold")
     + scale_color_identity()
     + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name=SHARE)
-    + scale_y_reverse()
+    + scale_x_continuous(expand=[0.01, 0])
+    + scale_y_reverse(expand=[0.01, 0])
     + coord_fixed()
     + labs(x="", y="", title=title)
 )
@@ -132,6 +133,7 @@ anyplot_theme = theme(
     axis_ticks=element_blank(),
     axis_line=element_blank(),
     plot_title=element_text(color=INK, size=title_fontsize),
+    legend_position="bottom",
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=12),
     legend_title=element_text(color=INK, size=13),

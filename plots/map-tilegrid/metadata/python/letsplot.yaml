@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: map-tilegrid
 created: '2026-08-24T21:50:54Z'
-updated: '2026-11-26T09:39:28Z'
+updated: '2026-11-27T17:45:11Z'
 generated_by: claude-sonnet
-workflow_run: 45793109507
+workflow_run: 46043645192
 issue: 5246
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,40 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tileg
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 81
 review:
   strengths:
-  - Per-tile label ink switches between dark and light by the fill's luminance, so
-    every country code stays legible from pale mint to navy in light and from deep
-    green to pale blue in dark.
-  - imprint_seq fields ramp with each theme's own stops, sampled through ramp_color
-    into scale_fill_gradientn as the library prompt prescribes.
-  - 'Clean grammar composition: geom_tile + geom_text + scale_color_identity + scale_y_reverse
-    + coord_fixed gives equal square tiles with north at the top.'
-  - Plausible, neutral European renewable-share data with a wide 12-78 % spread; gggrid
-    wrapper paints the whole square canvas in the page color.
-  - Library-native interactive HTML export alongside the PNG.
+  - Current imprint_seq fields stops for each theme, sampled into scale_fill_gradientn
+    via the prescribed ramp_color helper
+  - Per-tile label ink switched by fill luminance and fed through scale_color_identity,
+    keeping every abbreviation readable on the dark tiles in both themes
+  - Bottom legend and tight expand margins let the coord_fixed grid fill the square
+    canvas, with the gggrid wrap painting the page color edge to edge
+  - 'Recognizable Europe layout: Iceland and the Nordics on top, Iberia at the lower
+    left, the Baltics down the east edge'
   weaknesses:
-  - 'VQ-05 (both): the 8x9 tile grid on the square canvas leaves empty page bands
-    of roughly 300 px above the title and below the panel (about a quarter of the
-    canvas height unused) → let the grid fill more of the height, e.g. by tightening
-    the panel''s expand margins or shrinking the legend''s width so the fixed-aspect
-    panel can grow. Likely cause: coord_fixed with a wide right-hand legend narrowing
-    the panel, plus default scale expansion.'
+  - 'VQ-01 (light): off-white #F0EFE8 tile labels on the mid-green tiles (GR, BG,
+    LT, RO, SI, CH, DE, around #2AB88C) read at roughly 2.5:1 contrast → dark ink
+    #1A1A17 on those fills. Likely cause: the luminance threshold 140 in np.where(fill_luminance
+    > 140, ...) is too high; around 120-125 would switch them.'
   - 'Suggestion: label the colorbar''s ends (about 12 % and 78 %) so the extremes
     can be read off directly.'
-  - 'Suggestion: a slightly narrower legend frame would balance the composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
-      Chrome: dark-ink title 'Renewable Energy Share · map-tilegrid · python · letsplot · anyplot.ai' (~88 % of width), thin INK_SOFT panel border, no axes or grid; legend 'Renewable share (%)' in an elevated #FFFDF6 frame with soft-ink ticks 20/40/60. All readable. Wide empty bands above the title and below the panel.
-      Data: 30 equal square tiles of European countries in an approximate geographic grid (IS top, Nordics upper right, Iberia lower left, MT/GR bottom), filled with the light imprint_seq fields ramp (pale mint -> #009E73 -> blue -> navy); bold codes in dark ink on pale tiles and light ink on dark ones.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas, thin INK_SOFT panel border.
+      Chrome: title 'Renewable Energy Share · map-tilegrid · python · letsplot · anyplot.ai' in dark ink at the top, ~88% of width; no axes (layout grid); horizontal colorbar legend below with title 'Renewable share (%)' and ticks 20/40/60 in dark ink, all readable.
+      Data: 30 equal square tiles in an 8x9 Europe layout, filled pale mint -> brand green #009E73 -> deep blue -> dark violet (IS darkest); bold abbreviations in dark ink on pale tiles, off-white on darker ones. Off-white labels on mid-green tiles (GR, BG, LT, RO) read with low contrast.
+      Legibility verdict: PASS (minor low-contrast labels on mid-green tiles)
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 across the whole canvas.
-      Chrome: light-ink title, light-grey panel border, legend in an elevated #242420 frame with light title and soft-light ticks. No dark-on-dark text.
-      Data: same tiles and positions, filled with the dark imprint_seq fields stops (deep green -> #009E73 -> pale blue), as a continuous ramp should; IS/NO/SE/FI codes switch to dark ink on the pale-blue tiles, the rest light ink.
+      Background: warm near-black #1A1A17, light-grey panel border, elevated legend box.
+      Chrome: title, legend title and ticks in light ink, all readable; no dark-on-dark text.
+      Data: same layout; dark-stop ramp dark olive -> brand green -> pale blue (IS, NO, SE pale with dark ink labels), all other tiles carry off-white labels with good contrast.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,39 +49,37 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Title, bold tile codes (size 6), legend title and ticks set explicitly
-          and readable in both themes
+        passed: false
+        comment: Explicit sizes, chrome readable in both themes; off-white tile labels
+          on the mid-green light-render tiles (GR, BG, LT, RO, SI, CH, DE) read with
+          low contrast (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; labels centred in their tiles, legend clear of
-          the grid
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 tiles and their codes clearly visible; colorbar visible in both
-          themes
+        comment: Tiles and colorbar clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Luminance-switched label ink keeps contrast on every fill; the ramp
-          varies in lightness, CVD-safe
+        comment: Ramp varies in lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Square canvas fully painted, but the 8x9 tile grid leaves wide empty
-          bands above the title and below the panel (defect line)
+        passed: true
+        comment: Square canvas fully painted; legend below lets the fixed-aspect grid
+          fill the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,8 +92,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq fields stops of each theme sampled via ramp_color; page
-          backgrounds correct in both renders
+        comment: imprint_seq fields stops of each theme (current style guide) sampled
+          via ramp_color; backgrounds correct
     design_excellence:
       score: 8
       max: 20
@@ -109,21 +102,21 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: tokens, explicit sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Grid and axes removed, panel border; nothing beyond the baseline
+        comment: Grid and axes removed, tile gaps, panel border; nothing beyond the
+          baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; the Nordic high-share cluster emerges from the ramp
-          alone, no hierarchy chosen beyond the Notes
+        comment: Data displayed; the Nordic cluster emerges from the ramp alone
     spec_compliance:
       score: 15
       max: 15
@@ -140,7 +133,7 @@ review:
         max: 4
         passed: true
         comment: Equal tiles, abbreviation on every tile with luminance-switched ink,
-          sequential ramp, colorbar, approximate geography (C1-C4 met)
+          sequential ramp, colorbar, approximate geography (C1-C4)
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -152,8 +145,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format with a descriptive prefix; legend 'Renewable
-          share (%)'
+        comment: Mandated title with descriptive prefix; legend 'Renewable share (%)'
     data_quality:
       score: 15
       max: 15
@@ -163,19 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Values 12-78 % span the ramp; 30 regions within the spec's 10-60
+        comment: Values ~12-78 % span the ramp; 30 regions within 10-60
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world renewable energy share by European country
+        comment: Neutral real-world renewable energy share by European country
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Shares plausible (IS/NO/SE high, LU/MT/BE low); no Check values in
+        comment: Plausible shares (IS/NO/SE high, LU/MT/BE low); no Check values in
           the spec
     code_quality:
       score: 10
@@ -212,35 +204,38 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Grammar composition geom_tile + geom_text + scale_y_reverse + coord_fixed;
-          gggrid wrapper is the library prompt's mandate
+        passed: false
+        comment: geom_tile + geom_text + scale_y_reverse + coord_fixed; gggrid wrap
+          is the library prompt's mandate
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: scale_color_identity drives precomputed per-tile label ink
+        comment: scale_color_identity for precomputed label ink; nothing beyond the
+          prompt
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T09:35:53Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
+  rendered_at: '2026-11-27T17:42:05Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - custom-colormap
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - normalization
   styling:
+  - theme-adaptive
   - minimal-chrome
-  - custom-colormap
