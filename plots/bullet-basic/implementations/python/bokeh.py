@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -83,12 +83,12 @@ source = ColumnDataSource(
 p = figure(
     width=3200,
     height=1800,
-    x_range=Range1d(-38, 118),
-    y_range=Range1d(-0.9, n - 0.2),
+    x_range=Range1d(-26, 118),
+    y_range=Range1d(-0.6, n - 0.3),
     title="bullet-basic · python · bokeh · anyplot.ai",
     x_axis_label="% of Maximum Range",
     toolbar_location=None,
-    min_border_bottom=160,
+    min_border_bottom=60,
     min_border_left=180,
     min_border_top=110,
     min_border_right=80,
@@ -120,7 +120,15 @@ p.xgrid.grid_line_alpha = 0.15
 # Qualitative bands: widest first so the narrower ones stay visible on top
 bands = df[BANDS].div(top, axis=0) * 100
 for j, band in reversed(list(enumerate(BANDS))):
-    p.rect(x=bands[band] / 2, y=y_pos, width=bands[band], height=bar_height, color=BAND_COLORS[j], line_color=None)
+    p.rect(
+        x=bands[band] / 2,
+        y=y_pos,
+        width=bands[band],
+        height=bar_height,
+        color=BAND_COLORS[j],
+        line_color=None,
+        legend_label=band,
+    )
 
 # Measure bar, one color throughout
 actual_renderer = p.rect(
@@ -128,7 +136,7 @@ actual_renderer = p.rect(
 )
 
 # Target marker: thin line perpendicular to the bar
-p.rect(x=target_pct, y=y_pos, width=0.7, height=bar_height * 0.6, color=INK, line_color=None)
+p.rect(x=target_pct, y=y_pos, width=0.7, height=bar_height * 0.6, color=INK, line_color=None, legend_label=TARGET)
 
 p.add_tools(
     HoverTool(
@@ -168,23 +176,20 @@ for y, metric, value in zip(y_pos, df[METRIC], source.data["actual"], strict=Tru
     )
 
 # Legend below the chart: the three bands and the target marker
-p.segment(x0=[0], x1=[100], y0=[-0.45], y1=[-0.45], line_color=INK_SOFT, line_alpha=0.3, line_width=3)
-legend_y, legend_spacing, box_w, box_h = -0.65, 22, 4.0, 0.22
-entries = [*zip(BANDS, BAND_COLORS, [box_w] * len(BANDS), strict=True), (TARGET, INK, 0.8)]
-for k, (name, color, width) in enumerate(entries):
-    lx = 5 + k * legend_spacing
-    p.rect(x=lx, y=legend_y, width=width, height=box_h, color=color, line_color=INK_SOFT if width == box_w else None)
-    p.add_layout(
-        Label(
-            x=lx + box_w / 2 + 1,
-            y=legend_y,
-            text=name,
-            text_font_size="26pt",
-            text_color=INK_SOFT,
-            text_align="left",
-            text_baseline="middle",
-        )
-    )
+legend = p.legend[0]
+legend.items = [*reversed(legend.items[:-1]), legend.items[-1]]  # Poor, Satisfactory, Good, Target
+legend.orientation = "horizontal"
+legend.location = "center"
+legend.label_text_font_size = "30pt"
+legend.label_text_color = INK_SOFT
+legend.glyph_height = 40
+legend.glyph_width = 40
+legend.label_standoff = 16
+legend.spacing = 40
+legend.padding = 20
+legend.background_fill_color = PAGE_BG
+legend.border_line_color = None
+p.add_layout(legend, "below")
 
 # Save: interactive HTML, then a headless-Chrome screenshot at the exact canvas size
 output_file(f"plot-{THEME}.html")
