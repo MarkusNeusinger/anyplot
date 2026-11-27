@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -27,6 +27,9 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"  
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]  # Imprint position 1 — cumulative line (first series)
 ANYPLOT_AMBER = "#DDCC77"  # semantic anchor — caution, 90% threshold
+ANYPLOT_AMBER_TEXT = (
+    "#8A7400" if THEME == "light" else ANYPLOT_AMBER
+)  # darker amber keeps 3:1 text contrast on the light page
 MATTE_RED = IMPRINT_PALETTE[4]  # Imprint position 5 — alert, 95% threshold
 
 # Constants
@@ -37,6 +40,7 @@ THRESHOLD_TARGET = 95.0
 COMPONENT = "Principal component"  # role: n_components
 CUMULATIVE = "Cumulative explained variance (%)"  # role: explained_variance_ratio
 INDIVIDUAL = "Individual explained variance (%)"  # role: extra
+SERIES = "Series"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("pca_variance.csv")
 # Image-pixel PCA: 8x8 handwritten digit images (64 pixel features), first 30 components
@@ -71,6 +75,13 @@ tooltip_pc = f"PC @{{{COMPONENT}}}"
 tooltip_cum = f"Cumulative: @{{{CUMULATIVE}}}%"
 tooltip_ind = f"Individual: @{{{INDIVIDUAL}}}%"
 
+LABEL_CUMULATIVE = "Cumulative variance"
+LABEL_INDIVIDUAL = "Individual variance (bars)"
+bars_df = df.copy()
+bars_df[SERIES] = LABEL_INDIVIDUAL
+line_df = df.copy()
+line_df[SERIES] = LABEL_CUMULATIVE
+
 # Dark page needs a stronger bar fill to stay visible but subordinate
 bar_alpha = 0.28 if THEME == "light" else 0.42
 
@@ -89,12 +100,14 @@ anyplot_chrome = theme(
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_text(color=INK),
+    legend_position=[0.98, 0.14],
+    legend_justification=[1, 0],
 )
 
 plot = (
     ggplot(df, aes(x=COMPONENT, y=CUMULATIVE))
-    # Secondary: individual variance bars (muted, behind the cumulative line)
-    + geom_bar(aes(y=INDIVIDUAL), stat="identity", fill=INK_MUTED, alpha=bar_alpha, width=0.65)
+    # Secondary: individual variance bars (muted, behind the cumulative line), named in the legend
+    + geom_bar(aes(y=INDIVIDUAL, fill=SERIES), data=bars_df, stat="identity", alpha=bar_alpha, width=0.65)
     # Threshold reference lines
     + geom_hline(yintercept=THRESHOLD_CAUTION, linetype="dashed", color=ANYPLOT_AMBER, size=1.0)
     + geom_hline(yintercept=THRESHOLD_TARGET, linetype="dashed", color=MATTE_RED, size=1.0)
@@ -102,7 +115,7 @@ plot = (
     + geom_text(
         data=pd.DataFrame({"x": [label_x], "y": [THRESHOLD_CAUTION - 3.5], "label": [f"{THRESHOLD_CAUTION:.0f}%"]}),
         mapping=aes(x="x", y="y", label="label"),
-        color=ANYPLOT_AMBER,
+        color=ANYPLOT_AMBER_TEXT,
         size=4,
         hjust=1,
     )
@@ -114,7 +127,7 @@ plot = (
         hjust=1,
     )
     # Primary: cumulative variance line (Imprint brand green, first series)
-    + geom_line(size=2.0, color=BRAND)
+    + geom_line(aes(color=SERIES), data=line_df, size=2.0)
     # Points with lets-plot native tooltips (hover shows both cumulative and individual)
     + geom_point(
         size=4, color=BRAND, alpha=0.9, tooltips=layer_tooltips().line(tooltip_pc).line(tooltip_cum).line(tooltip_ind)
@@ -123,6 +136,8 @@ plot = (
     + geom_point(data=elbow, size=9, shape=21, color=INK, fill=ELEVATED_BG)
     + geom_point(data=elbow, size=4, color=BRAND)
     + geom_text(data=elbow, mapping=aes(label="label"), color=INK, size=4.5, hjust=0, nudge_x=0.9, nudge_y=-4)
+    + scale_fill_manual(values=[INK_MUTED], name="")
+    + scale_color_manual(values=[BRAND], name="")
     + scale_x_continuous(breaks=[1, *range(5, int(components[last]) + 1, 5)])
     + scale_y_continuous(breaks=list(range(0, 101, 10)), limits=[0, cumulative.max() * 1.06])
     + labs(title=title, x=COMPONENT, y=CUMULATIVE)
