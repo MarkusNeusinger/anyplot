@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-27
@@ -55,7 +55,7 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-table = df.pivot_table(index=PRODUCT_CATEGORY, columns=MONTH, values=SALES_GROWTH, sort=False)
+table = df.pivot_table(index=PRODUCT_CATEGORY, columns=MONTH, values=SALES_GROWTH, sort=False).sort_index()
 values = table.to_numpy()
 
 # Symmetric color range so zero is exactly the midpoint of the diverging scale
