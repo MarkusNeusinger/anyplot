@@ -5,9 +5,8 @@
 
 using CairoMakie
 using Colors
+using DataFrames
 using Random
-
-Random.seed!(42)
 
 # Theme tokens
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
@@ -28,25 +27,35 @@ const IMPRINT_PALETTE = [
     colorant"#2ABCCD",
 ]
 
-# Data — tech startup investor-ranking competition, Q1 2023 to Q2 2024
-companies = ["NovaTech", "PulseAI", "CircleCloud", "ApexRobotics", "QuantumIO", "ShieldSec"]
-quarters  = ["Q1'23", "Q2'23", "Q3'23", "Q4'23", "Q1'24", "Q2'24"]
-n_periods   = length(quarters)
-n_companies = length(companies)
+Random.seed!(42)
 
-# Rankings matrix (rows = companies, cols = quarters); 1 = highest rank
+# Columns: set these to your table's column names
+const COMPANY = "Company"   # role: group
+const QUARTER = "Quarter"   # role: category
+const RANK = "Rank"         # role: value
+
+# Data: tech startup investor-ranking competition, Q1 2023 to Q2 2024
+quarter_labels = ["Q1'23", "Q2'23", "Q3'23", "Q4'23", "Q1'24", "Q2'24"]
 rankings = [
-    2  1  1  1  1  2;   # NovaTech:     rises to top, then slips
-    4  3  2  2  2  1;   # PulseAI:      steadily climbs to #1
-    1  2  3  3  3  3;   # CircleCloud:  leads early, then fades
-    3  4  4  4  4  4;   # ApexRobotics: stable mid-pack
-    6  5  5  5  5  5;   # QuantumIO:    slight recovery
-    5  6  6  6  6  6;   # ShieldSec:    slides to last
+    2  1  1  1  1  2;   # NovaTech
+    4  3  2  2  2  1;   # PulseAI
+    1  2  3  3  3  3;   # CircleCloud
+    3  4  4  4  4  4;   # ApexRobotics
+    6  5  5  5  5  5;   # QuantumIO
+    5  6  6  6  6  6;   # ShieldSec
 ]
-
-x = Float64.(1:n_periods)
+company_names = ["NovaTech", "PulseAI", "CircleCloud", "ApexRobotics", "QuantumIO", "ShieldSec"]
+df = DataFrame(
+    COMPANY => repeat(company_names; inner = length(quarter_labels)),
+    QUARTER => repeat(quarter_labels, length(company_names)),
+    RANK => vec(permutedims(rankings)),
+)
 
 # Plot
+companies = unique(df[!, COMPANY])
+quarters = unique(df[!, QUARTER])
+n_companies = length(companies)
+
 fig = Figure(
     size            = (1600, 900),
     fontsize        = 14,
@@ -58,14 +67,14 @@ ax = Axis(
     title              = "bump-basic · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "Quarter",
-    ylabel             = "Rank",
-    xlabelsize         = 14,
-    ylabelsize         = 14,
+    xlabel             = QUARTER,
+    ylabel             = RANK,
+    xlabelsize         = 16,
+    ylabelsize         = 16,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 12,
-    yticklabelsize     = 12,
+    xticklabelsize     = 14,
+    yticklabelsize     = 14,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -75,46 +84,40 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xticks             = (x, quarters),
-    yticks             = 1:n_companies,
+    xticks             = (eachindex(quarters), quarters),
+    yticks             = 1:maximum(df[!, RANK]),
     yreversed          = true,
     xgridvisible       = false,
     ygridvisible       = true,
     ygridcolor         = GRID_INK,
     xminorgridvisible  = false,
     yminorgridvisible  = false,
-    limits             = (0.3, n_periods + 1.1, nothing, nothing),
+    limits             = (0.7, length(quarters) + 0.3, nothing, nothing),
 )
 
-for i in 1:n_companies
-    ranks = Float64.(rankings[i, :])
-    color = IMPRINT_PALETTE[i]
-    # Thicker stroke on the two most dramatic arcs: PulseAI (#1 climber) and CircleCloud (biggest faller)
-    lw = (i == 2 || i == 3) ? 4.5 : 3.0
-    lines!(ax, x, ranks; color = color, linewidth = lw)
-    scatter!(ax, x, ranks;
-        color       = color,
+for (i, company) in enumerate(companies)
+    rows = df[df[!, COMPANY] .== company, :]
+    x = [findfirst(==(q), quarters) for q in rows[!, QUARTER]]
+    lines!(ax, x, rows[!, RANK]; color = IMPRINT_PALETTE[i], linewidth = 3.5)
+    scatter!(ax, x, rows[!, RANK];
+        color       = IMPRINT_PALETTE[i],
         markersize  = 16,
         strokecolor = PAGE_BG,
         strokewidth = 2,
     )
-    # Endpoint rank callouts via Makie's text! — surface final positions for storytelling
-    text!(ax, n_periods + 0.18, Float64(rankings[i, end]);
-        text     = "#$(rankings[i, end])",
-        fontsize = 11,
-        color    = color,
-        align    = (:left, :center),
-    )
 end
 
-legend_elements = [LineElement(color = IMPRINT_PALETTE[i], linewidth = 3.0) for i in 1:n_companies]
+legend_elements = [LineElement(color = IMPRINT_PALETTE[i], linewidth = 3.5) for i in 1:n_companies]
 Legend(
     fig[1, 2],
     legend_elements,
-    companies;
+    companies,
+    COMPANY;
+    titlecolor      = INK,
     backgroundcolor = ELEVATED_BG,
     framecolor      = INK_SOFT,
     labelcolor      = INK,
+    labelsize       = 14,
 )
 
 # Proportion the legend column to ~18% of figure width using colsize!
