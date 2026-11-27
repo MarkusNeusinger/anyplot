@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-27
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
@@ -34,6 +34,8 @@ custom_style = Style(
         INK_MUTED,  # 3: vertical guide line — muted neutral
         "#009E73",  # 4: Gini peak dot — matches Gini
         "#C475FD",  # 5: Entropy peak dot — matches Entropy
+        INK,  # 6: Gini label anchor (no dot drawn)
+        INK,  # 7: Entropy label anchor (no dot drawn)
     ),
     opacity="1",
     opacity_hover="1",
@@ -47,8 +49,8 @@ custom_style = Style(
     title_font_size=66,
     label_font_size=48,
     major_label_font_size=48,
-    value_colors=(INK,) * 5,
-    value_label_colors=(INK,) * 5,
+    value_colors=(INK,) * 7,
+    value_label_colors=(INK,) * 7,
     legend_font_size=44,
     value_font_size=36,
     value_label_font_size=48,
@@ -87,12 +89,12 @@ chart = pygal.XY(
     legend_box_size=24,
     truncate_legend=-1,
     xrange=(0, 1),
-    range=(0, 1.05),
+    range=(0, 1.15),
     y_labels=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
     show_y_labels=True,
     x_label_rotation=0,
     margin=80,
-    margin_bottom=120,
+    margin_bottom=0,
     margin_left=160,
     margin_right=80,
     margin_top=80,
@@ -120,27 +122,30 @@ entropy_peak = (p[entropy.argmax()], entropy.max())
 
 # Series 3: Vertical guide through the shared peak position
 chart.add(
-    None,
-    [(gini_peak[0], 0.0), (gini_peak[0], float(entropy.max()) * 1.05)],
-    stroke_style={"width": 1.5, "dasharray": "8, 6"},
+    None, [(gini_peak[0], 0.0), (gini_peak[0], float(entropy.max()))], stroke_style={"width": 1.5, "dasharray": "8, 6"}
 )
 
 # Series 4: Gini peak annotation dot at (0.5, 0.5)
-chart.add(
-    None,
-    [{"value": gini_peak, "label": f"Gini peak = {gini_peak[1]:.2f}"}],
-    stroke_style={"width": 0},
-    show_dots=True,
-    dots_size=10,
-)
+chart.add(None, [gini_peak], stroke_style={"width": 0}, show_dots=True, dots_size=10)
 
 # Series 5: Entropy peak annotation dot at (0.5, 1.0)
+chart.add(None, [entropy_peak], stroke_style={"width": 0}, show_dots=True, dots_size=10)
+
+# Series 6-7: label anchors a fixed offset above each peak dot, so no curve crosses the text
+LABEL_LIFT = 0.07
 chart.add(
     None,
-    [{"value": entropy_peak, "label": f"Entropy peak = {entropy_peak[1]:.2f}"}],
+    [{"value": (gini_peak[0], gini_peak[1] + LABEL_LIFT), "label": f"Gini peak = {gini_peak[1]:.2f}"}],
     stroke_style={"width": 0},
     show_dots=True,
-    dots_size=10,
+    dots_size=0.1,
+)
+chart.add(
+    None,
+    [{"value": (entropy_peak[0], entropy_peak[1] + LABEL_LIFT), "label": f"Entropy peak = {entropy_peak[1]:.2f}"}],
+    stroke_style={"width": 0},
+    show_dots=True,
+    dots_size=0.1,
 )
 
 

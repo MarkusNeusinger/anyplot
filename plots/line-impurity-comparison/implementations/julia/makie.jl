@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-impurity-comparison: Gini Impurity vs Entropy Comparison
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-05-29
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 78/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
@@ -78,7 +78,7 @@ ax = Axis(
 )
 
 band!(ax, collect(p), gini, entropy;
-    color = (IMPRINT_PALETTE[3], 0.12))
+    color = (IMPRINT_PALETTE[3], 0.2))
 
 lines!(ax, collect(p), gini;
     color     = IMPRINT_PALETTE[1],
@@ -97,7 +97,7 @@ vlines!(ax, [0.5];
     linewidth = 1.5,
     linestyle = :dot)
 
-text!(ax, 0.52, 0.97;
+text!(ax, 0.52, 0.82;
     text     = "max at p = 0.5",
     color    = INK_MUTED,
     fontsize = 13,
