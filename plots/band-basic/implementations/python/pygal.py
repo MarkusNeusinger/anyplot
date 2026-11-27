@@ -1,7 +1,7 @@
 """ anyplot.ai
 band-basic: Basic Band Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-29
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -13,6 +13,7 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -20,41 +21,42 @@ from pygal.style import Style
 # Theme tokens (Imprint palette — theme-adaptive chrome)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Series order: band=green(0), center=blue(1) for contrast against green, wilting=red(2) semantic anchor
-IMPRINT_PALETTE = ("#009E73", "#4467A3", "#AE3030", "#C475FD", "#BD8233", "#2ABCCD", "#954477", "#99B314")
+# Imprint palette: band=green (first series), center line=blue for contrast against the band
+IMPRINT_PALETTE = ("#009E73", "#4467A3", "#C475FD", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data — soil moisture sensor readings with 95% confidence interval
+# Constants
+SMOOTH_WINDOW = 7  # moving-average width that turns the noisy readings into the sensor mean
+
+# Columns: set these to your table's column names
+HOURS = "Time (hours)"  # role: x
+LOWER = "Lower 95% bound (%)"  # role: y_lower
+UPPER = "Upper 95% bound (%)"  # role: y_upper
+CENTER = "Soil Moisture (%)"  # role: y_center
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sensor.csv")
+# Soil moisture sensor readings with a 95% confidence interval
 np.random.seed(42)
 n_points = 80
 hours = np.linspace(0, 48, n_points)
-
-# Realistic soil moisture pattern: starts high after rain, dips during dry spell,
-# partially recovers at night, then drops before a second rain event
 base_trend = 38 - 0.3 * hours + 4.0 * np.sin(2 * np.pi * hours / 24) + 8.0 * np.exp(-((hours - 40) ** 2) / 8)
-noise = np.random.randn(n_points) * 0.6
-y_raw = base_trend + noise
-
-# Smooth with convolution, preserving array length with edge padding
-kernel = np.ones(7) / 7
-y_smooth = np.convolve(y_raw, kernel, mode="valid")
+y_raw = base_trend + np.random.randn(n_points) * 0.6
+y_smooth = np.convolve(y_raw, np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW, mode="valid")
 pad_left = (n_points - len(y_smooth)) // 2
 pad_right = n_points - len(y_smooth) - pad_left
 y_center = np.concatenate([np.full(pad_left, y_smooth[0]), y_smooth, np.full(pad_right, y_smooth[-1])])
-
-# Confidence interval: wider during dry midday, narrower after rain
+# Wider during the dry midday, narrower after rain
 uncertainty = 1.2 + 0.8 * np.sin(2 * np.pi * hours / 24) ** 2 + 0.04 * hours
-y_lower = y_center - uncertainty
-y_upper = y_center + uncertainty
+df = pd.DataFrame({HOURS: hours, LOWER: y_center - uncertainty, UPPER: y_center + uncertainty, CENTER: y_center})
 
-# Y-axis tick grid at clean 4% intervals
-y_lo = 4 * (int(min(y_lower)) // 4)
-y_hi = 4 * (int(max(y_upper)) // 4 + 1)
+# Plot
+x_vals = df[HOURS].astype(float).tolist()
+y_lo = 4 * (int(df[LOWER].min()) // 4)
+y_hi = 4 * (int(df[UPPER].max()) // 4 + 1)
 y_label_values = list(range(y_lo, y_hi + 1, 4))
+x_ticks = list(range(0, int(df[HOURS].max()) + 1, 6))
 
 # Custom style — Imprint palette, theme-adaptive chrome
 custom_style = Style(
@@ -63,6 +65,8 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT_PALETTE,
     opacity=".25",
     opacity_hover=".40",
@@ -70,7 +74,7 @@ custom_style = Style(
     stroke_opacity_hover="1",
     stroke_width=2.5,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -87,30 +91,30 @@ chart = pygal.XY(
     height=1800,
     explicit_size=True,
     title=title,
-    x_title="Time (hours)",
-    y_title="Soil Moisture (%)",
+    x_title=HOURS,
+    y_title=CENTER,
     show_dots=False,
     show_x_guides=False,
     show_y_guides=True,
     fill=True,
     stroke=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
+    legend_at_bottom_columns=2,
     legend_box_size=28,
     truncate_legend=-1,
     x_label_rotation=0,
     range=(y_lo - 1, y_hi + 1),
     y_labels=y_label_values,
-    x_labels=[0, 6, 12, 18, 24, 30, 36, 42, 48],
-    x_labels_major=[0, 12, 24, 36, 48],
+    x_labels=x_ticks,
+    x_labels_major=x_ticks[::2],
     show_minor_x_labels=True,
-    show_minor_y_labels=False,
+    show_minor_y_labels=True,
     print_values=False,
     x_value_formatter=lambda x: f"{x:.0f}h",
     value_formatter=lambda x: f"{x:.1f}%",
     tooltip_border_radius=8,
     margin_top=30,
-    margin_bottom=50,
+    margin_bottom=130,
     margin_left=30,
     margin_right=50,
     spacing=18,
@@ -118,32 +122,18 @@ chart = pygal.XY(
 
 
 # Band as closed polygon: upper boundary forward, then lower boundary reversed
-band_polygon = [(float(h), float(y)) for h, y in zip(hours, y_upper, strict=True)]
-for h, y in zip(reversed(hours), reversed(y_lower), strict=True):
-    band_polygon.append((float(h), float(y)))
+upper_pts = list(zip(x_vals, df[UPPER].astype(float).tolist(), strict=True))
+lower_pts = list(zip(x_vals, df[LOWER].astype(float).tolist(), strict=True))
+chart.add("95% Confidence Band", upper_pts + lower_pts[::-1], stroke_style={"width": 0.01}, show_dots=False)
 
-chart.add("95% Confidence Band", band_polygon, stroke_style={"width": 0.5}, show_dots=False)
-
-# Central trend line — blue (palette pos 1) for high contrast against green band, bold stroke
-center_data = [(float(h), float(y)) for h, y in zip(hours, y_center, strict=True)]
+# Central line on top of the band
 chart.add(
     "Sensor Mean",
-    center_data,
+    list(zip(x_vals, df[CENTER].astype(float).tolist(), strict=True)),
     fill=False,
     stroke=True,
     dots_size=0,
     stroke_style={"width": 10, "linecap": "round", "linejoin": "round"},
-)
-
-# Wilting point reference — semantic red for danger threshold
-chart.add(
-    "Wilting Point (25%)",
-    [(0.0, 25.0), (48.0, 25.0)],
-    fill=False,
-    stroke=True,
-    dots_size=0,
-    formatter=lambda x: f"{x:.0f}%",
-    stroke_style={"width": 5, "dasharray": "16,10", "linecap": "round"},
 )
 
 # Save PNG and interactive HTML
