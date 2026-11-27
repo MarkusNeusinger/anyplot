@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -18,17 +18,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette: all eight positions in canonical order
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-
-# Constants: Likert levels carry a semantic color (positive green, negative red, neutral muted anchor)
-SEMANTIC = {
-    "Strongly Agree": IMPRINT_PALETTE[0],
-    "Agree": IMPRINT_PALETTE[7],
-    "Neutral": INK_MUTED,
-    "Disagree": IMPRINT_PALETTE[3],
-    "Strongly Disagree": IMPRINT_PALETTE[4],
-}
+# Constants: ordered Likert levels take steps of one ramp: green pole, grey midpoint, red pole (Imprint marks ramp)
+RAMP_POLES = ["#009E73", "#6B6A63" if THEME == "light" else "#686762", "#AE3030"]
 
 # Columns: set these to your table's column names
 WAVE = "Quarter"  # role: wave
@@ -62,7 +53,14 @@ f_source, f_target, f_flow, f_wave = (c.translate(ESCAPE) for c in (SOURCE, TARG
 
 waves = list(df[WAVE].unique()) + [df[NEXT_WAVE].iloc[-1]]
 categories = list(pd.unique(pd.concat([df[SOURCE], df[TARGET]])))
-cat_colors = [SEMANTIC.get(cat, IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]) for i, cat in enumerate(categories)]
+n_cats_total = len(categories)
+ramp_rgb = [[int(c[k : k + 2], 16) for k in (1, 3, 5)] for c in RAMP_POLES]
+cat_colors = []
+for i in range(n_cats_total):
+    pos = 2 * i / max(n_cats_total - 1, 1)
+    lo = min(int(pos), 1)
+    mix = [a + (b - a) * (pos - lo) for a, b in zip(ramp_rgb[lo], ramp_rgb[lo + 1], strict=True)]
+    cat_colors.append("#" + "".join(f"{round(v):02X}" for v in mix))
 n_waves, n_cats = len(waves), len(categories)
 
 # Respondents per category and wave. A block is as tall as the flows leaving it (first wave) or
