@@ -290,11 +290,29 @@ step "Stop on the render hash" acts on those outputs. See
 Checks the static contract of one implementation file (stdlib only): the
 mandated title tail, the theme read, the themed save target, no legacy brand
 colour, no named library colormap, and no hex outside the style guide's
-palette. `check` compares the file at the PR
-head with its predecessor from `main`, prints a `contract_check` notice, and
-writes a job-summary line (`impl-review.yml`, "Contract check (record-only)",
-from a copy at the workflow's ref). It always exits 0. See
+palette. It also checks the settings a library prompt states as mandatory,
+as a hard rule or as forbidden, where the source shows them (`MANDATES`): the
+bokeh page paint and toolbar, equal pygal tick sizes and both pygal guide
+colours, altair's `autosize` fit, no plotly `autosize=True`, the lets-plot
+canvas wrap for a fixed aspect, no `bbox_inches="tight"` in matplotlib and
+seaborn, and the entrance animation off in Chart.js, ECharts, Highcharts and
+MUI X. Each rule carries the prompt's own words, and a unit test keeps them
+in the prompt.
+
+`check` compares the file at the PR head with its predecessor from `main`,
+prints a `contract_check` notice, and writes a job-summary line
+(`impl-review.yml`, "Contract check (record-only)", from a copy at the
+workflow's ref). It always exits 0. See
 [Contract check](../../docs/workflows/overview.md#contract-check-record-only).
+
+`selfcheck FILE --spec-id S --language L --library B` is the generator's own
+run on the file it wrote (Step 2b of the generate prompt), from the
+workspace. It prints one line per broken rule with what it found and the
+prompt's words, marks `palette` as advisory, and ends in a verdict line
+(`contract: pass`, `pass (advisory: palette)`, `fix (<keys>)`, or `not run`).
+It writes no record and no job summary, and exits 0 when nothing must be
+fixed, 1 when something must, and 2 when it can't read the file. See
+[Contract self-check](../../docs/workflows/overview.md#contract-self-check).
 
 ### `readiness_scan.py`
 Scans a Python implementation and its predecessor with the agent chat's

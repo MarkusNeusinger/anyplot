@@ -124,9 +124,11 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- Python: copies the agent chat's validator for the session's readiness self-check
-  |-- AI generates code (Python: adaptability and readiness self-check, Step 3c;
-  |     every language: visual self-check of both renders with the review's questions,
-  |     Step 4, result in the commit body's "Visual self-check:" line)
+  |-- AI generates code (every language: contract self-check of the source, Step 2b;
+  |     Python: adaptability and readiness self-check, Step 3c;
+  |     every language: visual self-check of both renders with the review's questions
+  |     and a computed check of the plot's own claims, Step 4; results in the commit
+  |     body's "Visual self-check:", "Contract self-check:" and "Claims self-check:" lines)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
   |-- Fails if the pushed branch doesn't carry the workspace's implementation file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
@@ -373,9 +375,25 @@ Each rule is a text pattern over the code. It says what the code contains, not w
 | `colormap` | A named library colormap, such as `viridis` or `Blues`, sits in a colormap position. Only the two Imprint colormaps are allowed. |
 | `palette` | The code holds a six-digit hex that is neither an Imprint colour, nor an anchor, nor a theme token of `prompts/default-style-guide.md`. |
 
+Then one rule per setting that a library prompt states as mandatory, as a hard rule, or as forbidden, where the source shows it. Each rule applies to its library only and carries the prompt's own words, which a unit test keeps in the prompt:
+
+| Rule | Library | The file breaks it when |
+|---|---|---|
+| `bokeh-page-paint` | bokeh | The file takes a browser screenshot but never paints the page in the page colour, so a light line runs along the top and left edge of the PNG. A style property set from a script and CSS written into the saved HTML both count. |
+| `bokeh-toolbar` | bokeh | The figure keeps its toolbar (`toolbar_location=None` as a keyword or as a key of a keyword dict). |
+| `pygal-tick-sizes` | pygal | The style sets only one of `label_font_size` and `major_label_font_size`, or the two to different numbers. A name the code assigns a number, with or without a type, counts as that number, and a key of a dict passed as `Style(**kw)` counts like a keyword. |
+| `pygal-grid-colour` | pygal | A chart that draws guide lines leaves `guide_stroke_color` or `major_guide_stroke_color` at pygal's black. Pie, treemap, gauge and funnel charts and the world maps draw none, whether the file calls `pygal.Pie(`, an alias of the module, or a name it imports from `pygal`. |
+| `altair-autosize` | altair | A single or layered chart doesn't fit its size with `autosize` type `fit`, as a keyword or as the first argument of `alt.AutoSizeParams`. Compound charts can't fit and are exempt: the concat, facet and repeat calls, a row, column or facet channel, and `\|` or `&` next to a name bound to a chart. A pandas mask is no composition. A chart composed out of a list or by a function, such as `functools.reduce(operator.or_, charts)`, isn't recognised as compound. |
+| `plotly-autosize` | plotly | The layout turns `autosize` on. |
+| `letsplot-wrap` | letsplot | A plot with a fixed aspect isn't held by a `gggrid` or `ggbunch` that carries the page colour. The rule reads the statements in order: the wrapper holds the plot when its arguments name it (also through a list), and it carries the page colour when its own expression, or a later statement on the name it went to, adds a `theme(plot_background=element_rect(fill=…))` or a named theme that does. A theme inside the wrapper's arguments paints only a panel. |
+| `bbox-tight` | matplotlib, seaborn | The figure is saved with `bbox_inches="tight"`. |
+| `animation` | chartjs, echarts, highcharts, muix | The entrance animation stays on: no `animation: false` (Highcharts: fewer than the two the prompt asks for, the chart's and the series'), or no `skipAnimation` in MUI X. A name bound to `false` counts as `false`, and a named object that holds the switch counts once for each place it's used. A value the file doesn't resolve leaves it unjudged. |
+
+These rules exist because a regeneration carries a library-prompt line that a gate checks into nearly every file, but a line that is only read into about half of them. Of the 16 bokeh files that the regenerations of 2026-11-26 replaced, 9 paint the page; the 7 that don't show the light edge line in their dark render, and the 9 that do show none. Of the 16 replaced pygal files, 7 set both tick sizes alike.
+
 The `palette` rule records a deviation and never judges it. The owner's rule is to use the Imprint colours unless there is a very good reason, such as the squares of a chessboard, and whether a reason is good is for a reader to decide. The record therefore lists up to eight of the hexes it found.
 
-Comments and the generated header never count. The step writes a `**Contract check (record-only):**` line to the job summary: `clean`, or the rules the file breaks, and on a regeneration which of them only the new version breaks. It also prints a `contract_check` notice with the same fields. Nothing reads the result yet: the step has no `id`, it never fails the job, and the reviewer never sees its output.
+Comments and the generated header never count. The patterns that look for code, such as a call, an import, an operator or an animation switch, read the code with its string literals emptied, so a title that names `coord_fixed(` is no call and `"animation: false"` in a JavaScript string is no switch. A JavaScript template keeps its `${…}` fields as code, and a key in quotes stays a key. A regular expression literal that holds a quote reads as a string to the end of its line, which can only hide code, never invent it. The step writes a `**Contract check (record-only):**` line to the job summary: `clean`, or the rules the file breaks, and on a regeneration which of them only the new version breaks. It also prints a `contract_check` notice with the same fields. Nothing reads the result yet: the step has no `id`, it never fails the job, and the reviewer never sees its output.
 
 On `main` at 3222442c3, of 4,863 files:
 
@@ -386,7 +404,33 @@ On `main` at 3222442c3, of 4,863 files:
 | `colormap` | 151 |
 | `theme`, `save`, `legacy-colour` | 1 each, the same file |
 
+On `main` at e20def8b5, of 325 files per library (323 for Highcharts), the library rules count these files. Most of them predate the prompt line they miss, so a regeneration's record lists them as inherited from the predecessor, not as new in this version:
+
+| Rule | Files that break it |
+|---|---|
+| `bokeh-page-paint` | 296 |
+| `altair-autosize` | 269 |
+| `pygal-tick-sizes` | 240 |
+| `pygal-grid-colour` | 181 |
+| `bbox-tight` | 33 (13 matplotlib, 20 seaborn) |
+| `letsplot-wrap` | 15 |
+| `animation` | 4, all Highcharts |
+| `bokeh-toolbar` | 1 |
+| `plotly-autosize` | 0 |
+
 The rules that later become defect lines will be chosen from the nightly records.
+
+#### Contract self-check
+
+The record comes after the session, so the generating session runs the same rules on its own file first: Step 2b of `impl-generate-claude.md`, in every language, right after the file is written and before the first render. It runs `contract_check.py selfcheck` from the workspace with the workspace's `.venv` interpreter. The command prints one line per rule the file breaks, with what it found and, after `→`, the words of the prompt that set the rule; `palette` is marked advisory. A last line gives the verdict: `contract: pass`, `pass (advisory: palette)`, `fix (<keys>)`, or `not run`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it can't read the file, and it writes no record and no job summary.
+
+The session fixes every line that isn't advisory, on a regeneration also the ones the previous file already broke, because the library prompt wins over the previous code. It keeps a colour outside the palette only for a reason that holds and names it. When a later fix changed the file, Step 4 runs the check once more before the record-only adaptability run. The commit body carries the result in a `Contract self-check:` line: `pass`, `fixed (<keys>)`, `open (<keys>)`, or `not run`, with a kept palette colour and its reason after a semicolon. The check decides nothing: "Contract check (record-only)" in `impl-review.yml` runs its own copy of the script on the committed file.
+
+#### Claims self-check
+
+The review reads the picture and doesn't recompute it, so a plot that states something its own data contradicts passes it: a "Mercator" title over a map in another projection, a change indicator that says "up" over a line that falls, a maze whose goal no corridor reaches. In Step 4 of `impl-generate-claude.md`, after the questions it answers by eye, the generating session lists every claim the plot states that its data or structure can confirm or refute, and checks each one with a short computation outside the file: printed numbers and words, two parts that show one quantity, the legend against what is drawn, an axis title's unit and sign against its ticks, a named method or property, and a structural rule the spec states, such as exactly one route through a maze or a symbology's check digit. It tests what the file hands to its plot calls, not only the code that produced it.
+
+A failed claim is fixed in Step 4's one fix round, by deriving the claim from the data, correcting the structure, or correcting the claim's words. The check stays out of the committed file, which carries no checking code. The commit body carries the result in a `Claims self-check:` line: `pass (N checked)`, `fixed (<claims>), N checked`, `open (<claims>), N checked`, or `none`.
 
 #### Promotion to production
 
