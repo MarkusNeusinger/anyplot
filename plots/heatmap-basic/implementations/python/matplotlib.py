@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-27
@@ -16,7 +16,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _here and p != ""]
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm, to_rgb
 
 
 # Theme tokens
@@ -31,8 +31,16 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Imprint diverging colormap: the midpoint is the page color (fields ramp)
 imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", PAGE_BG, "#4467A3"])
 
-# Constants
-LABEL_CONTRAST = 0.45  # cells beyond this |value| are dark enough for white text
+
+def luminance(color):
+    r, g, b = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in to_rgb(color)]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(a, b):
+    hi, lo = sorted((luminance(a), luminance(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
 
 # Columns: set these to your table's column names
 X = "Department (column)"  # role: x
@@ -84,11 +92,12 @@ ax.set_xticks(np.arange(n_cols), table.columns, fontsize=8, rotation=45, ha="rig
 ax.set_yticks(np.arange(n_rows), table.index, fontsize=8, color=INK_SOFT)
 ax.tick_params(axis="both", length=0, colors=INK_SOFT)
 
-# Cell annotations: white on deep cells, INK on near-midpoint cells
+# Cell annotations: per cell, the page color or INK, whichever contrasts more with the cell fill
 for i in range(n_rows):
     for j in range(n_cols):
         val = values[i, j]
-        text_color = "white" if abs(val) > LABEL_CONTRAST else INK
+        fill = im.cmap(norm(val))
+        text_color = max((INK, PAGE_BG), key=lambda c: contrast(c, fill))
         ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=8, color=text_color, zorder=4)
 
 cbar = fig.colorbar(im, ax=ax, fraction=0.032, pad=0.025, aspect=28)
