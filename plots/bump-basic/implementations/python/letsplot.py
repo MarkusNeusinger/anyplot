@@ -1,7 +1,7 @@
 """ anyplot.ai
 bump-basic: Basic Bump Chart
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-27
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -50,11 +50,11 @@ RANK = "Market rank"  # role: rank
 # Data: replace this block with your own table, for example df = pd.read_csv("rankings.csv")
 df = pd.DataFrame(
     {
-        ENTITY: ["Alpha Corp"] * 6
-        + ["Beta Inc"] * 6
-        + ["Gamma Tech"] * 6
-        + ["Delta Systems"] * 6
-        + ["Epsilon Labs"] * 6,
+        ENTITY: ["Northwind"] * 6
+        + ["Brightline"] * 6
+        + ["Cobalt Systems"] * 6
+        + ["Meridian Foods"] * 6
+        + ["Sable Energy"] * 6,
         PERIOD: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"] * 5,
         RANK: [1, 2, 3, 2, 1, 1] + [3, 1, 1, 3, 4, 5] + [2, 3, 2, 1, 2, 3] + [4, 4, 5, 4, 3, 2] + [5, 5, 4, 5, 5, 4],
     }
@@ -79,7 +79,7 @@ plot = (
     # Direct entity labels right of each line's last point, in the line's color
     + geom_text(aes(label=ENTITY), data=last, nudge_x=0.15, hjust=0, size=6)
     + scale_y_reverse(breaks=ranks)
-    + scale_x_continuous(breaks=list(range(1, len(periods) + 1)), labels=periods, limits=[0.7, len(periods) + 1.9])
+    + scale_x_continuous(breaks=list(range(1, len(periods) + 1)), labels=periods, limits=[0.7, len(periods) + 1.1])
     + scale_color_manual(values=IMPRINT_PALETTE[: len(entities)])
     + labs(x=PERIOD, y=RANK, title=title)
     + theme_minimal()
@@ -87,14 +87,17 @@ plot = (
         plot_title=element_text(size=16, color=INK),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line=element_blank(),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
+        panel_border=element_blank(),
         axis_ticks=element_blank(),
         legend_position="none",
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=GRID, size=0.3),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
     + ggsize(800, 450)
 )
