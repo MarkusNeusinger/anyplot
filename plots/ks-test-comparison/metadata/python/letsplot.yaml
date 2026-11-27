@@ -2,102 +2,107 @@ library: letsplot
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:13:57Z'
-updated: '2026-05-29T03:44:19Z'
+updated: '2026-11-27T18:27:36Z'
 generated_by: claude-sonnet
-workflow_run: 26616027575
+workflow_run: 46048553884
 issue: 4130
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Amber ribbon on light/muted-gray on dark is semantically meaningful and theme-adaptive,
-    highlighting divergence area without a fixed color
-  - 'Perfect spec compliance: all KS plot elements (step ECDFs, max-divergence marker,
-    KS stat, p-value, legend) present and well-executed'
-  - 'letsplot-distinctive features used effectively: layer_tooltips() with format
-    chaining, element_markdown() subtitle, arrow() segment'
-  - Theme-adaptive chrome applied consistently across all text elements in both renders
+  - Native geom_step draws both ECDFs as true step functions, rising only at each
+    sample's values
+  - element_markdown subtitle reports D and the p-value in bold with a muted qualifier,
+    clear of both curves
+  - Max-divergence location computed from both ECDFs and marked by a dashed vertical
+    segment with an arrowed 'D = 0.469' label
+  - Theme tokens threaded through every chrome element; both renders fully readable
+  - layer_tooltips gives group, score and ECDF on hover in the HTML view
   weaknesses:
-  - '"Bad Customers" series uses Imprint position 3 (#4467A3, blue) instead of canonical
-    position 2 (#C475FD, lavender) or the semantic red anchor (#AE3030) — fix by using
-    canonical order or applying IMPRINT_PALETTE[4] (#AE3030) for the bad/fail semantic
-    role'
+  - 'Suggestion: give the divergence band no outline (color=None or a transparent
+    outline) so it does not draw dark lines along y = 0 below 360 and y = 1 above
+    760 where only one curve exists.'
+  - 'Suggestion: derive the ''(highly significant)'' qualifier from p_value instead
+    of a fixed string, so it stays true on other data.'
+  - 'Suggestion: match the legend key background to the legend box (legend_key=element_rect(fill=ELEVATED_BG))
+    so the keys do not sit on visibly different squares.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "ks-test-comparison · python · letsplot · anyplot.ai" in bold dark ink (#1A1A17), clearly readable; subtitle in INK_SOFT (#4A4A44) showing K-S Statistic and p-value with bold formatting via element_markdown; axis labels "Credit Score (points)" and "Cumulative Proportion" in bold dark ink; tick labels in INK_SOFT; all fully readable
-      Data: Good Customers step function in #009E73 (brand green, first series); Bad Customers step function in #4467A3 (blue, position 3); amber ribbon (#DDCC77 at alpha=0.20) filling divergence area; red dashed vertical segment at max divergence; arrow annotation; "D = 0.469" label in dark ink
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+      Background: warm off-white #FAF8F1 across canvas and panel
+      Chrome: bold dark title 'ks-test-comparison · python · letsplot · anyplot.ai'; INK_SOFT subtitle 'K-S Statistic: 0.469 | p-value: 9.52e-38 (highly significant)' with bold values; boxed legend at top (Good Customers, Bad Customers); bold axis titles 'Credit Score (points)' / 'Cumulative Proportion'; ticks 300–800 and 0–1; dashed y grid — all readable
+      Data: Good Customers step ECDF in #009E73, Bad Customers in lavender #C475FD; pale amber band between the curves; dashed red #AE3030 vertical segment at x≈552 from ≈0.19 to ≈0.66; red arrow to it with bold dark 'D = 0.469'
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct dark theme surface
-      Chrome: title in light ink (#F0EFE8), clearly readable against dark background; subtitle in INK_SOFT dark-mode (#B8B7B0); axis labels in light ink; tick labels in INK_SOFT; legend box with elevated dark bg (#242420); all chrome tokens correctly flipped for dark theme
-      Data: Good Customers green (#009E73) and Bad Customers blue (#4467A3) are IDENTICAL to light render — only chrome flipped; ribbon switches from amber to INK_MUTED (#A8A79F at alpha=0.30) — correct theme-adaptive design; "D = 0.469" annotation in #F0EFE8 (light ink), clearly visible
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures detected
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and D label in light ink; subtitle, ticks and legend text in light soft ink; legend box on elevated #242420; no dark-on-dark text
+      Data: green and lavender identical to the light render; band switches to muted gray; red segment and arrow unchanged; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, subtitle=12, axis=12, text=10,
-          legend=10). Both renders fully readable. Minor deduction for not reaching
-          8/8 perfection threshold.
+        comment: Title 16, subtitle 12 (markdown), axis titles 12 bold, ticks/legend
+          10, D label geom_text size 5 bold — all at the library prompt's reference
+          sizes and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps data or other labels. Arrow + annotation placement
-          is clean.
+        comment: No text collides with text or data; the D = 0.469 label sits in the
+          shaded gap clear of both curves; subtitle and legend clear of the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step functions at size=2.2 are prominent and distinct. Ribbon, dashed
-          segment, and arrow all clearly visible.
+        comment: Step lines at size 2.2 are prominent for 500/300 observations; dashed
+          red segment and arrow clearly visible; legend line samples match the marks
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. blue from Imprint palette are CVD-safe. Arrow annotation
-          adds redundant encoding at the key data point.
+        comment: Green vs. the second hue are well separated in luminance and hue;
+          the red segment is distinguished by line style and position, not by color
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Data fills the plot well; balanced
-          margins; no clipping.
+        comment: Canvas gate passed (3200x1800); the panel fills the width; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Credit Score (points) and Cumulative Proportion are descriptive with
-          units.
+        comment: '''Credit Score (points)'' and ''Cumulative Proportion'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73. Bad Customers uses Imprint position
-          3 (#4467A3, blue) instead of canonical position 2 (#C475FD, lavender) or
-          semantic red (#AE3030) for bad/fail roles. Background and chrome tokens
-          correct in both themes.'
+        passed: true
+        comment: 'Good Customers #009E73 (position 1), Bad Customers #C475FD (position
+          2) in canonical order; red #AE3030 used only for the K-S segment; backgrounds
+          #FAF8F1 / #1A1A17 correct'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -105,24 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: amber ribbon with semantic meaning, theme-adaptive
-          ribbon color (amber/muted), markdown subtitle with bold stats. Not quite
-          publication-ready but thoughtfully designed.'
+        comment: 'Above the baseline: the markdown subtitle sets the statistics in
+          bold with a muted qualifier, a deliberate typographic hierarchy between
+          title, statistics and chart'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good refinement: X-axis gridlines removed, only dashed Y-axis gridlines,
-          axis lines added, no panel border. Legend box border adds minor visual noise.'
+        passed: false
+        comment: Spine and grid rules met (x grid removed, dashed y grid, no panel
+          border); the boxed legend with mismatched key-square backgrounds and the
+          empty band between legend and panel add nothing beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Strong focal point: ribbon emphasizes divergence area, dashed segment
-          + arrow directs attention to maximum divergence, subtitle reports statistical
-          conclusion.'
+        comment: 'Chosen focal point beyond the Notes: the shaded divergence band
+          between the curves leads the eye to the widest gap, where the dashed segment
+          and arrowed D label sit'
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KS plot with both ECDFs rendered as step functions.
+        comment: 'Correct K-S plot: two ECDF step functions on shared axes'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: both ECDFs as step functions, KS statistic
-          prominently shown, maximum divergence highlighted, p-value reported, distributions
-          clearly labeled.'
+        comment: 'All Notes and C1–C4 present: both step ECDFs, D prominent (subtitle
+          + in-plot label), vertical segment at the maximum distance, p-value, legend,
+          y 0–1'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: credit scores (300-850). Y-axis: cumulative proportion (0-1.05).
-          Both distributions correctly mapped.'
+        comment: Score on x, cumulative proportion on y; x range from the data with
+          a margin; segment drawn at the computed max-divergence x (~552)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title ks-test-comparison · python · letsplot · anyplot.ai matches
-          required format. Legend labels Good Customers and Bad Customers are clear.
+        comment: Title in the mandated format; legend entries 'Good Customers' / 'Bad
+          Customers' are reader text
     data_quality:
       score: 15
       max: 15
@@ -164,22 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all KS plot features: distinct ECDFs, divergence area, max-divergence
-          marker, statistical summary. Ribbon adds context beyond basic KS plots.'
+        comment: Shows two clearly separated ECDFs of different sample sizes, the
+          gap, its location and the test result
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring is a canonical real-world KS test application. Good
-          mean=620, Bad mean=520 with realistic spreads and standard FICO range 300-850.
+        comment: Credit scoring Good vs Bad customers on a 300–850 score range — the
+          canonical K-S application, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values, proportions, and KS statistic (D=0.469) are realistic for
-          well-separated Good/Bad credit score distributions with 500 and 300 samples.
+        comment: D = 0.469 and p = 9.52e-38 come from stats.ks_2samp on the shown
+          samples; the max gap location (~552) agrees with the curves (≈0.19 vs ≈0.66
+          read off the axis)
     code_quality:
       score: 10
       max: 10
@@ -189,66 +196,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports -> tokens -> data -> ECDF computation
-          -> KS test -> plot construction -> save. No functions or classes.'
+        comment: 'Reads top to bottom: imports → tokens → column constants → data
+          → derived frames → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. Every lets_plot symbol imported is referenced in
-          the plot construction.
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic letsplot grammar-of-graphics code. DataFrames constructed
-          thoughtfully for each layer. Comments explain design decisions without over-explaining.
+        comment: Appropriate complexity; ECDF evaluation via np.searchsorted is needed
+          for the band and gap
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot-{THEME}.png (scale=4 for 3200x1800) and plot-{THEME}.html.
-          Current API throughout.
+        comment: Saves plot-{THEME}.png at scale=4 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert ggplot grammar: ggplot() + geom_*() layering, aes() mappings,
-          scale_* for custom palette, labs() for all labels, theme() for chrome, coord_cartesian()
-          for axis limits.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses multiple letsplot-specific features: layer_tooltips() with
-          .line()/.format() chaining, element_markdown() for rich subtitle rendering,
-          arrow() argument in geom_segment(), HTML output alongside PNG.'
+        comment: 'Above default: native geom_step, layer_tooltips with named lines,
+          coord_cartesian for the view, scale_color_manual dict mapping'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Above default: element_markdown for a rich-text subtitle and layer_tooltips
+          for the HTML view are lets-plot specific'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
+  rendered_at: '2026-11-27T18:23:56Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
