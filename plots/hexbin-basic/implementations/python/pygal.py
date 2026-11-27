@@ -1,227 +1,219 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 85/100 | Created: 2026-05-29
+Quality: 85/100 | Updated: 2026-11-27
 """
 
-import importlib.util
 import math
 import os
 import re
-import sys
+from itertools import pairwise
 
 import cairosvg
 import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
-# Ensure we import the installed pygal package, not this file
-pygal_spec = importlib.util.find_spec("pygal")
-if pygal_spec and pygal_spec.origin != __file__:
-    import pygal
-    from pygal.style import Style
-else:
-    cwd = os.getcwd()
-    sys.path = [p for p in sys.path if os.path.abspath(p) != cwd]
-    try:
-        import pygal
-        from pygal.style import Style
-    finally:
-        sys.path.insert(0, cwd)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Theme-adaptive chrome tokens (Imprint style guide)
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3), sparse → dense
-N_LEVELS = 6
-density_colors = tuple(
-    f"#{round(0x00 + (0x44 - 0x00) * i / (N_LEVELS - 1)):02X}"
-    f"{round(0x9E + (0x67 - 0x9E) * i / (N_LEVELS - 1)):02X}"
-    f"{round(0x73 + (0xA3 - 0x73) * i / (N_LEVELS - 1)):02X}"
-    for i in range(N_LEVELS)
+# Imprint sequential ramp for fields (cells that fill the plot), theme-specific stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
-# Data: urban air quality sensor network with three pollution hotspots
-np.random.seed(42)
-core_x = np.random.randn(2500) * 0.6 + 1.5
-core_y = np.random.randn(2500) * 0.6 + 3.0
-industrial_x = np.random.randn(1200) * 1.1 - 2.5
-industrial_y = np.random.randn(1200) * 0.9 - 1.0
-highway_x = np.random.randn(600) * 0.4 + 5.0
-highway_y = np.random.randn(600) * 1.8 + 1.0
-bg_x = np.random.uniform(-4.0, 6.5, 150)
-bg_y = np.random.uniform(-3.0, 5.5, 150)
+# Constants
+GRIDSIZE = 22  # hexagons across the plot width
+N_TIERS = 16  # color steps along the ramp: one pygal series per occupied step
+RAMP_START = 0.12  # start the ramp above its pale end so the sparsest hexagons stand off the page
+HEX_FILL = 0.96  # share of the cell a hexagon fills, the rest is the gap between neighbours
 
-sensor_x = np.concatenate([core_x, industrial_x, highway_x, bg_x])
-sensor_y = np.concatenate([core_y, industrial_y, highway_y, bg_y])
 
-# Hexagonal binning: assign points to tessellating hex cells, count per cell
-GRIDSIZE = 20
-PAD = 0.2
-x_min, x_max = sensor_x.min() - PAD, sensor_x.max() + PAD
-y_min = sensor_y.min() - PAD
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
 
-hex_width = (x_max - x_min) / GRIDSIZE  # pointy-top: x-spacing = sqrt(3)*R
-hex_height = hex_width * 2 / np.sqrt(3)  # y-spacing = 2R, circumradius R = hex_width/sqrt(3)
 
-rows = ((sensor_y - y_min) / hex_height).astype(int)
-odd_shift = np.where(rows % 2 == 1, 0.5, 0.0)
-cols = ((sensor_x - x_min) / hex_width - odd_shift).astype(int)
+# Columns: set these to your table's column names
+X = "Sensor grid X (km)"  # role: x
+Y = "Sensor grid Y (km)"  # role: y
 
-cell_ids = cols * 10000 + rows
-unique_cells, counts = np.unique(cell_ids, return_counts=True)
-cell_cols = unique_cells // 10000
-cell_rows = unique_cells % 10000
-cx = x_min + (cell_cols + np.where(cell_rows % 2 == 1, 0.5, 0.0)) * hex_width + hex_width / 2
-cy = y_min + cell_rows * hex_height + hex_height / 2
-
-# Log-spaced density thresholds → 6 colour levels
-c_min, c_max = float(counts.min()), float(counts.max())
-edges = np.logspace(np.log10(c_min), np.log10(c_max + 1), N_LEVELS + 1)
-edges[0] = c_min
-edges[-1] = c_max + 1
-
-level_names = ["Sparse", "Low", "Medium", "Moderate", "Dense", "Hotspot"]
-labels = [f"{level_names[i]} ({int(edges[i])}–{int(edges[i + 1])})" for i in range(N_LEVELS)]
-
-series_data: list[list] = [[] for _ in range(N_LEVELS)]
-for x, y, cnt in zip(cx, cy, counts, strict=True):
-    level = min(int(np.searchsorted(edges[1:], cnt)), N_LEVELS - 1)
-    series_data[level].append({"value": (round(float(x), 2), round(float(y), 2)), "label": f"{int(cnt)} readings"})
-
-# Imprint sequential palette, theme-adaptive chrome
-custom_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=density_colors,
-    opacity=0.95,
-    opacity_hover=1.0,
-    title_font_size=66,
-    label_font_size=56,
-    major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=36,
-    title_font_family="sans-serif",
-    label_font_family="sans-serif",
-    major_label_font_family="sans-serif",
-    legend_font_family="sans-serif",
+# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
+# Urban air-quality sensor network with three pollution hotspots and a thin background
+rng = np.random.default_rng(42)
+df = pd.DataFrame(
+    {
+        X: np.concatenate(
+            [
+                rng.normal(1.5, 0.6, 2500),  # urban core
+                rng.normal(-2.5, 1.1, 1200),  # industrial zone
+                rng.normal(5.0, 0.4, 600),  # highway corridor
+                rng.uniform(-4.0, 6.5, 150),  # background
+            ]
+        ),
+        Y: np.concatenate(
+            [
+                rng.normal(3.0, 0.6, 2500),
+                rng.normal(-1.0, 0.9, 1200),
+                rng.normal(1.0, 1.8, 600),
+                rng.uniform(-3.0, 5.5, 150),
+            ]
+        ),
+    }
 )
 
-# Axis viewport: 2nd/98th percentile + padding to trim outlier tails
-x_lo = float(np.percentile(sensor_x, 2)) - 0.4
-x_hi = float(np.percentile(sensor_x, 98)) + 0.4
-y_lo = float(np.percentile(sensor_y, 2)) - 0.4
-y_hi = float(np.percentile(sensor_y, 98)) + 0.4
+# Plot: reads only df and the constants above
+# Viewport: 2nd to 98th percentile plus padding trims the outlier tails
+x_lo = df[X].quantile(0.02) - 0.4
+x_hi = df[X].quantile(0.98) + 0.4
+y_lo = df[Y].quantile(0.02) - 0.4
+y_hi = df[Y].quantile(0.98) + 0.4
 
-# Uniform circumradius for tessellating hexagons (SVG user units = pixels at 3200px width)
-# Estimate: plot area ≈ 2900px wide, x_range ≈ 10.8 km, gridsize=20 →
-# hex_width_px = 2900/20 = 145, circumradius = 145/sqrt(3) ≈ 84
-# Use 56 for crisp gaps between hexes (standard hexbin look) and title headroom
-HEX_R = 56
+chart_args = {
+    "width": 3200,
+    "height": 1800,
+    "title": "hexbin-basic · python · pygal · anyplot.ai",
+    "x_title": X,
+    "y_title": Y,
+    "show_legend": False,
+    "stroke": False,
+    "show_x_guides": False,
+    "show_y_guides": False,
+    "xrange": (x_lo, x_hi),
+    "range": (y_lo, y_hi),
+    "margin_right": 500,  # room for the color bar
+    "x_labels_major_count": 6,
+    "y_labels_major_count": 6,
+    "show_minor_x_labels": False,
+    "show_minor_y_labels": False,
+    "value_formatter": lambda v: f"{v:g}",
+    "x_value_formatter": lambda v: f"{v:g}",
+}
+style_args = {
+    "background": PAGE_BG,
+    "plot_background": PAGE_BG,
+    "foreground": INK,
+    "foreground_strong": INK,
+    "foreground_subtle": INK_MUTED,
+    "guide_stroke_color": INK_MUTED,
+    "major_guide_stroke_color": INK_MUTED,
+    "opacity": 1.0,
+    "opacity_hover": 1.0,
+    "title_font_size": 66,
+    "label_font_size": 44,
+    "major_label_font_size": 44,
+    "legend_font_size": 44,
+    "value_font_size": 36,
+    "title_font_family": "sans-serif",
+    "label_font_family": "sans-serif",
+    "major_label_font_family": "sans-serif",
+}
 
-chart = pygal.XY(
-    width=3200,
-    height=1800,
-    style=custom_style,
-    title="hexbin-basic · python · pygal · anyplot.ai",
-    x_title="Sensor Grid X (km)",
-    y_title="Sensor Grid Y (km)",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=3,
-    legend_box_size=24,
-    stroke=False,
-    dots_size=HEX_R,
-    show_x_guides=False,
-    show_y_guides=False,
-    xrange=(x_lo, x_hi),
-    range=(y_lo, y_hi),
-    truncate_legend=-1,
-    print_values=False,
-    human_readable=True,
-    x_labels_major_count=6,
-    y_labels_major_count=6,
-    show_minor_x_labels=False,
-    show_minor_y_labels=False,
-    value_formatter=lambda v: f"{v:.1f} km",
+# Probe render: read the plot area in SVG pixels, so the hexagons can be regular on screen
+probe = pygal.XY(style=Style(colors=IMPRINT_PALETTE, **style_args), **chart_args)
+probe.add("probe", [(x_lo, y_lo), (x_hi, y_hi)])
+probe_svg = probe.render().decode("utf-8")
+px, py = (
+    float(v) for v in re.search(r'<g transform="translate\(([\d.]+),\s*([\d.]+)\)" class="plot"', probe_svg).groups()
 )
+plot_rect = re.search(r'<rect[^>]*class="background"[^>]*/>', probe_svg[probe_svg.index('class="plot"') :]).group(0)
+pw = float(re.search(r'width="([\d.]+)"', plot_rect).group(1))
+ph = float(re.search(r'height="([\d.]+)"', plot_rect).group(1))
 
-for i in range(N_LEVELS):
-    if series_data[i]:
-        chart.add(labels[i], series_data[i], dots_size=HEX_R)
+# Hexagonal binning in pixel space: pointy-top cells of circumradius R, nearest centre wins
+R = pw / GRIDSIZE / math.sqrt(3)
+valid = df[[X, Y]].dropna()  # a missing coordinate draws nothing
+u = (valid[X].to_numpy() - x_lo) / (x_hi - x_lo) * pw
+v = (valid[Y].to_numpy() - y_lo) / (y_hi - y_lo) * ph
+fq = (math.sqrt(3) / 3 * u - v / 3) / R
+fr = 2 / 3 * v / R
+rq, rr, rs = np.round(fq), np.round(fr), np.round(-fq - fr)
+dq, dr, ds = np.abs(rq - fq), np.abs(rr - fr), np.abs(rs - (-fq - fr))
+rq = np.where((dq > dr) & (dq > ds), -rr - rs, rq)
+rr = np.where((dq <= dr) | (dq <= ds), np.where(dr > ds, -rq - rs, rr), rr)
+cells, counts = np.unique(np.stack([rq, rr], axis=1), axis=0, return_counts=True)
+cell_x = x_lo + R * math.sqrt(3) * (cells[:, 0] + cells[:, 1] / 2) / pw * (x_hi - x_lo)
+cell_y = y_lo + R * 1.5 * cells[:, 1] / ph * (y_hi - y_lo)
 
-# SVG post-processing: replace circle markers with hexagonal polygons
-svg_raw = chart.render()
-svg_text = svg_raw.decode("utf-8") if isinstance(svg_raw, bytes) else svg_raw
+# Log-scaled count → one of N_TIERS color steps
+log_span = math.log(counts.max()) - math.log(counts.min())
+position = np.log(counts / counts.min()) / log_span if log_span > 0 else np.zeros(len(counts))
+tiers = np.minimum((position * N_TIERS).astype(int), N_TIERS - 1)
+used = sorted(set(tiers.tolist()))
+tier_colors = [ramp_color(SEQ_FIELDS, RAMP_START + (1 - RAMP_START) * (t + 0.5) / N_TIERS) for t in used]
+
+chart = pygal.XY(style=Style(colors=tier_colors, **style_args), **chart_args)
+for t in used:
+    in_tier = tiers == t
+    chart.add(
+        f"{counts[in_tier].min()}–{counts[in_tier].max()}",
+        [
+            {"value": (round(float(x), 4), round(float(y), 4)), "label": f"{c} readings"}
+            for x, y, c in zip(cell_x[in_tier], cell_y[in_tier], counts[in_tier], strict=True)
+        ],
+        dots_size=R * HEX_FILL,
+    )
+svg = chart.render().decode("utf-8")
 
 
-def _circle_to_hex(match: re.Match) -> str:
+# SVG post-processing: pygal has no hexagon marker, so each circle becomes a hexagon polygon
+def circle_to_hex(match):
     tag = match.group(0)
-    cx_m = re.search(r'cx="([\d.e+-]+)"', tag)
-    cy_m = re.search(r'cy="([\d.e+-]+)"', tag)
-    r_m = re.search(r"\br=\"([\d.e+-]+)\"", tag)
-    if not (cx_m and cy_m and r_m):
-        return tag
-    r_v = float(r_m.group(1))
-    if r_v < 1.0:  # skip tiny decorative circles (legend dots, etc.)
-        return tag
-    xc, yc = float(cx_m.group(1)), float(cy_m.group(1))
+    xc, yc, r = (float(re.search(rf'\b{a}="([\d.e+-]+)"', tag).group(1)) for a in ("cx", "cy", "r"))
     pts = " ".join(
-        f"{xc + r_v * math.cos(math.radians(a)):.2f},{yc + r_v * math.sin(math.radians(a)):.2f}"
-        for a in range(0, 360, 60)
+        f"{xc + r * math.cos(math.radians(a)):.2f},{yc + r * math.sin(math.radians(a)):.2f}" for a in range(30, 390, 60)
     )
-    result = re.sub(r'\bcx="[\d.e+-]+"', "", tag)
-    result = re.sub(r'\bcy="[\d.e+-]+"', "", result)
-    result = re.sub(r"\br=\"[\d.e+-]+\"", f'points="{pts}"', result, count=1)
-    return result.replace("<circle", "<polygon")
+    rest = re.sub(r'\s(cx|cy|r)="[\d.e+-]+"', "", tag)
+    return rest.replace("<circle", f'<polygon points="{pts}"', 1)
 
 
-svg_hex = re.sub(r"<circle[^>]*/>", _circle_to_hex, svg_text)
+svg = re.sub(r"<circle[^>]*/>", circle_to_hex, svg)
 
-# Inject a clip-path for the data area so hexagons don't bleed into title/margins.
-# Extract the plot group transform to find the data area bounds in SVG coordinates.
-plot_transform_m = re.search(r'<g transform="translate\(([\d.]+),\s*([\d.]+)\)" class="plot"', svg_hex)
-plot_bg_m = re.search(r'<rect x="0" y="0" width="([\d.]+)" height="([\d.]+)" class="background"', svg_hex)
-if plot_transform_m and plot_bg_m:
-    px = float(plot_transform_m.group(1))
-    py = float(plot_transform_m.group(2))
-    pw = float(plot_bg_m.group(1))
-    ph = float(plot_bg_m.group(2))
-    clip_id = "hex-data-clip"
-    clip_def = (
-        f'<clipPath id="{clip_id}"><rect x="{px:.1f}" y="{py:.1f}" width="{pw:.1f}" height="{ph:.1f}"/></clipPath>'
-    )
-    # Insert clipPath into <defs>
-    svg_hex = svg_hex.replace("</defs>", clip_def + "</defs>", 1)
-    # Apply clip to each series <g> group (leaves axis/label groups unclipped)
-    svg_hex = re.sub(
-        r'(<g class="series [^"]*">)', lambda m: m.group(0).replace(">", f' clip-path="url(#{clip_id})">', 1), svg_hex
-    )
-    # Subtle plot frame — inner background rect from plot group (width/height relative to transform)
-    inner_m = re.search(r'<rect[^>]+class="plot_background"[^>]*/>', svg_hex) or re.search(
-        r'<rect[^>]+class="graph"[^>]*/>', svg_hex
-    )
-    if inner_m:
-        inner_tag = inner_m.group(0)
-        iw_m = re.search(r'width="([\d.]+)"', inner_tag)
-        ih_m = re.search(r'height="([\d.]+)"', inner_tag)
-        if iw_m and ih_m:
-            iw, ih = float(iw_m.group(1)), float(ih_m.group(1))
-            frame_svg = (
-                f'<rect x="{px:.1f}" y="{py:.1f}" width="{iw:.1f}" height="{ih:.1f}" '
-                f'fill="none" stroke="{INK_MUTED}" stroke-width="1.5" opacity="0.3"/>'
-            )
-            svg_hex = svg_hex.replace("</svg>", frame_svg + "\n</svg>")
+# Clip the series to the plot area so hexagons never reach the title or the margins
+svg = svg.replace(
+    "</defs>", f'<clipPath id="hex-clip"><rect x="0" y="0" width="{pw}" height="{ph}"/></clipPath></defs>', 1
+)
+svg = re.sub(r'<g class="series [^"]*">', lambda m: m.group(0).replace(">", ' clip-path="url(#hex-clip)">'), svg)
 
-# Save interactive HTML and static PNG
+# Color bar: a continuous gradient on the log count scale, drawn into the right margin
+bar_x, bar_w = px + pw + 60, 56
+bar_y, bar_h = py + ph * 0.12, ph * 0.76
+stops = "".join(
+    f'<stop offset="{s / 40:.4f}" stop-color="{ramp_color(SEQ_FIELDS, RAMP_START + (1 - RAMP_START) * (1 - s / 40))}"/>'
+    for s in range(41)
+)
+ticks = [m * 10**e for e in range(8) for m in (1, 2, 5) if counts.min() <= m * 10**e <= counts.max()]
+tick_svg = "".join(
+    f'<line x1="{bar_x + bar_w}" x2="{bar_x + bar_w + 14}" y1="{y:.1f}" y2="{y:.1f}" stroke="{INK_MUTED}" stroke-width="3"/>'
+    f'<text x="{bar_x + bar_w + 26}" y="{y + 15:.1f}" font-size="40" fill="{INK}" font-family="sans-serif">{t}</text>'
+    for t in ticks
+    for y in [bar_y + bar_h * (1 - (math.log(t / counts.min()) / log_span if log_span > 0 else 0))]
+)
+colorbar = (
+    f'<defs><linearGradient id="count-ramp" x1="0" y1="0" x2="0" y2="1">{stops}</linearGradient></defs>'
+    f'<rect x="{bar_x}" y="{bar_y:.1f}" width="{bar_w}" height="{bar_h:.1f}" fill="url(#count-ramp)"/>'
+    f'<text x="{bar_x}" y="{bar_y - 70:.1f}" font-size="44" fill="{INK}" font-family="sans-serif">Points per bin</text>'
+    f'<text x="{bar_x}" y="{bar_y - 22:.1f}" font-size="40" fill="{INK_MUTED}" font-family="sans-serif">(log scale)</text>'
+    f"{tick_svg}"
+)
+svg = svg.replace("</svg>", colorbar + "</svg>")
+
+# Save the interactive HTML and the static PNG
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(svg_hex)
-
-cairosvg.svg2png(bytestring=svg_hex.encode("utf-8"), write_to=f"plot-{THEME}.png")
+    f.write(svg)
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
