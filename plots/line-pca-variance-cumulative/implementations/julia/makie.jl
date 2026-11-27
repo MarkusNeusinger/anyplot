@@ -93,6 +93,7 @@ ax1 = Axis(
     ygridcolor         = ink_grid,
     yminorgridvisible  = false,
     xminorgridvisible  = false,
+    yticks             = 0:20:100,
     limits             = (0.5, n_comp + 0.5, 0.0, 108.0),
 )
 
