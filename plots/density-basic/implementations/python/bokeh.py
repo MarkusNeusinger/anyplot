@@ -1,139 +1,99 @@
 """ anyplot.ai
 density-basic: Basic Density Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
-import sys
-
-
-# This file is named bokeh.py — remove its directory from sys.path so imports
-# resolve to the installed bokeh package rather than this script itself.
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
-
 import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, NumeralTickFormatter, Span
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
 from bokeh.plotting import figure
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Imprint palette — theme-adaptive chrome
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — first categorical series is always #009E73
-BRAND = "#009E73"
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — response times (ms) for a web service showing bimodal distribution
+# Columns: set these to your table's column names
+RESPONSE_TIME = "Response time (ms)"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("response_times.csv")
 np.random.seed(42)
-response_times = np.concatenate(
-    [
-        np.random.normal(150, 30, 300),  # Fast responses
-        np.random.normal(280, 40, 100),  # Slower responses (bimodal tail)
-    ]
+df = pd.DataFrame(
+    {
+        RESPONSE_TIME: np.concatenate(
+            [
+                np.random.normal(150, 30, 300),  # fast responses
+                np.random.normal(280, 40, 100),  # slower responses
+            ]
+        )
+    }
 )
 
-# Kernel density estimation — Silverman's rule for bandwidth
-n = len(response_times)
-std = np.std(response_times)
-iqr = np.percentile(response_times, 75) - np.percentile(response_times, 25)
-bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
+# Plot: reads only df and the constants above
+values = df[RESPONSE_TIME].dropna().to_numpy()
+n = len(values)
 
-# Evaluate KDE on a fine grid
-x_grid = np.linspace(response_times.min() - 40, response_times.max() + 40, 500)
-density = np.zeros_like(x_grid)
-for xi in response_times:
-    density += np.exp(-0.5 * ((x_grid - xi) / bandwidth) ** 2)
+# Gaussian KDE with Silverman's rule-of-thumb bandwidth
+iqr = np.percentile(values, 75) - np.percentile(values, 25)
+bandwidth = 0.9 * min(np.std(values), iqr / 1.34) * n ** (-0.2)
+
+# Grid ends three bandwidths past the data so the curve falls back to zero at both ends
+x_grid = np.linspace(values.min() - 3 * bandwidth, values.max() + 3 * bandwidth, 500)
+density = np.exp(-0.5 * ((x_grid[:, None] - values[None, :]) / bandwidth) ** 2).sum(axis=1)
 density /= n * bandwidth * np.sqrt(2 * np.pi)
 
-# Locate the two mode peaks for data storytelling
-peak1_idx = np.argmax(density[:250])
-peak2_idx = 250 + np.argmax(density[250:])
-peak1_x, peak1_y = x_grid[peak1_idx], density[peak1_idx]
-peak2_x, peak2_y = x_grid[peak2_idx], density[peak2_idx]
+top = density.max()
+source = ColumnDataSource(data={"x": x_grid, "density": density, "base": np.zeros_like(x_grid)})
+rug_source = ColumnDataSource(data={"x": values, "y0": np.zeros(n), "y1": np.full(n, top * 0.05)})
 
-# ColumnDataSource for density curve (enables HoverTool)
-source = ColumnDataSource(data={"x": x_grid, "density": density})
-
-# Rug plot — individual observations as vertical segments at y=0
-rug_y0 = -0.00055
-rug_y1 = rug_y0 + 0.00075
-rug_source = ColumnDataSource(
-    data={"x": response_times, "y0": np.full_like(response_times, rug_y0), "y1": np.full_like(response_times, rug_y1)}
-)
-
-# Figure — canonical 3200×1800 landscape canvas
 p = figure(
     width=3200,
     height=1800,
     title="density-basic · python · bokeh · anyplot.ai",
-    x_axis_label="Response Time (ms)",
+    x_axis_label=RESPONSE_TIME,
     y_axis_label="Density",
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
     min_border_right=50,
+    x_range=Range1d(x_grid.min(), x_grid.max()),
+    y_range=Range1d(0, top * 1.1),
 )
 
-# BoxAnnotation highlights each modal region — idiomatic Bokeh way to shade bands
-box1 = BoxAnnotation(left=peak1_x - 70, right=peak1_x + 70, fill_color=BRAND, fill_alpha=0.07, line_color=None)
-box2 = BoxAnnotation(left=peak2_x - 65, right=peak2_x + 65, fill_color=BRAND, fill_alpha=0.07, line_color=None)
-p.add_layout(box1)
-p.add_layout(box2)
+# Fill under the curve, then the curve itself (also the hover target)
+p.varea(x="x", y1="base", y2="density", source=source, fill_color=IMPRINT_PALETTE[0], fill_alpha=0.18)
+density_line = p.line(x="x", y="density", source=source, line_color=IMPRINT_PALETTE[0], line_width=5)
 
-# Span — vertical dashed reference lines at each peak (Bokeh-idiomatic)
-for px in (peak1_x, peak2_x):
-    p.add_layout(
-        Span(location=px, dimension="height", line_color=BRAND, line_width=2, line_dash="dashed", line_alpha=0.45)
-    )
-
-# Fill under the density curve
-p.varea(x="x", y1=0, y2="density", source=source, fill_color=BRAND, fill_alpha=0.18)
-
-# Density curve (primary glyph; also the HoverTool target)
-density_line = p.line(x="x", y="density", source=source, line_color=BRAND, line_width=5, line_alpha=0.9)
-
-# Peak annotations
-for px, py, label in ((peak1_x, peak1_y, "Fast Responses"), (peak2_x, peak2_y, "Slower Responses")):
-    p.add_layout(
-        Label(
-            x=px,
-            y=py,
-            text=label,
-            text_font_size="34pt",
-            text_color=INK,
-            text_font_style="bold",
-            text_align="center",
-            y_offset=20,
-        )
-    )
-
-# HoverTool — vline mode follows cursor along the curve
-hover = HoverTool(
-    renderers=[density_line],
-    tooltips=[("Response Time", "@x{0.0} ms"), ("Density", "@density{0.00000}")],
-    mode="vline",
-    line_policy="nearest",
+# Rug: one short tick per observation along the baseline
+p.segment(
+    x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color=IMPRINT_PALETTE[0], line_width=2, line_alpha=0.4
 )
-p.add_tools(hover)
 
-# Rug plot — reduced alpha to ease visual crowding in the primary cluster
-p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color=BRAND, line_width=2, line_alpha=0.38)
+p.add_tools(
+    HoverTool(
+        renderers=[density_line],
+        tooltips=[(RESPONSE_TIME, "@x{0.0}"), ("Density", "@density{0.00000}")],
+        mode="vline",
+        line_policy="nearest",
+    )
+)
 
-# Text sizing — canonical native-pixel values for 3200×1800
+# Style
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "42pt"
@@ -144,36 +104,27 @@ p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Y-axis numeric format
 p.yaxis.formatter = NumeralTickFormatter(format="0.0000")
 
-# Axis chrome — theme-adaptive
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.axis_line_width = 1
-p.yaxis.axis_line_width = 1
-p.xaxis.minor_tick_line_color = None
-p.yaxis.minor_tick_line_color = None
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
-# Grid — y-axis only, subtle
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_width = 1
 
-# Background and border
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
-# Save interactive HTML (required catalog artifact)
+# Save interactive HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome — Selenium 4 / Selenium Manager
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -186,21 +137,20 @@ for arg in (
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-# CDP override is authoritative — --window-size alone loses ~139 px to Chrome chrome
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Normalize to exact 3200×1800 — guards against ±1–2 px rounding in headless Chrome
-from PIL import Image as _Image
-
-
-_img = _Image.open(f"plot-{THEME}.png")
-if _img.size != (W, H):
-    _norm = _Image.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
+# Normalize to the exact canvas — guards against a 1-2 px rounding in headless Chrome
+img = Image.open(f"plot-{THEME}.png")
+if img.size != (W, H):
+    canvas = Image.new("RGB", (W, H), PAGE_BG)
+    canvas.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
+    canvas.save(f"plot-{THEME}.png")
