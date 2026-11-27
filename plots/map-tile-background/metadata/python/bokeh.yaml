@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:38:31Z'
-updated: '2026-11-26T16:01:14Z'
+updated: '2026-11-27T17:34:07Z'
 generated_by: claude-sonnet
-workflow_run: 45853735980
+workflow_run: 46042071264
 issue: 3756
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,39 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Basemap follows the theme (Esri World Light Gray / Dark Gray canvas), so the gray
-    tiles stay quiet under the colored markers in both renders
-  - Continuous value uses the imprint_seq marks stops per theme through the style
-    guide's ramp_color, sampled into a LinearColorMapper and keyed by a ColorBar naming
-    'Visitors (M/year)'
-  - Square canvas with Range1d padding fits the map frame tightly to the cities' extent
-  - Provider attribution as a readable bokeh Label with an elevated background in
-    the bottom-right map corner
-  - 'Idiomatic bokeh geo stack: Web Mercator projection, add_tile with WMTSTileSource,
-    mercator axis types showing degrees, field transform on a ColumnDataSource'
-  - HoverTool shows city, visitors and coordinates in the HTML; pan and wheel-zoom
+  - Esri light and dark gray canvas tiles chosen per theme, so the basemap stays quiet
+    under the colored markers in both renders
+  - View fitted to the data bounds with a 12% margin; every city inside the frame
+  - 'Native bokeh map idioms: add_tile with WMTSTileSource, mercator axis types showing
+    degrees, field transform on a ColumnDataSource'
+  - HoverTool shows city, visitors and coordinates in the HTML; pan and wheel zoom
     enabled as the spec asks
+  - Readable Esri attribution on an elevated plate in the bottom-right corner, clear
+    of markers and color bar
   weaknesses:
+  - 'VQ-07 (both): the markers colored by the imprint_seq marks ramp are drawn at
+    fill_alpha 0.85, so the tile shows through and the marks no longer match the color
+    bar''s colors → draw them opaque (fill_alpha 1.0, +0.15). Likely cause: p.scatter(fill_alpha=0.85).'
   - 'Suggestion: a size key (two or three reference circles) would let the marker
     size be read as a value alongside the color bar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 around a 2400x2400 square map frame; Esri World Light Gray canvas tiles (gray sea, near-white land) cover the whole frame from about -12.5° to 24.5° longitude and 37° to 62° latitude, no missing tiles.
-      Chrome: title 'map-tile-background · python · bokeh · anyplot.ai' centered in dark ink; 'Longitude (°)' / 'Latitude (°)' axis labels and degree tick labels readable; color bar 'Visitors (M/year)' at right with 34pt ticks 5-20 on an elevated background; attribution 'Tiles © Esri — Esri, DeLorme, NAVTEQ' readable at 22pt in the bottom-right map corner on an elevated label box.
-      Data: 15 European city circles sized and colored by visitors on the imprint_seq light marks ramp (#009E73 green for Warsaw/Copenhagen → #4467A3 → #002850 navy for London/Paris), 2 px white outlines, all inside the frame.
+      Background: warm off-white #FAF8F1 page around the map frame, edges included; Esri World Light Gray tiles inside the frame covering the whole map area (Western and Central Europe, Lisbon to Warsaw, Rome to Stockholm)
+      Chrome: title 'map-tile-background · python · bokeh · anyplot.ai' centered in dark ink; axis labels 'Longitude (°)' and 'Latitude (°)' and tick labels in dark ink; color bar 'Visitors (M/year)' on the elevated shade at the right with ticks 5-20; attribution 'Tiles © Esri — Esri, DeLorme, NAVTEQ' on a light plate bottom-right; all readable
+      Data: 15 city markers with a white outline, size and color by visitors; the ramp runs brand green #009E73 (low: Warsaw, Copenhagen) through deep blue to dark violet (London, Paris)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 around the map; Esri World Dark Gray canvas tiles.
-      Chrome: title, axis labels, tick labels, color-bar title and ticks in light ink, all readable; no dark-on-dark text; attribution in light ink, readable.
-      Data: same markers and positions; the continuous ramp correctly uses the dark marks stops (#007755 → #009E73 → #CDD9FF), so London and Paris are pale blue-lavender and the rest green; white outlines visible.
+      Background: warm near-black #1A1A17 page, edges included; Esri World Dark Gray tiles inside the frame
+      Chrome: title, axis labels, tick labels, color-bar title and ticks in light ink; attribution in light ink bottom-right; no dark-on-dark text
+      Data: the same 15 markers at the same positions and sizes; the continuous ramp uses the dark marks stops, olive #6F7E20 (low) through brand green to pale blue #CDD9FF (London, Paris), as a continuous ramp should
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,21 +53,20 @@ review:
         max: 8
         passed: true
         comment: Title 50pt, axis labels 42pt, axis and color-bar ticks 34pt, color-bar
-          title 34pt, attribution 22pt — all readable in both themes
+          title 34pt, attribution 22pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; attribution sits clear of markers and the color
-          bar
+        comment: No text collisions; attribution clear of markers and color bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 sparse markers at ~26-62 px with 2 px white outline, visible on
-          light and dark gray tiles
+        comment: 15 sparse markers at about 26-62 px with a 2 px white outline, visible
+          on the light and dark gray tiles
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -79,8 +78,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, map frame fitted to the data with ~12% margin; no
-          wasted sea; nothing cut off
+        comment: Square canvas, map frame fitted to the data with about 12% margin;
+          page background set on the HTML document so the canvas edges are the page
+          color; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -89,34 +89,37 @@ review:
         comment: Longitude (°), Latitude (°), color bar Visitors (M/year)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'imprint_seq marks stops per theme (#009E73→#4467A3→#002850 light;
-          #007755→#009E73→#CDD9FF dark); backgrounds #FAF8F1 / #1A1A17'
+        passed: false
+        comment: 'Current imprint_seq marks stops per theme (#009E73→#024582→#351E45
+          light; #6F7E20→#009E73→#CDD9FF dark); backgrounds #FAF8F1 / #1A1A17; but
+          markers drawn at fill_alpha 0.85 instead of opaque (defect line)'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Basemap chosen per theme (Esri light/dark gray canvas) so the tiles
-          stay quiet under the colored markers — beyond the style guide
+        passed: true
+        comment: 'Basemap chosen per theme (Esri light / dark gray canvas) so the
+          tiles stay quiet under the colored markers: beyond the style-guide baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Spine and grid rules met, nothing beyond
+        passed: true
+        comment: 'Attribution on an elevated-shade plate, color bar on the elevated
+          shade, no grid over the tiles: a chosen refinement for a map'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed, no hierarchy chosen beyond the value encoding
+        passed: true
+        comment: Size and color both carry visitors, so London and Paris lead the
+          eye as the focal pair
     spec_compliance:
       score: 15
       max: 15
@@ -133,15 +136,16 @@ review:
         max: 4
         passed: true
         comment: C1 tiles cover the map, C2 outlined markers at their coordinates,
-          C3 view fitted to data bounds, C4 readable attribution bottom-right, C5
-          color bar names the variable clear of the attribution; pan/zoom enabled
+          C3 view fitted to the data bounds, C4 readable attribution bottom-right,
+          C5 color bar names the variable clear of the attribution; pan and wheel
+          zoom enabled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Lat/lon projected to Web Mercator correctly; every city inside the
-          frame; color-bar ticks readable
+          frame; color-bar ticks 5-20 readable
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -157,20 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Tile context, markers, value encoding all shown
+        comment: Tile context, markers and value encoding all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European city tourism, neutral
+        comment: European city tourism, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 3-21 M visitors/year plausible (London 21, Paris 19.1); city coordinates
-          correct; no Check values in spec
+          correct; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,14 +184,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the only function is the style guide's ramp_color
+        comment: Linear script; the only function is the library prompt's ramp_color
           helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,7 +209,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html via Selenium per library guide
+        comment: plot-{THEME}.png and .html via Selenium per the library prompt
     library_mastery:
       score: 7
       max: 10
@@ -221,13 +225,13 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
+        passed: true
         comment: add_tile with WMTSTileSource and mercator axis types (degree tick
           labels on a Web Mercator plot)
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
-  rendered_at: '2026-11-26T15:57:50Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-27T17:30:55Z'
 impl_tags:
   dependencies:
   - selenium
@@ -241,5 +245,5 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending

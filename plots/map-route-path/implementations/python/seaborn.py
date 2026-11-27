@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-26
+Quality: 80/100 | Updated: 2026-11-27
 """
 
 import os
@@ -23,9 +23,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 BRAND = IMPRINT_PALETTE[0]
 # Imprint sequential ramp for marks (stops per theme)
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
@@ -53,7 +53,6 @@ N_ARROWS = 4  # direction arrows spread evenly along the route
 LON = "Longitude (°)"  # role: lon
 LAT = "Latitude (°)"  # role: lat
 TIME = "Elapsed Time (min)"  # role: timestamp
-ELEV = "Elevation (m)"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("track.csv")
 # Mountain bike trail GPS track near Crested Butte, Colorado
@@ -69,22 +68,13 @@ lon_steps[80:160] -= 0.00020
 lat_steps[160:] -= 0.00030
 lon_steps[160:] += 0.00010
 
-elevation = 2820 + np.cumsum(np.random.normal(0.8, 3.5, n_points)) + 120 * np.sin(np.linspace(0, 1.8 * np.pi, n_points))
-
 df = pd.DataFrame(
-    {
-        LON: -106.985 + np.cumsum(lon_steps),
-        LAT: 38.870 + np.cumsum(lat_steps),
-        TIME: np.linspace(0, 150, n_points),
-        ELEV: elevation,
-    }
+    {LON: -106.985 + np.cumsum(lon_steps), LAT: 38.870 + np.cumsum(lat_steps), TIME: np.linspace(0, 150, n_points)}
 )
 
 # Plot: reads only df and the constants above
-fig, (ax_map, ax_elev) = plt.subplots(
-    2, 1, figsize=(8, 4.5), dpi=400, gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG
-)
-fig.subplots_adjust(left=0.08, right=0.90, top=0.93, bottom=0.10, hspace=0.55)
+fig, ax_map = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.90, top=0.92, bottom=0.12)
 
 # Connecting path in sequence order
 sns.lineplot(data=df, x=LON, y=LAT, color=INK_SOFT, linewidth=2.8, alpha=0.75, ax=ax_map, sort=False, zorder=1)
@@ -135,14 +125,5 @@ ax_map.grid(True, alpha=0.10, linewidth=0.8)
 ax_map.legend(fontsize=8, loc="lower right", framealpha=0.9, markerscale=0.5, labelspacing=1.0, borderpad=0.8)
 ax_map.margins(x=0.06, y=0.12)
 sns.despine(ax=ax_map)
-
-# Elevation profile
-sns.lineplot(data=df, x=TIME, y=ELEV, color=BRAND, linewidth=2.2, ax=ax_elev)
-ax_elev.fill_between(df[TIME], df[ELEV].min(), df[ELEV], alpha=0.15, color=BRAND)
-ax_elev.set_xlabel(TIME, fontsize=10, color=INK)
-ax_elev.set_ylabel(ELEV, fontsize=10, color=INK)
-ax_elev.tick_params(axis="both", labelsize=8)
-ax_elev.yaxis.grid(True, alpha=0.10, linewidth=0.8)
-sns.despine(ax=ax_elev)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
