@@ -1,20 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-28
 """
 
 import os
-import sys
-
-
-# Prevent self-import: this file is named pygal.py, which shadows the installed
-# pygal package when the script directory is first in sys.path.
-_here = os.path.dirname(os.path.abspath(__file__))
-if _here in sys.path:
-    sys.path.remove(_here)
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -25,37 +18,51 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data — natural frequencies of a rotor system vs rotational speed
-np.random.seed(42)
-speed_rpm = np.linspace(0, 6000, 80)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+WARNING = "#DDCC77"  # amber, semantic anchor outside the categorical pool
+
+# Constants
+ENGINE_ORDERS = [1, 2, 3]  # excitation orders drawn as diagonals from the origin
+
+# Columns: set these to your table's column names
+SPEED = "Rotational Speed (RPM)"  # role: speed
+MODES = ["1st Lateral", "Rocking", "2nd Lateral", "Axial", "1st Torsional"]  # role: frequency_mode_
+FREQUENCY = "Frequency (Hz)"  # role: extra
+ENGINE_ORDER = "Engine order"  # role: engine_order
+CRITICAL_SPEED = "Critical speed (RPM)"  # role: critical_speeds
+
+# Data: replace this block with your own table, for example df = pd.read_csv("modes.csv")
+# Steam-turbine shaft: bearing stiffening raises two modes with speed, softening lowers the others.
+speed = np.linspace(0, 6000, 80)
+base_hz = [32.0, 54.0, 71.0, 96.0, 118.0]
+stiffness = [0.35, 0.18, -0.12, -0.22, 0.10]  # relative change at 6000 RPM, nonlinear in speed
+df = pd.DataFrame(
+    {SPEED: speed}
+    | {name: f0 * np.sqrt(1 + k * (speed / 6000) ** 2) for name, f0, k in zip(MODES, base_hz, stiffness, strict=True)}
+)
+
+# Plot
+speed_rpm = df[SPEED].to_numpy()
 speed_hz = speed_rpm / 60
-
-# Natural frequency modes (Hz) with gyroscopic effects
-mode1 = 25 + 0.003 * speed_rpm + np.random.normal(0, 0.15, len(speed_rpm))
-mode2 = 48 + 0.005 * speed_rpm + np.random.normal(0, 0.15, len(speed_rpm))
-mode3 = 62 - 0.001 * speed_rpm + np.random.normal(0, 0.15, len(speed_rpm))
-mode4 = 78 - 0.002 * speed_rpm + np.random.normal(0, 0.15, len(speed_rpm))
-mode5 = 92 + 0.004 * speed_rpm + np.random.normal(0, 0.15, len(speed_rpm))
-
-orders = [1, 2, 3]
-modes_data = [mode1, mode2, mode3, mode4, mode5]
-mode_names = ["1st Bending", "2nd Bending", "1st Torsional", "Axial", "2nd Torsional"]
+top_hz = float(np.ceil(np.nanmax(df[MODES].to_numpy()) * 1.1 / 10) * 10)
+max_rpm = float(np.nanmax(speed_rpm))
 
 # Find critical speed intersections
 critical_speeds = []
 critical_info = []
-for order in orders:
+for order in ENGINE_ORDERS:
     eo_freq = order * speed_hz
-    for mi, mode in enumerate(modes_data):
-        diff = eo_freq - mode
+    for name in MODES:
+        diff = eo_freq - df[name].to_numpy()
         sign_changes = np.where(np.diff(np.sign(diff)))[0]
         for idx in sign_changes:
             frac = abs(diff[idx]) / (abs(diff[idx]) + abs(diff[idx + 1]))
             rpm_interp = speed_rpm[idx] + frac * (speed_rpm[idx + 1] - speed_rpm[idx])
             freq_interp = order * rpm_interp / 60
-            if 0 < rpm_interp < 6000:
+            if 0 < rpm_interp < max_rpm:
                 critical_speeds.append((float(rpm_interp), float(freq_interp)))
-                critical_info.append((order, mode_names[mi]))
+                critical_info.append((order, name))
 
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 custom_style = Style(
@@ -65,23 +72,15 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="4, 6",
     major_guide_stroke_dasharray="2, 4",
-    colors=(
-        "#009E73",  # 1st Bending — anyplot green
-        "#C475FD",  # 2nd Bending — lavender
-        "#4467A3",  # 1st Torsional — blue
-        "#BD8233",  # Axial — ochre
-        "#AE3030",  # 2nd Torsional — matte red
-        "#2ABCCD",  # 1× EO — cyan (clearly distinct from all mode colors)
-        "#954477",  # 2× EO — rose
-        "#99B314",  # 3× EO — lime
-        "#DDCC77",  # Critical Speeds — amber (semantic warning anchor)
-    ),
+    # modes first, then the engine order lines, then the amber critical speeds
+    colors=(*IMPRINT_PALETTE, WARNING),
     font_family=font,
     title_font_family=font,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     legend_font_family=font,
@@ -92,7 +91,7 @@ custom_style = Style(
     opacity_hover=1.0,
     stroke_opacity=1.0,
     stroke_opacity_hover=1.0,
-    stroke_width=2.5,
+    stroke_width=7,
 )
 
 chart = pygal.XY(
@@ -100,8 +99,8 @@ chart = pygal.XY(
     height=1800,
     style=custom_style,
     title="campbell-basic · python · pygal · anyplot.ai",
-    x_title="Rotational Speed (RPM)",
-    y_title="Frequency (Hz)",
+    x_title=SPEED,
+    y_title=FREQUENCY,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -118,8 +117,8 @@ chart = pygal.XY(
     margin_top=50,
     x_label_rotation=0,
     truncate_legend=-1,
-    range=(0, 130),
-    xrange=(0, 6000),
+    range=(0, top_hz),
+    xrange=(0, max_rpm),
     print_values=False,
     print_zeroes=False,
     tooltip_fancy_mode=True,
@@ -127,10 +126,12 @@ chart = pygal.XY(
 )
 
 # Natural frequency mode curves — solid, thick lines with cubic interpolation
-for mode, label in zip(modes_data, mode_names, strict=True):
+for label in MODES:
     points = []
     label_idx = int(len(speed_rpm) * 0.82)
-    for j, (r, f) in enumerate(zip(speed_rpm, mode, strict=True)):
+    for j, (r, f) in enumerate(zip(speed_rpm, df[label], strict=True)):
+        if np.isnan(r) or np.isnan(f):
+            continue  # a missing value draws nothing
         if j == label_idx:
             points.append({"value": (float(r), float(f)), "label": label})
         else:
@@ -138,10 +139,11 @@ for mode, label in zip(modes_data, mode_names, strict=True):
     chart.add(label, points, stroke_style={"width": 7, "linecap": "round"}, show_dots=False, interpolate="cubic")
 
 # Engine order lines — dashed with prominent width and clear patterns
-eo_labels = ["1× EO", "2× EO", "3× EO"]
 eo_dash_patterns = ["30, 12", "20, 8, 6, 8", "12, 6"]
-for order, eo_label, dash in zip(orders, eo_labels, eo_dash_patterns, strict=True):
-    eo_end_rpm = min(6000.0, 130.0 * 60.0 / order)
+for i, order in enumerate(ENGINE_ORDERS):
+    eo_label = f"{order}× EO"
+    dash = eo_dash_patterns[i % len(eo_dash_patterns)]
+    eo_end_rpm = min(max_rpm, top_hz * 60.0 / order)
     eo_rpms = np.linspace(0, eo_end_rpm, 40)
     eo_freqs = order * eo_rpms / 60.0
     label_idx = int(len(eo_rpms) * 0.70)
@@ -160,8 +162,7 @@ for pt, info in zip(critical_speeds, critical_info, strict=True):
     critical_points.append({"value": pt, "label": f"{mname} × {order}× EO\n{pt[0]:.0f} RPM / {pt[1]:.1f} Hz"})
 chart.add("Critical Speeds", critical_points, stroke=False, dots_size=15)
 
-# Save — write to the script's own directory regardless of working directory
-_out = os.path.join(_here, f"plot-{THEME}")
-with open(f"{_out}.html", "wb") as f:
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
-chart.render_to_png(f"{_out}.png")
