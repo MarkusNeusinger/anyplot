@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -19,7 +18,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
-    stat_summary,
+    scale_x_discrete,
     theme,
     theme_minimal,
 )
@@ -28,53 +27,44 @@ from plotnine import (
 # Theme tokens (Imprint palette — theme-adaptive chrome)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint categorical palette — positions 1–4 in canonical order
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — annual salary distributions across 4 departments
-np.random.seed(42)
+# Columns: set these to your table's column names
+TIER = "Server tier"  # role: category
+LATENCY = "Response latency (ms)"  # role: value
 
-records = []
-
-# Engineering: right-skewed (many mid-range, few senior high earners)
-salaries_eng = np.concatenate([np.random.normal(95000, 12000, 180), np.random.normal(148000, 7000, 40)])
-records.extend([("Engineering", s) for s in salaries_eng])
-
-# Design: bimodal (junior / senior pay split)
-salaries_design = np.concatenate([np.random.normal(70000, 7000, 100), np.random.normal(108000, 7000, 100)])
-records.extend([("Design", s) for s in salaries_design])
-
-# Marketing: tight normal (narrow pay band)
-salaries_mkt = np.random.normal(82000, 5000, 200)
-records.extend([("Marketing", s) for s in salaries_mkt])
-
-# Sales: wide spread (base + commission-driven variance)
-salaries_sales = np.random.normal(90000, 22000, 200)
-records.extend([("Sales", s) for s in salaries_sales])
-
-df = pd.DataFrame(records, columns=["department", "salary"])
-df["salary"] = df["salary"].clip(35000, 200000)
-df["department"] = pd.Categorical(
-    df["department"], categories=["Engineering", "Design", "Marketing", "Sales"], ordered=True
+# Data: replace this block with your own table, for example df = pd.read_csv("latency.csv")
+rng = np.random.default_rng(42)
+df = pd.concat(
+    [
+        # Edge cache: fast, right-skewed with a long tail of slow misses
+        pd.DataFrame({TIER: "Edge cache", LATENCY: rng.lognormal(np.log(18), 0.45, 300)}),
+        # API gateway: bimodal, cache hits versus full computations
+        pd.DataFrame(
+            {TIER: "API gateway", LATENCY: np.concatenate([rng.normal(60, 8, 160), rng.normal(130, 14, 140)])}
+        ),
+        # Database: tight, near-normal query times
+        pd.DataFrame({TIER: "Database", LATENCY: rng.normal(95, 9, 300)}),
+        # Batch worker: wide spread from variable job sizes
+        pd.DataFrame({TIER: "Batch worker", LATENCY: rng.normal(150, 38, 300).clip(40)}),
+    ],
+    ignore_index=True,
 )
 
-departments = ["Engineering", "Design", "Marketing", "Sales"]
-palette = dict(zip(departments, IMPRINT_PALETTE, strict=True))
-
-# Plot
+# Plot: reads only df and the constants above
+tiers = df[TIER].unique().tolist()
 title = "violin-basic · python · plotnine · anyplot.ai"
 
 plot = (
-    ggplot(df, aes(x="department", y="salary", fill="department"))
-    + geom_violin(draw_quantiles=[0.25, 0.5, 0.75], alpha=0.82, color=INK_SOFT, size=0.6, trim=False)
-    + stat_summary(geom="point", fun_y=np.mean, shape="D", size=2.5, color=INK, fill=INK)
-    + scale_fill_manual(values=palette)
-    + labs(x="Department", y="Annual Salary (USD)", title=title)
-    + annotate("text", x=2, y=148000, label="Bimodal:\njunior/senior split", size=2.8, color=INK_SOFT)
+    ggplot(df, aes(x=TIER, y=LATENCY, fill=TIER))
+    + geom_violin(draw_quantiles=[0.25, 0.5, 0.75], alpha=0.85, color=INK, size=0.6)
+    + scale_x_discrete(limits=tiers)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=tiers)
+    + labs(title=title)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
