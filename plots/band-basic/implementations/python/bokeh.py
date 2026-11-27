@@ -1,7 +1,7 @@
 """ anyplot.ai
 band-basic: Basic Band Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-29
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
@@ -25,32 +26,38 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Solar irradiance forecast with 95% confidence interval
+# Columns: set these to your table's column names
+HOUR = "Hour of Day"  # role: x
+IRRADIANCE = "Solar Irradiance (W/m²)"  # role: y_center
+LOWER = "Lower 95% bound (W/m²)"  # role: y_lower
+UPPER = "Upper 95% bound (W/m²)"  # role: y_upper
+
+# Data: replace this block with your own table, for example df = pd.read_csv("forecast.csv")
 np.random.seed(42)
 hours = np.linspace(6, 20, 120)  # 6 AM to 8 PM
-
-peak_hour = 13.0
-irradiance = 850 * np.exp(-0.5 * ((hours - peak_hour) / 2.8) ** 2) + 50
+irradiance = 850 * np.exp(-0.5 * ((hours - 13.0) / 2.8) ** 2) + 50
 
 # Uncertainty tight at midday (clear sky), widens in afternoon (convective clouds)
-base_uncertainty = 15 + 8 * np.abs(hours - peak_hour)
-afternoon_spike = 45 * np.clip((hours - 15) / 2, 0, 1) ** 1.5
-uncertainty = base_uncertainty + afternoon_spike
+uncertainty = 15 + 8 * np.abs(hours - 13.0) + 45 * np.clip((hours - 15) / 2, 0, 1) ** 1.5
+df = pd.DataFrame(
+    {
+        HOUR: hours,
+        IRRADIANCE: irradiance,
+        LOWER: np.maximum(irradiance - 1.96 * uncertainty, 0),
+        UPPER: irradiance + 1.96 * uncertainty,
+    }
+)
 
-y_upper = irradiance + 1.96 * uncertainty
-y_lower = np.maximum(irradiance - 1.96 * uncertainty, 0)
-
-source = ColumnDataSource(data={"hours": hours, "irradiance": irradiance, "y_upper": y_upper, "y_lower": y_lower})
-
-# Plot
+# Plot: reads only df and the constants above
+source = ColumnDataSource(df)
 title = "Solar Irradiance Forecast · band-basic · python · bokeh · anyplot.ai"
 
 p = figure(
     width=3200,
     height=1800,
     title=title,
-    x_axis_label="Hour of Day",
-    y_axis_label="Solar Irradiance (W/m²)",
+    x_axis_label=HOUR,
+    y_axis_label=IRRADIANCE,
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -62,9 +69,9 @@ p = figure(
 # Higher alpha in dark theme: alpha=0.25 on #1A1A17 composites to near-invisible forest-green
 band_alpha = 0.38 if THEME == "dark" else 0.25
 p.varea(
-    x="hours",
-    y1="y_lower",
-    y2="y_upper",
+    x=HOUR,
+    y1=LOWER,
+    y2=UPPER,
     source=source,
     fill_color=IMPRINT_PALETTE[0],
     fill_alpha=band_alpha,
@@ -72,9 +79,7 @@ p.varea(
 )
 
 # Forecast mean line — second series → Imprint position 2
-p.line(
-    x="hours", y="irradiance", source=source, line_color=IMPRINT_PALETTE[1], line_width=6, legend_label="Forecast Mean"
-)
+p.line(x=HOUR, y=IRRADIANCE, source=source, line_color=IMPRINT_PALETTE[1], line_width=6, legend_label="Forecast Mean")
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
@@ -147,6 +152,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
