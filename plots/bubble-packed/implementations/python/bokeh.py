@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-29
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure
@@ -22,9 +23,24 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-np.random.seed(42)
+# Imprint palette: tier colors follow the canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Label color per palette position, chosen by fill luminance (fills do not change between themes)
+LABEL_ON = ["#FFFFFF", "#1A1A17", "#FFFFFF", "#1A1A17", "#FFFFFF", "#1A1A17", "#FFFFFF", "#1A1A17"]
 
-# Data — department budgets (millions)
+# Constants
+SEED = 42
+W, H = 2400, 2400  # square canvas, also the packing space
+MAX_R = 310  # radius of the largest circle in packing units
+PAD = 12  # gap between circles in packing units
+MARGIN = 80  # empty border around the cluster in packing units
+
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: label
+BUDGET = "Budget (million USD)"  # role: value
+TIER = "Spending tier"  # role: group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("budgets.csv")
 departments = [
     "Engineering",
     "Marketing",
@@ -43,18 +59,24 @@ departments = [
     "Security",
 ]
 budgets = [45, 32, 38, 25, 12, 18, 42, 8, 22, 15, 28, 14, 10, 20, 6]
-n = len(budgets)
+df = pd.DataFrame(
+    {
+        DEPARTMENT: departments,
+        BUDGET: budgets,
+        TIER: [">$35M" if b > 35 else "$20–$35M" if b >= 20 else "$10–$19M" if b >= 10 else "<$10M" for b in budgets],
+    }
+)
 
+# Plot: reads only df and the constants above
+n = len(df)
+vals = df[BUDGET].to_numpy(dtype=float)
 # Area-scaled radii (sqrt) for accurate visual perception
-vals = np.array(budgets, dtype=float)
-max_r = 310
-radii = np.sqrt(vals / vals.max()) * max_r
+radii = np.sqrt(vals / np.nanmax(vals)) * MAX_R
 
-# Force-directed circle packing in 2400×2400 coordinate space
-W, H = 2400, 2400
+# Force-directed circle packing in the canvas coordinate space
+rng = np.random.RandomState(SEED)
 center = np.array([W / 2.0, H / 2.0])
-pos = center + (np.random.rand(n, 2) - 0.5) * 400
-pad = 12
+pos = center + (rng.rand(n, 2) - 0.5) * 400
 
 for step in range(600):
     pos += (center - pos) * 0.012
@@ -63,7 +85,7 @@ for step in range(600):
         for j in range(i + 1, n):
             d = pos[j] - pos[i]
             dist = np.linalg.norm(d) + 1e-6
-            gap = radii[i] + radii[j] + pad
+            gap = radii[i] + radii[j] + PAD
             if dist < gap:
                 s = d / dist * (gap - dist) * 0.5
                 pos[i] -= s
@@ -82,26 +104,20 @@ y_hi = (pos[:, 1] + radii).max()
 pos[:, 0] += (W - (x_lo + x_hi)) / 2
 pos[:, 1] += (H - (y_lo + y_hi)) / 2
 
-# Equal x/y range so data-unit circles render as true circles on square canvas
-margin = 80
-x_lo = (pos[:, 0] - radii).min() - margin
-x_hi = (pos[:, 0] + radii).max() + margin
-y_lo = (pos[:, 1] - radii).min() - margin
-y_hi = (pos[:, 1] + radii).max() + margin
+# Equal x/y range so data-unit circles render as true circles on the square canvas
+x_lo = (pos[:, 0] - radii).min() - MARGIN
+x_hi = (pos[:, 0] + radii).max() + MARGIN
+y_lo = (pos[:, 1] - radii).min() - MARGIN
+y_hi = (pos[:, 1] + radii).max() + MARGIN
 cx = (x_lo + x_hi) / 2
 cy = (y_lo + y_hi) / 2
 half = max(x_hi - x_lo, y_hi - y_lo) / 2
 xr = (cx - half, cx + half)
 yr = (cy - half, cy + half)
 
-# Imprint palette tier colors (canonical order: #009E73, #C475FD, #4467A3, #BD8233)
-# Text color fixed per-tier based on fill luminance — circle fills don't change between themes
-tier_defs = [
-    (">$35M", "#009E73", "#FFFFFF", [i for i in range(n) if budgets[i] > 35]),
-    ("$20–$35M", "#C475FD", "#1A1A17", [i for i in range(n) if 20 <= budgets[i] <= 35]),
-    ("$10–$19M", "#4467A3", "#FFFFFF", [i for i in range(n) if 10 <= budgets[i] < 20]),
-    ("<$10M", "#BD8233", "#1A1A17", [i for i in range(n) if budgets[i] < 10]),
-]
+circles = df.assign(x=pos[:, 0], y=pos[:, 1], radius=radii)
+# Tiers in the order of their largest member, so the legend reads from big to small
+tiers = list(circles.groupby(TIER, sort=False)[BUDGET].max().sort_values(ascending=False).index)
 
 p = figure(
     width=W,
@@ -114,48 +130,34 @@ p = figure(
 )
 
 renderers = []
-for tier_name, color, _text_color, idx in tier_defs:
-    if not idx:
-        continue
-    src = ColumnDataSource(
-        data={
-            "x": pos[idx, 0].tolist(),
-            "y": pos[idx, 1].tolist(),
-            "radius": radii[idx].tolist(),
-            "dept": [departments[i] for i in idx],
-            "budget": [f"${budgets[i]}M" for i in idx],
-            "tier": [tier_name for _ in idx],
-        }
-    )
+for t, tier_name in enumerate(tiers):
+    src = ColumnDataSource(circles[circles[TIER] == tier_name])
     r = p.circle(
         x="x",
         y="y",
         radius="radius",
         source=src,
-        fill_color=color,
+        fill_color=IMPRINT_PALETTE[t],
         fill_alpha=0.90,
         line_color=PAGE_BG,
         line_width=4,
-        legend_label=tier_name,
+        legend_label=str(tier_name),
     )
     renderers.append(r)
 
-# Adaptive label sizes by radius bracket (scaled for 2400×2400 canvas)
-# y_offset is in screen pixels, separating department name (above) and value (below)
-brackets = [(225, float("inf"), "18pt", "14pt", 16), (135, 225, "14pt", "12pt", 12), (0, 135, "12pt", "9pt", 9)]
+# Adaptive label sizes by radius bracket, as shares of the largest radius
+# y_offset is in screen pixels, separating the name (above) and the value (below)
+brackets = [(0.726, float("inf"), "18pt", "14pt", 16), (0.435, 0.726, "14pt", "12pt", 12), (0, 0.435, "12pt", "9pt", 9)]
 
 for lo, hi, name_fs, val_fs, y_off in brackets:
-    for _tier, _color, text_color, tier_idx in tier_defs:
-        idx = [i for i in tier_idx if lo <= radii[i] < hi]
-        if not idx:
+    for t, tier_name in enumerate(tiers):
+        text_color = LABEL_ON[t]
+        rel = circles["radius"] / circles["radius"].max()
+        rows = circles[(circles[TIER] == tier_name) & (rel >= lo) & (rel < hi)]
+        if rows.empty:
             continue
         src = ColumnDataSource(
-            data={
-                "x": pos[idx, 0].tolist(),
-                "y": pos[idx, 1].tolist(),
-                "name": [departments[i] for i in idx],
-                "val": [f"${budgets[i]}M" for i in idx],
-            }
+            {"x": rows["x"], "y": rows["y"], "name": rows[DEPARTMENT], "val": [f"${b:g}M" for b in rows[BUDGET]]}
         )
         p.add_layout(
             LabelSet(
@@ -216,7 +218,10 @@ p.legend.click_policy = "hide"
 
 # HoverTool — active in the HTML artifact
 p.add_tools(
-    HoverTool(tooltips=[("Department", "@dept"), ("Budget", "@budget"), ("Tier", "@tier")], renderers=renderers)
+    HoverTool(
+        tooltips=[(DEPARTMENT, f"@{{{DEPARTMENT}}}"), (BUDGET, f"@{{{BUDGET}}}"), (TIER, f"@{{{TIER}}}")],
+        renderers=renderers,
+    )
 )
 
 # Save interactive HTML (catalog artifact)
@@ -242,16 +247,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Belt-and-braces: pad/crop to exact dims so the post-render gate always passes
-from PIL import Image as _PILImage
-
-
-_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (W, H):
-    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
