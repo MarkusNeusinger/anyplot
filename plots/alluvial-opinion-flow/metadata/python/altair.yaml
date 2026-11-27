@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:16:57Z'
-updated: '2026-11-27T08:07:39Z'
+updated: '2026-11-27T08:15:45Z'
 generated_by: claude-sonnet
-workflow_run: 45962061392
+workflow_run: 45963434263
 issue: 4430
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,46 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Count text color chosen per block from its luminance — dark ink on the lime and
-    dark-theme neutral blocks, white on green, ochre-dark and red — so every node
-    count reads on its fill in both themes
-  - Stable flows (0.6) set apart from changers (0.3) by opacity, with the stable bands
-    running level because the category order is the same in every wave
-  - Right-hand labels show each category's Q4 total and net change since Q1, and a
-    computed note quantifies polarization (extremes 33% to 44%)
-  - Library-native fit sizing (autosize fit, padding 10) fills the 3200x1800 canvas
-    with balanced margins
+  - 'The five Likert levels take ordered steps of the imprint_div marks ramp with
+    the theme''s stops (#009E73 green pole for Strongly Agree, the grey midpoint #6B6A63
+    light / #686762 dark for Neutral, #AE3030 for Strongly Disagree), computed from
+    the data''s category order, so order reads at a glance in both themes'
+  - Stable flows (opacity 0.6) are set apart from changers (0.3), and the same category
+    order in every wave keeps stable bands running level
+  - Count text color chosen per block from its luminance, so every node count reads
+    on its fill in both themes
+  - Right-hand labels give each category's Q4 total and net change since Q1, and a
+    note computed from the data quantifies polarization (extremes 33% to 44%)
   - 'Idiomatic Altair layering: transform_filter splits stable vs changer flows, filled
-    mark_line polygons with detail/order, selection_point hover with alt.condition
-    opacity and per-flow tooltips in the HTML'
+    mark_line polygons with detail/order, scale=None for per-row text colors, and
+    a selection_point hover with alt.condition opacity plus per-flow tooltips in the
+    HTML'
   weaknesses:
-  - 'VQ-07 (both): the five Likert levels are colored with categorical hues — Agree
-    lime #99B314, Disagree ochre #BD8233 — and Neutral uses INK_MUTED (#A8A79F on
-    dark) instead of ordered steps of the imprint_div marks ramp → steps of one ramp
-    from #009E73 (Strongly Agree) through the grey midpoint #6B6A63 light / #686762
-    dark to #AE3030 (Strongly Disagree), with the theme''s stops. Likely cause: the
-    SEMANTIC dict picking IMPRINT_PALETTE[7] and [3] and INK_MUTED.'
-  - 'Suggestion: compute the category order and colors from the data''s ordered levels
-    instead of the sample labels hoisted into # Constants (the static checker''s advisory
-    on line 25), so renamed Likert levels keep their ramp.'
+  - 'Suggestion: repeat the category name in the right-hand labels (for example ''Strongly
+    Disagree 273 (+123)'') so the Q4 column reads without tracing back to the left
+    side.'
+  - 'Suggestion: the Agree step (#36846B on light) sits close in hue to Strongly Agree
+    (#009E73); a little more lightness spread between the two green steps would separate
+    those blocks faster.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
-      Chrome: bold dark title 'alluvial-opinion-flow · python · altair · anyplot.ai' and muted subtitle centred at top; bold quarter headers Q1-Q4 2025 above faint rounded grey column bands; left labels 'Strongly Agree (180)' … 'Strongly Disagree (150)' and right labels '(165) -15' … '(273) +123' in INK_SOFT; italic muted trend note at the bottom ('Strongly Agree + Strongly Disagree: 33% … Q1 2025, 44% in Q4 2025'). All readable.
-      Data: five outlined, rounded blocks per wave, top to bottom Strongly Agree #009E73, Agree lime #99B314, Neutral grey #6B6A63, Disagree ochre #BD8233, Strongly Disagree red #AE3030; flows colored by source, stable flows denser than changer flows; counts inside every block, white on green/grey/red, dark on lime/ochre.
+      Chrome: bold dark title 'alluvial-opinion-flow · python · altair · anyplot.ai' with a muted subtitle centred at the top; bold quarter headers Q1-Q4 2025 above faint rounded grey column bands; left labels 'Strongly Agree (180)' … 'Strongly Disagree (150)' and right labels '(165) -15' … '(273) +123' in soft ink; italic muted note at the bottom ('Strongly Agree + Strongly Disagree: 33% of respondents in Q1 2025, 44% in Q4 2025'). All readable.
+      Data: five outlined rounded blocks per wave, top to bottom Strongly Agree #009E73, Agree a darker blue-green step, Neutral grey #6B6A63, Disagree a brown-red step, Strongly Disagree #AE3030: ordered steps of one ramp. Flows colored by source; stable flows denser than changers. Counts in white inside every block.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, headers and side labels in light ink; subtitle and trend note in light muted grey; column bands a faint lighter grey. No dark-on-dark text.
-      Data: green, lime, ochre and red identical to the light render; Neutral flips to the light grey #A8A79F with dark count text; other counts as in light. Flows remain distinguishable, the stable bands brighter than changers.
+      Chrome: title, headers and side labels in light ink; subtitle and note in light muted grey; column bands a faint lighter grey. No dark-on-dark text.
+      Data: the same ramp steps as light, with the dark midpoint #686762 for Neutral (the theme's stop of the marks ramp); flows remain distinguishable, stable bands brighter than changers; white counts on every block read clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,58 +58,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text set explicitly (title 16, subtitle 11, headers 13 bold,
+        comment: All text sized explicitly (title 16, subtitle 11, headers 13 bold,
           side labels 12, counts 11 bold, note 11 italic) and readable in both themes;
-          count text switches to dark ink on light blocks (lime, dark-theme neutral)
-          and white on dark blocks, so every count reads on its fill.
+          count ink chosen by block luminance.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with blocks; side labels sit
-          clear of the outer columns, headers above the bands, the trend note below.
+        comment: No text collides with text or marks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Blocks outlined and clearly visible; stable flows at 0.6 and change
-          flows at 0.3 opacity stay visible in both themes; hair-thin rare flows are
-          permitted by the spec.
+        comment: Blocks outlined, flows visible down to hair-thin rare transitions
+          (permitted by C6).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green and red poles are never the sole signal: every block carries
-          its count and the categories are labelled directly; muted midpoint separates
-          the sides.'
+        comment: Ramp order carried in lightness plus position and direct labels;
+          red/green is never the sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: autosize fit at 800x450 fills the 3200x1800 canvas; balanced margins,
-          nothing cut off.
+        comment: Diagram fills the landscape canvas with balanced label gutters.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design; quarter headers and labelled categories with counts
-          serve as axes; descriptive subtitle names the survey.
+        comment: No axes; quarter headers and category labels are reader text.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Background and chrome theme-correct in both renders, green and red
-          poles on the correct sides, but the five Likert levels use categorical hues
-          (lime #99B314, ochre #BD8233) and the dark neutral #A8A79F instead of steps
-          of the imprint_div marks ramp (defect line).'
+        passed: true
+        comment: 'Likert levels are ordered steps of the imprint_div marks ramp (green
+          pole on agree, grey midpoint #6B6A63/#686762, red pole on disagree) with
+          the theme''s stops; backgrounds correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,25 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised one: a deliberate type hierarchy (bold quarter headers, italic
-          computed trend note, muted subtitle) and luminance-aware count ink per block,
-          beyond the baseline.'
+        comment: 'Raised one: clear type hierarchy (bold headers, italic computed
+          note, muted subtitle) and luminance-aware count ink.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Raised one: faint rounded column bands behind each wave and rounded
-          outlined blocks tie columns together; consistent gaps and generous label
-          gutters.'
+        comment: 'Raised two: faint rounded column bands and rounded outlined blocks
+          tie columns together; generous label gutters.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Raised one: the right-hand labels carry each category''s net change
-          since Q1 (+123 for Strongly Disagree) and the computed note quantifies polarization
-          (33% to 44% at the extremes), giving a clear focal point.'
+        comment: 'Raised two: net change since Q1 on the right (+123 Strongly Disagree)
+          and a computed polarization note give a focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -146,31 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial opinion-flow diagram, four waves, flows between
-          neighbors.
+        comment: Alluvial opinion-flow diagram, four waves, flows between neighbors.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent category colors, widths proportional to respondents, count
-          label on every block, chronological waves under column headers, stable flows
-          more opaque than changers, net change per category shown; transparency used.
-          All C1-C5 met.
+        comment: Consistent category colors, proportional widths, count label on every
+          block, chronological headers, stable vs changer opacity, net change shown,
+          transparency; C1-C5 met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Block heights are wave shares, flow widths scaled to their block
-          totals; stable flows run level because order is the same in every wave.
+        comment: Block heights are wave counts, flow widths scaled to their blocks;
+          stable flows level.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; no legend needed — categories
-          labelled directly on the left with counts.
+        comment: Mandated title; categories labelled directly, no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -180,22 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stability, churn in both directions, and growing polarization
-          across 4 waves with 5 levels and 70 flows.
+        comment: Stability, churn both ways, growing polarization across 4 waves x
+          5 levels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey of 1,000 staff — plausible and neutral.
+        comment: Employee engagement survey of 1,000 staff, plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Totals stay at 1,000 per wave; checked every incoming column sum
-          against the next matrix's outgoing row sum (e.g. Q2 Strongly Agree 165 in
-          and out, Q4 Strongly Disagree 273). No Check values in the Notes.
+        comment: Checked every incoming column sum against the next matrix's outgoing
+          row sums (e.g. Q3 Neutral 175, Q4 Strongly Disagree 273); each wave totals
+          1,000; note 33%/44% matches (330 and 438 of 1,000). No Check values in the
+          Notes.
     code_quality:
       score: 10
       max: 10
@@ -205,14 +192,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, tokens, column constants, Data block, Plot, Save; no functions
-          or classes.
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded transition matrices — deterministic.
+        comment: Hard-coded transition matrices.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -224,15 +210,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Flow polygons are hand-built because Altair has no Sankey mark; complexity
-          fits the chart type.
+        comment: Flow polygons hand-built because Altair has no Sankey mark; the 8-line
+          ramp sampling has no Altair call for discrete ordinal steps.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
-          and the library prompt's fit block.
+        comment: Saves plot-{THEME}.png and .html with current API.
     library_mastery:
       score: 6
       max: 10
@@ -242,35 +227,37 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised one: layered alt.layer composition, transform_filter splitting
-          stable vs changer flows, mark_line(filled=True) with detail/order for polygons,
-          scale=None for literal per-row text colors.'
+        comment: 'Raised one: alt.layer composition, transform_filter splitting flows,
+          mark_line(filled=True) with detail/order, scale=None literal colors.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
         comment: 'Raised one: selection_point on pointerover driving alt.condition
-          opacity, with tooltips per flow and block in the HTML.'
+          opacity, with per-flow tooltips in the HTML.'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
-  rendered_at: '2026-11-27T08:03:20Z'
+  rendered_at: '2026-11-27T08:12:23Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
-  - bezier-curves
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
+  - bezier-curves
   patterns:
+  - data-generation
   - matrix-construction
-  - groupby-aggregation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
+  - normalization
+  - interpolation
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
+  - dark-theme
