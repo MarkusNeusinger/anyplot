@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 78
 review:
   strengths:
-  - Complete bullet chart implementation with all three required elements (actual
-    value bars, target markers, and qualitative background bands)
-  - 'Excellent semantic color mapping: brand green (#009E73) for above-target metrics
-    and Imprint matte red (#AE3030) for below-target — immediately communicates performance
-    status'
-  - 'Theme-adaptive warm-gray band colors (light: #E4E3DC/#C0BFB8/#8E8D87; dark: #3A3A30/#484843/#60605A)
-    that complement the Imprint palette without competing'
-  - Creative SVG injection technique to implement a chart type pygal lacks natively
-    — shows advanced understanding of pygal internals
-  - Realistic manufacturing KPI dataset (OEE, First Pass Yield, etc.) with plausible
-    values normalized to a common percentage scale
-  - All font sizes explicitly set via Style object matching style-guide pygal defaults
+  - Complete bullet chart with bands, measure bars and target markers on a common
+    normalised scale
+  - Theme-adaptive grayscale bands and ink target marker readable in both themes
+  - Realistic manufacturing KPI scenario with a correctly normalised mixed-unit metric
+  - Interactive pygal SVG/HTML output
   weaknesses:
-  - Green/red is the primary color signal for above/below target status — CVD users
-    may struggle to distinguish the two bar colors; adding a thin INK-color stroke
-    on the bars or using bar hatching would provide redundant encoding
-  - Background band differentiation is lower contrast in the dark render (BAND_POOR=#3A3A30,
-    BAND_SAT=#484843, BAND_GOOD=#60605A are three very similar dark grays — consider
-    increasing the contrast step between bands in dark mode)
-  - 'Design could be more polished: the chart reads as a functional implementation
-    but lacks signature refinements that would elevate it to publication quality (e.g.
-    more intentional spacing, subtle gridline tuning)'
+  - 'SC-01 (both): the measure bar changes color by performance - green #009E73 above
+    target, red #AE3030 below - which the basic variant excludes (C5: one measure-bar
+    color throughout) → one #009E73 measure color for every bullet. Likely cause:
+    bar_color = COLOR_ABOVE if above_target[i] else COLOR_BELOW.'
+  - 'VQ-01 (both): the x tick labels mix two sizes - 0, 50 and 100 at 44 px, the other
+    ticks at 56 px → one size for all ticks (major_label_font_size = label_font_size).
+    Likely cause: label_font_size=56 vs major_label_font_size=44.'
+  - 'VQ-02 (both): the x-axis title''s descenders touch the ''Below Target'' legend
+    entry directly below it → at least 12 px clear gap (about +20 px). Likely cause:
+    legend_at_bottom without extra margin between x_title and the legend.'
+  - 'VQ-03 (both): the legend swatches render paler than the full-opacity bars and
+    marker they explain → swatches matching the marks'' fill. Likely cause: pygal''s
+    legend boxes use the series fill-opacity while the injected rects have none.'
+  - 'Suggestion: a slightly larger step between the dark-theme band grays would make
+    the Satisfactory band stand out more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme
-      Chrome: Title "bullet-basic · python · pygal · anyplot.ai" in dark ink, clearly readable at top. Y-axis labels (e.g., "Quality Score (94/100)", "On-Time Delivery (91%)") in dark text, readable. X-axis title "Performance (% of Maximum)" visible. X-axis tick labels (0, 10, 20, ..., 100) readable. Legend at bottom with 6 items clearly readable.
-      Data: Three warm-gray background band zones (Poor/Satisfactory/Good) fill each row. Green (#009E73) actual bars on 2 metrics above target (Quality Score, Capacity Utilization); matte red (#AE3030) bars on 5 metrics below target. Dark INK target marker rectangles visible at each metric's target percentage.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: warm off-white #FAF8F1
+      Chrome: title in dark ink; metric labels with values on the left; x ticks 0-100 where 0, 50 and 100 render smaller than the others; x-axis title 'Performance (% of Maximum)' touching the 'Below Target' legend entry; legend with Above Target, Below Target, Target and three band entries. All readable.
+      Data: three warm-gray bands per row; measure bars green #009E73 for the two metrics above target and red #AE3030 for the five below; dark ink target markers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme
-      Chrome: Title in light cream text, clearly visible. Y-axis labels in light text, readable. X-axis title and tick labels in light text, readable. Legend at bottom readable in light text.
-      Data: Data colors identical to light render — green bars on 2 above-target metrics, red bars on 5 below-target metrics. Band zones are dark gray variants (#3A3A30/#484843/#60605A) — distinguishable but with lower contrast than light render. Target markers appear as light-colored (#F0EFE8) vertical rectangles, visible against dark bands.
-      Legibility verdict: PASS — no dark-on-dark failures; all text appears in theme-correct light color; band zone distinction is reduced but acceptable
+      Background: warm near-black #1A1A17
+      Chrome: all text in light cream ink, readable; no dark-on-dark.
+      Data: identical green/red bars; bands as dark grays, distinguishable; light-ink target markers.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 27
@@ -59,111 +58,106 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style object. Readable in both
-          themes. Slight deduction for legend text being on the smaller side at full
-          canvas resolution.
+        comment: 'The x tick labels mix two sizes: 0, 50 and 100 render at 44 px,
+          the others at 56 px (defect line)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: The x-axis title's descenders touch the 'Below Target' legend entry
+          below it (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Actual bars and target markers clearly visible in light render. Dark
-          render band differentiation is reduced but bars remain clearly visible.
+        comment: Bars and markers visible; the legend swatches render paler than the
+          full-opacity marks they explain (defect line)
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Green/red pair is the primary signal for above/below target. Redundant
-          encoding via bar length vs. target marker helps, but CVD users may still
-          struggle with the color distinction alone.
+        comment: Green and red bars differ in lightness as well and bar length vs.
+          marker carries the same status; contrast adequate
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed. Good proportions, no overflow, balanced
-          legend at bottom.
+        comment: 3200x1800 canvas well used; nothing cut off; balanced axis and tick
+          label sizes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis titled 'Performance (% of Maximum)' with units. Title follows
-          spec format exactly.
+        comment: X-axis 'Performance (% of Maximum)' with unit; metric labels carry
+          their units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series uses #009E73. Red (#AE3030) is Imprint
-          matte red used as semantic exception for below-target. Backgrounds correct
-          (#FAF8F1 light / #1A1A17 dark). Chrome is theme-adaptive.'
+        comment: 'First series #009E73, #AE3030 is an Imprint color; grayscale bands;
+          backgrounds and chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above-default: semantic color mapping, theme-adaptive warm-gray
-          bands, SVG injection craftsmanship. Not quite publication-quality polish
-          but clearly above a generic default.'
+        comment: Style-guide baseline with consistent typography; nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: X-guides only (not y-guides), rounded_bars=2, print_values=False
-          keeps uncluttered. Above default but not exceptional.
+        comment: Y-guides removed, only vertical x-guides at band thresholds kept,
+          zero spacing within bullets and a clear gutter between them
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Semantic green/red immediately communicates performance status. Target
-          markers create visual focal points. Multiple metrics on common scale enables
-          comparison. Good visual hierarchy.
+        passed: false
+        comment: The green/red status coloring is an excluded addition and earns no
+          credit; otherwise data displayed on a common scale
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Correct horizontal bullet chart with background bands, actual value
-          bar, and target marker for each metric.
+        comment: 'Bullet chart, but the measure bar changes color by performance (green
+          above, red below target): an addition the basic variant excludes (defect
+          line)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Actual bar, target marker, qualitative range bands (Poor/Satisfactory/Good),
-          multiple stacked metrics — all present.
+        comment: Grayscale bands, thin target marker, horizontal orientation, value
+          in label, common scale all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows performance percentage, y-axis shows metric categories.
-          All data correctly mapped.
+        comment: Bars start at zero on a linear 0-100 scale; markers at target values;
+          Inventory Turnover normalised 8/12 = 66.7 and 10/12 = 83.3 correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bullet-basic · python · pygal · anyplot.ai'. Legend
-          labels match data series.
+        comment: Title in the mandated format; legend entries readable text
     data_quality:
       score: 15
       max: 15
@@ -173,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both above-target and below-target metrics, varies across multiple
-          KPI domains, demonstrates the full bullet chart visual vocabulary.
+        comment: Seven metrics with measures both short of and past their targets,
+          across all three bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing and supply chain KPIs (OEE, First Pass Yield, Inventory
-          Turnover) are a realistic, neutral, industry-standard context.
+        comment: Manufacturing KPIs (OEE, First Pass Yield, Supplier On-Time) are
+          a realistic, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are plausible for the domain (OEE ~72%, On-Time Delivery ~91%).
-          Normalization to percentage of maximum enables common-scale comparison.
+        comment: Plausible values; checked the turnover normalisation (66.7 % actual,
+          83.3 % target) on the axis
     code_quality:
       score: 10
       max: 10
@@ -198,55 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Top-level code flows: config → data → chart
-          → SVG injection → save.'
+        comment: Imports -> theme -> columns -> Data -> Plot -> Save, top to bottom,
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded — fully deterministic, no random seed needed.
+        comment: Hardcoded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. Self-import guard via importlib is necessary
-          and correctly implemented.
+        comment: All imports used; the self-import guard is needed for a file named
+          pygal.py
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, appropriate complexity given pygal's limitations. SVG
-          injection is the correct approach for this chart type in pygal.
+        comment: ElementTree parse and injection is appropriate given pygal has no
+          bullet type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: HorizontalStackedBar with Style object, add() series, x_labels —
-          all idiomatic. None-value series for legend-only placeholders is a clever
-          idiomatic pattern.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output (pygal's signature feature). SVG introspection
-          and injection to extend pygal's chart capabilities is distinctive and requires
-          library-specific knowledge.
+        comment: HorizontalStackedBar with Style and legend-only None series; ElementTree
+          SVG injection
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Interactive SVG/HTML output is mandated; nothing distinctive beyond
+          it
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  last_kept:
+    pr: 14961
+    code: criterion_below
+    note: '#14961 was kept because it scored below the live version''s re-score on
+      these criteria: CQ-04 1 < 2: The RANGES column is defined in df but never read;
+      bands come from the BAND_EDGES constant instead (defect line). Do not score
+      lower than the live version on them.'
 impl_tags:
   dependencies:
   - cairosvg

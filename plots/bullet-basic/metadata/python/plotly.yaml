@@ -12,151 +12,145 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 73
 review:
   strengths:
-  - Correct use of go.Indicator with gauge shape=bullet — the proper Plotly-native
-    API for bullet charts
-  - 'Semantic color logic: #009E73 (above target) and #AE3030 (below target) with
-    triangle/text redundancy in footer is clear and principled'
-  - Data covers all three qualitative zones with four diverse KPI metrics, demonstrating
-    the chart type fully
-  - Theme-adaptive design works correctly in both renders — backgrounds, text, and
-    target marker colors all adapt properly
-  - 'Full spec compliance: actual bar, target marker, qualitative bands, and metric
-    labels all implemented correctly'
+  - Uses plotly's native go.Indicator bullet gauge with steps and threshold
+  - Metric labels carry their units ($K)
+  - Neutral KPI data covering all three qualitative bands
   weaknesses:
-  - 'Rightmost tick labels clipped at gauge domain boundary on Revenue/Profit/Customers
-    rows: 300 shows as 00, 120 as 20, 500 as 00 — shrink gauge domain x-end from 0.94
-    to ~0.88 or suppress rightmost tick explicitly'
-  - 'Range band colors (#8B9DAF, #B4C0CA, #D5DDE2) are custom hex values outside the
-    Imprint palette — replace with INK_MUTED/INK_SOFT at graded opacity levels (0.30/0.18/0.08)
-    to stay within the Imprint system'
-  - Metric label title fontsize=11 is slightly small for 3200x1800 canvas — increase
-    to 13px for better mobile readability
-  - Green-red color pair on bar fills alone is a CVD risk — add a thin ink-colored
-    border or thickness difference as a non-color redundant cue beyond the footer
-    symbols
+  - 'VQ-02 (both): the tick-label rows of the upper three bullets are hidden behind
+    the next bullet''s bands, leaving only fragments such as ''0'' and ''00'' → leave
+    room below each gauge for its tick row (larger spacing). Likely cause: spacing
+    = 0.025 between indicator domains.'
+  - 'SC-03 (both): values cannot be read off the axes of Revenue, Profit and Customers
+    because their ticks are hidden → make every tick row visible. Likely cause: the
+    same 0.025 domain spacing.'
+  - 'SC-01 (both): measure bars and value numbers switch between green and red by
+    performance, with an ''Above/Below target'' footer; the basic variant asks for
+    one measure-bar color → one #009E73 bar color and no status footer. Likely cause:
+    bar_color = ABOVE_TARGET if meets_target else BELOW_TARGET and the two add_annotation
+    calls.'
+  - 'VQ-07, SC-02 (both): bands are custom blue-gray hexes (#8B9DAF, #B4C0CA, #D5DDE2
+    / blue rgba overlays), outside Imprint and not the grayscale the Notes ask for
+    → grayscale ink at graded opacity. Likely cause: range_colors.'
+  - 'VQ-04 (both): green vs red bar fill is the only cue for pass/fail on the bars
+    → one bar color removes the red-green signal. Likely cause: the performance-based
+    bar_color.'
+  - 'Suggestion: ELEVATED_BG and INK_MUTED are defined but unused.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "bullet-basic · python · plotly · anyplot.ai" in dark ink, readable; metric labels (Revenue $K, Profit $K, Customers, Satisfaction) in dark ink on left, readable; tick labels visible but rightmost ticks on top 3 rows clipped at gauge domain boundary
-      Data: Revenue bar is #009E73 (Imprint brand green, above target); Profit/Customers/Satisfaction bars are #AE3030 (Imprint matte red, below target); three blue-gray range bands visible per row; black target marker lines clearly visible; actual values (275/41/320/4.2) in colored text on right
-      Legibility verdict: PASS — all text readable; minor clipping of rightmost tick labels on Revenue/Profit/Customers rows (within gauge domain, not canvas edge)
+      Background: warm off-white #FAF8F1.
+      Chrome: centered title 'bullet-basic · python · plotly · anyplot.ai' in dark ink; metric labels Revenue ($K), Profit ($K), Customers, Satisfaction left of each bullet; footer '▲ Above target' (green) and '▼ Below target' (red). Only the last bullet's tick row (0–5) is readable; the tick rows of the upper three bullets are hidden behind the next bullet's bands, leaving fragments such as '0' and '00' / '20' at the edges.
+      Data: four stacked bullets with blue-gray bands (#8B9DAF, #B4C0CA, #D5DDE2) and a thin gauge border; measure bars green for Revenue (above target) and red for the other three; black target markers; value numbers colored like the bars.
+      Legibility verdict: FAIL (upper tick labels hidden)
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title and metric labels in light cream text, clearly readable; no dark-on-dark failures; tick labels in lighter tone readable; target markers switch to white lines, clearly visible
-      Data: Bar colors identical to light render (#009E73 green for Revenue, #AE3030 red for others) — data colors theme-stable; range bands use semi-transparent rgba overlays that are subtler but distinguishable; actual value numbers in green/red legible; footer legend text readable
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed
+      Background: warm near-black #1A1A17.
+      Chrome: title and metric labels in light ink, no dark-on-dark text; same hidden tick rows as light.
+      Data: same green/red bars as light; bands are blue-gray rgba overlays, subtle but distinguishable; target markers light ink.
+      Legibility verdict: FAIL (upper tick labels hidden)
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title and value numbers readable at full resolution; metric label
-          fontsize 11 slightly small for 3200x1800; tick labels adequate
+        comment: Sizes set explicitly; visible text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Rightmost tick labels clipped at gauge domain boundary on Revenue/Profit/Customers
-          rows — 300 shows as 00, 120 as 20
+        comment: Tick-label rows of the upper three bullets hidden behind the next
+          bullet's bands (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, target markers, and range bands all visible in both themes
+        comment: Bars, markers and bands clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Green-red pair used for above/below target; footer triangle symbols
-          provide partial CVD mitigation but bar fills rely on color alone
+        comment: Green vs red bar fill is the pass/fail signal (defect line)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct; compact row heights; slightly tight vertical
-          spacing
+        comment: Canvas well used
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Metric labels include units; title matches required format exactly
+        comment: Metric labels carry units ($K)
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Green #009E73 and red #AE3030 are correct Imprint semantic uses;
-          backgrounds correct; range band colors #8B9DAF/#B4C0CA/#D5DDE2 are custom
-          hex values outside Imprint palette'
+        comment: Bands are custom blue-gray hexes outside Imprint and not grayscale
+          (defect line)
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Semantic color logic with above/below target coding; clean sans-serif
-          typography; thoughtful footer legend
+        comment: Baseline, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Bullet gauge format removes traditional chrome; dark-mode rgba band
-          overlays show theme awareness
+        comment: Baseline, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Revenue above target (green) stands out clearly; Profit dramatically
-          below target is visually apparent; clear performance narrative
+        comment: The emphasis comes from performance coloring, which the basic variant
+          excludes and which earns no credit
     spec_compliance:
-      score: 15
+      score: 10
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct horizontal bullet chart using go.Indicator with gauge shape=bullet
+        passed: false
+        comment: 'Bullet chart, but bar color changes by performance with a status
+          footer: variant creep (defect line)'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Actual bar, target marker, qualitative range bands, and metric labels
-          all implemented
+        passed: false
+        comment: Bands are not grayscale as the Notes and C3 ask (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: All four metrics displayed with correct bar/target/range mappings
+        passed: false
+        comment: Values cannot be read off three of four axes (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; footer legend explains color
-          coding
+        comment: Title format correct
     data_quality:
       score: 15
       max: 15
@@ -166,21 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three qualitative zones represented; both above-target and below-target
-          states demonstrated
+        comment: All three bands reached; above and below target
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic KPI dashboard with Revenue/Profit/Customers/Satisfaction;
-          neutral business context
+        comment: Neutral business KPI dashboard with units
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All metric values and ranges are internally consistent and plausible
+        comment: 'Checked: bar ends and targets match the data list; ranges consistent'
     code_quality:
       score: 10
       max: 10
@@ -190,36 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No wrapper functions or classes; clean linear flow with a single
-          loop
+        comment: Top to bottom, one loop
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, plotly.graph_objects imported; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; loop over metrics dict is clean; theme logic
-          well-organized
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Plotly
-          API
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,16 +216,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Indicator with mode=number+gauge, domain-based
-          multi-indicator layout
+        comment: Native go.Indicator gauge with steps/threshold and domain layout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses Plotly's specialized go.Indicator bullet gauge, domain-based
-          panel layout, interactive HTML output
+        comment: Plotly bullet gauge shape with built-in number read-out
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  last_kept:
+    pr: 14959
+    code: regression
+    note: '#14959 was kept because the review found it worse than the live version
+      here: Metric labels lost their units: the predecessor''s ''Revenue ($K)'' /
+      ''Profit ($K)'' named the unit, the new labels and value numbers never say percent
+      (metric labels and value numbers, both renders). Keep these as the live version
+      has them.'
 impl_tags:
   dependencies: []
   techniques:
