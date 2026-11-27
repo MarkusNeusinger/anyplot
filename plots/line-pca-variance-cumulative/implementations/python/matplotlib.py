@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -105,8 +105,9 @@ for i, (t, n_comp) in enumerate(zip(THRESHOLDS, n_at_threshold, strict=True)):
     ax.axhline(y=t, color=color, linestyle="--", linewidth=1.2, alpha=0.75, label=f"{label} threshold", zorder=4)
     ax.plot(n_comp, t, marker="D", color=color, markersize=7, zorder=6, markeredgecolor=PAGE_BG, markeredgewidth=0.9)
     # Annotation: place to the left of the crossing point
-    text_x = max(n_comp - 3.5, 1.5)
-    text_y = t + (0.045 if i == 1 else -0.07)
+    # The 90% callout sits below the curve's right tail, the 95% one above the curve
+    text_x = n_comp + 1.2 if i == 0 else max(n_comp - 3.5, 1.5)
+    text_y = t - 0.14 if i == 0 else t + 0.045
     ax.annotate(
         f"{n_comp} components → {label}",
         xy=(n_comp, t),
@@ -172,7 +173,7 @@ ax.set_axisbelow(True)
 
 # Legend
 if len(ax.get_legend_handles_labels()[0]) > 1:
-    leg = ax.legend(fontsize=8, loc="lower right", framealpha=0.95, fancybox=True, borderpad=0.7, handlelength=2.0)
+    leg = ax.legend(fontsize=8, loc="center right", framealpha=0.95, fancybox=True, borderpad=0.7, handlelength=2.0)
     if leg:
         leg.get_frame().set_facecolor(ELEVATED_BG)
         leg.get_frame().set_edgecolor(INK_SOFT)
