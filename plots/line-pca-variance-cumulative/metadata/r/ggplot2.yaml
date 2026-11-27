@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: line-pca-variance-cumulative
 created: '2026-05-29T05:51:55Z'
-updated: '2026-11-27T18:56:14Z'
+updated: '2026-11-27T19:04:00Z'
 generated_by: claude-sonnet
-workflow_run: 46052363061
+workflow_run: 46053207863
 issue: 4131
 language_version: 4.6.1
 library_version: 4.0.3
@@ -12,47 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - 'Clear three-level hierarchy: bold Imprint-green cumulative curve, near-transparent
-    tinted individual-variance bars behind it, muted ink threshold labels'
-  - Threshold labels now sit cleanly above their dashed 90 %/95 % lines, and the bars
-    are named by a direct label
-  - Elbow detected by maximum distance from the chord rather than hard-coded, and
-    the 90 % crossing component (PC6) called out
-  - Theme tokens threaded through every chrome element; both renders read correctly
-    with identical data colors
-  - Clean top-to-bottom R script with set.seed, prcomp/cumsum and ragg output
+  - Elbow drawn as a hollow ring on the curve's own PC3 marker with a green label
+    beside it, a clear focal point
+  - Individual-variance bars stay subordinate behind the cumulative curve and are
+    named by a direct label
+  - 'Theme tokens threaded through every element: grid at alpha(INK, 0.15), INK_SOFT
+    dashed thresholds readable in both themes'
+  - prcomp + cumsum compute the variance from a generated 3-factor dataset; threshold
+    component and elbow are derived, not hard-coded
   weaknesses:
-  - 'VQ-07 (both): the y grid lines are drawn in full-strength INK (#1A1A17 light
-    / #F0EFE8 dark) and read as hard rules, against the style guide''s grid tone of
-    INK at 15 % → alpha(INK, 0.15) at linewidth 0.3. Likely cause: panel.grid.major.y
-    = element_line(color = INK, linewidth = 0.18) without alpha().'
-  - 'SC-02 (both): the elbow is annotated at the bottom of the plot (y = 5 %) far
-    from its curve marker at about 82 %, and the PC3 marker itself looks like every
-    other marker (C4 asks for the elbow on the curve''s own marker) → place the ''PC3
-    elbow'' label beside the PC3 marker and emphasize that marker (larger, ringed).
-    Likely cause: annotate(''text'', x = elbow_pc + 0.35, y = 5, ...).'
-  - 'VQ-02 (both): the ''elbow'' text overlaps the low PC4 bar (bar top near 3.6 %,
-    text spanning about 0-8 %) → keep the label clear of the bars. Likely cause: the
-    elbow annotate at y = 5, which the SC-02 fix moves up to the marker.'
-  - 'Suggestion: annotation text at 3.8 mm (about 10.8 pt) is larger than the 10 pt
-    axis titles; about 3.2 mm would keep the callouts below the axis titles in the
-    hierarchy.'
-  - 'Suggestion: name a concrete sensor domain in the code comments and data so the
-    scenario reads less generic.'
+  - 'VQ-02 (both): the stacked ''95%'' and ''90%'' labels at x = 1.2 sit with their
+    glyphs on the dashed lines below them, the ''95%'' top touches the 100 % grid
+    line, and the ''PC6 / 90%'' call-out''s top touches the 90 % dashed line → keep
+    each label clear of the lines by a few px, e.g. place them to the right edge at
+    the line''s own height with vjust = -0.3 and the PC6 call-out lower (y about 82).
+    Likely cause: annotate(y = 90.7 / 95.7, vjust = 0) and annotate(y = 85) for the
+    call-out.'
+  - 'VQ-03 (dark): the individual-variance bars for PC4-PC15 at alpha 0.13 on #1A1A17
+    nearly vanish → raise the bar alpha in the dark theme (about 0.25) so all bars
+    stay visible while subordinate. Likely cause: geom_col(alpha = 0.13) used for
+    both themes.'
+  - 'DQ-03 (code): the data comment says the elbow lies around components 5-7, but
+    the computed elbow is PC3 (render and elbow_pc agree on 3) → correct the comment
+    to the computed elbow. Likely cause: a stale comment above n_obs.'
+  - 'Suggestion: annotation text at 3.8 mm (about 10.8 pt) is a touch larger than
+    the 10 pt axis titles; about 3.2 mm would keep call-outs below the axis titles
+    in the hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white
-      Chrome: bold dark title 'line-pca-variance-cumulative · r · ggplot2 · anyplot.ai' at about 63 % of the width; axis titles 'Number of Principal Components' and 'Cumulative Explained Variance' in dark ink; tick labels 1-15 and 0 %-100 % in soft ink; y grid lines in full-strength dark ink; L-shaped axis lines
-      Data: #009E73 cumulative line with 15 circle markers rising from 32 % at PC1 to 82 % at PC3 and flattening to 100 %; light green bars (alpha 0.13) for individual variance; gray dashed lines at 90 % and 95 % with '90%'/'95%' labels just above them at the left; dotted green vertical line at PC3 with a green 'PC3 elbow' label at the bottom (overlapping the PC4 bar); 'PC6 90%' callout below the curve; 'Bars: individual variance per component' label in the lower right
+      Background: warm off-white #FAF8F1 across canvas and panel.
+      Chrome: bold dark title "line-pca-variance-cumulative · r · ggplot2 · anyplot.ai" top-left (~63 % of width); dark axis titles "Number of Principal Components" and "Cumulative Explained Variance"; soft-ink ticks 1-15 and 0%-100%; subtle grey horizontal grid every 20 %; L-shaped axis lines, no ticks.
+      Data: #009E73 cumulative line with markers at 15 components, rising from ~32 % to ~82 % at PC3, then flattening to 100 % at PC15; PC3 drawn as a large hollow ring with "PC3 elbow" in green beside it and a dotted green vertical line; dashed ink lines at 90 % and 95 % with labels "90%"/"95%" stacked at the left (touching the lines); "PC6 90%" call-out under the curve at PC6; pale green individual-variance bars (32, 28, 22 % then <4 %) behind the curve with the label "Bars: individual variance per component".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black
-      Chrome: title and axis titles in light cream, ticks and annotations in light gray; grid lines in full-strength light ink; no dark-on-dark text
-      Data: identical #009E73 line, markers and elbow label; bars render as a dark green tint; dashed reference lines light gray and clearly visible
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in soft light grey, grid subtle; no dark-on-dark text.
+      Data: identical #009E73 line, markers and hollow elbow ring as the light render; dashed thresholds in light grey, clearly visible; bars dark green and very faint, the PC4-PC15 bars nearly invisible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,51 +63,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 12 pt, axis titles 10 pt, ticks 8
-          pt, annotations about 10.8 pt); all text readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, annotations about 10.8
+          pt; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: false
-        comment: The 'elbow' label overlaps the PC4 bar (defect line); threshold labels
-          sit just above their lines
+        comment: The stacked 90%/95% labels touch the dashed lines and the 100% grid
+          line, and the PC6 callout touches the 90% line (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 15 sparse markers at size 2.8 with a 1.2 mm line are prominent; bars
-          at alpha 0.13 stay visible but subordinate in both themes
+        passed: false
+        comment: Markers and line prominent; the bars for PC4-PC15 almost vanish on
+          the dark background at alpha 0.13 (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Imprint green series plus neutral ink reference lines; CVD-safe,
-          good contrast in both themes
+        comment: Single hue plus ink; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, plot fills the canvas, nothing cut off or overflowing
+        comment: 3200x1800, panel fills the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; the % unit is carried by the tick labels
+        comment: Descriptive axis titles; percent units on the y ticks
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Green #009E73 series, correct #FAF8F1/#1A1A17 backgrounds, chrome
-          flips; but the y grid is drawn in full INK instead of INK at 15 % (defect
-          line)'
+        passed: true
+        comment: '#009E73 series, grid at alpha(INK, 0.15), correct page backgrounds
+          in both themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,24 +114,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Above the baseline: a clear three-level hierarchy (bold green curve,
-          near-transparent tinted bars, muted ink reference labels)'
+        comment: 'Deliberate two-tier hierarchy: green callout for the elbow, muted
+          ink for threshold labels, translucent subordinate bars'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Ticks removed, L-shaped axis lines, generous margins; the grid density
-          is not refined (full-strength grid lines)
+        comment: Ticks removed, L-shaped axis lines, x grid dropped for discrete components;
+          label spacing near the top is tight
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: 'Beyond the Notes: the 90 % crossing is called out at its component
-          (PC6) in addition to the elbow marker'
+        comment: Hollow ringed elbow marker as focal point and the PC6 call-out for
+          the 90 % crossing go beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,31 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: cumulative explained variance line with markers'
+        comment: Cumulative variance line with markers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Cumulative y, % scale, 90/95 % dashed lines, markers, x from 1, optional
-          bar overlay all present; the elbow label sits at the bottom of the plot,
-          away from the PC3 marker, which itself is not emphasized (C4; defect line)
+        passed: true
+        comment: Cumulative y in %, x from 1, markers at every count, dashed 90/95
+          % lines, elbow annotated on its own marker (C4), optional bars named by
+          a direct label (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = component 1-15 with whole-number ticks, y = cumulative % from
-          0 to 100; marks at their data values
+        comment: x = 1-15 whole-number ticks, y 0-100 % with zero baseline for the
+          bars; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; single series needs no legend; the
-          bars are named by a direct label
+        comment: Mandated title; single series, bars identified by direct label
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -173,22 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Steep rise, elbow at PC3, both thresholds crossed, individual-variance
-          bars shown
+        comment: Steep rise, elbow, both thresholds crossed, flat tail to 100 %
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 15-feature sensor dataset with three latent factors; no
-          generic placeholder labels appear in the render
+        comment: PCA on a 15-feature, 3-factor sensor-style dataset; neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values computed by prcomp on generated data; cumulative curve monotone
-          and ends at 100 %; no Check values in the Notes
+        passed: false
+        comment: 'Checked: curve monotone, ends at 100 % at PC15, 90 % first reached
+          at PC6 as labelled, elbow PC3 computed; the data comment claims the elbow
+          at components 5-7 (defect line); no Check values in the Notes'
     code_quality:
       score: 10
       max: 10
@@ -198,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Reads top to bottom: tokens, data, plot, save; no functions'
+        comment: 'Top to bottom: tokens, data, plot, save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,14 +212,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; elbow geometry has no base-R equivalent call;
-          prcomp and cumsum used
+        comment: prcomp and cumsum; the knee-distance geometry has no available call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave + ragg::agg_png
+        comment: ggsave plot-{THEME}.png with ragg::agg_png
     library_mastery:
       score: 4
       max: 10
@@ -233,8 +228,8 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Idiomatic layering of geom_col/geom_line/geom_point/annotate with
-          scale_y_continuous label function; standard, nothing beyond
+        comment: Standard layering of geom_col/geom_line/geom_point/annotate; nothing
+          beyond
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -244,14 +239,13 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
-  rendered_at: '2026-11-27T18:52:53Z'
+  rendered_at: '2026-11-27T19:00:06Z'
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   - layer-composition
-  - reference-lines
   patterns:
   - data-generation
   dataprep:

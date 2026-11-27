@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 82/100 | Updated: 2026-11-27
+#' Quality: 83/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
@@ -81,9 +81,12 @@ p <- ggplot(df, aes(x = component)) +
   annotate("text", x = thr90 + 0.3, y = 85,
            label = sprintf("PC%d\n90%%", thr90),
            color = INK_MUTED, size = 3.8, hjust = 0, lineheight = 0.9) +
-  annotate("text", x = elbow_pc + 0.35, y = 5,
-           label = sprintf("PC%d\nelbow", elbow_pc),
-           color = IMPRINT_PALETTE[1], size = 3.8, hjust = 0, lineheight = 0.9) +
+  geom_point(data = df[elbow_pc, ], aes(y = cumulative_pct),
+             shape = 21, size = 5.5, stroke = 1.3,
+             color = IMPRINT_PALETTE[1], fill = PAGE_BG) +
+  annotate("text", x = elbow_pc + 0.3, y = var_cum[elbow_pc] - 3,
+           label = sprintf("PC%d elbow", elbow_pc),
+           color = IMPRINT_PALETTE[1], size = 3.8, hjust = 0, vjust = 1) +
   annotate("text", x = 10, y = 9, label = "Bars: individual variance per component",
            color = INK_SOFT, size = 3.8, hjust = 0.5) +
   scale_x_continuous(breaks = seq_len(n_features)) +
@@ -101,7 +104,7 @@ p <- ggplot(df, aes(x = component)) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.18),
+    panel.grid.major.y = element_line(color = alpha(INK, 0.15), linewidth = 0.3),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
     panel.border       = element_blank(),
