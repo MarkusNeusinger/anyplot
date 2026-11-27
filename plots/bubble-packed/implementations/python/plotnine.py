@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-29
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -37,72 +37,64 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — positions 1-4 for four tech segments
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — global tech industry revenue by segment (billions USD, 2024 est.)
-market_data = {
-    "label": [
-        "Cloud",
-        "SaaS",
-        "Security",
-        "Analytics",
-        "Dev Tools",
-        "Chips",
-        "Storage",
-        "Networks",
-        "Displays",
-        "Peripherals",
-        "Consulting",
-        "Tech Svc",
-        "Training",
-        "Managed",
-        "APIs",
-        "Mobile",
-        "Gaming",
-        "Streaming",
-        "Smart Home",
-        "Wearables",
-    ],
-    "value": [52, 38, 29, 24, 16, 48, 31, 27, 18, 12, 34, 22, 14, 11, 9, 44, 35, 26, 17, 13],
-    "group": [
-        "Software",
-        "Software",
-        "Software",
-        "Software",
-        "Software",
-        "Hardware",
-        "Hardware",
-        "Hardware",
-        "Hardware",
-        "Hardware",
-        "Services",
-        "Services",
-        "Services",
-        "Services",
-        "Services",
-        "Consumer",
-        "Consumer",
-        "Consumer",
-        "Consumer",
-        "Consumer",
-    ],
-}
+# Constants
+MIN_RADIUS = 0.22  # radius of the smallest circle, relative to the largest (radius 1)
+GAP = 0.03  # space kept between neighbouring circles
+LARGE_SHARE = 0.5  # circles at or above this share of the largest value carry name and value
+MEDIUM_SHARE = 0.22  # circles at or above this share carry name and value in a smaller size
 
-df = pd.DataFrame(market_data)
+# Columns: set these to your table's column names
+LABEL = "Item"  # role: label
+VALUE = "Revenue (USD billion)"  # role: value
+GROUP = "Tech Segment"  # role: group
 
-# Scale values to radii (area-based for accurate visual perception)
-max_radius = 1.0
-min_radius = 0.22
-df["radius"] = min_radius + (max_radius - min_radius) * np.sqrt(df["value"] / df["value"].max())
+# Data: replace this block with your own table, for example df = pd.read_csv("items.csv")
+df = pd.DataFrame(
+    {
+        LABEL: [
+            "Cloud",
+            "SaaS",
+            "Security",
+            "Analytics",
+            "Dev Tools",
+            "Chips",
+            "Storage",
+            "Networks",
+            "Displays",
+            "Peripherals",
+            "Consulting",
+            "Tech Svc",
+            "Training",
+            "Managed",
+            "APIs",
+            "Mobile",
+            "Gaming",
+            "Streaming",
+            "Smart Home",
+            "Wearables",
+        ],
+        VALUE: [52, 38, 29, 24, 16, 48, 31, 27, 18, 12, 34, 22, 14, 11, 9, 44, 35, 26, 17, 13],
+        GROUP: ["Software"] * 5 + ["Hardware"] * 5 + ["Services"] * 5 + ["Consumer"] * 5,
+    }
+)
 
-# Circle packing — greedy placement with vectorized collision detection
-n = len(df)
-radii = df["radius"].values
-idx = np.argsort(-radii)
-sorted_radii = radii[idx]
-gap = 0.03
+# Plot: reads only df and the constants above
+RADIUS, X, Y, CIRCLE, VALUE_TEXT = "radius", "x", "y", "circle_id", "value_text"
 
+items = df.dropna(subset=[VALUE]).reset_index(drop=True)
+groups = items[GROUP].dropna().unique().tolist()
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
+
+# Area-based radius: circle area is proportional to value
+items[RADIUS] = MIN_RADIUS + (1 - MIN_RADIUS) * np.sqrt(items[VALUE] / items[VALUE].max())
+
+# Circle packing: greedy placement with vectorized collision detection
+n = len(items)
+order = np.argsort(-items[RADIUS].to_numpy())
+sorted_radii = items[RADIUS].to_numpy()[order]
 x_pos = np.zeros(n)
 y_pos = np.zeros(n)
 angles_sweep = np.linspace(0, 2 * np.pi, 72, endpoint=False)
@@ -113,17 +105,14 @@ for i in range(1, n):
     target_r = sorted_radii[i]
 
     for ref in range(i):
-        place_r = sorted_radii[ref] + target_r + gap
+        place_r = sorted_radii[ref] + target_r + GAP
         cx = x_pos[ref] + place_r * np.cos(angles_sweep)
         cy = y_pos[ref] + place_r * np.sin(angles_sweep)
 
-        dx_c = cx[:, np.newaxis] - x_pos[:i][np.newaxis, :]
-        dy_c = cy[:, np.newaxis] - y_pos[:i][np.newaxis, :]
-        dists_c = np.hypot(dx_c, dy_c)
-        valid = np.all(dists_c >= target_r + sorted_radii[:i] + gap, axis=1)
+        dists_c = np.hypot(cx[:, np.newaxis] - x_pos[:i][np.newaxis, :], cy[:, np.newaxis] - y_pos[:i][np.newaxis, :])
+        valid = np.all(dists_c >= target_r + sorted_radii[:i] + GAP, axis=1)
 
-        center_dists = cx**2 + cy**2
-        valid_dists = np.where(valid, center_dists, float("inf"))
+        valid_dists = np.where(valid, cx**2 + cy**2, float("inf"))
         best_k = np.argmin(valid_dists)
         if valid_dists[best_k] < best_dist:
             best_dist = valid_dists[best_k]
@@ -132,9 +121,9 @@ for i in range(1, n):
     x_pos[i] = best_x
     y_pos[i] = best_y
 
-# Force simulation to tighten packing (vectorized with numpy)
+# Force simulation tightens the packing (vectorized)
 tri = np.triu(np.ones((n, n), dtype=bool), k=1)
-min_dists = sorted_radii[:, np.newaxis] + sorted_radii[np.newaxis, :] + gap
+min_dists = sorted_radii[:, np.newaxis] + sorted_radii[np.newaxis, :] + GAP
 
 for _ in range(2000):
     x_pos *= 0.997
@@ -153,49 +142,41 @@ for _ in range(2000):
         x_pos += corr_x.sum(axis=1) - corr_x.sum(axis=0)
         y_pos += corr_y.sum(axis=1) - corr_y.sum(axis=0)
 
-# Restore original order
-x_final = np.zeros(n)
-y_final = np.zeros(n)
-for i, orig_idx in enumerate(idx):
-    x_final[orig_idx] = x_pos[i]
-    y_final[orig_idx] = y_pos[i]
+# Restore the data's order
+items[X] = np.zeros(n)
+items[Y] = np.zeros(n)
+items.loc[order, X] = x_pos
+items.loc[order, Y] = y_pos
 
-df["x"] = x_final
-df["y"] = y_final
-
-# Build circle polygons for geom_polygon
-circle_dfs = []
+# Circle outlines for geom_polygon
 angles = np.linspace(0, 2 * np.pi, 64)
-for i, row in df.iterrows():
-    cx = row["x"] + row["radius"] * np.cos(angles)
-    cy = row["y"] + row["radius"] * np.sin(angles)
-    circle_dfs.append(pd.DataFrame({"x": cx, "y": cy, "label": row["label"], "group": row["group"], "circle_id": i}))
-circles_df = pd.concat(circle_dfs, ignore_index=True)
-circles_df["group"] = pd.Categorical(circles_df["group"], categories=["Software", "Hardware", "Services", "Consumer"])
+circles = pd.DataFrame(
+    {
+        X: (items[X].to_numpy()[:, None] + items[RADIUS].to_numpy()[:, None] * np.cos(angles)).ravel(),
+        Y: (items[Y].to_numpy()[:, None] + items[RADIUS].to_numpy()[:, None] * np.sin(angles)).ravel(),
+        GROUP: np.repeat(items[GROUP].to_numpy(), len(angles)),
+        CIRCLE: np.repeat(np.arange(n), len(angles)),
+    }
+)
+circles[GROUP] = pd.Categorical(circles[GROUP], categories=groups)
 
-# Labels — name and revenue value per bubble
-labels_df = df.copy()
-labels_df["value_label"] = labels_df["value"].apply(lambda v: f"${v}B")
+# Labels: name and value per bubble, tiered by bubble size
+items[VALUE_TEXT] = items[VALUE].map(lambda v: f"${v:g}B")
+share = items[VALUE] / items[VALUE].max()
+large = items[share >= LARGE_SHARE]
+medium = items[(share >= MEDIUM_SHARE) & (share < LARGE_SHARE)]
+small = items[share < MEDIUM_SHARE]
 
-# Group colors using Imprint palette (canonical positions 1-4)
-group_colors = {
-    "Software": IMPRINT_PALETTE[0],  # #009E73 brand green
-    "Hardware": IMPRINT_PALETTE[1],  # #C475FD lavender
-    "Services": IMPRINT_PALETTE[2],  # #4467A3 blue
-    "Consumer": IMPRINT_PALETTE[3],  # #BD8233 ochre
-}
+# Group totals for the subtitle
+group_totals = items.groupby(GROUP, sort=False)[VALUE].sum()
+subtitle_text = " · ".join(f"{g}: \\${t:g}B" for g, t in group_totals.items())
 
-# Group totals for subtitle
-group_order = ["Software", "Hardware", "Services", "Consumer"]
-group_totals = df.groupby("group")["value"].sum()
-subtitle_text = " · ".join(f"{g}: ${group_totals[g]}B" for g in group_order)
-
-# Tight viewport bounds for optimal canvas utilization
+# Square viewport around the packed cluster
 pad = 0.12
-x_lo = (df["x"] - df["radius"]).min() - pad
-x_hi = (df["x"] + df["radius"]).max() + pad
-y_lo = (df["y"] - df["radius"]).min() - pad
-y_hi = (df["y"] + df["radius"]).max() + pad
+x_lo = (items[X] - items[RADIUS]).min() - pad
+x_hi = (items[X] + items[RADIUS]).max() + pad
+y_lo = (items[Y] - items[RADIUS]).min() - pad
+y_hi = (items[Y] + items[RADIUS]).max() + pad
 half_span = max(x_hi - x_lo, y_hi - y_lo) / 2
 cx_mid = (x_lo + x_hi) / 2
 cy_mid = (y_lo + y_hi) / 2
@@ -204,56 +185,23 @@ cy_mid = (y_lo + y_hi) / 2
 title = "bubble-packed · python · plotnine · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
-# Plot — layered grammar of graphics composition
 plot = (
     ggplot()
-    # Layer 1: Circle fills with theme-adaptive borders for group separation
-    + geom_polygon(data=circles_df, mapping=aes(x="x", y="y", fill="group", group="circle_id"), color=PAGE_BG, size=0.6)
-    # Layer 2: Name labels — large bubbles (value ≥ 26)
+    + geom_polygon(data=circles, mapping=aes(x=X, y=Y, fill=GROUP, group=CIRCLE), color=PAGE_BG, size=0.6)
+    # Name labels per size tier
     + geom_text(
-        data=labels_df[labels_df["value"] >= 26],
-        mapping=aes(x="x", y="y", label="label"),
-        size=3.5,
-        color="white",
-        fontweight="bold",
-        nudge_y=0.09,
+        data=large, mapping=aes(x=X, y=Y, label=LABEL), size=3.5, color="white", fontweight="bold", nudge_y=0.09
     )
-    # Layer 3: Name labels — medium bubbles (12 ≤ value < 26)
     + geom_text(
-        data=labels_df[(labels_df["value"] >= 12) & (labels_df["value"] < 26)],
-        mapping=aes(x="x", y="y", label="label"),
-        size=3.0,
-        color="white",
-        fontweight="bold",
-        nudge_y=0.06,
+        data=medium, mapping=aes(x=X, y=Y, label=LABEL), size=3.0, color="white", fontweight="bold", nudge_y=0.06
     )
-    # Layer 4: Name labels — small bubbles (value < 12)
+    + geom_text(data=small, mapping=aes(x=X, y=Y, label=LABEL), size=2.5, color="white", fontweight="bold")
+    # Value labels for large and medium bubbles
+    + geom_text(data=large, mapping=aes(x=X, y=Y, label=VALUE_TEXT), size=3.0, color="white", alpha=0.9, nudge_y=-0.12)
     + geom_text(
-        data=labels_df[labels_df["value"] < 12],
-        mapping=aes(x="x", y="y", label="label"),
-        size=2.5,
-        color="white",
-        fontweight="bold",
+        data=medium, mapping=aes(x=X, y=Y, label=VALUE_TEXT), size=2.5, color="white", alpha=0.85, nudge_y=-0.09
     )
-    # Layer 5: Revenue value labels — large bubbles
-    + geom_text(
-        data=labels_df[labels_df["value"] >= 26],
-        mapping=aes(x="x", y="y", label="value_label"),
-        size=3.0,
-        color="white",
-        alpha=0.9,
-        nudge_y=-0.12,
-    )
-    # Layer 6: Revenue value labels — medium bubbles
-    + geom_text(
-        data=labels_df[(labels_df["value"] >= 12) & (labels_df["value"] < 26)],
-        mapping=aes(x="x", y="y", label="value_label"),
-        size=2.5,
-        color="white",
-        alpha=0.85,
-        nudge_y=-0.09,
-    )
-    + scale_fill_manual(values=group_colors, name="Tech Segment")
+    + scale_fill_manual(values=group_colors, limits=groups, name=GROUP)
     + coord_fixed(xlim=(cx_mid - half_span, cx_mid + half_span), ylim=(cy_mid - half_span, cy_mid + half_span))
     + labs(title=title, subtitle=subtitle_text)
     + theme_void()
