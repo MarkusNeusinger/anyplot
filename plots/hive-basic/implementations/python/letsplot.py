@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hive-basic: Basic Hive Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-27
@@ -21,11 +21,8 @@ from lets_plot import (
     ggplot,
     ggsave,
     ggsize,
-    guide_legend,
-    guides,
     labs,
     scale_fill_manual,
-    scale_size,
     theme,
     theme_void,
 )
@@ -130,7 +127,8 @@ lookup = nodes.set_index("module")
 # Edges as quadratic Bezier curves pulled toward the center
 t = np.linspace(0, 1, 24)
 curves = []
-for source, target in zip(df[SOURCE], df[TARGET], strict=True):
+between = df[df[SOURCE_TYPE] != df[TARGET_TYPE]]
+for source, target in zip(between[SOURCE], between[TARGET], strict=True):
     sx, sy = lookup.loc[source, ["x", "y"]]
     tx, ty = lookup.loc[target, ["x", "y"]]
     cx, cy = (sx + tx) * CURVE_PULL, (sy + ty) * CURVE_PULL
@@ -166,24 +164,19 @@ labels = pd.DataFrame(
     }
 )
 
-reach = 1.35
+x_lim, y_lim = (-0.75, 1.5), (-1.15, 1.15)  # drawn extent including the group labels
 
 plot = (
     ggplot()
     + geom_path(aes(x="x", y="y", group="group"), data=axis_lines, color=INK_SOFT, size=0.8, alpha=0.5)
     + geom_path(aes(x="x", y="y", group="edge"), data=edges, color=INK_SOFT, size=0.5, alpha=0.5)
-    + geom_point(
-        aes(x="x", y="y", fill="group", size="degree"), data=nodes, color=INK_SOFT, stroke=0.6, shape=21, alpha=0.9
-    )
+    + geom_point(aes(x="x", y="y", fill="group"), data=nodes, color=INK_SOFT, stroke=0.6, shape=21, size=6, alpha=0.9)
     + geom_text(aes(x="x", y="y", label="label"), data=labels, size=7, fontface="bold", color=INK, show_legend=False)
     + scale_fill_manual(values=IMPRINT_PALETTE, breaks=groups)
-    + scale_size(range=[3, 8])
-    + guides(size=guide_legend(override_aes={"fill": INK_SOFT}))
-    + coord_fixed(ratio=1, xlim=(-reach, reach), ylim=(-reach, reach))
+    + coord_fixed(ratio=1, xlim=x_lim, ylim=y_lim)
     + labs(
         title="hive-basic · python · letsplot · anyplot.ai",
         fill="Module type",
-        size="Connections (node size)",
         caption="Distance from the center: rank by connections within each axis",
     )
     + theme_void()
