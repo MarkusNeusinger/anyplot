@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-27
@@ -95,12 +95,6 @@ y_axis = alt.Y(
     CUMULATIVE.translate(ESCAPE), type="quantitative", title=CUMULATIVE, scale=y_scale, axis=alt.Axis(format=".0f")
 )
 threshold_color = alt.Color(THRESHOLD.translate(ESCAPE), type="nominal", scale=threshold_scale, legend=None)
-
-area = (
-    alt.Chart(cum_df)
-    .mark_area(opacity=0.06, color=BRAND)
-    .encode(x=x_enc, y=y_enc, y2=alt.datum(float(y_scale.domain[0])))
-)
 
 line = alt.Chart(cum_df).mark_line(strokeWidth=3, color=BRAND, interpolate="monotone").encode(x=x_axis, y=y_axis)
 
@@ -203,8 +197,7 @@ elbow_label = (
 
 chart = (
     (
-        area
-        + threshold_lines
+        threshold_lines
         + hover_rule
         + line
         + points
