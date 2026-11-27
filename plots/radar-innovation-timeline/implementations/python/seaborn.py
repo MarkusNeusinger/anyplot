@@ -1,7 +1,7 @@
 """anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 79/100 | Updated: 2026-11-27
+Quality: pending | Updated: 2026-11-27
 """
 
 import os
