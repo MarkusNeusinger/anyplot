@@ -2,49 +2,57 @@ library: altair
 language: python
 specification_id: pie-basic
 created: '2025-12-23T00:35:02Z'
-updated: '2026-05-28T11:41:17Z'
+updated: '2026-11-27T02:44:20Z'
 generated_by: claude-sonnet
-workflow_run: 26571641796
+workflow_run: 45929412443
 issue: 678
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Excellent Imprint palette compliance: 6 categories in canonical order, correct
-    theme-adaptive chrome in both renders'
-  - 'Clever Altair-specific technique: radiusOffset + transform_filter split to implement
-    exploded slice without manual coordinate math'
-  - 'Thoughtful small-slice handling: separate text layer with larger radius and smaller
-    font for 3%/4% slices prevents crowding'
-  - 'Perfect spec compliance: all 4 required features (percentages, distinct colors,
-    legend, exploded slice) fully implemented'
-  - 'Factually grounded data: cloud market shares align with real 2023 figures; neutral
-    business context'
+  - 'Slice angles come from explicit start/end fields on one shared theta scale (theta
+    + theta2), so every layer, including the exploded one, places its slice at the
+    true share: AWS 31 %, Azure 24 %, Others 27 % close the full circle'
+  - 'Native Altair explode: radiusOffset on the largest slice''s arc and its label,
+    chosen from the data (exploded = value == max) rather than a hard-coded category'
+  - Percentage labels drawn in theme ink (alt.value(INK) / INK_SOFT), readable in
+    both renders; the 3 % and 4 % slivers get a separate, farther and smaller label
+    layer
+  - Correct canvas via width=600, height=600 with autosize fit and padding=10; theme-adaptive
+    chrome and the Imprint palette in canonical order
+  - Tooltips with provider and share in the HTML output
   weaknesses:
-  - 'Percentage label colors are driven by the inherited Color encoding rather than
-    the intended INK/INK_SOFT mark property. Fix: add .encode(color=alt.value(INK))
-    to override the encoding so labels remain readable in both themes regardless of
-    slice hue.'
-  - Blue (#4467A3) 11% label on dark background (#1A1A17) yields ~3.3:1 contrast (marginal
-    for WCAG large text). The above fix would eliminate this concern by switching
-    labels to theme-adaptive INK.
+  - 'SC-02 (both): the 3 % and 4 % labels float about 60 view-px beyond their narrow
+    Oracle and Alibaba slices with no leader line, as the spec''s label bullet asks
+    for narrow slices → a short leader line from each sliver''s edge to its label,
+    or the label pulled close to the slice. Likely cause: labels_small at radius=230
+    against an outerRadius of 170 with no rule layer.'
+  - 'VQ-05 (both): the legend box sits left of centre (about x 35–1383 of 1932) under
+    a centred pie and title → centre it under the pie. Likely cause: orient="bottom"
+    legend with fixed columns, no legend direction/anchor that centres it (e.g. legendX
+    or orient none with legendX at the view centre, or a narrower columns setting).'
+  - 'CQ-05 (code): the mandatory fit-to-canvas block from the altair library prompt
+    is missing after the PNG save → add the inline PIL block (TW, TH = 2400, 2400).
+    Likely cause: the block was dropped because the chart already fits.'
+  - 'Suggestion: a slightly smaller pie radius ratio to the label ring would bring
+    the outer labels closer to their slices.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "pie-basic · python · altair · anyplot.ai" in dark ink, clearly readable. Subtitle "Global Cloud Infrastructure Market Share" in lighter ink. Legend "Provider" title in dark ink, labels in muted ink — all readable.
-      Data: 6 slices using Imprint palette in canonical order: AWS green (#009E73), Azure lavender (#C475FD), Google Cloud blue (#4467A3), Alibaba ochre (#BD8233), Oracle red (#AE3030), Others cyan (#2ABCCD). First series (AWS) correctly uses brand green. Percentage labels colored by slice (encoding override), positioned outside pie. AWS slice exploded with radiusOffset=25.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "pie-basic · python · altair · anyplot.ai" in dark ink, subtitle "Global Cloud Infrastructure Market Share" in INK_SOFT, centred; legend "Provider" in an elevated off-white box with a soft outline at the bottom, slightly left of centre. All text readable.
+      Data: flat pie with six slices in Imprint order — AWS #009E73 (31 %, pulled out to the upper right), Azure #C475FD (24 %), Google Cloud #4467A3 (11 %), Alibaba #BD8233 (4 %), Oracle #AE3030 (3 %), Others #2ABCCD (27 %). Angles match the shares. Bold percentage labels in dark ink outside each slice; 3 % and 4 % smaller in INK_SOFT, farther out, without leader lines. No axes or grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle rendered in light (#F0EFE8) text — readable. Legend box uses elevated dark background (#242420) with light label text — correctly theme-adapted. No dark-on-dark failures for chrome elements.
-      Data: Slice colors identical to light render (same green, purple, blue, ochre, red, cyan). Blue (#4467A3) "11%" label has ~3.3:1 contrast on near-black background (borderline WCAG large-text but visually legible at 2400×2400 canvas size).
-      Legibility verdict: PASS — all text readable, marginal blue label contrast noted but acceptable at canvas size.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in light ink #F0EFE8, subtitle and legend labels in #B8B7B0, legend box #242420 with light outline. No dark-on-dark text.
+      Data: slice colors identical to the light render; percentage labels in light ink, small-slice labels in INK_SOFT, all readable. Slice separators in the page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,83 +60,75 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes. Minor: percentage
-          label colors driven by Color encoding override, not INK token as intended;
-          blue 11% label has ~3.3:1 contrast on dark background (marginal at large
-          size).'
+        comment: Title 16, labels 16/13 bold, legend 12/11; all readable in both themes,
+          labels in theme ink
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping labels. Small slices pushed to larger radius (250
-          vs 228) prevents crowding.
+        comment: No label collisions; 3 % and 4 % labels separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 6 slices visible including 3% Oracle sliver. Exploded AWS slice
-          clearly identified.
+        comment: All six slices visible including the 3 % sliver; legend glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; 6 distinct hues well-separated perceptually.
+        comment: Imprint palette, page-colored separators between neighbours
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 2400x2400 square canvas correct for pie. Pie, title+subtitle, and
-          legend fill canvas well. Balanced whitespace.
+        passed: false
+        comment: Square canvas filled; legend box off-centre to the left under a centred
+          pie (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (N/A for pie); descriptive subtitle provides context; legend
-          titled Provider.
+        comment: N/A axes; descriptive subtitle and legend title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series AWS -> #009E73. All 6 positions in canonical order.
-          Background #FAF8F1 light / #1A1A17 dark. Chrome correctly theme-adaptive.'
+        comment: 'AWS #009E73 first, canonical Imprint order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Clearly above defaults: descriptive subtitle, corner radius + pad
-          angle, different text radii for large vs small slices, custom legend styling.
-          Professional and polished.'
+        passed: false
+        comment: Subtitle hierarchy, tiered label sizes and tones for slivers, rounded
+          slice corners
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: No grid, clean view (strokeWidth=0), generous whitespace, slices
-          separated by themed stroke, custom legend box.
+        passed: false
+        comment: Page-colored slice strokes with padAngle, no view frame, elevated
+          legend box
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Exploded AWS slice highlights market leader. Different radii for
-          small labels reduce crowding and signal their weight. Subtitle frames real-world
-          context.
+        passed: false
+        comment: Explode is spec-required; no further hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,27 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pie chart using mark_arc with stacked theta encoding.
+        comment: Single flat pie, no hollow centre or extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Percentage labels, distinct colors, legend, largest slice (AWS) exploded
-          — all present.
+        passed: false
+        comment: Percentages, distinct colors, legend, largest slice exploded; narrow-slice
+          labels lack leader lines (C2, defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value->theta, category->color; all 6 slices visible.
+        comment: Angles proportional to shares on a shared theta domain; labels at
+          slice midpoints
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: pie-basic · python · altair · anyplot.ai. Legend labels match
-          all 6 categories.'
+        comment: Mandated title; legend names all six providers
     data_quality:
       score: 15
       max: 15
@@ -166,24 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 providers spanning 3%-31%, showing dominant players and small ones;
-          full variety.
+        comment: Dominant, mid and sliver slices
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cloud infrastructure market share is real, neutral, business/technology
-          scenario.
+        comment: Cloud infrastructure market share, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AWS 31%, Azure 24%, GCP 11%, Alibaba 4%, Oracle 3%, Others 27% consistent
-          with ~2023 cloud market figures.
+        comment: Shares sum to 100; labels 31/24/11/4/3/27 % match the data and the
+          drawn angles (AWS boundary ~110 deg, Azure ~199 deg)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,61 +189,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> sys.path fix -> data -> base chart -> layers
-          -> save. No functions or classes.'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hardcoded; fully deterministic.
+        comment: Hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, pandas, PIL — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic; transform_filter splits used elegantly; PAD-only
-          save logic is correct.
+        comment: Short pandas cumsum for start/end, data-driven explode flag
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png (with padding) and plot-{THEME}.html. Correct
-          API usage.
+        passed: false
+        comment: Saves plot-{THEME}.png/.html, but the mandated fit-to-canvas block
+          is missing (defect line)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of layered chart composition, transform_filter, alt.Title
-          with subtitle, configure_legend/configure_view. Solid idiomatic Altair.
+        passed: false
+        comment: Layered chart, theta/theta2 with shared scale, transform_filter splits,
+          autosize fit
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Altair's radiusOffset + transform_filter split for exploded-slice
-          effect — genuinely Altair-specific. Multi-layer composition with separate
-          tooltip encodings per layer also distinctive.
+        passed: false
+        comment: radiusOffset explode, padAngle/cornerRadius arcs, HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
+  rendered_at: '2026-11-27T02:40:22Z'
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
   - layer-composition
-  - hover-tooltips
   - html-export
+  - hover-tooltips
+  - polar-projection
   patterns: []
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  - normalization
+  styling:
+  - minimal-chrome
+  - edge-highlighting

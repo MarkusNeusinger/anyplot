@@ -1,7 +1,7 @@
 """ anyplot.ai
 pie-basic: Basic Pie Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-28
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -15,7 +15,6 @@ sys.path[:] = [p for p in sys.path if os.path.normcase(os.path.abspath(p if p el
 
 import altair as alt
 import pandas as pd
-from PIL import Image
 
 
 # Theme tokens
@@ -24,90 +23,96 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — cloud infrastructure market share
-data = pd.DataFrame(
-    {"category": ["AWS", "Azure", "Google Cloud", "Alibaba", "Oracle", "Others"], "value": [31, 24, 11, 4, 3, 27]}
+# Constants
+SMALL_SLICE = 5  # slices below this share (%) get their label pushed further out
+
+# Columns: set these to your table's column names
+PROVIDER = "Provider"  # role: category
+SHARE = "Market share (%)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("shares.csv")
+df = pd.DataFrame(
+    {PROVIDER: ["AWS", "Azure", "Google Cloud", "Alibaba", "Oracle", "Others"], SHARE: [31, 24, 11, 4, 3, 27]}
 )
 
-total = data["value"].sum()
-data["percentage"] = data["value"] / total * 100
-data["label"] = data["percentage"].apply(lambda x: f"{x:.0f}%")
-data["order"] = range(len(data))
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+provider, share = PROVIDER.translate(ESCAPE), SHARE.translate(ESCAPE)
 
-domain = data["category"].tolist()
-color_scale = alt.Scale(domain=domain, range=IMPRINT_PALETTE)
+plot_df = df.assign(pct=df[SHARE] / df[SHARE].sum() * 100, exploded=df[SHARE] == df[SHARE].max())
+plot_df["label"] = plot_df["pct"].round().astype("Int64").astype(str) + "%"
+plot_df["end"] = plot_df[SHARE].cumsum()
+plot_df["start"] = plot_df["end"] - plot_df[SHARE]
+plot_df["mid"] = (plot_df["start"] + plot_df["end"]) / 2
+theta_scale = alt.Scale(domain=[0, float(df[SHARE].sum())])
+plot_df["small"] = plot_df["pct"] < SMALL_SLICE
 
-title_str = "pie-basic · python · altair · anyplot.ai"
-
-# Shared base encodings
-base = alt.Chart(data).encode(
-    theta=alt.Theta("value:Q", stack=True),
-    order=alt.Order("order:O"),
+base = alt.Chart(plot_df).encode(
     color=alt.Color(
-        "category:N",
-        scale=color_scale,
+        provider,
+        type="nominal",
+        title=PROVIDER,
+        scale=alt.Scale(domain=df[PROVIDER].tolist(), range=IMPRINT_PALETTE),
         legend=alt.Legend(
-            title="Provider",
             titleFontSize=12,
             labelFontSize=11,
             symbolSize=180,
             orient="bottom",
             direction="horizontal",
-            columns=6,
+            columns=len(df),
             titleAnchor="middle",
         ),
-    ),
-)
-
-# Non-AWS pie slices
-pie = (
-    base.transform_filter(alt.datum.category != "AWS")
-    .mark_arc(outerRadius=185, innerRadius=0, stroke=PAGE_BG, strokeWidth=2, padAngle=0.02, cornerRadius=3)
-    .encode(tooltip=[alt.Tooltip("category:N", title="Provider"), alt.Tooltip("value:Q", title="Market Share (%)")])
-)
-
-# Exploded AWS slice — emphasises the market leader
-exploded_aws = (
-    base.transform_filter(alt.datum.category == "AWS")
-    .mark_arc(
-        outerRadius=185, innerRadius=0, radiusOffset=25, stroke=PAGE_BG, strokeWidth=2.5, padAngle=0.04, cornerRadius=3
     )
-    .encode(tooltip=[alt.Tooltip("category:N", title="Provider"), alt.Tooltip("value:Q", title="Market Share (%)")])
+)
+tooltip = [alt.Tooltip(provider, title=PROVIDER), alt.Tooltip(share, title=SHARE)]
+
+# Slices that stay joined
+pie = (
+    base.transform_filter(~alt.datum.exploded)
+    .mark_arc(outerRadius=170, innerRadius=0, stroke=PAGE_BG, strokeWidth=2, padAngle=0.02, cornerRadius=3)
+    .encode(theta=alt.Theta("start", type="quantitative", scale=theta_scale), theta2="end", tooltip=tooltip)
 )
 
-# Percentage labels for slices ≥5% at standard radius
-text_main = (
-    base.transform_filter((alt.datum.category != "AWS") & (alt.datum.percentage >= 5))
-    .mark_text(radius=228, fontSize=16, fontWeight="bold", color=INK)
-    .encode(text="label:N")
+# Exploded slice: the largest one, pulled out of the circle
+exploded = (
+    base.transform_filter(alt.datum.exploded)
+    .mark_arc(
+        outerRadius=170, innerRadius=0, radiusOffset=25, stroke=PAGE_BG, strokeWidth=2.5, padAngle=0.04, cornerRadius=3
+    )
+    .encode(theta=alt.Theta("start", type="quantitative", scale=theta_scale), theta2="end", tooltip=tooltip)
 )
 
-# Small slices (<5%) pushed further out to reduce crowding between 3% and 4% labels
-text_small = (
-    base.transform_filter((alt.datum.category != "AWS") & (alt.datum.percentage < 5))
-    .mark_text(radius=250, fontSize=13, fontWeight="bold", color=INK_SOFT)
-    .encode(text="label:N")
+# Percentage labels in theme ink (the color override keeps the slice hue off the text)
+labels_main = (
+    base.transform_filter(~alt.datum.exploded & ~alt.datum.small)
+    .mark_text(radius=210, fontSize=16, fontWeight="bold")
+    .encode(theta=alt.Theta("mid", type="quantitative", scale=theta_scale), text="label:N", color=alt.value(INK))
 )
-
-# AWS label with matching radiusOffset
-text_aws = (
-    base.transform_filter(alt.datum.category == "AWS")
-    .mark_text(radius=228, radiusOffset=25, fontSize=16, fontWeight="bold", color=INK)
-    .encode(text="label:N")
+labels_small = (
+    base.transform_filter(~alt.datum.exploded & alt.datum.small)
+    .mark_text(radius=230, fontSize=13, fontWeight="bold")
+    .encode(theta=alt.Theta("mid", type="quantitative", scale=theta_scale), text="label:N", color=alt.value(INK_SOFT))
+)
+labels_exploded = (
+    base.transform_filter(alt.datum.exploded)
+    .mark_text(radius=210, radiusOffset=25, fontSize=16, fontWeight="bold")
+    .encode(theta=alt.Theta("mid", type="quantitative", scale=theta_scale), text="label:N", color=alt.value(INK))
 )
 
 chart = (
-    alt.layer(pie, exploded_aws, text_main, text_small, text_aws)
+    alt.layer(pie, exploded, labels_main, labels_small, labels_exploded)
     .properties(
-        width=500,
-        height=460,
+        width=600,
+        height=600,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(
-            text=title_str,
+            text="pie-basic · python · altair · anyplot.ai",
             subtitle="Global Cloud Infrastructure Market Share",
             fontSize=16,
             subtitleFontSize=12,
@@ -122,22 +127,5 @@ chart = (
     )
 )
 
-# Save PNG targeting 2400×2400 (square — pie chart)
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-# PAD-only-to-target (2400×2400) — DO NOT crop
-TW, TH = 2400, 2400
-PAGE_BG_RGB = tuple(int(PAGE_BG.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG_RGB)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
