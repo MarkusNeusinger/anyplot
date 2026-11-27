@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
@@ -15,8 +15,6 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
-    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
@@ -35,18 +33,18 @@ from plotnine import (
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-categories = ["Engineering", "Marketing", "Sales", "Support", "Research"]
-records = []
+# Constants
+DEPARTMENT = "Department"  # role: category
+SALARY = "Salary ($)"  # role: value
 
-for cat in categories:
+# Data: replace this block with your own table, for example df = pd.read_csv("salaries.csv")
+np.random.seed(42)
+records = []
+for cat in ["Engineering", "Marketing", "Sales", "Support", "Research"]:
     n = np.random.randint(60, 120)
     if cat == "Engineering":
         values = np.random.normal(95000, 15000, n)
@@ -60,67 +58,22 @@ for cat in categories:
         values = np.random.normal(55000, 8000, n)
     else:  # Research
         values = np.random.normal(85000, 20000, n)
-    records.extend({"department": cat, "salary": v} for v in values)
-
+    records.extend({DEPARTMENT: cat, SALARY: v} for v in values)
 df = pd.DataFrame(records)
-dept_order = ["Support", "Marketing", "Sales", "Research", "Engineering"]
-df["department"] = pd.Categorical(df["department"], categories=dept_order, ordered=True)
-
-medians = df.groupby("department", observed=True)["salary"].median()
-eng_median = medians["Engineering"]
-sup_median = medians["Support"]
-gap = eng_median - sup_median
 
 # Plot
+dept_order = df.groupby(DEPARTMENT)[SALARY].median().sort_values().index.tolist()
+df[DEPARTMENT] = pd.Categorical(df[DEPARTMENT], categories=dept_order, ordered=True)
+
 plot = (
-    ggplot(df, aes(x="department", y="salary", fill="department"))
+    ggplot(df, aes(x=DEPARTMENT, y=SALARY, fill=DEPARTMENT))
     + geom_boxplot(
         outlier_size=2.5, outlier_alpha=0.65, outlier_colour=INK_SOFT, size=0.5, alpha=0.85, width=0.6, color=INK_SOFT
     )
     + stat_summary(fun_y=np.median, geom="point", size=4, shape="D", color=INK, fill=INK)
-    + scale_fill_manual(values=IMPRINT_PALETTE[:5])
-    + scale_y_continuous(labels=lambda vals: [f"${v / 1000:.0f}k" for v in vals], breaks=range(20000, 160001, 20000))
-    + coord_cartesian(ylim=(12000, 160000))
-    # Gap annotation — bracket style with ticks at Support (x=1) and Engineering (x=5)
-    + annotate(
-        "text",
-        x=3,
-        y=157000,
-        label=f"Engineering earns ${gap / 1000:.0f}k more than Support",
-        color=INK,
-        size=4.0,
-        ha="center",
-        fontweight="bold",
-    )
-    + annotate("segment", x=1, xend=5, y=152500, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
-    + annotate("segment", x=1, xend=1, y=149000, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
-    + annotate("segment", x=5, xend=5, y=149000, yend=152500, color=INK_SOFT, size=0.6, alpha=0.65)
-    # Senior hires: diagonal connector from Sales outlier cluster to label
-    + annotate(
-        "label",
-        x=4.1,
-        y=143000,
-        label="Senior hires\nabove market rate",
-        size=4.0,
-        color=INK,
-        fill=ELEVATED_BG,
-        alpha=0.92,
-        label_size=0,
-        ha="center",
-    )
-    + annotate("segment", x=3.08, xend=4.0, y=136500, yend=141000, color=INK_SOFT, size=0.5, alpha=0.65)
-    # Support tight distribution insight
-    + annotate(
-        "text",
-        x=1,
-        y=24000,
-        label="Narrow spread\n(σ ≈ $8k)",
-        color=INK_MUTED,
-        size=3.8,
-        ha="center",
-        fontstyle="italic",
-    )
-    + labs(x="Department", y="Salary ($)", title="box-basic · python · plotnine · anyplot.ai")
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=dept_order)
+    + scale_y_continuous(labels=lambda vals: [f"${v / 1000:.0f}k" for v in vals])
+    + labs(title="box-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
