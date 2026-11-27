@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-basic: Basic Bar Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -11,6 +11,7 @@ import sys
 # Prevent this file from shadowing the installed pygal package
 sys.path = [p for p in sys.path if not p.endswith("/implementations/python")]
 
+import cairosvg  # noqa: E402
 import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -41,8 +42,6 @@ df = pd.DataFrame(
 ranked = df.sort_values(VISITS, ascending=False)
 categories = ranked[CHANNEL].tolist()
 values = ranked[VISITS].tolist()
-leader = ranked.iloc[0]
-share = leader[VISITS] / ranked[VISITS].sum()
 top = ranked[VISITS].max()
 
 # Leader in brand green, the rest in the muted token
@@ -77,7 +76,7 @@ custom_style = Style(
 chart = pygal.Bar(
     width=3200,
     height=1800,
-    title=f"bar-basic · python · pygal · anyplot.ai\n{leader[CHANNEL]} leads Q4 2025 traffic at {share:.0%} share",
+    title="Website Traffic by Channel · bar-basic · python · pygal · anyplot.ai",
     x_title=CHANNEL,
     y_title=VISITS,
     style=custom_style,
@@ -102,7 +101,9 @@ chart.y_labels = y_ticks
 chart.x_labels = categories
 chart.add(VISITS, bar_data)
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+# Save: pygal sets value labels a sixth of the font size above the bar top, so the
+# commas touch it; a dy on each value text lifts it clear of the bar
+svg = chart.render().replace(b'class="value"', b'class="value" dy="-14"')
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg)
+cairosvg.svg2png(bytestring=svg, write_to=f"plot-{THEME}.png")
