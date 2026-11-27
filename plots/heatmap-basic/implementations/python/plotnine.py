@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-28
@@ -33,10 +33,19 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint diverging colormap: matte-red → theme-adaptive midpoint → blue
+# Imprint diverging colormap (fields): matte-red -> page color at the midpoint -> blue
 CMAP_MID = "#FAF8F1" if THEME == "light" else "#1A1A17"
 
-# Data — quarterly growth rates (%) across 8 departments over 8 quarters
+# Constants
+DARK_SHARE = 0.6  # a cell beyond this share of the colorbar end gets white text on the light theme
+BREAK_STEP = 15  # colorbar tick spacing
+
+# Columns: set these to your table's column names
+QUARTER = "Quarter"  # role: x
+DEPARTMENT = "Department"  # role: y
+GROWTH = "Growth (%)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("growth.csv")
 np.random.seed(42)
 departments = ["Engineering", "Marketing", "Sales", "Finance", "Operations", "HR", "Research", "Support"]
 quarters = ["Q1 '23", "Q2 '23", "Q3 '23", "Q4 '23", "Q1 '24", "Q2 '24", "Q3 '24", "Q4 '24"]
@@ -52,45 +61,34 @@ values[6, 6] = 33.7  # Research surge Q3 '24
 dept_idx, qtr_idx = np.meshgrid(np.arange(8), np.arange(8), indexing="ij")
 df = pd.DataFrame(
     {
-        "Department": pd.Categorical(
-            [departments[i] for i in dept_idx.ravel()], categories=departments[::-1], ordered=True
-        ),
-        "Quarter": pd.Categorical([quarters[j] for j in qtr_idx.ravel()], categories=quarters, ordered=True),
-        "Growth (%)": values.ravel(),
+        QUARTER: [quarters[j] for j in qtr_idx.ravel()],
+        DEPARTMENT: [departments[i] for i in dept_idx.ravel()],
+        GROWTH: values.ravel(),
     }
 )
 
-# Theme-adaptive text color: white on dark extremes, INK on mid-range
-if THEME == "light":
-    df["text_color"] = np.where(df["Growth (%)"] < -20, "white", np.where(df["Growth (%)"] > 28, "white", INK))
-else:
-    df["text_color"] = INK  # light cream on all dark cells in dark theme
+# Plot: reads only df and the constants above
+low = np.floor(df[GROWTH].min() / 5) * 5
+high = np.ceil(df[GROWTH].max() / 5) * 5
+breaks = np.arange(np.ceil(low / BREAK_STEP) * BREAK_STEP, high + 1, BREAK_STEP)
 
-df["label"] = [f"{v:+.1f}" for v in df["Growth (%)"]]
+# Cell text: white on the strongly colored cells of the light theme, INK everywhere else
+share = np.where(df[GROWTH] > 0, df[GROWTH] / high, df[GROWTH] / low)
+df["label"] = [f"{v:+.1f}" for v in df[GROWTH]]
+df["text_color"] = np.where((share > DARK_SHARE) & (THEME == "light"), "white", INK)
 
-# Standard title format — no descriptive prefix needed on square canvas (2400px wide)
 title = "heatmap-basic · python · plotnine · anyplot.ai"
-n = len(title)
-title_fs = max(8, round(12 * 67 / n)) if n > 67 else 12
+title_fs = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
-# Plot
 plot = (
-    ggplot(df, aes(x="Quarter", y="Department"))
-    + geom_tile(aes(fill="Growth (%)"), color=INK_SOFT, size=0.5)
-    + geom_text(aes(label="label", color="text_color"), size=3, fontweight="bold", show_legend=False)
-    + scale_fill_gradient2(
-        low="#AE3030",
-        mid=CMAP_MID,
-        high="#4467A3",
-        midpoint=0,
-        name="Growth (%)",
-        limits=(-35, 40),
-        breaks=[-30, -15, 0, 15, 30],
-    )
+    ggplot(df, aes(x=QUARTER, y=DEPARTMENT))
+    + geom_tile(aes(fill=GROWTH), color=INK_SOFT, size=0.6)
+    + geom_text(aes(label="label", color="text_color"), size=5, fontweight="bold", show_legend=False)
+    + scale_fill_gradient2(low="#AE3030", mid=CMAP_MID, high="#4467A3", midpoint=0, limits=(low, high), breaks=breaks)
     + scale_color_identity()
-    + scale_x_discrete(expand=(0, 0.5))
-    + scale_y_discrete(expand=(0, 0.5))
-    + labs(x="Quarter", y="Department", title=title, subtitle="Year-over-year growth rate (%) · Q1 2023 – Q4 2024")
+    + scale_x_discrete(limits=df[QUARTER].unique().tolist(), expand=(0, 0))
+    + scale_y_discrete(limits=df[DEPARTMENT].unique().tolist()[::-1], expand=(0, 0))
+    + labs(title=title, subtitle="Year-over-year growth rate (%) · Q1 2023 – Q4 2024")
     + theme_minimal()
     + theme(
         figure_size=(6, 6),
@@ -104,14 +102,14 @@ plot = (
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=7, color=INK_SOFT),
         legend_position="right",
-        legend_key_height=12,
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key_height=110,
+        legend_key_width=22,
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_margin=0.02,
+        plot_margin=0.04,
     )
 )
 
