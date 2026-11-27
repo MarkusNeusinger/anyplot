@@ -26,7 +26,7 @@ Layout
   same pattern as Apple HIG / Material Design / GitHub Primer.
 - Continuous ramps, per theme and per use (``fields`` or ``marks``), as
   ``(position, hex)`` stops: ``sequential_stops(theme, use)`` (``imprint_seq``,
-  brand green and blue, light → dark on the light page and dark → bright on
+  through brand green, light → dark on the light page and dark → bright on
   the dark one) and ``diverging_stops(theme, use)`` (``imprint_div``, matte
   red ↔ midpoint ↔ blue). Matplotlib cmaps via ``sequential(theme, use)`` and
   ``diverging(theme, use)``. Categorical colours stay identical across themes;
@@ -167,7 +167,11 @@ palette = SimpleNamespace(
 # In both themes the high values stand out from the page and the low values
 # recede into it: the light ramps run light → dark, the dark ramps dark →
 # bright. Stop positions are proportional to CIELAB L*, so lightness runs
-# linearly along each sequential ramp. Design and numbers:
+# linearly along each sequential ramp. The other stops take the hue of a
+# palette colour (green, lime, blue, lavender) at the lightness their position
+# needs, in one hue order from low to high, lime → green → blue → lavender, so
+# the long stretches of a ramp change in hue as well as in lightness: a stretch
+# that changes in lightness only reads as one colour. Design and numbers:
 # docs/decisions/2026-11-23-continuous-ramps-per-theme.md.
 
 Theme = Literal["light", "dark"]
@@ -175,14 +179,17 @@ Use = Literal["fields", "marks"]
 Stops = tuple[tuple[float, str], ...]
 
 _SEQUENTIAL: dict[tuple[str, str], Stops] = {
-    # pale mint → brand green → blue → navy (L* 82 → 16)
-    ("fields", "light"): ((0.0, "#66E2B2"), (0.368, GREEN), (0.582, BLUE), (1.0, "#002850")),
-    # deep green → brand green → pale blue (L* 32 → 87)
-    ("fields", "dark"): ((0.0, "#00573D"), (0.467, GREEN), (1.0, "#CDD9FF")),
-    # brand green → blue → navy (L* 58 → 16)
-    ("marks", "light"): ((0.0, GREEN), (0.338, BLUE), (1.0, "#002850")),
-    # dark green → brand green → pale blue (L* 44 → 87)
-    ("marks", "dark"): ((0.0, "#007755"), (0.32, GREEN), (1.0, "#CDD9FF")),
+    # pale mint → brand green → deep blue → dark violet (L* 82 → 16)
+    ("fields", "light"): ((0.0, "#66E2B2"), (0.369, GREEN), (0.803, "#024582"), (1.0, "#351E45")),
+    # dark olive → brand green → pale blue (L* 30 → 87)
+    ("fields", "dark"): ((0.0, "#404C02"), (0.487, GREEN), (1.0, "#CDD9FF")),
+    # brand green → deep blue → dark violet (L* 58 → 16)
+    ("marks", "light"): ((0.0, GREEN), (0.687, "#024582"), (1.0, "#351E45")),
+    # olive → brand green → pale blue (L* 50 → 87). The low end keeps 3:1 against
+    # the dark page (3.9:1), the elevated shade #242420 (3.5:1) and a dark land
+    # fill up to #2C2C28 (3.1:1), so a thin opaque line of the lowest value
+    # stays visible on a dark basemap.
+    ("marks", "dark"): ((0.0, "#6F7E20"), (0.21, GREEN), (1.0, "#CDD9FF")),
 }
 
 # The midpoint of ``imprint_div`` for marks on the dark page. The ``muted`` ink
@@ -195,7 +202,7 @@ _DIV_MARKS_MID_DARK: str = "#686762"
 
 #: Every hex of the continuous ramps that is not already a palette colour or a
 #: theme token. ``automation/scripts/contract_check.py`` allows these too.
-RAMP_STOPS: tuple[str, ...] = ("#66E2B2", "#002850", "#00573D", "#CDD9FF", "#007755", _DIV_MARKS_MID_DARK)
+RAMP_STOPS: tuple[str, ...] = ("#66E2B2", "#024582", "#351E45", "#404C02", "#CDD9FF", "#6F7E20", _DIV_MARKS_MID_DARK)
 
 
 def _key(theme: str, use: str) -> tuple[str, str]:

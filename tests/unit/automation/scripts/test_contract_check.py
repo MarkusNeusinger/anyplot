@@ -226,8 +226,8 @@ def test_javascript_is_exempt_from_the_save_rule():
         ("python", 'color="#009E73"', 'c=[1, 2], cmap=LinearSegmentedColormap.from_list("imprint_seq", stops)'),
         ("python", 'color="#009E73"', 'color="#ddcc77", edgecolor="#FAF8F1", mfc="#6b6a63"'),
         # The stops of the per-theme continuous ramps are style-guide colours too.
-        ("python", 'color="#009E73"', 'c=[1, 2], cmap=from_list("s", ["#66E2B2", "#002850", "#00573D", "#CDD9FF"])'),
-        ("r", 'colour = "#009E73"', 'colour = "#007755"'),
+        ("python", 'color="#009E73"', 'c=[1, 2], cmap=from_list("s", ["#66E2B2", "#024582", "#351E45", "#404C02"])'),
+        ("r", 'colour = "#009E73"', 'colour = "#6F7E20"'),
         ("r", 'colour = "#009E73"', 'colour = "#686762"'),
         # An eight-digit hex is a palette colour with alpha, not a custom six-digit one.
         ("python", 'color="#009E73"', 'color="#009E7380"'),

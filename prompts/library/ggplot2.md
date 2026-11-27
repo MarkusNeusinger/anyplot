@@ -185,14 +185,14 @@ scale_fill_manual(values  = IMPRINT_PALETTE)
 # contours, map polygons). MARKS: coloured points, lines, outlines or bars on the
 # page. Keep only the ramps the plot uses.
 SEQ_FIELDS <- if (THEME == "light") {
-  list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))
+  list(colours = c("#66E2B2", "#009E73", "#024582", "#351E45"), values = c(0, 0.369, 0.803, 1))
 } else {
-  list(colours = c("#00573D", "#009E73", "#CDD9FF"), values = c(0, 0.467, 1))
+  list(colours = c("#404C02", "#009E73", "#CDD9FF"), values = c(0, 0.487, 1))
 }
 SEQ_MARKS <- if (THEME == "light") {
-  list(colours = c("#009E73", "#4467A3", "#002850"), values = c(0, 0.338, 1))
+  list(colours = c("#009E73", "#024582", "#351E45"), values = c(0, 0.687, 1))
 } else {
-  list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))
+  list(colours = c("#6F7E20", "#009E73", "#CDD9FF"), values = c(0, 0.21, 1))
 }
 # Sequential (single-polarity): gradientn takes the stop positions as `values`
 scale_fill_gradientn(colours = SEQ_FIELDS$colours, values = SEQ_FIELDS$values)

@@ -139,14 +139,14 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 # lines, outlines or bars on the page. Keep only the ramps the plot uses.
 from plotnine import scale_color_gradient2, scale_color_gradientn, scale_fill_gradient2, scale_fill_gradientn
 SEQ_FIELDS = (
-    [(0.0, '#66E2B2'), (0.368, '#009E73'), (0.582, '#4467A3'), (1.0, '#002850')]
+    [(0.0, '#66E2B2'), (0.369, '#009E73'), (0.803, '#024582'), (1.0, '#351E45')]
     if THEME == 'light'
-    else [(0.0, '#00573D'), (0.467, '#009E73'), (1.0, '#CDD9FF')]
+    else [(0.0, '#404C02'), (0.487, '#009E73'), (1.0, '#CDD9FF')]
 )
 SEQ_MARKS = (
-    [(0.0, '#009E73'), (0.338, '#4467A3'), (1.0, '#002850')]
+    [(0.0, '#009E73'), (0.687, '#024582'), (1.0, '#351E45')]
     if THEME == 'light'
-    else [(0.0, '#007755'), (0.32, '#009E73'), (1.0, '#CDD9FF')]
+    else [(0.0, '#6F7E20'), (0.21, '#009E73'), (1.0, '#CDD9FF')]
 )
 # Sequential (single-polarity): gradientn takes the stop positions as `values`
 + scale_fill_gradientn(colors=[c for _, c in SEQ_FIELDS], values=[p for p, _ in SEQ_FIELDS])

@@ -47,26 +47,26 @@ describe('PalettePage snippet()', () => {
   it.each([
     [
       'python',
-      'light=[(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]',
-      'dark=[(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]',
+      'light=[(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]',
+      'dark=[(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]',
       'light=[(0.0, "#AE3030"), (0.5, "#6B6A63"), (1.0, "#4467A3")]',
     ],
     [
       'r',
-      'light = list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))',
-      'dark  = list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))',
+      'light = list(colours = c("#66E2B2", "#009E73", "#024582", "#351E45"), values = c(0, 0.369, 0.803, 1))',
+      'dark  = list(colours = c("#6F7E20", "#009E73", "#CDD9FF"), values = c(0, 0.21, 1))',
       'light = list(colours = c("#AE3030", "#6B6A63", "#4467A3"), values = c(0, 0.5, 1))',
     ],
     [
       'julia',
-      'values = [0.0, 0.368, 0.582, 1.0]',
-      'dark = (colors = [colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], values = [0.0, 0.32, 1.0])',
+      'values = [0.0, 0.369, 0.803, 1.0]',
+      'dark = (colors = [colorant"#6F7E20", colorant"#009E73", colorant"#CDD9FF"], values = [0.0, 0.21, 1.0])',
       'dark = (colors = [colorant"#AE3030", colorant"#686762", colorant"#4467A3"], values = [0.0, 0.5, 1.0])',
     ],
     [
       'js',
-      'light: [[0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1, "#002850"]]',
-      'dark: [[0, "#007755"], [0.32, "#009E73"], [1, "#CDD9FF"]]',
+      'light: [[0, "#66E2B2"], [0.369, "#009E73"], [0.803, "#024582"], [1, "#351E45"]]',
+      'dark: [[0, "#6F7E20"], [0.21, "#009E73"], [1, "#CDD9FF"]]',
       'dark: [[0, "#AE3030"], [0.5, "#1A1A17"], [1, "#4467A3"]]',
     ],
   ] as [Lang, string, string, string][])(
