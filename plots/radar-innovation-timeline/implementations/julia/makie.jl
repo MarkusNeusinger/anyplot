@@ -60,7 +60,7 @@ const ITEMS = [
     ("Post-Quantum",      3, 4, 0.42),
     ("GitHub Actions",    4, 1, 0.25),
     ("Dev Containers",    4, 1, 0.75),
-    ("OpenTelemetry",     4, 2, 0.35),
+    ("OpenTelemetry",     4, 2, 0.52),
     ("AI Code Assist",    4, 2, 0.72),
     ("Backstage",         4, 3, 0.35),
     ("DORA Metrics",      4, 3, 0.65),
@@ -179,7 +179,7 @@ for (label, sec, ring, frac) in ITEMS
     ha = cos(θ) > 0.15 ? :left : (cos(θ) < -0.15 ? :right : :center)
     va = sin(θ) > 0.15 ? :bottom : (sin(θ) < -0.15 ? :top : :center)
     text!(ax, xl, yl; text = label,
-          fontsize = 10,
+          fontsize = 11,
           color    = INK_SOFT,
           align    = (ha, va))
 end
