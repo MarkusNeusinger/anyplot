@@ -381,19 +381,19 @@ Then one rule per setting that a library prompt states as mandatory, as a hard r
 |---|---|---|
 | `bokeh-page-paint` | bokeh | The file takes a browser screenshot but never paints the page in the page colour, so a light line runs along the top and left edge of the PNG. A style property set from a script and CSS written into the saved HTML both count. |
 | `bokeh-toolbar` | bokeh | The figure keeps its toolbar (`toolbar_location=None` as a keyword or as a key of a keyword dict). |
-| `pygal-tick-sizes` | pygal | The style sets only one of `label_font_size` and `major_label_font_size`, or the two to different numbers (a name the code assigns a number counts as that number). |
-| `pygal-grid-colour` | pygal | A chart that draws guide lines leaves `guide_stroke_color` or `major_guide_stroke_color` at pygal's black. Pie, treemap, gauge and funnel charts and the world maps draw none. |
-| `altair-autosize` | altair | A single or layered chart doesn't fit its size with `autosize` type `fit`. Compound charts can't fit and are exempt, and so is any file with an `|` or `&` between spaces, which may be a chart operator or a pandas mask: the rule misses some files rather than flag a compliant one. |
+| `pygal-tick-sizes` | pygal | The style sets only one of `label_font_size` and `major_label_font_size`, or the two to different numbers. A name the code assigns a number, with or without a type, counts as that number, and a key of a dict passed as `Style(**kw)` counts like a keyword. |
+| `pygal-grid-colour` | pygal | A chart that draws guide lines leaves `guide_stroke_color` or `major_guide_stroke_color` at pygal's black. Pie, treemap, gauge and funnel charts and the world maps draw none, whether the file calls `pygal.Pie(`, an alias of the module, or a name it imports from `pygal`. |
+| `altair-autosize` | altair | A single or layered chart doesn't fit its size with `autosize` type `fit`, as a keyword or as the first argument of `alt.AutoSizeParams`. Compound charts can't fit and are exempt: the concat, facet and repeat calls, a row, column or facet channel, and `\|` or `&` next to a name bound to a chart. A pandas mask is no composition. A chart composed out of a list or by a function, such as `functools.reduce(operator.or_, charts)`, isn't recognised as compound. |
 | `plotly-autosize` | plotly | The layout turns `autosize` on. |
 | `letsplot-wrap` | letsplot | A plot with a fixed aspect isn't wrapped in a `gggrid` or `ggbunch` that paints the canvas. |
 | `bbox-tight` | matplotlib, seaborn | The figure is saved with `bbox_inches="tight"`. |
-| `animation` | chartjs, echarts, highcharts, muix | The entrance animation stays on: no `animation: false` (Highcharts: fewer than the two the prompt asks for, the chart's and the series'), or no `skipAnimation` in MUI X. |
+| `animation` | chartjs, echarts, highcharts, muix | The entrance animation stays on: no `animation: false` (Highcharts: fewer than the two the prompt asks for, the chart's and the series'), or no `skipAnimation` in MUI X. A name bound to `false` counts as `false`, and a named object that holds the switch counts once for each place it's used. A value the file doesn't resolve leaves it unjudged. |
 
 These rules exist because a regeneration carries a library-prompt line that a gate checks into nearly every file, but a line that is only read into about half of them. Of the 16 bokeh files that the regenerations of 2026-11-26 replaced, 9 paint the page; the 7 that don't show the light edge line in their dark render, and the 9 that do show none. Of the 16 replaced pygal files, 7 set both tick sizes alike.
 
 The `palette` rule records a deviation and never judges it. The owner's rule is to use the Imprint colours unless there is a very good reason, such as the squares of a chessboard, and whether a reason is good is for a reader to decide. The record therefore lists up to eight of the hexes it found.
 
-Comments and the generated header never count. The step writes a `**Contract check (record-only):**` line to the job summary: `clean`, or the rules the file breaks, and on a regeneration which of them only the new version breaks. It also prints a `contract_check` notice with the same fields. Nothing reads the result yet: the step has no `id`, it never fails the job, and the reviewer never sees its output.
+Comments and the generated header never count. In Python, the patterns that look for code, such as a call, an import or an operator, read the code with its string literals emptied, so a title that names `coord_fixed(` is no call. The JavaScript patterns read strings as code. The step writes a `**Contract check (record-only):**` line to the job summary: `clean`, or the rules the file breaks, and on a regeneration which of them only the new version breaks. It also prints a `contract_check` notice with the same fields. Nothing reads the result yet: the step has no `id`, it never fails the job, and the reviewer never sees its output.
 
 On `main` at 3222442c3, of 4,863 files:
 
@@ -409,8 +409,8 @@ On `main` at e20def8b5, of 325 files per library (323 for Highcharts), the libra
 | Rule | Files that break it |
 |---|---|
 | `bokeh-page-paint` | 296 |
+| `altair-autosize` | 269 |
 | `pygal-tick-sizes` | 240 |
-| `altair-autosize` | 215 |
 | `pygal-grid-colour` | 181 |
 | `bbox-tight` | 33 (13 matplotlib, 20 seaborn) |
 | `letsplot-wrap` | 15 |

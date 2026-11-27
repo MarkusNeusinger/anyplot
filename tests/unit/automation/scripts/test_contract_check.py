@@ -776,6 +776,111 @@ def test_a_size_set_through_a_name_is_compared_by_its_value():
     # Two names the code never assigns a number: not judged, never flagged.
     unknown = "style = Style(label_font_size=sizes.tick, major_label_font_size=sizes.major)\n"
     assert "pygal-tick-sizes" not in _mandates(unknown, "pygal")
+    # A typed constant is a constant too.
+    typed = "FS_TICK: int = 44\nFS_MAJOR: int = 40\nstyle = Style(label_font_size=FS_TICK, major_label_font_size=FS_MAJOR)\n"
+    assert "pygal-tick-sizes" in _mandates(typed, "pygal")
+    assert "pygal-tick-sizes" not in _mandates(typed.replace("FS_MAJOR: int = 40", "FS_MAJOR: int = 44"), "pygal")
+
+
+# The forms below occur in no catalogue file yet; each is written the way a generator could write it,
+# from the excerpts above.
+
+
+def test_pygal_reads_chart_types_and_style_keys_in_every_import_and_call_form():
+    """A guideless chart imported by name, the module under an alias, and the style passed as a dict."""
+    pie_by_name = "from pygal import Pie\n" + PYGAL_PIE.replace("pygal.Pie(", "Pie(")
+    assert _mandates(pie_by_name, "pygal") == []
+    pie_aliased = "from pygal import Pie as Donut\n" + PYGAL_PIE.replace("pygal.Pie(", "Donut(")
+    assert _mandates(pie_aliased, "pygal") == []
+    module_alias = "import pygal as pg\n" + PYGAL_PIE.replace("pygal.Pie(", "pg.Pie(")
+    assert _mandates(module_alias, "pygal") == []
+    # A chart with guides, imported by name, still needs both colours.
+    line_by_name = "from pygal import Line, Pie\n" + PYGAL_BLACK_GUIDES.replace("pygal.Line(", "Line(")
+    assert _mandates(line_by_name, "pygal") == ["pygal-grid-colour"]
+    # The style as a dict of keywords (`Style(**STYLE)`): its string keys count like keywords.
+    as_dict = """
+STYLE = {
+    "label_font_size": 44,
+    "major_label_font_size": 44,
+    "guide_stroke_color": INK_MUTED,
+    "major_guide_stroke_color": INK_MUTED,
+}
+chart = pygal.Line(style=Style(**STYLE), show_y_guides=True)
+"""
+    assert _mandates(as_dict, "pygal") == []
+    assert _mandates(as_dict.replace('"major_label_font_size": 44', '"major_label_font_size": 56'), "pygal") == [
+        "pygal-tick-sizes"
+    ]
+    assert _mandates(as_dict.replace('    "major_guide_stroke_color": INK_MUTED,\n', ""), "pygal") == [
+        "pygal-grid-colour"
+    ]
+
+
+def test_altair_fit_in_its_positional_form_and_compound_charts_by_composition():
+    positional = ALTAIR_FIT.replace('alt.AutoSizeParams(type="fit"', 'alt.AutoSizeParams("fit"')
+    assert _mandates(positional, "altair") == []
+    # A pandas mask, a string and a selection union are no composition: an unfitted single chart is judged.
+    masked = 'peaks = df[(df["elevation"] > 0) & (df["distance"] < 40)]\n' + ALTAIR_NO_FIT
+    assert _mandates(masked, "altair") == ["altair-autosize"]
+    titled = ALTAIR_NO_FIT.replace("width=620,", 'width=620,\n        title="Home & Garden | 2026",')
+    assert _mandates(titled, "altair") == ["altair-autosize"]
+    selection = "opacity = alt.condition(highlight | click, alt.value(1.0), alt.value(0.4))\n" + ALTAIR_NO_FIT
+    assert _mandates(selection, "altair") == ["altair-autosize"]
+    # A layer fits like a single chart, so it is judged too.
+    layered = "base = alt.Chart(df)\nbars = base.mark_bar()\ntext = base.mark_text()\nchart = (bars + text).properties(width=800)\n"
+    assert _mandates(layered, "altair") == ["altair-autosize"]
+    # Composition with the chart operators, also of charts derived from one base, is compound and exempt.
+    for compose in ("chart = bars | text\n", "chart = (bars & text)\n", "chart = bars\nchart |= text\n"):
+        assert (
+            _mandates("base = alt.Chart(df)\nbars = base.mark_bar()\ntext = base.mark_text()\n" + compose, "altair")
+            == []
+        )
+    inline = "chart = alt.Chart(df).mark_bar() | alt.Chart(df).mark_line()\n"
+    assert _mandates(inline, "altair") == []
+    channel = 'chart = alt.Chart(df).mark_bar().encode(x=X, y=Y, column="region:N").properties(width=200)\n'
+    assert _mandates(channel, "altair") == []
+
+
+def test_named_animation_switches_count_where_they_are_used():
+    """A switch held in a named object counts once per use; a value the file does not resolve is not judged."""
+    shared = """
+const NO_ANIMATION = { animation: false };
+Highcharts.chart("container", {
+  chart: { backgroundColor: "transparent", ...NO_ANIMATION },
+  plotOptions: { series: NO_ANIMATION },
+});
+"""
+    assert _mandates(shared, "highcharts", language="javascript") == []
+    once = shared.replace("  plotOptions: { series: NO_ANIMATION },\n", "")
+    assert _mandates(once, "highcharts", language="javascript") == ["animation"]
+    by_name = HIGHCHARTS_BOTH.replace(
+        'Highcharts.chart("container", {', 'const ANIMATE = false;\nHighcharts.chart("container", {'
+    )
+    by_name = by_name.replace("animation: false", "animation: ANIMATE")
+    assert _mandates(by_name, "highcharts", language="javascript") == []
+    unresolved = HIGHCHARTS_BOTH.replace("series: { animation: false }", "series: { animation: options.animate }")
+    assert _mandates(unresolved, "highcharts", language="javascript") == []
+    assert _mandates(
+        CHARTJS_OPTIONS.replace("animation: false", "animation: true"), "chartjs", language="javascript"
+    ) == ["animation"]
+    assert _mandates(
+        MUIX_CHART.replace("skipAnimation", "{...{ skipAnimation: false }}"), "muix", language="javascript"
+    ) == ["animation"]
+
+
+def test_code_patterns_skip_string_literals():
+    """A pattern that looks for code never matches the text of a string: a title can name `coord_fixed(`."""
+    titled = 'plot = ggplot(df) + geom_point() + labs(title="Why coord_fixed( matters · python · letsplot")\n'
+    assert _mandates(titled, "letsplot") == []
+    hidden = LETSPLOT_UNWRAPPED.replace(
+        "+ ggsize(800, 450)", '+ labs(caption="no gggrid( here")\n    + ggsize(800, 450)'
+    )
+    assert _mandates(hidden, "letsplot") == ["letsplot-wrap"]
+    # In an f-string too, fields included.
+    assert _mandates('note = f"coord_fixed({RATIO}) keeps the aspect"\n', "letsplot") == []
+    # The patterns that read a value inside a string still see it.
+    assert _mandates(MATPLOTLIB_TIGHT, "matplotlib") == ["bbox-tight"]
+    assert _mandates(BOKEH_FIGURE + BOKEH_SAVE_PAINTED, "bokeh") == []
 
 
 def test_every_rule_has_its_reason_and_the_prompt_still_says_it():

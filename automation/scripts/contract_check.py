@@ -46,20 +46,28 @@ these rules make the read lines checkable:
   ``major_label_font_size``, or the two to different numbers.
 - ``pygal-grid-colour``: a chart that draws guide lines leaves one of their
   two colours at pygal's black.
-- ``altair-autosize``: a single or layered chart does not fit its size
-  (compound charts cannot fit and are exempt).
+- ``altair-autosize``: a single or layered chart does not fit its size.
+  Compound charts cannot fit and are exempt: the concat, facet and repeat
+  calls, a row, column or facet channel, and ``|`` or ``&`` next to a name
+  bound to a chart. A chart composed out of a list or by a function
+  (``functools.reduce(operator.or_, charts)``) is not recognised as one.
 - ``plotly-autosize``: the layout turns autosize on.
 - ``letsplot-wrap``: a fixed-aspect plot is not wrapped in a grid that
   paints the canvas.
 - ``bbox-tight``: matplotlib or seaborn saves with ``bbox_inches="tight"``.
 - ``animation``: Chart.js, ECharts, Highcharts or MUI X leave the entrance
-  animation on.
+  animation on. A switch counts as a literal ``false``, as a name bound to
+  ``false``, or as a named object that holds it, once for each place the
+  object is used; a value the file does not resolve leaves the file unjudged.
 
 Comments and the generated header never count. The patterns are deliberately
 narrow: a rule that flags a compliant file is worse than no rule, so a
 colormap name counts only where a colormap goes, never as a data label such
 as ``"Oranges"``, and a setting counts as present in any spelling the
-catalogue uses for it.
+catalogue uses for it. In Python, the patterns that look for code (a call, an
+import, an operator) read the code with its string literals emptied, so a
+title that names ``coord_fixed(`` is no call. The JavaScript patterns read
+strings as code: an ``animation: false`` written inside a string counts.
 
 Stdlib only: ``impl-review.yml`` runs a copy taken at the workflow's own ref
 with the job's pinned ``python3``, so a PR head cannot choose its own rules.
@@ -243,36 +251,87 @@ _PAGE_PAINT_RE = re.compile(
     r"|<body[^>]*style=[\"'][^\"']*background"
 )
 _TOOLBAR_OFF_RE = re.compile(r"toolbar_location[\"']?\s*[=:]\s*None")
+# A style key as a keyword (`label_font_size=44`) or as a dict key (`"label_font_size": 44`, for `Style(**kw)`).
 # `label_font_size` alone, never the tail of `major_label_font_size` or `value_label_font_size`.
-_PYGAL_MINOR_RE = re.compile(r"(?<![\w])label_font_size\s*=\s*([^,\n)]+)")
-_PYGAL_MAJOR_RE = re.compile(r"\bmajor_label_font_size\s*=\s*([^,\n)]+)")
-_PYGAL_GUIDE_RE = re.compile(r"(?<![\w])guide_stroke_color\s*=")
-_PYGAL_MAJOR_GUIDE_RE = re.compile(r"\bmajor_guide_stroke_color\s*=")
+_PYGAL_MINOR_RE = re.compile(r"(?<![\w])[\"']?label_font_size[\"']?\s*[=:]\s*([^,\n)}]+)")
+_PYGAL_MAJOR_RE = re.compile(r"\b[\"']?major_label_font_size[\"']?\s*[=:]\s*([^,\n)}]+)")
+_PYGAL_GUIDE_RE = re.compile(r"(?<![\w])[\"']?guide_stroke_color[\"']?\s*[=:]")
+_PYGAL_MAJOR_GUIDE_RE = re.compile(r"\b[\"']?major_guide_stroke_color[\"']?\s*[=:]")
 # Chart types that draw no guide lines, and the world maps.
 _PYGAL_GUIDELESS = frozenset({"Pie", "Treemap", "Gauge", "SolidGauge", "Funnel"})
-_PYGAL_CHART_RE = re.compile(r"\bpygal\.([A-Z]\w*)\s*\(")
+_PYGAL_FROM_IMPORT_RE = re.compile(r"^\s*from\s+pygal\s+import\s+\(?([^)\n]+)", re.MULTILINE)
+_PYGAL_MODULE_RE = re.compile(r"^\s*import\s+pygal(?:\s+as\s+(\w+))?\s*$", re.MULTILINE)
 _ALTAIR_FIT_RE = re.compile(
-    r"autosize\s*=\s*(?:alt\.AutoSizeParams\([^)]*type\s*=\s*[\"']fit"
+    r"autosize\s*=\s*(?:alt\.AutoSizeParams\((?:\s*[\"']fit|[^)]*type\s*=\s*[\"']fit)"
     r"|\{[^}]*[\"']type[\"']\s*:\s*[\"']fit|[\"']fit)"
 )
-# Compound charts cannot fit. An `|` or `&` between spaces also exempts a pandas mask: a rule that
-# misses a file is better than one that flags a compliant file.
-_ALTAIR_COMPOUND_RE = re.compile(r"\balt\.(?:h|v)?concat\(|\.(?:facet|repeat)\(|\b(?:row|column|facet)\s*=|\s[|&]=?\s")
+# Compound charts cannot fit: the concat, facet and repeat calls, a row, column or facet channel, and an `|`
+# or `&` next to a name the code binds to an altair chart (`_altair_chart_names`). A layer (`alt.layer`, `+`)
+# fits like a single chart, so it is judged. A pandas mask (`(df.a > 0) & (df.b > 0)`) is no composition.
+_ALTAIR_COMPOUND_RE = re.compile(
+    r"\balt\.(?:h|v)?concat\(|\.(?:facet|repeat)\(|\balt\.(?:Row|Column|Facet)\("
+    r"|\b(?:row|column|facet)\s*=\s*(?:alt\.|[\"'])"
+    r"|\)\s*[|&]=?\s*\(?\s*alt\.Chart\b"
+)
+_ALTAIR_CHART_ROOTS = ("Chart", "LayerChart", "layer", "hconcat", "vconcat", "concat", "HConcatChart", "VConcatChart")
+_ASSIGNMENT_RE = re.compile(r"^\s*(\w+)\s*(?::[^=\n]+)?=(?!=)\s*\(?\s*([\w.]+)", re.MULTILINE)
 _PLOTLY_AUTOSIZE_RE = re.compile(r"\bautosize[\"']?\s*[=:]\s*True\b")
 _LETSPLOT_FIXED_RE = re.compile(r"\bcoord_(?:fixed|polar|map)\(")
 _LETSPLOT_WRAP_RE = re.compile(r"\bgg(?:grid|bunch)\(")
 _BBOX_TIGHT_RE = re.compile(r"bbox_inches\s*=\s*[\"']tight[\"']")
-_ANIMATION_OFF_RE = re.compile(r"\banimation\s*[:=]\s*false\b")
-_SKIP_ANIMATION_RE = re.compile(r"\bskipAnimation\b(?!\s*=\s*\{\s*false\s*\})")
+_JS_FALSE_NAME_RE = re.compile(r"\b(?:const|let|var)\s+(\w+)\s*=\s*false\b")
+_JS_ANIMATION_VALUE_RE = re.compile(r"\banimation\s*[:=]\s*([A-Za-z_$][\w$]*)")
+_SKIP_ANIMATION_RE = re.compile(r"\bskipAnimation\b(?!\s*(?:=\s*\{\s*false\s*\}|:\s*false\b))")
+_FSTRING_START = frozenset(
+    getattr(tokenize, name) for name in ("FSTRING_START", "TSTRING_START") if hasattr(tokenize, name)
+)
+_FSTRING_END = frozenset(getattr(tokenize, name) for name in ("FSTRING_END", "TSTRING_END") if hasattr(tokenize, name))
+
+
+def _without_strings(code: str) -> str:
+    """Python ``code`` with every string literal emptied to ``""``, for the patterns that look for code.
+
+    A title that names ``coord_fixed(`` or a label with an ``&`` in it no longer counts as code. An
+    f-string goes whole, its fields included. Code that does not tokenize comes back unchanged. The
+    patterns that read a value inside a string (a page colour in a script, ``"tight"``) use the code
+    as it is.
+    """
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(code).readline))
+    except tokenize.TokenError, SyntaxError:
+        return code
+    starts = [0]
+    for line in code.split("\n"):
+        starts.append(starts[-1] + len(line) + 1)
+    spans: list[tuple[int, int]] = []
+    depth, opened = 0, 0
+    for token in tokens:
+        offset = starts[token.start[0] - 1] + token.start[1]
+        if token.type in _FSTRING_START:
+            if depth == 0:
+                opened = offset
+            depth += 1
+        elif token.type in _FSTRING_END:
+            depth -= 1
+            if depth == 0:
+                spans.append((opened, starts[token.end[0] - 1] + token.end[1]))
+        elif token.type == tokenize.STRING and depth == 0:
+            spans.append((offset, starts[token.end[0] - 1] + token.end[1]))
+    for begin, end in reversed(spans):
+        code = code[:begin] + '""' + code[end:]
+    return code
 
 
 def _number(code: str, expr: str) -> float | str:
-    """A size as a number: a literal, or a name the code assigns a literal on a line of its own; else its text."""
+    """A size as a number: a literal, or a name the code assigns a literal on a line of its own; else its text.
+
+    The assignment may carry a type (``FS_TICK: int = 44``).
+    """
     expr = expr.strip()
     if re.fullmatch(r"\d+(?:\.\d+)?", expr):
         return float(expr)
     if re.fullmatch(r"[A-Za-z_]\w*", expr):
-        assigned = re.search(rf"^\s*{expr}\s*=\s*(\d+(?:\.\d+)?)\s*$", code, re.MULTILINE)
+        assigned = re.search(rf"^\s*{expr}\s*(?::[^=\n]+)?=\s*(\d+(?:\.\d+)?)\s*$", code, re.MULTILINE)
         if assigned:
             return float(assigned.group(1))
     return expr
@@ -290,13 +349,76 @@ def _pygal_two_tick_sizes(code: str) -> bool:
     return False  # two names the code does not resolve: not judged
 
 
+def _pygal_chart_types(code: str) -> set[str]:
+    """The pygal chart types the code builds: ``pygal.Pie(``, an alias of the module, or a name imported from it."""
+    modules = {"pygal"} | {alias for alias in _PYGAL_MODULE_RE.findall(code) if alias}
+    types = set()
+    for module in modules:
+        types |= set(re.findall(rf"\b{module}\.([A-Z]\w*)\s*\(", code))
+    for imported in _PYGAL_FROM_IMPORT_RE.findall(code):
+        for item in imported.split(","):
+            name, _, alias = item.strip().partition(" as ")
+            if name[:1].isupper() and re.search(rf"\b{alias.strip() or name}\s*\(", code):
+                types.add(name)
+    return types - {"Style"}
+
+
 def _pygal_black_guides(code: str) -> bool:
-    charts = set(_PYGAL_CHART_RE.findall(code)) - {"Style"}
-    if "pygal_maps_" in code or (charts and charts <= _PYGAL_GUIDELESS):
+    structure = _without_strings(code)
+    charts = _pygal_chart_types(structure)
+    if "pygal_maps_" in structure or (charts and charts <= _PYGAL_GUIDELESS):
         return False
-    if re.search(r"\bshow_y_guides\s*=\s*False", code) and not re.search(r"\bshow_x_guides\s*=\s*True", code):
+    if re.search(r"\bshow_y_guides\s*=\s*False", structure) and not re.search(r"\bshow_x_guides\s*=\s*True", structure):
         return False
     return not (_PYGAL_GUIDE_RE.search(code) and _PYGAL_MAJOR_GUIDE_RE.search(code))
+
+
+def _altair_chart_names(code: str) -> set[str]:
+    """Names bound to an altair chart: from ``alt.Chart`` and the other chart builders, or from such a name."""
+    assignments = _ASSIGNMENT_RE.findall(code)
+    names: set[str] = set()
+    while True:
+        found = {
+            name
+            for name, value in assignments
+            if value.split(".")[0] in names or (value.startswith("alt.") and value.split(".")[1] in _ALTAIR_CHART_ROOTS)
+        }
+        if found <= names:
+            return names
+        names |= found
+
+
+def _altair_compound(code: str) -> bool:
+    structure = _without_strings(code)
+    if _ALTAIR_COMPOUND_RE.search(structure):
+        return True
+    names = _altair_chart_names(structure)
+    return any(re.search(rf"\b{name}\s*[|&]|[|&]=?\s*\(?\s*{name}\b", structure) for name in names)
+
+
+def _animation_switches(code: str) -> int | None:
+    """How often the code turns animation off: a literal ``false``, a name bound to it, or a named object that
+    holds the switch, counted where it is used. None when a value is a name the code does not resolve."""
+    false_names = set(_JS_FALSE_NAME_RE.findall(code))
+    values = _JS_ANIMATION_VALUE_RE.findall(code)
+    if any(value not in false_names | {"false", "true"} for value in values):
+        return None
+    switches = sum(value in false_names | {"false"} for value in values)
+    off = "|".join(["false", *sorted(false_names)])
+    holder = re.compile(rf"\b(?:const|let|var)\s+(\w+)\s*=\s*\{{[^{{}}]*\banimation\s*:\s*(?:{off})\b")
+    for name in holder.findall(code):
+        # The object's own switch counts once for every place it is used, not for its definition.
+        # A spread (`...NAME`) is a use; a member access (`obj.NAME`) is another name.
+        switches += len(re.findall(rf"(?:(?<=\.\.\.)|(?<![\w$.])){re.escape(name)}(?![\w$])", code)) - 2
+    return switches
+
+
+def _too_few_animation_switches(needed: int) -> Callable[[str], bool]:
+    def breaks(code: str) -> bool:
+        switches = _animation_switches(code)
+        return switches is not None and switches < needed
+
+    return breaks
 
 
 class Mandate(NamedTuple):
@@ -313,7 +435,7 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "bokeh-page-paint",
         "bokeh",
-        lambda code: "webdriver" in code and not _PAGE_PAINT_RE.search(code),
+        lambda code: "webdriver" in _without_strings(code) and not _PAGE_PAINT_RE.search(code),
         "the screenshot never paints the browser page in the page colour, so a light line runs along the top "
         "and left edge of the PNG",
         "IMPORTANT: paint the page in the theme's page color.",
@@ -344,7 +466,7 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "altair-autosize",
         "altair",
-        lambda code: not _ALTAIR_COMPOUND_RE.search(code) and not _ALTAIR_FIT_RE.search(code),
+        lambda code: not _altair_compound(code) and not _ALTAIR_FIT_RE.search(code),
         "the chart does not fit its width and height, so title, axes and legend land outside them",
         'Both with `autosize=alt.AutoSizeParams(type="fit", contains="padding")`',
     ),
@@ -358,7 +480,10 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "letsplot-wrap",
         "letsplot",
-        lambda code: bool(_LETSPLOT_FIXED_RE.search(code)) and not _LETSPLOT_WRAP_RE.search(code),
+        lambda code: (
+            bool(_LETSPLOT_FIXED_RE.search(_without_strings(code)))
+            and not _LETSPLOT_WRAP_RE.search(_without_strings(code))
+        ),
         "a fixed-aspect plot is not wrapped in a one-panel grid, so the canvas outside its plot box stays transparent",
         "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color.",
     ),
@@ -379,14 +504,14 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "animation",
         "chartjs",
-        lambda code: not _ANIMATION_OFF_RE.search(code),
+        _too_few_animation_switches(1),
         "the chart keeps its entrance animation, so the screenshot can catch a frame before the last",
         "`animation: false` is mandatory",
     ),
     Mandate(
         "animation",
         "echarts",
-        lambda code: not _ANIMATION_OFF_RE.search(code),
+        _too_few_animation_switches(1),
         "the chart keeps its entrance animation, so the screenshot can catch a frame before the last",
         "**`animation: false` is mandatory**",
     ),
@@ -394,7 +519,7 @@ MANDATES: tuple[Mandate, ...] = (
         "animation",
         "highcharts",
         # Both switches, the chart's and the series': with only one the series still grow in.
-        lambda code: len(_ANIMATION_OFF_RE.findall(code)) < 2,
+        _too_few_animation_switches(2),
         "the chart and its series do not both turn animation off, so the series can still grow in when the "
         "screenshot is taken",
         "**`animation: false` is mandatory** (both `chart.animation` and",
