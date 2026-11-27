@@ -1,21 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-28
 """
-
-import sys
-
-
-if sys.path and not sys.path[0].endswith("site-packages"):
-    sys.path = [p for p in sys.path if "implementations/python" not in p]
 
 import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
 
 
 # Theme tokens
@@ -25,185 +18,164 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette: all eight positions in canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — low-speed industrial machinery operating range 2500–4500 RPM
-np.random.seed(42)
+# Constants
+MODE = "Natural frequency"  # kind of a series: a mode curve
+EXCITATION = "Engine order"  # kind of a series: an excitation line
+OPERATING_RANGE = (2500, 4500)  # RPM band the machine runs in
+
+# Columns: set these to your table's column names
+SPEED = "Rotational speed (RPM)"  # role: speed
+FREQUENCY = "Frequency (Hz)"  # role: frequency_mode_
+SERIES = "Natural frequencies"  # role: extra
+KIND = "Kind"  # role: extra
+CRITICAL = "Critical speed"  # role: critical_speeds
+IN_RANGE = "In operating range"  # role: extra
+
+# Data: replace this block with your own table (one row per speed and series), for example df = pd.read_csv("campbell.csv")
 speeds = np.linspace(0, 6000, 80)
+mode_shapes = {
+    "1st Bending": (45, 0.004, 5e-7),
+    "2nd Bending": (95, -0.003, -4e-7),
+    "1st Torsional": (130, 0.005, 2e-7),
+    "Axial": (175, 0.001, 1e-7),
+    "3rd Bending": (220, -0.004, -3e-7),
+}
+orders = [1, 2, 3]
+df = pd.concat(
+    [
+        pd.DataFrame({SPEED: speeds, FREQUENCY: base + slope * speeds + curve * speeds**2, SERIES: name, KIND: MODE})
+        for name, (base, slope, curve) in mode_shapes.items()
+    ]
+    + [
+        pd.DataFrame({SPEED: speeds, FREQUENCY: order * speeds / 60, SERIES: f"{order}x", KIND: EXCITATION})
+        for order in orders
+    ],
+    ignore_index=True,
+)
 
-mode_labels = ["1st Bending", "2nd Bending", "1st Torsional", "Axial", "3rd Bending"]
-base_freqs = [45, 95, 130, 175, 220]
-slopes = [0.004, -0.003, 0.005, 0.001, -0.004]
-curvatures = [5e-7, -4e-7, 2e-7, 1e-7, -3e-7]
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+modes = df[df[KIND] == MODE]
+lines = df[df[KIND] == EXCITATION]
+mode_names = list(modes[SERIES].unique())
 
-mode_rows = []
-for label, base, slope, curv in zip(mode_labels, base_freqs, slopes, curvatures, strict=True):
-    freqs = base + slope * speeds + curv * speeds**2
-    for s, f in zip(speeds, freqs, strict=True):
-        mode_rows.append({"RPM": s, "Hz": f, "Mode": label})
+# Critical speeds: where an engine order line crosses a mode curve (both are straight between samples)
+crossings = []
+for name in mode_names:
+    curve = modes[modes[SERIES] == name]
+    for order_name in lines[SERIES].unique():
+        line = lines[lines[SERIES] == order_name]
+        gap = curve[FREQUENCY].to_numpy() - line[FREQUENCY].to_numpy()
+        x = curve[SPEED].to_numpy()
+        for i in np.where(np.diff(np.sign(gap)) != 0)[0]:
+            speed = x[i] + gap[i] * (x[i + 1] - x[i]) / (gap[i] - gap[i + 1])
+            crossings.append(
+                {
+                    SPEED: speed,
+                    FREQUENCY: np.interp(speed, x, line[FREQUENCY].to_numpy()),
+                    CRITICAL: f"{name} / {order_name}",
+                    IN_RANGE: OPERATING_RANGE[0] <= speed <= OPERATING_RANGE[1],
+                }
+            )
+crit = pd.DataFrame(crossings, columns=[SPEED, FREQUENCY, CRITICAL, IN_RANGE]).astype({IN_RANGE: bool})
+crit_in = crit[crit[IN_RANGE]]
+crit_out = crit[~crit[IN_RANGE]]
 
-engine_orders = [1, 2, 3]
-eo_rows = []
-for order in engine_orders:
-    for s in speeds:
-        eo_rows.append({"RPM": s, "Hz": order * s / 60, "EO": f"{order}x"})
+# Annotate the lowest crossing outside the operating range and the first and third ones inside it
+inside = crit_in.sort_values(SPEED)
+annot = pd.concat([crit_out.sort_values(FREQUENCY).head(1), inside.iloc[[0, 2]] if len(inside) > 2 else inside.head(1)])
 
-df_modes = pd.DataFrame(mode_rows)
-df_eo = pd.DataFrame(eo_rows)
+# Scales come from the data
+x_max = df[SPEED].max()
+x_scale = alt.Scale(domain=[0, x_max * 1.035], nice=False)
+y_top = df[FREQUENCY].max() * 1.03
+y_scale = alt.Scale(domain=[0, y_top])
+x_enc = alt.X(SPEED.translate(ESCAPE), type="quantitative", title=SPEED, scale=x_scale)
+y_enc = alt.Y(FREQUENCY.translate(ESCAPE), type="quantitative", title=FREQUENCY, scale=y_scale)
 
-# Dense sign-change detection for critical speed intersections
-critical_rows = []
-dense_speeds = np.linspace(0, 6000, 5000)
-for label, base, slope, curv in zip(mode_labels, base_freqs, slopes, curvatures, strict=True):
-    mode_freq = base + slope * dense_speeds + curv * dense_speeds**2
-    for order in engine_orders:
-        eo_freq = order * dense_speeds / 60
-        diff = mode_freq - eo_freq
-        sign_changes = np.where(np.diff(np.sign(diff)))[0]
-        for idx in sign_changes:
-            s_crit = dense_speeds[idx]
-            f_crit = eo_freq[idx]
-            if 100 < s_crit < 5900 and 5 < f_crit < 295:
-                in_op = 2500 <= s_crit <= 4500
-                critical_rows.append(
-                    {"RPM": round(s_crit), "Hz": round(f_crit, 1), "Label": f"{label} / {order}x", "InOpRange": in_op}
-                )
-
-df_critical = pd.DataFrame(critical_rows)
-df_crit_out = df_critical[~df_critical["InOpRange"]]
-df_crit_in = df_critical[df_critical["InOpRange"]]
-
-# Select 2–3 key annotations: one outside + up to two within operating range
-key_out = df_crit_out.sort_values("Hz")
-key_in = df_crit_in.sort_values("RPM")
-annot_rows = []
-if len(key_out) > 0:
-    annot_rows.append(key_out.iloc[0].to_dict())
-if len(key_in) > 0:
-    annot_rows.append(key_in.iloc[0].to_dict())
-if len(key_in) > 2:
-    annot_rows.append(key_in.iloc[2].to_dict())
-df_annot = pd.DataFrame(annot_rows) if annot_rows else pd.DataFrame(columns=df_critical.columns)
-
-# Chart scales
-op_min, op_max = 2500, 4500
-x_scale = alt.Scale(domain=[0, 6200], nice=False)
-y_scale = alt.Scale(domain=[0, 310])
-
-# Operating range shaded band
-op_band = (
-    alt.Chart(pd.DataFrame({"x": [op_min], "x2": [op_max]}))
+# Operating range band and its label
+band = (
+    alt.Chart(pd.DataFrame({"start": [OPERATING_RANGE[0]], "end": [OPERATING_RANGE[1]]}))
     .mark_rect(opacity=0.07, color=IMPRINT_PALETTE[2])
-    .encode(x=alt.X("x:Q", scale=x_scale), x2="x2:Q")
+    .encode(x=alt.X("start", type="quantitative", scale=x_scale), x2="end")
+)
+band_label = (
+    alt.Chart(pd.DataFrame({SPEED: [sum(OPERATING_RANGE) / 2], FREQUENCY: [y_top * 0.08], "text": ["Operating range"]}))
+    .mark_text(fontSize=11, fontStyle="italic", fontWeight="bold", color=IMPRINT_PALETTE[2])
+    .encode(x=x_enc, y=y_enc, text=alt.Text("text", type="nominal"))
 )
 
-# Operating range label
-op_label = (
-    alt.Chart(pd.DataFrame({"RPM": [(op_min + op_max) / 2], "Hz": [10], "label": ["Operating Range"]}))
-    .mark_text(fontSize=10, fontStyle="italic", fontWeight="bold", color=IMPRINT_PALETTE[2])
-    .encode(x=alt.X("RPM:Q", scale=x_scale), y=alt.Y("Hz:Q", scale=y_scale), text="label:N")
-)
-
-# Engine order excitation lines — dashed, muted, opacity raised from 0.55 to 0.68
+# Engine order lines: dashed, one per order, labeled at their right end
 eo_chart = (
-    alt.Chart(df_eo)
+    alt.Chart(lines)
     .mark_line(strokeWidth=1.8, strokeDash=[8, 6], opacity=0.68, color=INK_MUTED)
-    .encode(x=alt.X("RPM:Q", scale=x_scale), y=alt.Y("Hz:Q", scale=y_scale), detail="EO:N")
+    .encode(x=x_enc, y=y_enc, detail=alt.Detail(SERIES.translate(ESCAPE), type="nominal"))
 )
-
-# Engine order labels at right edge (direct labeling instead of legend)
-eo_label_rows = []
-for order in engine_orders:
-    end_hz = order * 6000 / 60
-    if end_hz <= 295:
-        eo_label_rows.append({"RPM": 6050, "Hz": end_hz, "label": f"{order}x"})
-    else:
-        cap_rpm = 285 * 60 / order
-        eo_label_rows.append({"RPM": cap_rpm, "Hz": 283, "label": f"{order}x"})
-
 eo_labels = (
-    alt.Chart(pd.DataFrame(eo_label_rows))
-    .mark_text(fontSize=11, fontWeight="bold", align="left", dx=4, dy=-8, color=INK_SOFT)
-    .encode(x=alt.X("RPM:Q", scale=x_scale), y=alt.Y("Hz:Q", scale=y_scale), text="label:N")
+    alt.Chart(lines.loc[lines.groupby(SERIES, sort=False)[SPEED].idxmax()])
+    .mark_text(fontSize=12, fontWeight="bold", align="left", dx=5, dy=-8, color=INK_SOFT)
+    .encode(x=x_enc, y=y_enc, text=alt.Text(SERIES.translate(ESCAPE), type="nominal"))
 )
 
-# Natural frequency mode curves
+# Natural frequency curves
 modes_chart = (
-    alt.Chart(df_modes)
+    alt.Chart(modes)
     .mark_line(strokeWidth=2.5)
     .encode(
-        x=alt.X("RPM:Q", title="Rotational Speed (RPM)", scale=x_scale),
-        y=alt.Y("Hz:Q", title="Frequency (Hz)", scale=y_scale),
+        x=x_enc,
+        y=y_enc,
         color=alt.Color(
-            "Mode:N",
-            scale=alt.Scale(domain=mode_labels, range=IMPRINT_PALETTE[:5]),
-            legend=alt.Legend(
-                title="Natural Frequencies", titleFontSize=10, labelFontSize=10, symbolStrokeWidth=2.5, symbolSize=100
-            ),
+            SERIES.translate(ESCAPE),
+            type="nominal",
+            title=SERIES,
+            sort=None,
+            scale=alt.Scale(domain=mode_names, range=IMPRINT_PALETTE),
+            legend=alt.Legend(title=SERIES, symbolStrokeWidth=2.5, symbolSize=120),
         ),
     )
 )
 
-# Critical speed markers — outlined diamonds outside operating range
+# Critical speed markers: outlined outside the operating range, larger and filled inside it
+tooltip = [
+    alt.Tooltip(CRITICAL.translate(ESCAPE), title=CRITICAL),
+    alt.Tooltip(SPEED.translate(ESCAPE), title=SPEED, format=".0f"),
+    alt.Tooltip(FREQUENCY.translate(ESCAPE), title=FREQUENCY, format=".1f"),
+]
 crit_out_chart = (
-    alt.Chart(df_crit_out)
-    .mark_point(size=130, shape="diamond", filled=False, strokeWidth=1.8)
-    .encode(
-        x=alt.X("RPM:Q", scale=x_scale),
-        y=alt.Y("Hz:Q", scale=y_scale),
-        color=alt.value(IMPRINT_PALETTE[4]),
-        tooltip=["Label:N", "RPM:Q", "Hz:Q"],
-    )
+    alt.Chart(crit_out)
+    .mark_point(size=150, shape="diamond", filled=False, strokeWidth=1.8, color=IMPRINT_PALETTE[4])
+    .encode(x=x_enc, y=y_enc, tooltip=tooltip)
 )
-
-# Larger filled diamonds inside operating range — danger emphasis
 crit_in_chart = (
-    alt.Chart(df_crit_in)
-    .mark_point(size=300, shape="diamond", filled=True, stroke=PAGE_BG, strokeWidth=2.0)
-    .encode(
-        x=alt.X("RPM:Q", scale=x_scale),
-        y=alt.Y("Hz:Q", scale=y_scale),
-        color=alt.value(IMPRINT_PALETTE[4]),
-        tooltip=["Label:N", "RPM:Q", "Hz:Q"],
-    )
+    alt.Chart(crit_in)
+    .mark_point(size=340, shape="diamond", filled=True, stroke=PAGE_BG, strokeWidth=2.0, color=IMPRINT_PALETTE[4])
+    .encode(x=x_enc, y=y_enc, tooltip=tooltip)
 )
-
-# Consolidated annotation layer for key critical speeds (single layer, not per-row)
 annot_chart = (
-    alt.Chart(df_annot)
-    .mark_text(fontSize=11, fontWeight="bold", align="left", dx=8, dy=-20)
-    .encode(
-        x=alt.X("RPM:Q", scale=x_scale),
-        y=alt.Y("Hz:Q", scale=y_scale),
-        text="Label:N",
-        color=alt.value(IMPRINT_PALETTE[4]),
-    )
+    alt.Chart(annot)
+    .mark_text(fontSize=11, fontWeight="bold", align="left", dx=8, dy=-30, color=IMPRINT_PALETTE[4])
+    .encode(x=x_enc, y=y_enc, text=alt.Text(CRITICAL.translate(ESCAPE), type="nominal"))
 )
-
-# Compose layers
-layers = [op_band, eo_chart, modes_chart, crit_out_chart, crit_in_chart, eo_labels, op_label]
-if len(df_annot) > 0:
-    layers.append(annot_chart)
-
-combined = layers[0]
-for lyr in layers[1:]:
-    combined = combined + lyr
-
-title_str = "campbell-basic · python · altair · anyplot.ai"
 
 chart = (
-    combined.properties(
-        width=620,
-        height=320,
+    alt.layer(band, eo_chart, modes_chart, crit_out_chart, crit_in_chart, eo_labels, band_label, annot_chart)
+    .properties(
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
-        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(
-            title_str,
+            "campbell-basic · python · altair · anyplot.ai",
             fontSize=16,
             fontWeight=500,
             anchor="start",
             color=INK,
-            subtitle="Natural Frequencies vs Engine Order Excitations",
+            subtitle="Natural frequencies vs engine order excitations",
             subtitleFontSize=11,
             subtitleColor=INK_MUTED,
         ),
@@ -228,28 +200,12 @@ chart = (
         labelFontSize=10,
         titleColor=INK,
         titleFontSize=10,
-        symbolStrokeWidth=2.5,
-        symbolSize=100,
         orient="bottom",
-        columns=5,
+        columns=len(mode_names),
     )
     .configure_title(anchor="start", offset=10, color=INK)
 )
 
-# Save — canvas gate: inner view 620×320 @ scale 4.0 → target 3200×1800 with padding
-TW, TH = 3200, 1800
+# Save
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
