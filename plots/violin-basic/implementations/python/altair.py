@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-basic: Basic Violin Plot
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-27
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import importlib
@@ -58,12 +58,7 @@ base = alt.Chart(df)
 
 # Violin shape — KDE, mirrored via stack="center"
 violin = (
-    base.transform_density(
-        density=SALARY_F,
-        as_=[SALARY_F, "density"],
-        groupby=[DEPT_F],
-        extent=[int(df[SALARY].min()) - 8000, int(df[SALARY].max()) + 8000],
-    )
+    base.transform_density(density=SALARY_F, as_=[SALARY_F, "density"], groupby=[DEPT_F])
     .mark_area(orient="horizontal", opacity=0.75)
     .encode(
         y=alt.Y(SALARY_F, type="quantitative", title=SALARY),
@@ -102,11 +97,7 @@ median_line = (
     )
 )
 
-# Title — 43 chars, below 67-char threshold so fontSize=16 is fine
 title_str = "violin-basic · python · altair · anyplot.ai"
-n_chars = len(title_str)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
-title_fontsize = max(11, round(16 * ratio))
 
 # Chart — four violin panels faceted side-by-side; dept ordering tells salary story
 chart = (
@@ -115,12 +106,12 @@ chart = (
         column=alt.Column(
             DEPT_F,
             type="nominal",
-            header=alt.Header(labelFontSize=16, labelOrient="bottom", title=None, labelPadding=12, labelColor=INK_SOFT),
+            header=alt.Header(labelFontSize=12, labelOrient="bottom", title=None, labelPadding=12, labelColor=INK_SOFT),
             sort=dept_order,
         )
     )
     .resolve_scale(x="independent")
-    .properties(background=PAGE_BG, title=alt.Title(title_str, fontSize=title_fontsize, anchor="middle", color=INK))
+    .properties(background=PAGE_BG, title=alt.Title(title_str, fontSize=16, anchor="middle", color=INK))
     .configure_facet(spacing=15)
     .configure_view(stroke=None, fill=PAGE_BG, continuousWidth=160, continuousHeight=340)
     .configure_axis(
