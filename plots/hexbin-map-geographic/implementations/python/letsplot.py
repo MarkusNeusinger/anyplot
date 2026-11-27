@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import math
@@ -44,9 +44,9 @@ BASEMAP_COLOR = "#AAAAAA" if THEME == "light" else "#5A5A54"
 
 # Imprint sequential ramp for fields (colored cells filling the plot), per theme
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -76,10 +76,11 @@ np.random.seed(42)
 n_points = 15000
 
 manhattan_lat = np.random.normal(40.758, 0.025, n_points // 2)
-manhattan_lon = np.random.normal(-73.985, 0.015, n_points // 2)
+# the island runs north-north-east, so the cluster's longitude follows its latitude
+manhattan_lon = -73.987 + 0.5 * (manhattan_lat - 40.758) + np.random.normal(0, 0.006, n_points // 2)
 
 midtown_lat = np.random.normal(40.752, 0.018, n_points // 4)
-midtown_lon = np.random.normal(-73.972, 0.012, n_points // 4)
+midtown_lon = -73.985 + 0.5 * (midtown_lat - 40.752) + np.random.normal(0, 0.006, n_points // 4)
 
 jfk_lat = np.random.normal(40.641, 0.012, n_points // 6)
 jfk_lon = np.random.normal(-73.778, 0.015, n_points // 6)
@@ -210,8 +211,18 @@ anyplot_theme = theme(
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_text(color=INK, size=11),
-    legend_position="right",
+    legend_position="bottom",
 )
+
+# Map window from the basemap outlines, padded; the shorter span is widened to match the other
+pad = 0.02
+lon_mid, lat_mid = (
+    (df_boroughs[LON].min() + df_boroughs[LON].max()) / 2,
+    (df_boroughs[LAT].min() + df_boroughs[LAT].max()) / 2,
+)
+half_span = max(np.ptp(df_boroughs[LON]), np.ptp(df_boroughs[LAT])) / 2 + pad
+lon_limits = [lon_mid - half_span, lon_mid + half_span]
+lat_limits = [lat_mid - half_span, lat_mid + half_span]
 
 plot = (
     ggplot()
@@ -231,16 +242,16 @@ plot = (
         tooltips=layer_tooltips().line("Pickups|@..count.."),
     )
     + scale_fill_gradientn(
-        colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Pickup\nCount", trans="log10"
+        colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Pickup Count", trans="log10"
     )
     + labs(x="Longitude (°)", y="Latitude (°)", title=title)
-    + coord_fixed(ratio=1.0, xlim=[-74.05, -73.68], ylim=[40.55, 40.90])
+    + coord_fixed(ratio=1.0, xlim=lon_limits, ylim=lat_limits)
     + theme_minimal()
     + anyplot_theme
 )
 
 # coord_fixed narrows the plot box; a one-panel grid paints the whole canvas with the page color
-plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
+plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))
 
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

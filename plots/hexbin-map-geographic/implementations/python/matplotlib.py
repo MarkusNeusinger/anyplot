@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -115,22 +115,27 @@ FARE = "Trip fare ($)"  # role: value
 # Data: replace this block with your own table, for example df = pd.read_csv("trips.csv")
 # NYC taxi pickup locations (5,000 simulated trips) with the fare of each trip
 np.random.seed(42)
-n_points = 5000
 
 # Pickups start on land: draw extra candidates per cluster and keep the first n that fall inside a land outline
-clusters = [  # (center lon, center lat, spread lon, spread lat, trips)
-    (-73.985, 40.758, 0.015, 0.030, 2500),
-    (-73.960, 40.680, 0.030, 0.040, 1500),
-    (-73.850, 40.730, 0.040, 0.030, 1000),
+clusters = [  # (center lon, center lat, spread lon, spread lat, trips, land outline the cluster stays inside)
+    (-73.985, 40.758, 0.015, 0.030, 2500, LAND_PATHS[1]),  # Manhattan
+    (-73.960, 40.680, 0.030, 0.040, 1500, LAND_PATHS[3]),  # Brooklyn
+    (-73.850, 40.730, 0.040, 0.030, 1000, LAND_PATHS[3]),  # Queens
 ]
 lons, lats = [], []
-for lon_c, lat_c, lon_sd, lat_sd, n_trips in clusters:
-    cand = np.column_stack([np.random.normal(lon_c, lon_sd, n_trips * 4), np.random.normal(lat_c, lat_sd, n_trips * 4)])
-    on_land = np.any([path.contains_points(cand) for path in LAND_PATHS], axis=0)
+for lon_c, lat_c, lon_sd, lat_sd, n_trips, outline in clusters:
+    cand = np.column_stack(
+        [np.random.normal(lon_c, lon_sd, n_trips * 40), np.random.normal(lat_c, lat_sd, n_trips * 40)]
+    )
+    on_land = outline.contains_points(cand)
     lons.append(cand[on_land][:n_trips, 0])
     lats.append(cand[on_land][:n_trips, 1])
 
-df = pd.DataFrame({LON: np.concatenate(lons), LAT: np.concatenate(lats), FARE: np.random.exponential(15, n_points) + 5})
+lon_all, lat_all = np.concatenate(lons), np.concatenate(lats)
+
+# Fares grow with the distance from Midtown (degrees of longitude scaled to match latitude), plus trip-to-trip noise
+dist = np.hypot((lon_all + 73.985) * np.cos(np.radians(40.75)), lat_all - 40.758)
+df = pd.DataFrame({LON: lon_all, LAT: lat_all, FARE: 8 + 260 * dist + np.random.exponential(3, len(lon_all))})
 
 # Plot — landscape 3200 × 1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)

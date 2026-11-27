@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:15:01Z'
-updated: '2026-11-26T15:32:29Z'
+updated: '2026-11-27T16:47:38Z'
 generated_by: claude-sonnet
-workflow_run: 45849090233
+workflow_run: 46035865046
 issue: 3767
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,46 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
   - Hand-built base map with water and simplified coastline polygons for NJ, Manhattan,
     the Bronx and Long Island gives geographic context in theme-adapted tones
-  - 'Correct imprint_seq fields stops per theme: pale mint to navy on light, deep
-    green to pale blue on dark'
   - ax.hexbin with C and reduce_C_function=np.mean aggregates natively; GRIDSIZE and
     extent make the hexagon size configurable
-  - Degree-formatted °W/°N ticks via FuncFormatter add cartographic polish
-  - Every chrome element (ticks, labels, colorbar, spines, annotation boxes) flips
+  - Fare grows with distance from Midtown, so the mean-fare colors show a clear spatial
+    gradient from Manhattan to outer Queens and southern Brooklyn
+  - Each cluster is rejection-sampled inside its own borough outline with Path.contains_points,
+    so pickups sit on plausible land
+  - Degree-formatted °W/°N ticks via FuncFormatter and every chrome element flipping
     correctly between themes
   weaknesses:
-  - 'DQ-01 (both): the color encodes the mean of i.i.d. exponential fares, so cell
-    colors are noise with no spatial structure and single-trip cells produce the extremes
-    → generate fares that depend on location (e.g. trip distance from the pickup)
-    so the aggregated value shows a pattern. Likely cause: FARE = np.random.exponential(15,
-    n_points) + 5 independent of position.'
-  - 'DQ-02 (both): roughly a third of the ''Manhattan'' cluster''s pickups land in
-    New Jersey west of the Hudson (dense cells at about 74.03-74.01°W), an implausible
-    taxi hot spot → keep the Manhattan cluster inside the Manhattan outline (e.g.
-    accept only Manhattan-polygon points for that cluster). Likely cause: one shared
-    on-land test over all LAND polygons with lon spread 0.015 around -73.985.'
-  - 'Suggestion: placing each borough label over its own borough (the Manhattan box
-    sits over the East River) would read more naturally.'
+  - 'VQ-07 (both): the hexbin colormap uses outdated SEQ_FIELDS stops (light: #4467A3
+    at 0.582 and #002850 at 1.0; dark: #00573D at 0 and #009E73 at 0.467) instead
+    of the style guide''s imprint_seq fields stops → light (0, #66E2B2), (0.369, #009E73),
+    (0.803, #024582), (1, #351E45); dark (0, #404C02), (0.487, #009E73), (1, #CDD9FF).
+    Likely cause: the SEQ_FIELDS lists at the top of the file.'
+  - 'Suggestion: placing the Manhattan label over Manhattan itself (its box sits over
+    the East River at the (25, 19) pt offset) would read more naturally.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 page; map area light-blue water with beige land polygons (NJ, Manhattan, Bronx, Long Island) and grey coastline outlines
-      Chrome: title, Longitude/Latitude axis titles, degree ticks and colorbar 'Mean Trip fare ($)' in dark ink, all readable
-      Data: about 600 translucent hexagons (alpha 0.65) in imprint_seq fields stops, pale mint through green to slate blue for high means; coastlines visible through cells; three small borough label boxes
+      Chrome: title, Longitude/Latitude axis titles, degree ticks and colorbar 'Mean Trip fare ($)' (about 12-65) in dark ink, all readable
+      Data: about 550 translucent hexagons (alpha 0.65) over Manhattan, Brooklyn and Queens; pale mint in Midtown Manhattan grading through green to slate blue in southern Brooklyn and outer Queens; no cells in New Jersey; coastlines visible through cells; three borough label boxes
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page; dark navy water, dark olive land, light grey coastlines
       Chrome: title, axis titles, ticks and colorbar text light, readable; no dark-on-dark
-      Data: same cells with the dark fields stops (deep green to brand green to pale blue); borough boxes on dark elevated fill with light text
+      Data: same cells with the dark ramp (deep green in Manhattan, brand green in Brooklyn/western Queens, pale blue-grey in the outer cells); borough boxes on dark elevated fill with light text
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,28 +62,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Borough label boxes at alpha 0.6, 8 pt let the cells under them show;
-          no text collisions
+        comment: No text collisions; borough label boxes at alpha 0.6 let the cells
+          under them show
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 35-across grid with thin INK_MUTED edges; cells clearly visible on
-          land and water in both themes, colorbar visible
+        comment: 35-across grid with thin INK_MUTED edges; cells clearly visible over
+          land and water in both themes; colorbar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is a monotone lightness ramp, CVD-safe; no red-green
-          signal
+        comment: Monotone lightness ramp, CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No canvas-gate file; map plus colorbar fill the 3200x1800 canvas,
+        comment: No canvas-gate file; map and colorbar fill the 3200x1800 canvas,
           nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
@@ -98,13 +93,13 @@ review:
           and unit
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'imprint_seq with the fields stops per theme (mint to navy on light,
-          deep green to pale blue on dark); backgrounds #FAF8F1 / #1A1A17'
+        passed: false
+        comment: Backgrounds correct, but the SEQ_FIELDS stops are an outdated set,
+          not the style guide's imprint_seq fields stops (defect line)
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,8 +107,8 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: hand-built water/land base map in theme-adapted water and
-          land tones, cartographic degree-formatted ticks'
+        comment: 'Raised: hand-built water/land base map in theme-adapted tones and
+          cartographic degree-formatted ticks'
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -123,11 +118,11 @@ review:
           outline, faint dashed grid tuned for the map'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: 'Default: mean fare is i.i.d. noise, so no focal point emerges beyond
-          the density footprint'
+        comment: 'Raised: the chosen fare model makes a clear focal gradient, cheap
+          Midtown cells fading to expensive outer-borough cells'
     spec_compliance:
       score: 15
       max: 15
@@ -144,14 +139,13 @@ review:
         max: 4
         passed: true
         comment: Configurable GRIDSIZE, mean aggregation, sequential colormap with
-          colorbar, base map; at alpha 0.65 the coastlines show through the cells
-          (C4 met)
+          colorbar, base map; at alpha 0.65 the coastlines show through (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon on x, lat on y; extent matches the axes; marks at their positions;
+        comment: Lon on x, lat on y; extent matches the axes; cells at their positions;
           readable ticks and colorbar ticks
       - id: SC-04
         name: Title & Legend
@@ -161,30 +155,30 @@ review:
         comment: Mandated title format; colorbar label 'Mean Trip fare ($)' names
           the statistic
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Hexagonal aggregation, mean reduction and empty gaps shown, but the
-          aggregated value is per-trip noise with no spatial structure (defect line)
+        passed: true
+        comment: Hexagonal aggregation, mean reduction, empty gaps and a spatially
+          structured aggregated value all shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Pickups now fall on land, but much of the Manhattan cluster lands
-          in New Jersey west of the Hudson (defect line)
+        passed: true
+        comment: Taxi pickups stay inside their own borough outlines on land; fares
+          rise with distance from Midtown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean fares about $5-68, plausible for NYC taxi trips; no Check values
-          in the spec
+        comment: Mean fares about $12-65, cheap in Midtown and rising toward outer
+          Queens/Brooklyn, plausible for NYC taxis; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,7 +188,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script, no functions or classes (the adaptability advisory on
+          LANDMARKS is no CQ-01 deduction)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,8 +207,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Rejection sampling with Path.contains_points is concise; title fontsize
-          set directly
+        comment: Rejection sampling with Path.contains_points is concise; no hand-rolled
+          aggregation
       - id: CQ-05
         name: Output & API
         score: 1
@@ -221,7 +216,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png; current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,26 +228,30 @@ review:
           fig.colorbar on the PolyCollection; FuncFormatter ticks'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: 'Raised: hexbin''s native reduce_C_function aggregation instead of
-          pre-binning'
+        comment: 'Raised: hexbin''s native reduce_C_function aggregation and matplotlib.path.Path.contains_points
+          for on-land rejection sampling'
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
-  rendered_at: '2026-11-26T15:29:05Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T16:44:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - binning
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
+  - grid-styling
