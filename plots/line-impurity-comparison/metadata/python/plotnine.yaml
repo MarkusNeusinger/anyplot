@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: line-impurity-comparison
 created: '2026-02-17T18:52:54Z'
-updated: '2026-11-27T17:48:10Z'
+updated: '2026-11-27T17:53:47Z'
 generated_by: claude-sonnet
-workflow_run: 46043886124
+workflow_run: 46044781784
 issue: 4133
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,79 +12,74 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - 'Correct Imprint order: Gini in #009E73 (position 1), entropy in #C475FD (position
-    2), identical in both renders; chrome fully theme-adaptive (#FAF8F1 / #1A1A17
-    backgrounds, INK/INK_SOFT text, elevated legend fill)'
-  - Color and linetype mapped to the same variable with shared limits, so plotnine
-    merges them into one legend and the curves stay apart by solid vs dashed even
-    where they converge near p = 0 and p = 1
-  - Legend moved below the panel as a horizontal strip, so no data is covered; formulas
-    set as readable Unicode mathematics (log₂, −)
-  - Peaks and annotation position computed from df (idxmax per group, peak_p in an
-    f-string), and p sampled on 201 points so p = 0.5 is an exact sample and both
-    maxima sit on the guide
-  - Edge cases at p = 0 and p = 1 handled with np.where; both curves reach zero at
-    both ends without gaps
-  - Axis titles come from the column constants, the plotnine idiom, with no redundant
-    labs()
+  - 'Correct Imprint order: Gini in #009E73, entropy in #C475FD, identical in both
+    renders; chrome fully theme-adaptive (#FAF8F1 / #1A1A17, INK/INK_SOFT text, elevated
+    legend fill)'
+  - Color and linetype mapped to the same column with shared limits, so plotnine merges
+    them into one guide and the curves stay apart by solid vs dashed even where they
+    converge near p = 0 and p = 1
+  - Formulas set as readable Unicode mathematics (log₂, −) in the legend, below the
+    panel so no data is covered
+  - Peaks and annotation position computed from df (groupby idxmax, f-string); 201
+    samples make p = 0.5 exact
+  - Edge cases at p = 0 and 1 handled with np.where; both curves reach zero without
+    gaps
   weaknesses:
-  - 'VQ-01 (both): the annotation ''Both maxima at p = 0.5'' is set at 5.5 pt and
-    reads small beside the 8 pt tick labels → about 8 pt (+2.5 pt). Likely cause:
-    annotate("text", size=5.5).'
-  - 'VQ-02 (both): the dashed p = 0.5 guide line runs straight through the ''Both
-    maxima at p = 0.5'' text, crossing its letters → keep the text clear of the line
-    (end the guide below the text, or set the text with ha=''left'' beside it). Likely
-    cause: geom_vline spans the full panel height while the annotate text is centred
-    on x=peak_p.'
+  - 'VQ-03 (both): the entropy legend sample is drawn as a short solid lavender bar,
+    so the key does not show the dashed style the curve carries → a key long enough
+    to show the dash pattern. Likely cause: default legend_key_width with geom_line(size=2.5);
+    set legend_key_width (e.g. 40) in theme().'
   - 'Suggestion: draw the legend background without the INK_SOFT frame (color="none"),
     as the plotnine prompt''s legend recipe does, for a quieter bottom strip.'
+  - 'Suggestion: tighten the empty band between the x-axis title and the legend strip.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "line-impurity-comparison · python · plotnine · anyplot.ai" in dark ink, centred, about 58 % of the width. Axis titles "Probability (p)" and "Impurity measure (normalized)" in dark INK, tick labels 0.0–1.0 (x every 0.1, y every 0.2) in INK_SOFT, all readable. Subtle horizontal grid only; left and bottom axis lines. Small italic annotation "Both maxima at p = 0.5" above the peaks, crossed by the dashed vertical guide at p = 0.5.
-      Data: Gini as a solid #009E73 arch peaking at 0.5, entropy as a dashed #C475FD arch peaking at 1.0, both symmetric and reaching 0 at p = 0 and p = 1; peak dots on both maxima at p = 0.5. Horizontal legend below the panel on an elevated #FFFDF6 strip: "Splitting criterion — Gini: 2p(1−p), Entropy: −p log₂p − (1−p) log₂(1−p)".
-      Legibility verdict: PASS (annotation small but readable)
+      Chrome: title "line-impurity-comparison · python · plotnine · anyplot.ai" in dark ink, centred, ~58 % of width. Axis titles "Probability (p)" / "Impurity measure (normalized)" in INK, ticks 0.0-1.0 in INK_SOFT; subtle horizontal grid; left and bottom axis lines. Italic 8 pt annotation "Both maxima at p = 0.5" above the peaks, clear of the dashed guide that ends at the entropy peak.
+      Data: Gini solid #009E73 arch peaking at 0.5, entropy dashed #C475FD arch peaking at 1.0, both reach 0 at p = 0 and 1; dots on both maxima. Framed horizontal legend below the panel with formula entries; the entropy key reads as a solid bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title and axis titles in light #F0EFE8, tick labels and legend text in #B8B7B0, legend strip on #242420 with a light frame; no dark-on-dark text. Grid subtle but visible.
-      Data: identical categorical colors to the light render (green #009E73 solid, lavender #C475FD dashed), same peak dots and guide line.
+      Chrome: title and axis titles in #F0EFE8, ticks, annotation and legend text in #B8B7B0, legend on #242420 with a light frame; no dark-on-dark text; grid subtle but visible.
+      Data: identical categorical colors to the light render (green solid, lavender dashed), same peak dots and guide.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Theme text sizes explicit (12/10/8/8 pt) and readable in both themes;
-          the 5.5 pt annotation reads small (defect line)
+        comment: Theme sizes explicit (12/10/8/8 pt); annotation at 8 pt; all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Legend sits below the panel and covers nothing; the dashed guide
-          crosses the annotation text (defect line)
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick lines suit two smooth curves; peak dots and legend line samples
-          visible in both themes
+        comment: Legend below the panel covers nothing; the p = 0.5 guide ends at
+          the peak and stays clear of the annotation text
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: Thick lines and peak dots visible in both themes; the entropy legend
+          sample is drawn as a solid line and does not show the curve's dash (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green vs lavender plus solid vs dashed: not color-only'
+        comment: Green vs lavender plus solid vs dashed on the curves; not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -104,8 +99,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1 and 2 in order; correct theme backgrounds and
-          chrome
+        comment: 'Imprint positions 1 (#009E73) and 2 (#C475FD) in order, identical
+          in both renders; #FAF8F1 / #1A1A17 backgrounds and theme chrome'
     design_excellence:
       score: 8
       max: 20
@@ -122,7 +117,7 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: Spine and grid rules met; legend strip framed; nothing beyond
+        comment: Spine and grid rules met; framed legend strip; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -145,7 +140,7 @@ review:
         max: 4
         passed: true
         comment: Formula legend, maxima annotated at p = 0.5, edge cases at 0 and
-          1, light grid, distinct color and style; C1–C5 all met
+          1, light grid, distinct color and line style; C1-C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -182,7 +177,7 @@ review:
         max: 4
         passed: true
         comment: 'Checked off the axis and in code: Gini peak 0.5 and entropy peak
-          1.0 at p = 0.5 (p = 0.5 an exact sample of 201), both 0 at p = 0 and 1'
+          1.0 at p = 0.5 (an exact sample of 201), both 0 at p = 0 and 1'
     code_quality:
       score: 10
       max: 10
@@ -210,7 +205,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Peaks via groupby idxmax, labels via f-string; no hand-rolled algorithm
+        comment: Peaks via groupby idxmax, label via f-string; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,7 +222,7 @@ review:
         max: 5
         passed: true
         comment: Color and linetype mapped to one column with shared limits so plotnine
-          merges them into a single guide; axis and legend titles come from the column
+          merges them into one guide; axis and legend titles come from the column
           names without labs()
       - id: LM-02
         name: Distinctive Features
@@ -238,7 +233,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
-  rendered_at: '2026-11-27T17:44:32Z'
+  rendered_at: '2026-11-27T17:50:54Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -247,6 +242,8 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
+  - minimal-chrome
   - grid-styling
