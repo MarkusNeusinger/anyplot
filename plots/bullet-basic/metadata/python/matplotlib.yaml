@@ -2,130 +2,125 @@ library: matplotlib
 language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:18:21Z'
-updated: '2026-05-29T15:34:23Z'
+updated: '2026-11-27T21:04:35Z'
 generated_by: claude-sonnet
-workflow_run: 26645147725
+workflow_run: 46067155698
 issue: 999
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Complete bullet chart implementation with all required elements: actual bar,
-    target marker, three qualitative bands, value labels, and a fully-labelled legend'
-  - 'Semantic green/red encoding (#009E73 above target, #AE3030 below target) with
-    hatch pattern redundancy provides CVD-safe dual encoding for status'
-  - FancyBboxPatch with rounded corners gives a polished, modern aesthetic that differentiates
-    from default matplotlib rectangles
-  - Proper theme adaptation throughout — all chrome elements (text, grid, spines,
-    legend frame) correctly flip between light and dark renders with no dark-on-dark
-    failures
+  - 'Single brand-green measure bar on a three-step grayscale band ramp: exactly the
+    basic variant''s layers, readable at a glance in both themes'
+  - Band ramp derived from two theme-adaptive endpoints via LinearSegmentedColormap,
+    so the steps stay even and every band separates from the page in the dark render
+    too
+  - Tidy df with column constants, grouped in data order; limits and band extents
+    come from the data
+  - FancyBboxPatch boxstyle gives bands and bars softly rounded ends; proxy Patch/Line2D
+    handles build a complete legend
   weaknesses:
-  - 'Dark-theme qualitative band contrast is subtle: ''Poor'' band (#2C2C29) sits
-    very close to background (#1A1A17) with limited perceptual separation — consider
-    widening the gap between dark band shades (e.g. #353532, #434340, #52524F) so
-    all three bands are clearly distinguishable in the dark render'
-  - 'DE storytelling could be stronger: a small annotation showing the count of metrics
-    above/below target (e.g. ''2 of 5 metrics above target'') or a highlighted ''best
-    performer'' label would add a focal point'
+  - 'Suggestion: the x-axis title is typed as ''Performance (%)''; deriving it from
+    the ACTUAL constant would keep it in step with the data block.'
+  - 'Suggestion: the empty strip below the legend could be reclaimed by lowering the
+    bottom margin slightly, giving the bullets a little more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "bullet-basic · python · matplotlib · anyplot.ai" is dark and readable at top. X-axis label "Performance (%)" is clearly visible in dark ink. Y-axis metric names (Revenue, Profit Margin, Customer Growth, Satisfaction, On-Time Delivery) appear as bold dark tick labels. X-axis tick values (0, 20, 40, 60, 80, 100) are readable. Subtle x-axis grid lines (alpha=0.15) visible but not dominant. Only bottom spine present.
-      Data: Three qualitative bands per row in light gray / medium gray / dark gray (poor to good). Revenue and On-Time Delivery bars are green (#009E73) with hatch pattern "///" (above target). Profit Margin, Customer Growth, Satisfaction bars are red (#AE3030) (below target). Target markers are thin black vertical lines. Value labels (e.g. "92%", "38%") appear to the right in matching green/red color. Legend at bottom shows all 6 elements clearly.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'bullet-basic · python · matplotlib · anyplot.ai' centered in dark ink, bold metric labels left (Revenue, Profit Margin, Customer Growth, Satisfaction, On-Time Delivery) in INK_SOFT, x ticks 0-100 and 'Performance (%)' axis title, legend below in an elevated frame; all readable.
+      Data: five horizontal bullets, each with three grayscale bands (#DCDCDC, #B8B8B8, #949494) ending at their thresholds, a narrower #009E73 measure bar from zero, a thin near-black target line, and a bold ink value label (92%, 38%, 71%, 84%, 96%) right of the bands. Profit Margin uses a shorter 0-60 band scale.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title readable in cream/off-white text. Axis labels, tick labels all appear in light gray/cream tones (INK_SOFT = #B8B7B0 for dark). No dark-on-dark failures observed. Grid lines are subtle. Bottom spine visible as lighter line.
-      Data: Green (#009E73) hatched bars for Revenue and On-Time Delivery are identical to light render. Red (#AE3030) bars for Profit Margin, Customer Growth, Satisfaction are identical to light render. Target markers appear as cream/white vertical lines (INK = #F0EFE8). Value labels in green/red remain readable against dark background. Qualitative bands use dark variants (#2C2C29, #3A3A37, #484845) — distinguishable but the "Poor" band (lightest-dark shade) offers low contrast against the near-black background; the three bands are visible but less crisp than in the light render. Legend has elevated dark frame (#242420) with light gray text.
-      Legibility verdict: PASS (with minor note: dark-theme band distinction is subtle for the "Poor" range)
+      Background: warm near-black #1A1A17.
+      Chrome: title, ticks, axis title and legend text in light ink; metric labels in light gray; no dark-on-dark text.
+      Data: identical brand-green measure bars; bands flip to dark grays #34342F / mid / #66665E, each distinct from the page and its neighbors; target lines flip to light ink and contrast with bar and bands; value labels light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title dynamic, axis 10pt, ticks 8pt);
-          all text readable in both renders with proper INK/INK_SOFT token threading
+        comment: Title 12 pt, axis title 10 pt, ticks/legend/value labels 8 pt; all
+          readable in both themes (INK/INK_SOFT tokens)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; value labels positioned at range_max+2 with
-          sufficient clearance; metric name labels well-spaced
+        comment: No text collisions; value labels sit in a clean column right of the
+          bands; target over bar is expected (C6)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All bars and target markers clearly visible; minor: dark-theme ''Poor''
-          band (#2C2C29) has low contrast against #1A1A17 background, subtle separation'
+        comment: 'Bars, target markers and all three bands clearly visible in both
+          themes; dark bands #34342F→#66665E separate from the page and from each
+          other; legend swatches visible'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-green encoding supplemented with hatch pattern ('///') as CVD-safe
-          redundant encoding; hatch uses INK edgecolor for contrast
+        comment: 'Single green measure, grayscale bands, ink target: no red-green
+          signal, good contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; figsize=(8,4.5) dpi=400 → 3200×1800px; no overflow;
-          fig.subplots_adjust used instead of bbox_inches='tight'
+        comment: 3200x1800, chart fills the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Performance (%)'' x-axis with units; y-axis uses metric names
-          as tick labels (appropriate for horizontal bullet charts)'
+        comment: '''Performance (%)'' with unit; metric names as readable labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 brand green for above-target; #AE3030 (Imprint slot 5) for
-          below-target semantic exception; grayscale bands per spec; backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'Measure bar #009E73 throughout; neutral grayscale bands; backgrounds
+          #FAF8F1 / #1A1A17 correct; chrome theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: FancyBboxPatch rounded corners add modern polish; semantic color
-          hierarchy (green above/red below) with hatch redundancy is a thoughtful
-          design choice; intentional bar_height vs band_height proportioning
+        comment: Style-guide baseline; bold metric and value labels give mild hierarchy,
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three spines removed (only bottom kept); subtle x-axis grid (alpha=0.15);
-          legend with elevated background frame; clean label placement
+        comment: Value labels aligned in one column past the widest band; x-only grid
+          that shows in the gaps between bullets; bar-to-band ratio tuned (bar 0.32
+          vs band 0.77)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color immediately signals above/below target; hatch reinforces success
-          state; value labels with matching colors provide precise reading; 5-metric
-          layout enables easy dashboard comparison
+        comment: Data displayed as the spec describes; no focal point chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -135,31 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bullet chart with bars, target markers, and qualitative
-          range bands
+        comment: Correct horizontal bullet chart with only the basic variant's three
+          layers (+ allowed value label)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: actual bar, target marker, three qualitative
-          bands (poor/satisfactory/good), metric label, value annotation, multiple
-          bullets stacked'
+        comment: 'All Notes and C1-C5 met: grayscale bands, thin contrasting target,
+          horizontal, value labels, common scale'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows performance values 0-100%; Y-axis shows all 5 metric
-          names; full data range visible
+        comment: Bars start at zero on a linear 0-115 axis; targets and band limits
+          at their values; limits from data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bullet-basic · python · matplotlib · anyplot.ai' correct;
-          legend with 6 entries (Above Target, Below Target, Target, Good, Satisfactory,
-          Poor) fully explains the visual encoding
+        comment: Title format correct; legend explains Actual, Target and the three
+          bands
     data_quality:
       score: 15
       max: 15
@@ -169,23 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: single measure bar, target marker, three qualitative
-          bands, value label, multiple stacked bullets for comparison'
+        comment: Five bullets show measures above and below target, varied band thresholds
+          including a shorter 0-60 scale
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world Q1 KPI dashboard with business metrics (Revenue, Profit
-          Margin, Customer Growth, Satisfaction, On-Time Delivery); realistic percentage
-          values; neutral business context
+        comment: Neutral KPI dashboard (revenue, margin, growth, satisfaction, delivery)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentage-based scale (0-100%) appropriate for KPI metrics; values
-          span realistic range (38-96%)
+        comment: Plausible percentages; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -195,60 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear script structure; data as list of
-          dicts
+        comment: Top to bottom, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random state needed
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: os, plt, Line2D, FancyBboxPatch, Patch'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration with enumerate; zip(strict=True) for range bands;
-          no fake UI elements; appropriate complexity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
-          API
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'; current API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses Axes methods throughout (FancyBboxPatch, ax.vlines, ax.set_yticks,
-          ax.legend); plt.setp() for legend text; fig.subplots_adjust for padding
-          control
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyBboxPatch with boxstyle='round,pad=0,rounding_size=...' is distinctively
-          matplotlib for rounded-corner rectangles; custom legend with Line2D + Patch
-          handles; plt.setp() for batch text styling
+        comment: 'Axes methods, groupby over the tidy df, proxy legend handles: the
+          library prompt''s pattern, nothing beyond'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: FancyBboxPatch boxstyle for rounded bands/bars and LinearSegmentedColormap
+          to derive the band ramp
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T21:01:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
+  - patches
   - annotations
   - manual-ticks
   patterns:
@@ -256,6 +244,4 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
