@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:16:53Z'
-updated: '2026-11-26T15:32:02Z'
+updated: '2026-11-27T16:59:14Z'
 generated_by: claude-sonnet
-workflow_run: 45848868708
+workflow_run: 46037132014
 issue: 3767
 language_version: 3.14.10
 library_version: 0.13.2
@@ -12,166 +12,153 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - 'imprint_seq with the theme''s fields stops: pale mint→navy on light, deep green→pale
-    blue on dark, so the Seattle and Portland hotspots stand out in both themes'
-  - sns.jointplot(kind='hex') with joint_kws C=richness and reduce_C_function=np.mean
-    is the idiomatic seaborn path to mean aggregation
-  - Colorbar in a dedicated axes outside the y-marginal keeps the joint and marginal
-    axes aligned
-  - 'Fully theme-adaptive chrome: all text readable on #FAF8F1 and #1A1A17, label
-    boxes take ELEVATED_BG per theme'
-  - Colorbar label names the statistic (Mean Species Richness)
+  - Single-axes ax.hexbin with gridsize rows derived from the latitude-corrected aspect,
+    so hexagons are regular on screen over a map that is not stretched
+  - Base map covers the Pacific coast, Strait of Juan de Fuca, Puget Sound, Vancouver
+    Island and dashed US-Canada and WA-OR borders, drawn over the translucent cells
+    so it reads in both themes
+  - Observations clipped to land with np.interp against the coastline, so no cells
+    sit offshore
+  - Current imprint_seq fields stops per theme with a colorbar that names the statistic
+    (Mean Species Richness)
+  - City labels on empty ground with thin leaders to the Seattle and Portland hotspots;
+    no boxes covering data
   weaknesses:
-  - 'VQ-02 (both): the boxed ''Seattle'' label sits on the top row of the Seattle
-    hotspot cells and the WA, OR and Canada boxes cover hex cells, hiding the very
-    cells the labels point to → place the labels where no cells are, or drop the boxes
-    so cells stay visible. Likely cause: ax.text positions (-122.33, 47.83), (-119.0,
-    48.5/44.5), (-125.6, 49.15) with bbox_props.'
-  - 'VQ-01 (both): colorbar tick labels at 7 pt, below the style guide''s 8 pt tick
-    reference → 8 pt (+1 pt). Likely cause: cbar.ax.tick_params(labelsize=7).'
-  - 'SC-01 (both): marginal histograms of longitude and latitude are drawn although
-    the spec asks for a hexbin map only → draw the hexbin on a single axes (e.g. ax.hexbin
-    or JointGrid without marginals). Likely cause: sns.jointplot marginals.'
-  - 'SC-02 (both): the base map is a 9-vertex coastline and two border lines without
-    Puget Sound or Vancouver Island, thin geographic context for the ''base map of
-    coastlines'' property (C4) → a more detailed coastline polyline. Likely cause:
-    coast_lon/coast_lat lists.'
-  - 'DQ-03 (both): the broad background Gaussian (sd 1.4° lon) places many land-bird
-    observations far offshore west of the drawn coastline (lon -126 to -124.5) → keep
-    generated points on land (narrower spread or clip at the coast). Likely cause:
-    np.random.normal(center_lon, 1.4, n_points).'
-  - 'Suggestion: demonstrating the count default alongside mean would show the aggregation
-    choice.'
+  - 'VQ-06 (both): the x-axis title ''Longitude (°W)'' is paired with negative tick
+    values (−126 … −118), so the ticks read as −126 °W = 126 °E → either ''Longitude
+    (°)'' with signed ticks or ''°W'' with positive tick labels (126 … 118). Likely
+    cause: ax.set_xlabel(''Longitude (°W)'') with untransformed negative longitudes.'
+  - 'Suggestion: a second panel or a count-aggregated variant would show the aggregation
+    choice the Notes describe.'
+  - 'Suggestion: closing the Vancouver Island outline at its northern end would make
+    the island read as land rather than two open lines.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 on figure, joint and marginal axes.
-      Chrome: title 'hexbin-map-geographic · python · seaborn · anyplot.ai' dark at top; Longitude (°W) / Latitude (°N) axis titles and tick labels in dark ink; colorbar 'Mean Species Richness' with ticks 1.5-3.5 at right outside the y-marginal; Canada/WA/OR and italic Seattle/Portland labels in light boxes. All readable.
-      Data: ~28-gridsize hexbins colored with imprint_seq fields stops (pale mint low → green → blue → navy high); navy cells at the Seattle and Portland hotspots; #009E73 marginal histograms on top and right; grey coastline, dashed 49°N border and WA-OR border drawn over the cells.
+      Background: warm off-white #FAF8F1 page and axes, square 2400x2400 canvas.
+      Chrome: dark title 'hexbin-map-geographic · python · seaborn · anyplot.ai' (~76% width), axis titles 'Longitude (°W)' / 'Latitude (°N)', INK_SOFT ticks, L-shaped spines, colorbar 'Mean Species Richness' with 1.5-3.5 ticks; italic 'Seattle'/'Portland' with leaders, 'Canada', 'WA', 'OR' labels. All readable.
+      Data: ~28-column hexbin grid over the Pacific NW, pale mint → brand green #009E73 → deep blue → dark violet; darkest violet cells at Seattle and Portland, mostly green interior, sparse fringe cells with gaps. Dark grey coastline, Strait, Puget Sound and Vancouver Island lines, dashed 49°N and WA-OR borders drawn over the cells.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and labels in light ink, ticks in light grey, label boxes dark elevated; no dark-on-dark text.
-      Data: same hexbins with the dark fields stops (deep green low → brand green → pale blue high); Seattle and Portland hotspots pale blue; marginals in #009E73; geographic lines in light grey.
+      Chrome: light title, axis titles and light-grey ticks, spines and colorbar outline; base-map lines and labels light grey. No dark-on-dark text.
+      Data: same grid and data; dark-theme fields ramp dark olive → brand green → pale blue, Seattle/Portland hotspots pale blue; the brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, labels 8-9 pt readable
-          in both themes; colorbar tick labels at 7 pt sit below the 8 pt reference
-          (defect line)
+        comment: Title 12 pt, axis titles 10 pt, ticks and colorbar ticks 8 pt, city/state
+          labels 8-9 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Boxed Seattle label covers the top row of the Seattle hotspot cells,
-          and the WA/OR/Canada boxes sit on hex cells (defect line)
+        comment: No text collisions; city labels sit on empty ocean ground with leaders
+          to their hotspots, state labels on empty land
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 7,000 points at gridsize 28 give clearly visible hexes with thin
-          page-colored edges; colorbar and marginal bars visible in both themes
+        comment: Hexagons clearly visible with thin page-colored edges; base-map lines
+          visible over the cells in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential ramp varies in lightness; no red-green signal
+        comment: Lightness-ordered sequential ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas (gate passed); colorbar in its own axes right
-          of the y-marginal, joint and marginals aligned, drawing fills the canvas
+        comment: Square 2400x2400, map fills the axes with latitude-corrected aspect,
+          colorbar beside it, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Longitude (°W) / Latitude (°N) with units; colorbar 'Mean Species
-          Richness'
+        comment: '''Longitude (°W)'' is paired with negative tick values (−126 … −118),
+          a contradictory sign (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq fields stops per theme (mint→green→blue→navy light;
-          deep green→green→pale blue dark); #009E73 marginals; correct page backgrounds'
+        comment: 'Current imprint_seq fields stops per theme; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above default: typographic hierarchy of italic city labels vs upright
-          state labels in ELEVATED_BG boxes, dedicated colorbar axes centred on the
-          joint height'
+        passed: true
+        comment: 'Typographic hierarchy chosen for the map: italic city labels in
+          INK, medium-weight state labels in INK_SOFT, solid coastline vs dashed borders'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Above default: hex edges in the page color separate cells, colorbar
-          trimmed to 60 % of the joint height and aligned to its centre'
+        passed: true
+        comment: Latitude-corrected aspect with gridsize rows computed so hexagons
+          are regular on screen; labels placed on empty ground with thin leaders instead
+          of boxes over data
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Seattle and Portland labels point the eye to the two richness hotspots,
-          which carry the darkest (light) / brightest (dark) cells
+        passed: true
+        comment: Seattle and Portland leaders steer the eye to the two darkest/brightest
+          richness hotspots
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Hexbin map correct, but jointplot adds marginal histograms the spec
-          does not ask for (defect line)
+        comment: Single-axes hexbin map, no unasked encodings
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Hexbins, sequential colormap with colorbar, mean aggregation, translucency
-          present; base map is a 9-vertex coastline and two borders, thin geographic
-          context for C4 (defect line)
+        comment: Hexbins with configurable gridsize, mean aggregation (count/sum noted),
+          imprint_seq with colorbar, alpha 0.85, coastline/Puget Sound/Vancouver Island/borders
+          base map; C1-C4 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon on x, lat on y, mean richness on color; marginals aligned with
-          the joint axes
+        comment: Lon on x, lat on y, mean richness on color; extent fixed to the map
+          bounds; marks at their data positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly 'hexbin-map-geographic · python · seaborn · anyplot.ai';
-          colorbar names the statistic
+          colorbar names the statistic 'Mean Species Richness'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hex aggregation, mean statistic, dense clusters and sparse
-          gaps
+        comment: Dense urban hotspots, broad regional cover, sparse fringe gaps, mean
+          aggregation shows a value pattern distinct from density
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bird species richness observations around Seattle, Portland, Cascades,
-          Olympic Peninsula — plausible and neutral
+        comment: Bird species richness observations in the Pacific Northwest (Seattle,
+          Portland, Cascades, Olympic Peninsula) — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Lat/lon bounds right for the Pacific NW, but the broad Gaussian puts
-          many cells offshore west of the drawn coastline (defect line); no Check
+        comment: Coordinates within 43-51°N / 126.5-116.5°W, observations clipped
+          to land east of the coast, richness 1-5 with cell means 1.1-3.6; no Check
           values in spec
     code_quality:
       score: 10
@@ -205,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Linear Imports → Data → Plot → Save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,45 +210,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; land clip in one np.interp line; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400, current API
+        comment: Saves plot-{THEME}.png at 400 dpi, no bbox_inches='tight', current
+          API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: sns.jointplot(kind='hex') with joint_kws C/reduce_C_function and
-          marginal_kws; sns.set_theme rc
+        comment: sns.set_theme rc tokens and sns.despine; hexbin drawn with ax.hexbin
+          since seaborn has no axes-level hexbin
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Marginal histograms are seaborn-distinctive but unrequested, so they
-          earn no credit; nothing else beyond the prompt
+        comment: Nothing seaborn-distinctive beyond the library prompt's baseline
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
-  rendered_at: '2026-11-26T15:28:04Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-27T16:55:17Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - custom-colormap
+  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
