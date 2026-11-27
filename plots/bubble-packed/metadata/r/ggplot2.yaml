@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: bubble-packed
 created: '2026-05-29T23:04:19Z'
-updated: '2026-11-27T22:22:07Z'
+updated: '2026-11-27T22:29:13Z'
 generated_by: claude-sonnet
-workflow_run: 46075511774
+workflow_run: 46076329999
 issue: 992
 language_version: 4.6.1
 library_version: 4.0.3
@@ -12,47 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 81
 review:
   strengths:
-  - Circle radii are sqrt(value)-scaled, so area is proportional to revenue (C1)
-  - The force simulation produces one compact, touching cluster with no crossing circles
-    (C2)
-  - 'Label color follows the fill: white on the blue and red bubbles in light, white
-    on every fill in dark, so every label is readable in both themes (C5)'
-  - Labels only in circles with radius >= 0.24, and every label fits inside its bubble
-  - Page-colored circle outlines and theme tokens threaded through title, legend text
-    and the elevated legend box
+  - Bubble radii are sqrt(value) * k, so circle area is proportional to the value
+    (C1), and the 21 circles pack into one compact, non-overlapping cluster with no
+    axes or grid (C2)
+  - Opaque fills in the exact Imprint hexes (#009E73 first for Consumer), identical
+    in both renders, with a 'Sector' legend that identifies every color (C3)
+  - Labels appear only in circles large enough to hold them; small circles stay unlabeled,
+    as the spec permits (C5)
+  - 'Clean ggplot2 grammar: geom_polygon with group = id, scale_fill_manual, scale_color_identity
+    for per-label ink, coord_equal for true circles, theme_void for chrome-free output'
+  - Specific, plausible technology-segment labels (ERP, Lending, AI / ML) that never
+    repeat a sector name
+  - The pairwise overlap pass is one separate_pairs() helper reused by all three packing
+    stages
   weaknesses:
-  - 'VQ-07 (both): fills drawn at alpha 0.85 with no overlapping marks blend with
-    the page, so the categorical colors differ between the renders (Consumer reads
-    about #25AC87 in light and #048A65 in dark) → opaque fills in the exact Imprint
-    hexes (alpha 1). Likely cause: geom_polygon(alpha = 0.85).'
-  - 'DQ-02 (both): the items ''Enterprise'' and ''Fintech'' carry the names of their
-    own sectors, so a bubble label repeats the legend entry and reads generic → specific
-    segment names (e.g. ''ERP'', ''Lending''). Likely cause: the label vector in the
-    segments tibble.'
-  - 'CQ-04 (code): the same pairwise overlap-resolution loop is written out three
-    times in pack_circles() (main iterations, tightening pass, the 300 final passes)
-    → one resolve_overlaps() block or a single loop reused. Likely cause: the final
-    300-pass loop added as a copy instead of reusing the existing one.'
-  - 'Suggestion: the sector gravity is too weak to form visible sector clusters; a
-    stronger pull (or per-sector centroids) would show the optional grouping as separated
-    clusters.'
+  - 'VQ-01 (dark): every bubble label is white in the dark render, including those
+    on the light lavender fill #C475FD (about 2.5:1) and on the green and ochre fills,
+    while the light render puts dark ink on the same fills, so the label color follows
+    the theme instead of the fill → label color chosen per fill in both themes: dark
+    ink #1A1A17 on lavender, green and ochre, white on blue and red. Likely cause:
+    label_color = LABEL_COLOR (''#FFFFFF'') for every row when THEME == ''dark''.'
+  - 'Suggestion: the sector gravity (gs = 0.012) is too weak to form visible sector
+    clusters; a stronger pull would show the optional grouping as separated clusters.'
   - 'Suggestion: ggforce::geom_circle() would draw the bubbles without the hand-built
     72-point polygons.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: title 'bubble-packed · r · ggplot2 · anyplot.ai' centered top in dark ink; horizontal 'Sector' legend at the bottom in an elevated box with dark-grey text — all readable.
-      Data: 21 circles packed into one compact cluster, touching and none crossing; Consumer #009E73 green (Digital Ads, E-Commerce, Social, Mobile, Streaming) at the center, lavender Infrastructure, blue Enterprise, ochre Fintech, red Emerging; bold labels inside the 16 larger circles — dark ink on green/lavender/ochre, white on blue; six small circles unlabeled. Fills are slightly translucent (alpha 0.85).
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas.
+      Chrome: title "bubble-packed · r · ggplot2 · anyplot.ai" in dark ink, centered at the top; no axes or grid (theme_void); a horizontal "Sector" legend in an elevated box with a thin INK_SOFT border at the bottom. All text readable.
+      Data: 21 opaque circles in one compact cluster, touching but not overlapping, with thin page-colored outlines. Consumer #009E73 (E-Commerce, Digital Ads, Social, Mobile, Streaming), Infrastructure lavender #C475FD (Cloud, Semicon., IoT, 5G), Enterprise blue #4467A3 (AI / ML, ERP, SaaS, Analytics, Cyber, one unlabeled), Fintech ochre #BD8233 (Payments, Lending, one unlabeled), Emerging red #AE3030 (three small unlabeled). Bold labels: dark ink on green, lavender and ochre, white on blue. The sectors are interleaved rather than clustered.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, legend box #242420 with light-grey text and a light outline — all readable, no dark-on-dark.
-      Data: identical layout; hues are the same Imprint positions but look darker because the 0.85 alpha blends with the dark page; all labels white and readable on every fill.
-      Legibility verdict: PASS
+      Chrome: title in light ink, legend box in #242420 with a light border, legend text in INK_SOFT; no dark-on-dark text anywhere.
+      Data: identical layout, and the categorical fills are identical to the light render (opaque Imprint hexes). Every label is white, including those on the light lavender fill, where the contrast is weak (about 2.5:1) but the text is still readable.
+      Legibility verdict: PASS (lavender labels weakly contrasted)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,77 +58,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Title 12 pt, legend 8/10 pt, bubble labels 2.7 mm (~7.7 pt, inside
-          the prompt's 2.5–4 mm range), bold; white labels on the blue and red fills
-          in light, white on every fill in dark — all readable in both themes
+        passed: false
+        comment: Font sizes set explicitly and readable in both themes, but in the
+          dark render all labels are white, including on the light lavender fill (defect
+          line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; every label sits inside its circle; circles do
-          not cross
+        comment: No text collisions; circles touch without crossing; each label fits
+          its circle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 21 circles clearly visible with page-colored outlines; legend swatches
-          match the fills in both themes
+        comment: Every circle visible against both pages; legend swatches visible
+          and matching the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues, labels plus legend; no red-green-only signal
+        comment: Five well-separated Imprint hues; legend plus labels, so no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Compact cluster fills the square canvas well, title and bottom legend
-          balanced, nothing cut off
+        comment: Square canvas well used by the cluster and the bottom legend; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (packed layout, no axes); legend title 'Sector' is reader
-          text
+        comment: N/A for axes (position carries no data); legend title 'Sector' reads
+          for a reader
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Imprint order with #009E73 first and correct backgrounds, but alpha
-          0.85 blends each fill with the page, so the categorical colors differ between
-          light and dark (defect line)'
+        passed: true
+        comment: 'Opaque exact Imprint hexes, #009E73 first, correct theme backgrounds'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: 'Style-guide baseline: theme_void, theme tokens, bold labels — nothing
+        passed: false
+        comment: 'Style-guide baseline: theme_void, theme tokens, bold labels; nothing
           beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Page-colored circle outlines separate touching bubbles, and a horizontal
-          bottom legend balances the square canvas
+        passed: false
+        comment: Page-colored outlines and a boxed bottom legend; baseline refinement
+          only
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
+        passed: false
         comment: Data displayed; no hierarchy chosen beyond size
     spec_compliance:
       score: 15
@@ -147,16 +144,16 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Area-proportional radii (sqrt(value)), packed by force simulation,
-          labels only in large circles, color by sector with a legend (C1, C2, C3,
-          C5 met)
+        comment: Area-proportional radii, force-simulation packing, labels only in
+          large circles, color by sector with a legend (C1, C2, C3, C5 met); grouping
+          is optional and not used as clusters
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: radius = sqrt(value)*k gives area ∝ value; layout-positioned type,
-          so packing displacement is exempt
+        comment: radius = sqrt(value) * 0.017 gives area proportional to value; packing
+          displacement exempt for a layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -165,7 +162,7 @@ review:
         comment: Title 'bubble-packed · r · ggplot2 · anyplot.ai' correct; legend
           'Sector' with reader-friendly entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -173,24 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide size range (110–720), five color groups, labelled and unlabelled
-          circles — all aspects of the plot type shown
+        comment: Wide size range (110 to 720), five groups, labelled and unlabelled
+          circles
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Technology market segments are plausible and neutral, but items 'Enterprise'
-          and 'Fintech' repeat their sector names (defect line)
+        passed: true
+        comment: Neutral, plausible technology market segments with specific names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue in $B (110–720) plausible for global tech segments; no Check
-          values in the spec
+        comment: Revenue in $B (110 to 720) plausible for global tech segments; the
+          spec has no Check values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,8 +194,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; pack_circles() is a layout helper, which CQ-01 does
-          not deduct
+        comment: Linear script; pack_circles() and separate_pairs() are layout helpers,
+          which CQ-01 does not deduct
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,17 +210,17 @@ review:
         comment: ggplot2, dplyr, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The same pairwise overlap-resolution loop is written out three times
-          inside pack_circles() (defect line)
+        passed: true
+        comment: Overlap resolution factored into one reused helper
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png, current API (linewidth)
+        comment: Saves plot-{THEME}.png via ragg::agg_png at 2400x2400; current API
+          (linewidth)
     library_mastery:
       score: 4
       max: 10
@@ -233,29 +229,27 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
+        passed: false
         comment: Sound grammar (geom_polygon with group, scale_fill_manual, scale_color_identity,
-          coord_equal, theme_void) — the default level
+          coord_equal, theme_void); the default level
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: true
+        passed: false
         comment: Nothing distinctive beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
-  rendered_at: '2026-11-27T22:18:19Z'
+  rendered_at: '2026-11-27T22:26:02Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending
+  - edge-highlighting
