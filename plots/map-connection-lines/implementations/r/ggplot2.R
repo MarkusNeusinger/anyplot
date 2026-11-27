@@ -20,9 +20,9 @@ IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
 
 # Imprint marks ramp (colored lines on the page), per theme
 SEQ_MARKS <- if (THEME == "light") {
-  list(colours = c("#009E73", "#4467A3", "#002850"), values = c(0, 0.338, 1))
+  list(colours = c("#009E73", "#024582", "#351E45"), values = c(0, 0.687, 1))
 } else {
-  list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))
+  list(colours = c("#6F7E20", "#009E73", "#CDD9FF"), values = c(0, 0.21, 1))
 }
 
 # Columns
@@ -40,8 +40,8 @@ airports <- tibble::tibble(
   !!LON  := c(-73.78, -0.45, 139.78, 55.36, 151.17, -46.47,
               103.99, 18.60, 72.87, -118.41, 8.57, 113.91),
   # label placement relative to the marker
-  hjust  = c(1.15, 1.3, -0.3, -0.15, 0.5, 1.15, -0.15, 1.15, 0.4, 1.15, -0.15, -0.15),
-  vjust  = c(0.5, 0.5, 0.5, -0.4, 1.8, 0.5, 1.4, 0.5, 1.9, 0.5, -0.5, 1.3)
+  hjust  = c(1.1, 1.3, -0.3, -0.15, 0.5, 1.15, -0.15, 1.15, 0.4, 1.15, -0.15, -0.15),
+  vjust  = c(-1.0, 0.5, 0.5, -0.4, 1.8, 0.5, 1.4, 0.5, 1.9, 0.5, -0.5, 1.3)
 )
 
 routes <- tibble::tibble(
