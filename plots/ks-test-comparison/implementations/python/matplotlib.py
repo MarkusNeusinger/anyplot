@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-27
@@ -58,7 +58,7 @@ x_span = all_values[-1] - all_values[0]
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# "Bad Customers" — matte red with white outline for visual separation from gridlines
+# "Bad Customers" — matte red with a page-colored outline for visual separation from gridlines
 ax.step(bad_sorted, bad_ecdf, where="post", linewidth=3.5, color=PAGE_BG, zorder=3)
 ax.step(
     bad_sorted, bad_ecdf, where="post", linewidth=2.2, color=IMPRINT_PALETTE[4], label=BAD, linestyle="--", zorder=4
