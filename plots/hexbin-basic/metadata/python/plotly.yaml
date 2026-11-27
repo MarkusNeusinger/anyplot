@@ -2,55 +2,49 @@ library: plotly
 language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:46:35+00:00
-updated: '2026-05-29T09:42:17Z'
+updated: '2026-11-27T19:44:04Z'
 generated_by: claude-sonnet
-workflow_run: 26628883909
+workflow_run: 46057957508
 issue: 859
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - Strong Imprint sequential colorscale (imprint_seq) correctly applied for continuous
-    density data
-  - Log-scale color mapping effectively reveals wide density range
-  - Three named cluster annotations (Downtown, Airport, University) create clear spatial
-    narrative
-  - 'Perfect theme-adaptive chrome: backgrounds, text, and annotation boxes all flip
-    correctly between light and dark'
-  - Axis units included (km), scaleanchor=x enforces spatial accuracy
-  - Interactive HTML export with CDN plotlyjs included
-  - Custom hover template with raw count values while using log-scale for color is
-    a nice UX touch
-  - np.random.seed(42) ensures reproducibility
+  - Uses the imprint_seq field ramp with the theme's own stops, so low counts recede
+    and dense cores stand out in both renders
+  - Log color mapping with colorbar tickvals/ticktext showing raw counts (1, 3, 10
+    … 901) keeps the wide density range readable
+  - Binning in plot-area pixel space keeps hexagons regular on screen regardless of
+    axis units
+  - customdata hovertemplate gives the raw reading count per hexagon in the HTML view
+  - Factory spindle sensor scenario with three correlated operating modes is realistic
+    and neutral
   weaknesses:
-  - Minor hex tessellation gaps visible at cluster boundary edges — a known limitation
-    of plotly hexagon2 marker sizing calibration; could reduce marker_size multiplier
-    slightly or increase gridsize to improve coverage
-  - Colorbar top two tick labels (261 and 200) are slightly crowded — could deduplicate
-    by removing the max-count tick if within 15% of the next tick
-  - 'DE-01: Design is strong but not quite publication-ready; lacks the final layer
-    of polish (e.g. colorbar axis label could be vertical/rotated, annotation font
-    could be slightly bolder)'
-  - 'LM-02: The hexagon2 scatter approach is the correct plotly workaround but some
-    deeper plotly-specific features (e.g. subplot annotations, rangeslider) remain
-    unused'
+  - 'SC-02 (both): hexagons do not tile edge to edge (C1) — flat-top ''hexagon2''
+    markers sit on a pointy-top lattice (centers sqrt(3)·R apart horizontally, 1.5·R
+    vertically), so neighbours overlap sideways and small page-colored triangles show
+    between rows → use the pointy-top symbol ''hexagon'' sized to the lattice so cells
+    meet edge to edge. Likely cause: marker symbol ''hexagon2'' with the axial pointy-top
+    binning math.'
+  - 'Suggestion: a slightly smaller gridsize step (e.g. 32 across) would resolve the
+    gradient inside the overload cluster a little finer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "hexbin-basic · python · plotly · anyplot.ai" in dark ink at center, clearly readable. X-axis label "Distance East (km)" and Y-axis label "Distance North (km)" both in dark ink, descriptive with units. Tick labels in secondary ink (#4A4A44), well-sized. Colorbar titled "Pickups" on the right with log-scale ticks mapped back to raw counts (1, 5, 10, 25, 50, 100, 200, 261).
-      Data: Hexagonal bins covering roughly -10 to +11 km east and -5 to +7 km north. Color gradient runs from teal-green (#009E73, low density) to blue (#4467A3, high density) via imprint_seq. Three annotation boxes mark "Downtown" (left, densest), "Airport" (upper center), "University" (right). Arrow lines in muted ink connect labels to cluster centers. Hexagon tessellation is mostly seamless with minor edge gaps at cluster boundaries.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title 'hexbin-basic · python · plotly · anyplot.ai' centered in dark ink; axis titles 'Bearing temperature (°C)' and 'Vibration (mm/s)' in dark ink; ticks in soft ink; vertical colorbar 'Readings per hexagon (log scale)' with ticks 1, 3, 10, 30, 100, 300, 901. No grid, left and bottom axis lines only. All readable.
+      Data: ~28-across hexagons covering three operating-mode clusters rising diagonally (idle ~42 °C/1.2 mm/s, normal ~68 °C/3.4 mm/s, overload ~86 °C/7 mm/s); imprint_seq light field stops pale mint → #009E73 → deep blue → dark violet for the densest cells (901). Close inspection shows small page-colored notches between hexagon rows (flat-top markers on a pointy-top lattice).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black.
-      Chrome: Title, axis labels, and tick labels all flip to light ink (#F0EFE8 / #B8B7B0). Annotation box backgrounds are #242420 (elevated dark) with light text. Colorbar tick labels rendered in #B8B7B0 (INK_SOFT dark). No dark-on-dark failures detected.
-      Data: Hex bin colors are identical to the light render — imprint_seq gradient from #009E73 to #4467A3 unchanged. The density pattern (three hotspot clusters) is equally clear.
-      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, axis titles in light ink, ticks in soft light ink, colorbar title and ticks light. No dark-on-dark text.
+      Data: same hexagon layout; continuous ramp correctly uses the dark field stops dark olive #404C02 → #009E73 → pale blue #CDD9FF, so sparse fringes are olive (still distinct from the page) and dense cores bright. Brand green visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,80 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16, axis labels 12, ticks 10).
-          Both themes fully readable. Title at ~55% canvas width — appropriate. Axis
-          label balance good.
+        comment: Title 16, axis titles 12, ticks 10 explicitly set; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data overlaps. Annotation labels clearly separated. Colorbar
-          ticks tight at top but readable.
+        comment: No text collisions; colorbar ticks 1/3/10/30/100/300/901 well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexagonal bins clearly visible with strong density contrast. Log-scale
-          mapping reveals both sparse and dense regions.
+        comment: Hexagons large and clear; sparsest cells stand out from the page
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe with no red-green dependence.
+        comment: Lightness-monotone ramp, no red-green dependence
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correctly used. Plot fills canvas well with balanced
-          margins. Colorbar well-positioned on right.
+        comment: 3200x1800, plot fills the canvas with balanced margins, colorbar
+          beside it
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes descriptive with units: ''Distance East (km)'' and ''Distance
-          North (km)''. Title format correct.'
+        comment: '''Bearing temperature (°C)'' and ''Vibration (mm/s)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq [[0,''#009E73''],[1,''#4467A3'']] used for continuous
-          density — correct. Backgrounds #FAF8F1 / #1A1A17 correct. All chrome theme-adaptive.'
+        comment: imprint_seq field stops per theme (mint→green→blue→violet light;
+          olive→green→pale blue dark); backgrounds correct
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design: Imprint sequential colorscale, log-scale density
-          mapping, annotated cluster hotspots, spatial aspect ratio locked. Clearly
-          above library defaults. Not quite publication-ready (minor polish gaps).'
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: No grid, no zeroline, colorbar outlinewidth=0, annotation box borders
-          refined. Axis lines retained (appropriate for spatial chart). Good but not
-          full refinement.
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three labeled cluster annotations (Downtown, Airport, University)
-          create a clear spatial narrative. Color density guides viewer to identify
-          high-traffic zones. Above default storytelling.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,29 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexbin plot via plotly hexagon2 scatter markers with manual
-          binning (plotly has no native hexbin).
+        comment: Hexbin, hexagons only plus the colorbar
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Colorbar present, perceptually uniform imprint_seq colorscale used,
-          log-scale color mapping implemented, gridsize parameter present.
+        comment: 'Colorbar, perceptually uniform ramp, log scale, gridsize present;
+          C1 partly missed: flat-top hexagon2 markers on a pointy-top lattice overlap
+          sideways and leave page-colored notches between rows (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to spatial east/north coordinates. Axes show
-          full data range.
+        comment: Bins at their computed centers; axes cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'hexbin-basic · python · plotly · anyplot.ai'. No category
-          legend needed (continuous colorbar handles density legend).
+        comment: Mandated title; colorbar 'Readings per hexagon (log scale)' with
+          raw-count ticks
     data_quality:
       score: 15
       max: 15
@@ -174,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all hexbin aspects: density variation, log-scale wide range,
-          multiple overlapping clusters, edge sparsity vs core density.'
+        comment: Dense cores, gradients, sparse fringes, wide count range 1–901
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ride-share pickup density in a metro area — highly realistic, neutral,
-          comprehensible. Named clusters (Downtown, Airport, University) add authenticity.
+        comment: Milling-spindle sensor readings in idle/normal/overload modes, neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: km-scale spatial data, ~20 km coverage area, 10,000 points across
-          3 clusters — all factually plausible for a metro ride-share dataset.
+        comment: Bearing temps 30–98 °C and vibration 0–10.5 mm/s read off the axes
+          are plausible for a spindle; 12,000 readings within the spec range
     code_quality:
       score: 10
       max: 10
@@ -199,36 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → theme tokens → data → hexbin computation
-          → plot → save. No functions or classes.'
+        comment: Flat top-to-bottom, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys (for path fix), numpy, plotly.graph_objects — all used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual hexbin logic is necessarily complex but well-organized. zip(strict=True),
-          sorted rendering, pixel calibration are clean choices.
+        comment: Vectorized cube-rounding binning; plotly has no native hexbin trace
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current plotly
-          API used.
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,22 +216,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good plotly usage: go.Scatter with hexagon2 symbol, customdata for
-          hover, update_layout, add_annotation. Idiomatic for the hexbin workaround.'
+        comment: go.Scatter with marker colorscale/cmin/cmax and colorbar tickvals/ticktext
+          mapping log values back to raw counts
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: hexagon2 symbol type (plotly-specific), customdata hover template
-          showing raw counts vs log-scale color, HTML CDN export — some plotly-distinctive
-          features leveraged.
+        passed: false
+        comment: customdata hovertemplate shows raw readings per hexagon in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T19:40:11Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
@@ -260,4 +241,5 @@ impl_tags:
   dataprep:
   - binning
   styling:
+  - minimal-chrome
   - custom-colormap

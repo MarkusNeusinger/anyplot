@@ -2,40 +2,46 @@ library: bokeh
 language: python
 specification_id: hexbin-basic
 created: 2025-12-14 19:46:16+00:00
-updated: '2026-05-29T09:30:26Z'
+updated: '2026-11-27T19:40:13Z'
 generated_by: claude-sonnet
-workflow_run: 26628974601
+workflow_run: 46057597257
 issue: 859
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/bokeh/plot-dark.html
-quality_score: 94
+quality_score: 85
 review:
   strengths:
-  - Both renders fully theme-correct with no dark-on-dark or light-on-light failures
-  - Idiomatic use of Bokeh native hexbin() utility and transform() color-mapping pipeline
-  - IoT sensor monitoring scenario is neutral realistic and well-suited to hexbin
-    density visualization
-  - 'Complete Imprint imprint_seq palette compliance with correct #009E73→#4467A3
-    gradient'
-  - Clean reproducible code with explicit font sizing throughout
+  - Uses Bokeh's native bokeh.util.hex.hexbin aggregation with the hex_tile glyph
+    on axial q/r coordinates and a transform()-driven LinearColorMapper
+  - 'Color ramp is imprint_seq with each theme''s fields stops, sampled at 256 steps:
+    light runs pale mint → green → deep blue → violet, dark runs olive → green → pale
+    blue, so dense cores stand out in both themes'
+  - Hex size derived from the data range (about 42 across) so the 11,000 readings
+    read as a continuous density surface with clear cluster gradients
+  - Page painted in the theme color before the screenshot, so the dark render has
+    no light edge line
+  - Neutral IoT sensor monitoring scenario with five overlapping plumes of different
+    spread
   weaknesses:
-  - HTML export does not include a HoverTool showing bin count on hover — adding HoverTool(tooltips=[(Count,
-    @counts)]) would push both design sophistication and Bokeh distinctiveness
+  - 'Suggestion: a HoverTool showing the count per hexagon would add inspection value
+    to the HTML artifact.'
+  - 'Suggestion: the unused IMPRINT_PALETTE constant could be dropped, since this
+    plot uses only the sequential ramp.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Bold title "hexbin-basic · python · bokeh · anyplot.ai" in dark ink (~62% width), axis labels "Distance East (km)" / "Distance North (km)" with units in italic at 42pt, tick labels in dark secondary text — all readable
-      Data: Imprint sequential colormap green #009E73 (low density) → blue #4467A3 (high density); five overlapping clusters with max count ~140; color bar on right labelled "Count" 0–140
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "hexbin-basic · python · bokeh · anyplot.ai" top left (~45% width), italic axis titles "Distance East (km)" / "Distance North (km)", soft-dark tick labels -6..6 and -4..6, color bar on the right titled "Count" with ticks 0–140; no grid, axis lines or ticks. All readable.
+      Data: regular hexagons tiling five overlapping clusters; imprint_seq fields ramp from pale mint (sparse fringe) through brand green #009E73 to deep blue and dark violet at the densest cores near (-3,-1) and (-0.5,3). Sparse hexes stand out from the page.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, fills entire canvas including borders
-      Chrome: Title and all labels switch to light cream (#F0EFE8 / #B8B7B0); color bar labels also light — no dark-on-dark issues anywhere; gaps between isolated hexbins show #1A1A17 background (expected)
-      Data: Identical green→blue Imprint sequential gradient and same cluster positions as light render — data colors unchanged
+      Background: warm near-black #1A1A17, no light edge or frame line.
+      Chrome: title, axis titles, tick labels and color bar labels in light ink; no dark-on-dark text.
+      Data: same hex layout; continuous ramp uses the dark fields stops, dark olive (sparse) → brand green → pale blue (densest cores), so cores glow against the page. Sparsest olive hexes are dim but distinct from the background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -47,73 +53,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks/colorbar); well-proportioned in both renders
+        comment: Explicit sizes (50pt title, 42pt axis titles, 34pt ticks, 28/34pt
+          color bar); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions in either render
+        comment: No text collisions; hexagons tile without overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexbins ideal for 11000-point density; all clusters distinguishable
+        comment: 11,000 points aggregated into ~0.32 km hexagons; sparse fringe hexes
+          visible against the page
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint imprint_seq (green→blue) is CVD-safe with sufficient luminance
-          ramp
+        comment: Sequential ramp with hue and lightness change; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Hexbin field fills ~65-70% of canvas; color bar efficient; balanced
-          margins
+        comment: Hex field and color bar use the canvas well; balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance East (km) / Distance North (km) with units; correct title
-          format
+        comment: Distance East (km) / Distance North (km) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'ANYPLOT_SEQ256 = Imprint imprint_seq #009E73→#4467A3; backgrounds
-          #FAF8F1/#1A1A17; all chrome theme-adaptive'
+        comment: 'imprint_seq fields stops of each theme sampled at 256 steps via
+          ramp_color; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom Imprint palette, spines/grid/ticks removed, color bar individually
-          styled — clearly above defaults
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, bold title, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Near-perfect: grid absent, spines removed, tick marks removed, generous
-          whitespace, color bar padding set'
+        passed: false
+        comment: Grid, axis lines and ticks removed as mandated; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Dark-blue cores vs green-teal perimeter guides eye to hotspot clusters;
-          multi-cluster IoT scenario coherent
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexbin using Bokeh native hexbin() + hex_tile()
+        comment: Basic hexbin, hexagons and color bar only (C5 met)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color bar, Imprint sequential cmap, gridsize=0.3, large 11000-point
-          dataset
+        comment: Color bar, sequential Imprint ramp, hex size sized to the sample;
+          C1–C3 and C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Distance East, Y=Distance North; all data visible
+        comment: x = Distance East, y = Distance North; axes cover all hexes; color
+          bar 0 to max count with readable ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; color bar replaces categorical legend appropriately
+        comment: Exact mandated title; color bar titled Count
     data_quality:
       score: 15
       max: 15
@@ -152,22 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five clusters of varying size/spread; full density range from sparse
-          edge bins to dense cores
+        comment: Five overlapping clusters of different spread give dense cores, gradients
+          and sparse fringes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: IoT sensor monitoring zones with overlapping plumes; neutral, plausible,
-          km-scale geographic context
+        comment: IoT sensor readings across urban monitoring zones; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ±6 km range, 1200-3500 point clusters, 0-140 bin counts — all physically
-          plausible
+        comment: ±6 km extent, 11,000 readings, counts 0–~150 per hex; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -177,62 +180,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → colorbar → chrome → save'
+        comment: Imports → data → plot → save; ramp_color is the library prompt's
+          helper (no deduction)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 14 imports used; no dead imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact ANYPLOT_SEQ256 comprehension; zip strict=True; PIL safety
-          resize well-placed
+        comment: Appropriate complexity; native hexbin() does the binning
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.9 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: hexbin() pre-aggregation, ColumnDataSource binding, transform() with
-          LinearColorMapper, add_layout() — all idiomatic Bokeh patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Native hexbin() + hex_tile() + transform() pipeline is distinctively
-          Bokeh; HTML export adds value; HoverTool omitted from HTML artifact
+        passed: false
+        comment: bokeh.util.hex.hexbin pre-aggregation into axial q/r, ColumnDataSource
+          and transform() with LinearColorMapper
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Native hex_tile glyph on axial coordinates is a Bokeh-specific hex
+          grid feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-27T19:36:59Z'
 impl_tags:
   dependencies:
   - selenium
-  - pillow
   techniques:
   - colorbar
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - columndatasource
   dataprep:
   - binning
   styling:
   - custom-colormap
+  - minimal-chrome
