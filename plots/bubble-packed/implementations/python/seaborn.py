@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -23,20 +23,28 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — canonical order, first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — company market cap by sector (billions USD)
-sectors = {
-    "Technology": [("Apple", 180), ("Microsoft", 160), ("Google", 120), ("NVIDIA", 95), ("Meta", 75)],
-    "Finance": [("JPMorgan", 85), ("Visa", 70), ("Mastercard", 55), ("Goldman Sachs", 45)],
-    "Healthcare": [("UnitedHealth", 90), ("J&J", 65), ("Merck", 50), ("Pfizer", 40)],
-    "Retail": [("Amazon", 140), ("Walmart", 60), ("Costco", 45), ("Target", 30)],
-}
+# Columns: set these to your table's column names
+COMPANY = "Company"  # role: label
+MARKET_CAP = "Market cap (billion USD)"  # role: value
+SECTOR = "Sector"  # role: group
 
-records = []
-for sector, companies in sectors.items():
-    for name, value in companies:
-        records.append({"name": name, "value": value, "sector": sector, "radius": np.sqrt(value) * 4})
+# Data: replace this block with your own table, for example df = pd.read_csv("companies.csv")
+df = pd.DataFrame(
+    {
+        COMPANY: ["Apple", "Microsoft", "Google", "NVIDIA", "Meta"]
+        + ["JPMorgan", "Visa", "Mastercard", "Goldman Sachs"]
+        + ["UnitedHealth", "J&J", "Merck", "Pfizer"]
+        + ["Amazon", "Walmart", "Costco", "Target"],
+        MARKET_CAP: [180, 160, 120, 95, 75, 85, 70, 55, 45, 90, 65, 50, 40, 140, 60, 45, 30],
+        SECTOR: ["Technology"] * 5 + ["Finance"] * 4 + ["Healthcare"] * 4 + ["Retail"] * 4,
+    }
+)
 
-df = pd.DataFrame(records).sort_values("radius", ascending=False).reset_index(drop=True)
+# Plot: reads only df and the constants above
+# Area encodes value: radius grows with the square root of the market cap
+df["radius"] = np.sqrt(df[MARKET_CAP]) * 4
+sector_order = list(df[SECTOR].unique())
+df = df.sort_values("radius", ascending=False).reset_index(drop=True)
 
 # Circle packing — greedy closest-to-center placement without overlap
 placed_x, placed_y, placed_r = [], [], []
@@ -84,9 +92,8 @@ plot_w = (df["x"] + df["radius"]).max() + pad
 plot_h = (df["y"] + df["radius"]).max() + pad
 max_dim = max(plot_w, plot_h)
 
-# Sector color mapping — Imprint palette positions 1–4
-sector_order = list(sectors.keys())
-sector_colors = dict(zip(sector_order, IMPRINT_PALETTE[:4], strict=True))
+# Sector color mapping — one Imprint palette position per sector, in order of appearance
+sector_colors = dict(zip(sector_order, IMPRINT_PALETTE, strict=False))
 
 # Apply seaborn theme with adaptive chrome tokens
 sns.set_theme(
@@ -117,14 +124,14 @@ pts_per_unit = px_per_unit * 72 / fig.dpi
 df["marker_size"] = (df["radius"] * 2 * pts_per_unit) ** 2
 
 # Categorical ordering for consistent palette mapping
-df["sector"] = pd.Categorical(df["sector"], categories=sector_order, ordered=True)
+df[SECTOR] = pd.Categorical(df[SECTOR], categories=sector_order, ordered=True)
 
 # Draw bubbles with seaborn scatterplot
 sns.scatterplot(
     data=df,
     x="x",
     y="y",
-    hue="sector",
+    hue=SECTOR,
     size="marker_size",
     sizes=(df["marker_size"].min(), df["marker_size"].max()),
     hue_order=sector_order,
@@ -137,24 +144,23 @@ sns.scatterplot(
 )
 
 # Accent the largest bubble per sector with a thicker edge ring to highlight the dominant story
-sector_top_idx = df.groupby("sector")["value"].idxmax()
+sector_top_idx = df.groupby(SECTOR, observed=True)[MARKET_CAP].idxmax()
 accent = df.loc[sector_top_idx]
 ax.scatter(accent["x"], accent["y"], s=accent["marker_size"], facecolor="none", edgecolor=INK, linewidth=2.5, zorder=3)
 
 # Labels inside bubbles — font sizes scaled for 2400×2400 canvas (dpi=400)
 for _, row in df.iterrows():
     r = row["radius"]
-    name = row["name"]
-    value = row["value"]
+    name = row[COMPANY]
+    value = row[MARKET_CAP]
+    share = r / df["radius"].max()
 
-    if r > 38:
+    if share > 0.75:
         fs_name, max_chars, show_val = 10, 12, True
-    elif r > 28:
-        fs_name, max_chars, show_val = 8, 12, True
-    elif r > 22:
-        fs_name, max_chars, show_val = 6, 10, False
+    elif share > 0.52:
+        fs_name, max_chars, show_val = 7, 12, True
     else:
-        fs_name, max_chars, show_val = 5, 8, False
+        fs_name, max_chars, show_val = 6, 10, False
 
     display_name = name if len(name) <= max_chars else name[: max_chars - 1] + "."
 
@@ -213,14 +219,7 @@ sector_labels = [lbl for lbl in all_labels if lbl in sector_order]
 leg_auto.remove()
 ax.legend(sector_handles, sector_labels)
 sns.move_legend(
-    ax,
-    "lower center",
-    bbox_to_anchor=(0.5, -0.06),
-    ncol=4,
-    title="Sector",
-    title_fontsize=9,
-    fontsize=8,
-    framealpha=0.95,
+    ax, "lower center", bbox_to_anchor=(0.5, -0.06), ncol=4, title=SECTOR, title_fontsize=9, fontsize=8, framealpha=0.95
 )
 leg = ax.get_legend()
 leg.get_frame().set_facecolor(ELEVATED_BG)
