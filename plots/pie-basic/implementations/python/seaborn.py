@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Created: 2026-05-28
@@ -7,6 +7,7 @@ Quality: 83/100 | Created: 2026-05-28
 import os
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 
@@ -16,11 +17,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# seaborn palette API — set_palette registers the anyplot hues globally; color_palette
-# retrieves them as a seaborn ColorPalette object for direct indexing
-ANYPLOT_HEX = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
+# Imprint palette, canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
     style="ticks",
@@ -33,67 +32,62 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
-sns.set_palette(ANYPLOT_HEX)
-palette = sns.color_palette(ANYPLOT_HEX)  # ColorPalette object for slice color access
 
-# Data — global cloud computing market share (2024 estimates)
-categories = ["Amazon AWS", "Microsoft Azure", "Google Cloud", "Alibaba Cloud", "IBM Cloud", "Others"]
-shares = [32, 22, 11, 6, 5, 24]
-colors = list(palette[:5]) + [INK_MUTED]  # muted anchor for catch-all "Others"
-explode = [0.06, 0, 0, 0, 0, 0]
+# Column constants
+ENERGY_SOURCE = "Energy source"  # role: category
+SHARE = "Share of household energy use (%)"  # role: value
 
-# Square canvas for symmetric donut chart
+# Data
+df = pd.DataFrame(
+    {
+        ENERGY_SOURCE: ["Natural gas", "Electricity", "Heating oil", "Propane", "Wood", "Solar"],
+        SHARE: [38, 27, 14, 9, 7, 5],
+    }
+)
+
+# Plot
+n_slices = len(df)
+colors = sns.color_palette(IMPRINT_PALETTE, n_slices)
+explode = ((df[SHARE] == df[SHARE].max()) * 0.06).tolist()
+
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
 fig.subplots_adjust(top=0.88, bottom=0.14)
 
-# Donut chart — width=0.65 hollows the center; pctdistance=0.78 centers labels in the ring
 wedges, texts, autotexts = ax.pie(
-    shares,
-    labels=None,
+    df[SHARE],
     colors=colors,
     explode=explode,
     autopct="%1.0f%%",
-    pctdistance=0.78,
+    pctdistance=0.72,
     startangle=90,
-    wedgeprops={"edgecolor": PAGE_BG, "linewidth": 2.0, "width": 0.65},
+    counterclock=False,
+    wedgeprops={"edgecolor": PAGE_BG, "linewidth": 2.0},
 )
 
-for autotext in autotexts:
-    autotext.set_fontsize(8)
-    autotext.set_color(INK)
-    autotext.set_fontweight("medium")
+# Label ink follows each slice's luminance: white on dark fills, near-black on light ones
+for autotext, color in zip(autotexts, colors, strict=True):
+    red, green, blue = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in color]
+    luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    autotext.set_color("#FFFFFF" if luminance < 0.18 else "#1A1A17")
+    autotext.set_fontsize(11)
+    autotext.set_fontweight("bold")
 
-# Center annotation — market context label in the donut hole
-ax.text(
-    0,
-    0,
-    "Cloud\nMarket\n2024",
-    ha="center",
-    va="center",
-    fontsize=9,
-    color=INK_SOFT,
-    fontweight="medium",
-    linespacing=1.4,
-)
-
-# Title and legend
-title = "pie-basic · python · seaborn · anyplot.ai"
-ax.set_title(title, fontsize=12, fontweight="bold", color=INK, pad=14)
+ax.set_title("pie-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="bold", color=INK, pad=14)
 
 legend = ax.legend(
     wedges,
-    categories,
+    df[ENERGY_SOURCE],
+    title=ENERGY_SOURCE,
     loc="lower center",
-    bbox_to_anchor=(0.5, -0.08),
+    bbox_to_anchor=(0.5, -0.12),
     ncol=3,
-    fontsize=8,
+    fontsize=9,
+    title_fontsize=9,
     frameon=True,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
 )
+legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_color(INK_SOFT)
 
-# Save — do NOT use bbox_inches='tight' (seaborn canvas contract)
+# Save — no tight_layout (subplots_adjust sets the margins) and no bbox_inches
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
