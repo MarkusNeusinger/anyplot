@@ -12,147 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 81
 review:
   strengths:
-  - Hierarchical clustering (hclust + as.dist) orders variables to reveal meaningful
-    clusters — analytical value beyond mere display
-  - Theme-adaptive imprint_div midpoint (DIV_MID = PAGE_BG) makes near-zero correlation
-    tiles seamlessly blend with the background in both themes
-  - Strong correlation border highlighting (|r| > 0.7) creates clear visual hierarchy
-    without annotations
-  - Lower triangle masking eliminates redundancy; diagonal text uses INK_SOFT for
-    subtle de-emphasis
-  - Real mtcars data with an insight-naming subtitle elevates storytelling
-  - Both themes render correctly with full chrome token adaptation throughout
+  - Hierarchical-clustering order (hclust) makes the positive size block and the negative
+    MPG band emerge
+  - imprint_div via scale_fill_gradient2 with the theme's fields midpoint and limits
+    c(-1, 1), zero centered on the labeled color bar
+  - Real mtcars correlations with readable variable names
   weaknesses:
-  - Cell annotation text (geom_text size=3.0 approx 8.5pt) is slightly small for a
-    2400x2400 canvas — increasing to 3.5-4.0 would improve mobile readability without
-    crowding the tiles
-  - LM-02 could be elevated with a dendrogram sidebar (ggdendro) to make the hierarchical
-    clustering ordering self-explanatory
+  - 'SC-01 (both): thick INK boxes outline every |r| > 0.7 off-diagonal cell, a highlight
+    layer the basic variant excludes → remove the second geom_tile layer. Likely cause:
+    geom_tile(data = cor_long[cor_long$is_strong, ], fill = NA, color = INK).'
+  - 'VQ-01 (light): the diagonal 1.00 labels are grey #4A4A44 on saturated blue #4467A3
+    and read with low contrast → page-colored or light ink on dark tiles. Likely cause:
+    the diagonal geom_text with color = INK_SOFT.'
+  - 'SC-02 (both): in-cell numbers use one ink regardless of tile darkness, missing
+    the spec''s color switching (dark text on the -0.87 and 0.90 tiles in light) →
+    pick label ink from the tile''s lightness. Likely cause: fixed color = INK in
+    geom_text.'
+  - 'Suggestion: cell numbers at size 3.0 could go slightly larger since the 8x8 cells
+    have room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "heatmap-basic · r · ggplot2 · anyplot.ai" bold size 12, dark INK (#1A1A17), readable. Subtitle size 9, INK_SOFT (#4A4A44), readable. X-axis tick labels rotated 35°, size 9, readable. Y-axis tick labels size 9, readable. All chrome elements clearly visible against light background.
-      Data: Lower-triangle correlation matrix of 8 mtcars variables. Diverging imprint_div colormap: matte red (#AE3030) for strong negative, near-white (#FAF8F1) midpoint for near-zero, blue (#4467A3) for strong positive. Cell annotations with 2-decimal values in dark INK text. Bold borders on |r| > 0.7 cells for visual emphasis.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1, correct; legend on a lighter elevated box.
+      Chrome: bold title 'heatmap-basic · r · ggplot2 · anyplot.ai' in dark ink, insight subtitle and tick labels in INK_SOFT, x labels rotated 35°, color bar titled r. All readable.
+      Data: lower-triangle 8x8 mtcars correlation matrix ordered by hierarchical clustering, imprint_div red-page-blue. Off-diagonal numbers in dark INK, diagonal 1.00 in grey INK_SOFT that sits with low contrast on the saturated blue tiles. Thick black boxes outline every |r| > 0.7 off-diagonal cell.
+      Legibility verdict: PASS (diagonal labels low-contrast but legible)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and subtitle use INK (#F0EFE8) — near-white, clearly readable. Tick labels use INK_SOFT (#B8B7B0) — medium gray, readable against dark background. No dark-on-dark failures observed. Strong correlation borders use INK (near-white) in dark mode.
-      Data: Tile colors identical to light render — imprint_div data colors unchanged between themes. Theme-adaptive midpoint (DIV_MID = #1A1A17) makes near-zero tiles blend with dark background. Near-white cell text (#F0EFE8) readable on all tile colors across the diverging range.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title near-white, subtitle and ticks light grey; no dark-on-dark text.
+      Data: same matrix with the dark fields midpoint; numbers in light ink, diagonal in grey; highlight boxes drawn in near-white INK.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; well-proportioned. Cell annotation
-          text (size=3.0 ~8.5pt) slightly small for 2400x2400 canvas but readable.
+        passed: false
+        comment: Diagonal 1.00 labels in INK_SOFT grey on saturated blue are low-contrast
+          in light (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap in either render. 35 degree x-axis rotation prevents
-          collision.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles clearly visible across full diverging range. Both renders fully
-          legible.
+        comment: Tiles and color bar clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_div is perceptually uniform and CVD-safe. INK-based cell
-          text adequate contrast on all tile colors.
+        comment: Red-blue ramp, values printed
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 ideal for symmetric matrix. Good canvas utilization,
-          balanced margins, legend adjacent to plot.
+        comment: Square canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Variable names as tick labels are informative. Subtitle adds insight.
-          Colorbar labeled r correctly.
+        comment: Readable variable names; color bar titled r
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div correctly applied (low=#AE3030, high=#4467A3, theme-adaptive
-          midpoint). Backgrounds and chrome tokens correct in both renders.
+        comment: imprint_div with theme fields midpoint; correct backgrounds
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: hierarchical clustering, lower triangle,
-          bold correlation borders, insight subtitle. Strong design.'
+        comment: Clear title/subtitle hierarchy, de-emphasized diagonal
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, panel border kept, generous margins, ELEVATED_BG legend,
-          PAGE_BG tile gaps, 35 degree label rotation. Noticeably refined.
+        comment: Thin page-colored separators, elevated legend box, coord_fixed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Hierarchical clustering groups Weight/HP/Cyl/Disp vs MPG/Gears clusters.
-          Subtitle names the pattern. Strong correlation borders create emphasis.
+        comment: Cluster ordering and insight subtitle; the highlight boxes earn no
+          credit (excluded by the variant)
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct heatmap in matrix format using color intensity.
+        passed: false
+        comment: Highlight boxes on selected cells, excluded by the basic variant
+          (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Diverging colormap, cell annotations, colorbar legend, hierarchical
-          ordering all present.
+        passed: false
+        comment: In-cell numbers do not switch color with tile darkness (C3, defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correctly assigned to variable names; all data in lower triangle
-          + diagonal.
+        comment: Correct mapping, limits -1..1
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title heatmap-basic · r · ggplot2 · anyplot.ai correct. Colorbar
-          labeled r.
+        comment: Title correct, color bar titled r
     data_quality:
       score: 15
       max: 15
@@ -162,22 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows strong positive, strong negative, moderate and weak correlations.
-          Full range of heatmap type represented.
+        comment: Full correlation range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real mtcars dataset with genuine vehicle performance metrics. Neutral
-          scientific domain.
+        comment: Real mtcars data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values bounded [-1,1] by definition. Specific values
-          are real mtcars data.
+        comment: cor() values; MPG-Weight -0.87 checked
     code_quality:
       score: 10
       max: 10
@@ -187,54 +177,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> tokens -> data -> reshape -> factor ordering
-          -> plot -> save. No functions or classes.'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic built-in dataset (mtcars), no stochastic component.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, tidyr, ragg — all three used.
+        comment: All used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic. Index-based lower triangle filtering concise.
-          Separate geom layers for diagonal vs off-diagonal text purposeful.
+        comment: No dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with sprintf plot-%s.png, ragg::agg_png, 6x6 in, 400dpi correct.
+        comment: ggsave plot-{THEME}.png with ragg
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot2 grammar: geom_tile, scale_fill_gradient2, coord_fixed,
-          multiple geom layers with conditional subsetting, theme_minimal + theme()
-          override chain.'
+        comment: Per-layer data subsetting, scale_fill_gradient2 limits, coord_fixed
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Layer composition (multiple geom_tile + geom_text with conditional
-          data subsetting) and coord_fixed() are idiomatic ggplot2 patterns. Could
-          add ggdendro dendrogram for full distinction.
+        passed: false
+        comment: Nothing beyond the library prompt; the highlight layer earns no credit
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
+  last_kept:
+    pr: 14802
+    code: criterion_below
+    note: '#14802 was kept because it scored below the live version''s re-score on
+      these criteria: CQ-04 1 < 2: Unused on_diag column (defect line). Do not score
+      lower than the live version on them.'
 impl_tags:
   dependencies: []
   techniques:

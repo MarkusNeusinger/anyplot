@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import os
@@ -16,13 +16,16 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
+    geom_contour,
     geom_path,
     geom_point,
+    geom_raster,
     gggrid,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
+    scale_alpha,
     scale_color_gradientn,
     scale_fill_manual,
     theme,
@@ -70,6 +73,7 @@ LON = "Longitude (°)"  # role: lon
 SEQUENCE = "Sequence"  # role: sequence
 PROGRESS = "Progress (%)"  # role: extra
 MARKER = "Marker"  # role: extra
+ELEVATION = "Elevation (relative)"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("track.csv")
 # Swiss Alps hiking trail (GPS track simulation)
@@ -93,6 +97,21 @@ df = pd.DataFrame(
 
 # Plot: reads only df and the constants above
 df = df.sort_values(SEQUENCE)
+
+# Terrain basemap: a synthetic elevation field over the route's extent plus a margin, drawn as quiet hillshade and contours
+lon_pad, lat_pad = df[LON].agg(np.ptp) * 0.12, df[LAT].agg(np.ptp) * 0.12
+lon_lim = [df[LON].min() - lon_pad, df[LON].max() + lon_pad]
+lat_lim = [df[LAT].min() - lat_pad, df[LAT].max() + lat_pad]
+gx, gy = np.meshgrid(np.linspace(*lon_lim, 160), np.linspace(*lat_lim, 120))
+u, v = (gx - lon_lim[0]) / (lon_lim[1] - lon_lim[0]), (gy - lat_lim[0]) / (lat_lim[1] - lat_lim[0])
+elevation = (
+    np.exp(-(((u - 0.25) / 0.22) ** 2 + ((v - 0.7) / 0.25) ** 2))
+    + 0.8 * np.exp(-(((u - 0.75) / 0.2) ** 2 + ((v - 0.3) / 0.28) ** 2))
+    + 0.15 * np.sin(9 * u + 4 * v) * np.cos(6 * v)
+)
+terrain = pd.DataFrame({LON: gx.ravel(), LAT: gy.ravel(), ELEVATION: elevation.ravel()})
+mid_lat = df[LAT].mean()
+
 markers_df = pd.concat([df.iloc[[0]].assign(**{MARKER: "Start"}), df.iloc[[-1]].assign(**{MARKER: "End"})])
 
 anyplot_theme = theme(
@@ -111,6 +130,11 @@ anyplot_theme = theme(
 
 plot = (
     ggplot()
+    + geom_raster(aes(x=LON, y=LAT, alpha=ELEVATION), data=terrain, fill=INK_SOFT, show_legend=False)
+    + geom_contour(
+        aes(x=LON, y=LAT, z=ELEVATION), data=terrain, bins=9, color=INK_SOFT, size=0.3, alpha=0.35, show_legend=False
+    )
+    + scale_alpha(range=[0.0, 0.22])
     + geom_path(
         aes(x=LON, y=LAT, color=PROGRESS),
         data=df,
@@ -138,7 +162,7 @@ plot = (
     + labs(x=LON, y=LAT, title="map-route-path · python · letsplot · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
-    + coord_fixed(ratio=1.0)
+    + coord_fixed(ratio=1 / np.cos(np.radians(mid_lat)), xlim=lon_lim, ylim=lat_lim)
 )
 
 # Fixed aspect leaves the canvas edges transparent: a one-panel grid paints the page color
