@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-28
@@ -8,22 +8,55 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, to_rgb
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint diverging colormap — theme-adaptive midpoint (matte-red ↔ neutral ↔ blue)
-midpoint = "#FAF8F1" if THEME == "light" else "#1A1A17"
-imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Global seaborn style
+# Imprint diverging field ramp (matte-red <-> page <-> blue); the midpoint is the page color
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", PAGE_BG, "#4467A3"])
+
+# Constants
+SCORE_MIN, SCORE_MAX, SCORE_CENTER = 0, 100, 50  # fixed domain of a performance score
+
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+DEPARTMENT = "Department"  # role: y
+SCORE = "Performance score"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+np.random.seed(42)
+departments = ["Sales", "Marketing", "Engineering", "Support", "Finance", "HR", "Operations"]
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+values = np.random.randn(len(departments), len(months)) * 20 + 50
+values[0, :6] += 20  # Sales surge first half
+values[2, 6:] += 25  # Engineering ramp second half
+values[4, :] = values[4, :] * 0.3 + 70  # Finance steady high
+values[5, 3:9] -= 15  # HR mid-year dip
+values[3, 10:] -= 22  # Support year-end slump
+values = np.clip(values, 5, 95)
+
+df = pd.DataFrame(
+    {MONTH: np.tile(months, len(departments)), DEPARTMENT: np.repeat(departments, len(months)), SCORE: values.ravel()}
+)
+
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=DEPARTMENT, columns=MONTH, values=SCORE, sort=False)
+table = table.loc[table.mean(axis=1).sort_values(ascending=False).index]  # rows by overall level
+
+title = "heatmap-basic · python · seaborn · anyplot.ai"
+title_fontsize = max(8, round(12 * min(1.0, 67 / len(title))))
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -37,83 +70,45 @@ sns.set_theme(
     },
 )
 
-# Data — monthly performance metrics across departments
-np.random.seed(42)
-departments = ["Sales", "Marketing", "Engineering", "Support", "Finance", "HR", "Operations"]
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-data = np.random.randn(len(departments), len(months)) * 20 + 50
-data[0, :6] += 20  # Sales surge first half
-data[2, 6:] += 25  # Engineering ramp second half
-data[4, :] = data[4, :] * 0.3 + 70  # Finance steady high
-data[5, 3:9] -= 15  # HR mid-year dip
-data[3, 10:] -= 22  # Support year-end slump (sharp outlier)
-data = np.clip(data, 5, 95)
-
-# Plot
-title = "heatmap-basic · python · seaborn · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = max(8, round(12 * ratio))
-
-g = sns.clustermap(
-    data,
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+sns.heatmap(
+    table,
+    ax=ax,
     annot=True,
     fmt=".0f",
     cmap=imprint_div,
-    center=50,
-    xticklabels=months,
-    yticklabels=departments,
+    center=SCORE_CENTER,
+    vmin=SCORE_MIN,
+    vmax=SCORE_MAX,
     linewidths=1.0,
-    linecolor=INK_SOFT,
-    annot_kws={"fontsize": 10, "fontweight": "medium", "color": INK},
-    figsize=(6, 6),
-    row_cluster=True,
-    col_cluster=False,
-    dendrogram_ratio=0.08,
-    cbar_pos=(0.05, 0.15, 0.04, 0.6),
-    cbar_kws={"ticks": [0, 25, 50, 75, 100]},
-    vmin=0,
-    vmax=100,
+    linecolor=PAGE_BG,
+    square=False,
+    annot_kws={"fontsize": 9, "fontweight": "medium"},
+    cbar_kws={"ticks": np.linspace(SCORE_MIN, SCORE_MAX, 5), "shrink": 0.8, "pad": 0.03},
 )
-g.figure.set_dpi(400)
 
-# Background
-g.figure.patch.set_facecolor(PAGE_BG)
-g.ax_heatmap.set_facecolor(PAGE_BG)
+# In-cell numbers switch with the darkness of their cell, so they stay legible in both themes
+shown = table.to_numpy().ravel()
+shown = shown[~np.isnan(shown)]  # masked (missing) cells carry no text
+for text, value in zip(ax.texts, shown, strict=True):
+    r, g, b = to_rgb(imprint_div((value - SCORE_MIN) / (SCORE_MAX - SCORE_MIN)))
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    text.set_color("#1A1A17" if luminance > 0.4 else "#F0EFE8")
 
-# Style row dendrogram
-g.ax_row_dendrogram.set_facecolor(PAGE_BG)
-for spine in g.ax_row_dendrogram.spines.values():
+# Colorbar
+cbar = ax.collections[0].colorbar
+cbar.set_label(SCORE, fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.outline.set_visible(False)
+
+# Chrome
+ax.set_xlabel(MONTH, fontsize=10, labelpad=8)
+ax.set_ylabel(DEPARTMENT, fontsize=10, labelpad=8)
+ax.tick_params(axis="both", labelsize=9, length=0)
+ax.tick_params(axis="y", rotation=0)
+for spine in ax.spines.values():
     spine.set_visible(False)
-for line in g.ax_row_dendrogram.get_lines():
-    line.set_color(INK_SOFT)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
 
-# Style column dendrogram area (empty when col_cluster=False)
-if g.ax_col_dendrogram is not None:
-    g.ax_col_dendrogram.set_facecolor(PAGE_BG)
-    for spine in g.ax_col_dendrogram.spines.values():
-        spine.set_visible(False)
-
-# Colorbar styling — small labelpad keeps label on-canvas given cbar_pos x=0.05
-g.cax.set_ylabel("Performance Score", fontsize=9, labelpad=2, color=INK)
-g.cax.yaxis.set_label_position("left")
-g.cax.tick_params(labelsize=7, colors=INK_SOFT)
-for spine in g.cax.spines.values():
-    spine.set_color(INK_SOFT)
-
-# Axis labels and ticks
-g.ax_heatmap.set_xlabel("Month", fontsize=10, labelpad=10, color=INK)
-g.ax_heatmap.set_ylabel("", fontsize=10)
-g.ax_heatmap.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
-g.ax_heatmap.tick_params(axis="y", labelsize=8, rotation=0, colors=INK_SOFT)
-
-# Remove heatmap spines
-for spine in g.ax_heatmap.spines.values():
-    spine.set_visible(False)
-
-# Title
-g.figure.subplots_adjust(top=0.92)
-g.figure.suptitle(title, fontsize=title_fontsize, fontweight="medium", color=INK)
-
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
