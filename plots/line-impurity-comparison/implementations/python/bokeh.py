@@ -107,8 +107,8 @@ fig.segment(
 # Annotation at p=0.5 maximum impurity
 max_label = Label(
     x=peak_p + 0.03,
-    y=entropy_max,
-    text=f"p = {peak_p:g}  (maximum impurity)",
+    y=entropy_max * 1.035,
+    text=f"p ={peak_p:g}  (maximum impurity)",
     text_font_size="28pt",
     text_font_style="bold",
     text_color=INK,
