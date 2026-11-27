@@ -2,126 +2,121 @@ library: plotly
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:15Z'
-updated: '2026-05-29T13:22:11Z'
+updated: '2026-11-27T20:35:27Z'
 generated_by: claude-sonnet
-workflow_run: 26639092515
+workflow_run: 46063699058
 issue: 982
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - Visual hierarchy (variable line width, marker size, opacity) by rank-change magnitude
-    highlights the most dynamic driver storylines at a glance
-  - 'Perfect Imprint palette compliance: canonical order, theme-adaptive chrome, correct
-    warm backgrounds in both renders'
-  - Interactive HTML with range slider provides genuine race-by-race exploration value
-  - End-of-line colour-coded annotations with bold text for notable movers eliminate
-    legend-lookup friction
-  - Correct inverted Y-axis with rank 1 at top; all six drivers clearly traceable
-    across all eight races
+  - Direct end-of-line labels in bold ink key every entity in both themes, so no legend
+    lookup is needed
+  - Inverted category-free rank axis (autorange='reversed', tickmode linear, dtick
+    1) puts rank 1 on top with whole-number ticks only
+  - Imprint palette in canonical order with Python on brand green; chrome threads
+    theme tokens correctly in both renders
+  - Page-colored marker halos keep dots distinct at each crossing
+  - Tidy df with column constants and a groupby loop makes the file easy to adapt;
+    the hovertemplate reads out the rank per year
   weaknesses:
-  - Sainz (#2ABCCD cyan) and Leclerc (#BD8233 ochre) annotation labels have lower
-    contrast on the warm cream light background — add a semi-transparent background
-    or thin dark stroke to annotation font for thumbnail legibility
-  - Top and right spines not explicitly removed in code (no showline=False on secondary
-    axis edges) — explicit removal would yield a cleaner chart frame
+  - 'Suggestion: drop the HTML range slider; on a basic bump chart it adds a control
+    the spec does not ask for and earns no credit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "bump-basic · python · plotly · anyplot.ai" in dark #1A1A17, left-aligned, readable; "Race" x-axis label and "Championship Position" y-axis label in dark ink at fontsize=12; tick labels in #4A4A44 at fontsize=10 — all clearly readable
-      Data: Verstappen=#009E73 (brand green, P1 anchor), Hamilton=#C475FD (lavender, dramatic rise), Norris=#4467A3 (blue, highest movement), Leclerc=#BD8233 (ochre, stable P2-4), Piastri=#AE3030 (red, stable P5), Sainz=#2ABCCD (cyan, stable P6). Variable line widths (2-5px) and marker sizes (10-16px) based on rank change. White marker edges for definition. End-of-line annotations in driver colors.
-      Legibility verdict: PASS — all chrome and data text readable. Minor note: Sainz cyan and Leclerc ochre annotation labels have lower contrast on cream bg but remain legible.
+      Background: warm off-white #FAF8F1
+      Chrome: title 'bump-basic · python · plotly · anyplot.ai' top-left in dark ink; 'Survey year' and 'Popularity rank' axis titles dark; ticks 2017-2024 and 1-6 in soft ink; subtle horizontal rank grid; all readable
+      Data: six languages as 4 px lines with 13 px halo markers: Python #009E73 (rises 3->1 by 2020), JavaScript #C475FD, Java #4467A3, C# #BD8233, Go #AE3030, Rust #2ABCCD; bold ink end labels at 2024 ordered Python, JavaScript, Java, Rust, Go, C#
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct theme surface
-      Chrome: title in light #F0EFE8, axis labels in light ink, tick labels in #B8B7B0 — all clearly readable against dark background. No dark-on-dark failures observed.
-      Data: all six driver colors identical to light render (green, lavender, blue, ochre, red, cyan) — only chrome flips between themes, data colors are constant. Y-axis grid lines subtle and visible.
-      Legibility verdict: PASS — all text elements readable against dark background. No dark-on-dark failures.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and end labels in light ink, ticks in light soft ink, grid faint but visible; no dark-on-dark text
+      Data: line and marker colors identical to the light render; halos switch to the dark page color
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=12).
-          Readable in both themes. Minor: Sainz cyan and Leclerc ochre annotation
-          labels have lower contrast on cream bg.'
+        comment: Title 16, axis titles 12, ticks 10, end labels 12 bold, all set explicitly;
+          ink-colored labels readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Generous right margin (r=130) gives end-of-line labels room; no collisions.
+        comment: End labels sit one per rank row with clear spacing; no text collisions;
+          crossings are expected (C6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Variable line widths (2/3/5px) and marker sizes (10/12/16px) density-appropriate.
-          White marker edges add definition.
+        comment: 4 px lines and 13 px markers with a page-colored halo suit 6 entities
+          x 8 periods
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette 1-6 in canonical order; CVD-safe; no red-green sole-signal
-          pairing.
+        comment: Six distinct Imprint hues plus a direct label per line, so color
+          is never the only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 via width=800, height=450, scale=4. autosize=False.
-          Explicit margins l=80, r=130, t=60, b=60. No clipping.
+        comment: 3200x1800; drawing fills the canvas, right margin sized for the end
+          labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Race and Championship Position are descriptive. Title format correct.
+        comment: '''Survey year'' and ''Popularity rank'' are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Verstappen = #009E73. Imprint positions 1-6 canonical
-          order. Backgrounds #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
+        comment: 'Python (first) #009E73, then Imprint positions 2-6 in canonical
+          order; #FAF8F1 / #1A1A17 backgrounds, chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Visual hierarchy through variable line width/marker size/opacity
-          by rank-change magnitude. Bold annotations for high-movers. End-of-line
-          direct labels.
+        comment: 'Beyond baseline: bold ink end labels set a clear typographic tier
+          above the soft-ink ticks, with uniform heavy line weight'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Y-axis grid only, x-axis grid off. White marker edges. Generous margins.
-          No explicit top/right spine removal code.
+        passed: false
+        comment: Page-colored marker halos keep dots separate where lines cross; rank-only
+          horizontal grid with x grid off
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Thicker lines on Norris and Hamilton draw eye to key story arcs.
-          Direct labels support individual driver tracking. Verstappen dominance vs.
-          late challenge readable at a glance.
+        passed: false
+        comment: Data displayed with its crossings; no hierarchy chosen beyond the
+          Notes (correct for a basic variant)
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Bump chart: ranked ordinal positions connected by lines across time
-          periods.'
+        comment: Basic bump chart, one uniform line per entity, no excluded layers
+          in the PNG
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted (rank 1 at top), distinct colors, dot markers at
-          each race, lines connect same driver.
+        comment: Inverted rank axis, distinct colors plus direct labels, dot markers
+          at each period, lines connect all periods (C1-C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=races (categorical), Y=championship rank. 6 entities, 8 periods
-          — within spec range.
+        comment: Markers sit exactly on whole-number ranks; ticks 1-6 only
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: bump-basic · python · plotly · anyplot.ai. Direct end-of-line
-          annotations replace legend.'
+        comment: Title matches the format; direct end labels key every line
     data_quality:
       score: 15
       max: 15
@@ -163,20 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers rank stability, sustained dominance, dramatic rise, high movement,
-          and crossovers — all key bump-chart story types.
+        comment: Overtakes, multiple crossings, long flat holds and a two-rank jump
+          (Rust 6->4)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'F1 driver standings: canonical, neutral, real-world application.'
+        comment: Programming-language popularity ranks across survey years, neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranks 1-6 over 8 named races. Sensible domain values.
+        comment: 6 entities x 8 years, ranks 1-6 each used once per year (checked
+          in the data dict)
     code_quality:
       score: 10
       max: 10
@@ -186,33 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural flow.
+        comment: Imports -> tokens -> constants -> Data -> Plot -> Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded data; deterministic output.
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects — both used.
+        comment: os, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over drivers; no fake UI.
+        comment: Tidy df built once, groupby loop, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct filenames.
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -220,25 +215,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper Graph Objects API: go.Figure(), add_trace(), update_layout(),
-          add_annotation(). All props via update_layout dicts.'
+        comment: Graph objects with groupby over the tidy df, category x axis, autorange='reversed'
+          and tickmode linear for whole ranks
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Range slider in HTML for race-by-race exploration. Custom hovertemplate
-          with driver name and position. Themed hoverlabel styling.
+        passed: false
+        comment: Hovertemplate written for the rank read-out ('#%{y}') and themed
+          hoverlabel; the HTML range slider earns no credit on a basic variant
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T20:31:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - grid-styling
