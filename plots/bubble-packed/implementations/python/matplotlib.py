@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -11,6 +11,7 @@ import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens — Imprint palette, theme-adaptive chrome
@@ -24,93 +25,67 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — 8 hues, canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — department budget allocation (in thousands USD)
-labels = [
-    "Engineering",
-    "Marketing",
-    "Sales",
-    "Operations",
-    "HR",
-    "Finance",
-    "R&D",
-    "Customer Support",
-    "Legal",
-    "IT",
-    "Design",
-    "Product",
-    "Data Science",
-    "Security",
-    "QA",
-]
-values = [950, 420, 680, 310, 160, 280, 820, 200, 130, 370, 230, 580, 470, 145, 175]
+# Constants
+MAX_RADIUS = 2.0  # radius of the largest circle in layout units; area stays proportional to value
 
-# Group assignments — organizational structure
-group_map = {
-    "Engineering": "Engineering",
-    "IT": "Engineering",
-    "Data Science": "Engineering",
-    "R&D": "Engineering",
-    "Marketing": "Business",
-    "Sales": "Business",
-    "Product": "Business",
-    "Design": "Business",
-    "Operations": "Operations",
-    "HR": "Operations",
-    "Finance": "Operations",
-    "Customer Support": "Operations",
-    "Legal": "Compliance",
-    "Security": "Compliance",
-    "QA": "Compliance",
-}
+# Columns: set these to your table's column names
+WARD = "Ward"  # role: label
+ADMISSIONS = "Admissions per month"  # role: value
+SPECIALTY = "Specialty"  # role: group
 
-# Groups mapped to first 4 Imprint palette positions (canonical order)
-group_order = ["Engineering", "Business", "Operations", "Compliance"]
-group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_order)}
-colors = [group_colors[group_map[label]] for label in labels]
-
-# Scale values to radius (sqrt for area-proportional sizing)
-min_radius = 0.30
-max_radius = 2.0
-values_array = np.array(values, dtype=float)
-radii = min_radius + (max_radius - min_radius) * np.sqrt(
-    (values_array - values_array.min()) / (values_array.max() - values_array.min())
+# Data: replace this block with your own table, for example df = pd.read_csv("wards.csv")
+df = pd.DataFrame(
+    {
+        WARD: [
+            "General Medicine",
+            "Cardiology",
+            "Oncology",
+            "Neurology",
+            "Respiratory",
+            "General Surgery",
+            "Orthopaedics",
+            "Urology",
+            "ENT",
+            "Emergency",
+            "Intensive Care",
+            "High Dependency",
+            "Maternity",
+            "Paediatrics",
+            "Gynaecology",
+            "Neonatal",
+        ],
+        ADMISSIONS: [920, 610, 450, 330, 380, 780, 560, 240, 150, 840, 230, 130, 690, 470, 260, 190],
+        SPECIALTY: ["Medical"] * 5 + ["Surgical"] * 4 + ["Emergency & critical care"] * 3 + ["Women & children"] * 4,
+    }
 )
 
-# Sort by size (largest first) for better packing
-n = len(labels)
-order = np.argsort(-radii)
-radii_sorted = radii[order]
-labels_sorted = [labels[i] for i in order]
-values_sorted = [values[i] for i in order]
-colors_sorted = [colors[i] for i in order]
-groups_sorted = [group_map[labels[i]] for i in order]
+# Plot: reads only df and the constants above
+groups = list(dict.fromkeys(df[SPECIALTY]))
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
 
-unique_groups = group_order
-group_ids = np.array([unique_groups.index(g) for g in groups_sorted])
+# Largest first gives the simulation a stable core; radius from sqrt so area follows value
+df = df.sort_values(ADMISSIONS, ascending=False, kind="stable").reset_index(drop=True)
+n = len(df)
+radii = MAX_RADIUS * np.sqrt(df[ADMISSIONS].to_numpy(dtype=float) / df[ADMISSIONS].max())
+group_ids = np.array([groups.index(g) for g in df[SPECIALTY]])
 
-# Initial positions in spiral pattern for tighter convergence
+# Initial positions on a spiral, then a deterministic force simulation with group clustering
 angles = np.linspace(0, 4 * np.pi, n)
 spiral_r = np.linspace(0, 3, n)
 positions = np.column_stack([spiral_r * np.cos(angles), spiral_r * np.sin(angles)])
 
-# Physics simulation with group-aware clustering
-for iteration in range(500):
-    progress = iteration / 500
-    pull_strength = 0.06 * (1 - progress * 0.8)
+for iteration in range(1500):
+    progress = iteration / 1500
+    pull_strength = 0.05 * (1 - progress * 0.8)
     group_pull = 0.04 * (1 - progress * 0.5)
 
-    group_centers = {}
-    for gid in range(len(unique_groups)):
-        mask = group_ids == gid
-        if np.any(mask):
-            group_centers[gid] = positions[mask].mean(axis=0)
+    group_centers = {gid: positions[group_ids == gid].mean(axis=0) for gid in range(len(groups))}
 
     for i in range(n):
         dist = np.linalg.norm(positions[i])
         if dist > 0.01:
-            positions[i] -= pull_strength * positions[i] / dist
-        gc = group_centers[group_ids[i]]
-        to_group = gc - positions[i]
+            positions[i] -= pull_strength * (radii[i] / radii[0]) ** 2 * positions[i] / dist
+        to_group = group_centers[group_ids[i]] - positions[i]
         gd = np.linalg.norm(to_group)
         if gd > 0.01:
             positions[i] += group_pull * to_group / gd
@@ -119,69 +94,62 @@ for iteration in range(500):
         for j in range(i + 1, n):
             delta = positions[j] - positions[i]
             dist = np.linalg.norm(delta)
-            same_group = group_ids[i] == group_ids[j]
-            gap = 0.06 if same_group else 0.20
-            min_dist = radii_sorted[i] + radii_sorted[j] + gap
-            if dist < min_dist and dist > 0.001:
-                overlap = (min_dist - dist) / 2
-                direction = delta / dist
-                positions[i] -= overlap * direction
-                positions[j] += overlap * direction
+            gap = 0.04 if group_ids[i] == group_ids[j] else 0.12
+            min_dist = radii[i] + radii[j] + gap
+            if 0.001 < dist < min_dist:
+                shift = (min_dist - dist) / 2 * delta / dist
+                positions[i] -= shift
+                positions[j] += shift
 
-# Center the layout
-bbox_min = positions.min(axis=0) - radii_sorted.max()
-bbox_max = positions.max(axis=0) + radii_sorted.max()
-positions -= (bbox_min + bbox_max) / 2
+# Center the layout on its bounding box
+lo = (positions - radii[:, None]).min(axis=0)
+hi = (positions + radii[:, None]).max(axis=0)
+positions -= (lo + hi) / 2
+half_extent = (hi - lo).max() / 2 + 1.0
 
-# Plot — square canvas for symmetric bubble chart (2400×2400 px at 400 dpi)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+ax.set_xlim(-half_extent, half_extent)
+ax.set_ylim(-half_extent, half_extent)
+ax.set_aspect("equal")
+ax.axis("off")
+fig.subplots_adjust(left=0.02, right=0.98, top=0.92, bottom=0.10)
 
-# Draw circles with PatchCollection for efficient batch rendering
-circles = [mpatches.Circle((positions[i, 0], positions[i, 1]), radii_sorted[i]) for i in range(n)]
 collection = mcoll.PatchCollection(
-    circles, facecolors=colors_sorted, edgecolors=PAGE_BG, linewidths=2.0, alpha=0.90, zorder=2
+    [mpatches.Circle(tuple(positions[i]), radii[i]) for i in range(n)],
+    facecolors=[group_colors[g] for g in df[SPECIALTY]],
+    edgecolors=PAGE_BG,
+    linewidths=2.0,
+    alpha=0.92,
+    zorder=2,
 )
 ax.add_collection(collection)
 
-# Labels inside circles (if large enough)
-small_circles = []
-for i in range(n):
-    label_chars = len(labels_sorted[i])
-    min_r_for_label = 0.48 + label_chars * 0.018
-    if radii_sorted[i] > min_r_for_label:
-        font_scale = min(1.0, radii_sorted[i] / 1.6)
-        label_fontsize = max(9, int(11 * font_scale))
-        value_fontsize = max(8, int(9 * font_scale))
+# Points per layout unit, to decide which circles can hold their label
+fig.canvas.draw()
+pt_per_unit = ax.get_window_extent().width / fig.dpi * 72 / (2 * half_extent)
 
-        # Contrast-appropriate text color (WCAG relative luminance)
-        bg_hex = colors_sorted[i]
-        rgb = [int(bg_hex[j : j + 2], 16) / 255 for j in (1, 3, 5)]
+external = []
+for i in range(n):
+    name = df[WARD][i]
+    words = name.split(" ")
+    display = "\n".join(words)
+    fontsize = 9 if radii[i] < 1.4 else 11
+    widest = max(len(w) for w in words) * 0.62 * fontsize
+    needed = max(widest, 0.9 * fontsize * len(words)) + 4
+    if needed < 2.0 * radii[i] * pt_per_unit:
+        fill = group_colors[df[SPECIALTY][i]]
+        rgb = [int(fill[k : k + 2], 16) / 255 for k in (1, 3, 5)]
         luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
         text_color = "#1A1A17" if luminance > 0.35 else "#F0EFE8"
-        # RGBA tuples — portable across matplotlib versions
-        stroke_fg = (0, 0, 0, 0.15) if luminance > 0.35 else (1, 1, 1, 0.15)
-        # linewidth=1.0 at 400 dpi ≈ 6 px — crisp without garish stroke
-        stroke = pe.withStroke(linewidth=1.0, foreground=stroke_fg)
-
-        # Wrap multi-word labels to reduce horizontal text extent within the circle
-        words = labels_sorted[i].split(" ")
-        if len(words) > 1:
-            display_label = "\n".join(words)
-            label_y_offset = 0.05
-            value_y_offset = -0.35
-        else:
-            display_label = labels_sorted[i]
-            label_y_offset = 0.12
-            value_y_offset = -0.22
-
+        stroke = pe.withStroke(linewidth=1.0, foreground=(0, 0, 0, 0.15) if luminance > 0.35 else (1, 1, 1, 0.15))
         ax.text(
             positions[i, 0],
-            positions[i, 1] + radii_sorted[i] * label_y_offset,
-            display_label,
+            positions[i, 1] + radii[i] * 0.16,
+            display,
             ha="center",
             va="center",
-            fontsize=label_fontsize,
+            fontsize=fontsize,
             fontweight="bold",
             color=text_color,
             path_effects=[stroke],
@@ -189,46 +157,47 @@ for i in range(n):
         )
         ax.text(
             positions[i, 0],
-            positions[i, 1] + radii_sorted[i] * value_y_offset,
-            f"${values_sorted[i]}K",
+            positions[i, 1] - radii[i] * (0.30 + 0.20 * (len(words) - 1)),
+            f"{df[ADMISSIONS][i]:,}",
             ha="center",
             va="center",
-            fontsize=value_fontsize,
+            fontsize=fontsize - 1,
             color=text_color,
-            alpha=0.85,
             path_effects=[stroke],
             zorder=3,
         )
     else:
-        small_circles.append(i)
+        external.append(i)
 
-# External labels with leader lines for small circles
-# Scan 16 candidate angles and pick the direction with maximum clearance from
-# all other circle edges — avoids the angle-from-origin pitfall where a small
-# circle near the cluster centre gets a label that points into a large neighbor.
-for i in small_circles:
-    cx, cy = positions[i, 0], positions[i, 1]
-    r = radii_sorted[i]
-    offset_dist = r + 0.65
-    best_angle = np.arctan2(cy, cx)
-    best_clearance = -np.inf
-    for test_angle in np.linspace(0, 2 * np.pi, 16, endpoint=False):
-        lx = cx + offset_dist * np.cos(test_angle)
-        ly = cy + offset_dist * np.sin(test_angle)
-        clearance = min(
-            np.sqrt((lx - positions[j, 0]) ** 2 + (ly - positions[j, 1]) ** 2) - radii_sorted[j]
-            for j in range(n)
-            if j != i
-        )
-        if clearance > best_clearance:
-            best_clearance = clearance
-            best_angle = test_angle
-    angle = best_angle
-    lx = cx + offset_dist * np.cos(angle)
-    ly = cy + offset_dist * np.sin(angle)
+# External labels with leader lines: nearest free spot whose text box clears every circle and label
+placed = []
+for i in external:
+    cx, cy = positions[i]
+    half_w = max(len(w) for w in df[WARD][i].split(" ")) * 0.62 * 9 / pt_per_unit / 2 + 0.1
+    half_h = 11 / pt_per_unit + 0.1
+    best_angle, best_pos, best_score = 0.0, None, None
+    for extra in np.arange(0.5, 9.0, 0.25):
+        for angle in np.linspace(0, 2 * np.pi, 36, endpoint=False):
+            lx, ly = cx + (radii[i] + extra) * np.cos(angle), cy + (radii[i] + extra) * np.sin(angle)
+            if abs(lx) + half_w > half_extent or abs(ly) + half_h > half_extent:
+                continue
+            nearest = np.clip(positions - [lx, ly], [-half_w, -half_h], [half_w, half_h]) + [lx, ly]
+            if np.any(np.hypot(*(nearest - positions).T) < radii + 0.05):
+                continue
+            if any(abs(lx - px) < half_w + qw and abs(ly - py) < half_h + qh for px, py, qw, qh in placed):
+                continue
+            # prefer a leader line that crosses no other circle, then the shortest one
+            ray = np.array([lx - cx, ly - cy])
+            t = np.clip((positions - [cx, cy]) @ ray / (ray @ ray), 0, 1)
+            gap = np.hypot(*(positions - [cx, cy] - t[:, None] * ray).T) - radii
+            crossed = int(np.sum((gap < 0.05) & (np.arange(n) != i)))
+            if best_score is None or (crossed, extra) < best_score:
+                best_angle, best_pos, best_score = angle, (lx, ly), (crossed, extra)
+    lx, ly = best_pos if best_pos else (cx, cy)
+    placed.append((lx, ly, half_w, half_h))
     ax.annotate(
-        f"{labels_sorted[i]}\n${values_sorted[i]}K",
-        xy=(cx + r * np.cos(angle), cy + r * np.sin(angle)),
+        f"{df[WARD][i]}\n{df[ADMISSIONS][i]:,}",
+        xy=(cx + radii[i] * np.cos(best_angle), cy + radii[i] * np.sin(best_angle)),
         xytext=(lx, ly),
         fontsize=9,
         fontweight="bold",
@@ -239,37 +208,33 @@ for i in small_circles:
         zorder=4,
     )
 
-# Symmetric axis limits centered at origin
-all_x, all_y = positions[:, 0], positions[:, 1]
-max_r = radii_sorted.max()
-half_extent = max(all_x.max() - all_x.min(), all_y.max() - all_y.min()) / 2 + max_r + 0.75
-ax.set_xlim(-half_extent, half_extent)
-ax.set_ylim(-half_extent, half_extent)
-ax.set_aspect("equal")
-ax.axis("off")
-
 # Title
 title = "bubble-packed · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
-ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
+fig.suptitle(title, fontsize=title_fontsize, fontweight="medium", color=INK, y=0.975)
 
-# Legend for group colors with theme-adaptive frame
+# Legend for groups, centered under the cluster
 legend_handles = [
     mpatches.Patch(facecolor=color, edgecolor=PAGE_BG, linewidth=1.5, label=group)
     for group, color in group_colors.items()
 ]
-leg = ax.legend(
+leg = fig.legend(
     handles=legend_handles,
-    loc="lower right",
+    title=SPECIALTY,
+    loc="lower center",
+    ncol=len(groups),
     fontsize=9,
+    title_fontsize=9,
     fancybox=False,
-    borderpad=0.8,
+    borderpad=0.7,
     handlelength=1.5,
-    handleheight=1.2,
+    handleheight=1.1,
+    columnspacing=1.6,
+    bbox_to_anchor=(0.5, 0.012),
 )
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK_SOFT)
 
-fig.subplots_adjust(left=0.02, right=0.98, top=0.91, bottom=0.02)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
