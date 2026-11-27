@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 84/100 | Created: 2026-11-27
+Quality: 85/100 | Created: 2026-11-27
 """
 
 import os
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.ticker import LogFormatterSciNotation
+from matplotlib.ticker import FormatStrFormatter, LogLocator, NullLocator
 
 
 # Theme tokens
@@ -67,10 +67,12 @@ hb = ax.hexbin(
     norm=mcolors.LogNorm(),
 )
 
-# Colorbar with scientific-notation ticks on the log scale
+# Colorbar with round 1-2-5 ticks across the log scale
 cbar = fig.colorbar(hb, ax=ax, shrink=0.85, pad=0.03)
 cbar.set_label("Sensor readings per hexagon (log count)", fontsize=10, color=INK)
-cbar.ax.yaxis.set_major_formatter(LogFormatterSciNotation())
+cbar.ax.yaxis.set_major_locator(LogLocator(subs=(1, 2, 5)))
+cbar.ax.yaxis.set_major_formatter(FormatStrFormatter("%g"))
+cbar.ax.yaxis.set_minor_locator(NullLocator())
 cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 cbar.outline.set_edgecolor(INK_SOFT)
