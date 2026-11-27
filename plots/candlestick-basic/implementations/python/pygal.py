@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: pygal 3.1.0 | Python 3.13.13
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
