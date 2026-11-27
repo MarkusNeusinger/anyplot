@@ -1,7 +1,7 @@
 """ anyplot.ai
 pie-basic: Basic Pie Chart
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -15,6 +15,7 @@ sys.path[:] = [p for p in sys.path if os.path.normcase(os.path.abspath(p if p el
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -61,10 +62,13 @@ base = alt.Chart(plot_df).encode(
             titleFontSize=12,
             labelFontSize=11,
             symbolSize=180,
-            orient="bottom",
+            orient="none",
+            legendX=80,
+            legendY=482,
             direction="horizontal",
             columns=len(df),
             titleAnchor="middle",
+            titleOrient="top",
         ),
     )
 )
@@ -94,7 +98,7 @@ labels_main = (
 )
 labels_small = (
     base.transform_filter(~alt.datum.exploded & alt.datum.small)
-    .mark_text(radius=230, fontSize=13, fontWeight="bold")
+    .mark_text(radius=200, fontSize=13, fontWeight="bold")
     .encode(theta=alt.Theta("mid", type="quantitative", scale=theta_scale), text="label:N", color=alt.value(INK_SOFT))
 )
 labels_exploded = (
@@ -128,4 +132,14 @@ chart = (
 )
 
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Fit to the 2400 x 2400 canvas (scale an overshoot down as a whole, never crop)
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
+    _canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
