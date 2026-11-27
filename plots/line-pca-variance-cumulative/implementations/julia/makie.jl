@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 # Library: makie 0.24.16 | Julia 1.13.4
-# Quality: 86/100 | Updated: 2026-11-27
+# Quality: 87/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
@@ -93,6 +93,7 @@ ax1 = Axis(
     ygridcolor         = ink_grid,
     yminorgridvisible  = false,
     xminorgridvisible  = false,
+    yticks             = 0:20:100,
     limits             = (0.5, n_comp + 0.5, 0.0, 108.0),
 )
 
