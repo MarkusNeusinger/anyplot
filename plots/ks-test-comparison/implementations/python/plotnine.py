@@ -1,7 +1,7 @@
 """ anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -16,13 +16,12 @@ from plotnine import (
     element_rect,
     element_text,
     geom_hline,
-    geom_segment,
-    geom_step,
     ggplot,
     labs,
     scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
+    stat_ecdf,
     theme,
     theme_minimal,
 )
@@ -40,81 +39,67 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Semantic exception: green for Good, red for Bad customers
-COLOR_GOOD = IMPRINT_PALETTE[0]  # #009E73 — brand green
-COLOR_BAD = IMPRINT_PALETTE[4]  # #AE3030 — matte red (bad/loss semantic anchor)
+COLOR_GOOD = IMPRINT_PALETTE[0]  # brand green
+COLOR_BAD = IMPRINT_PALETTE[4]  # matte red (bad/loss semantic anchor)
 
-# Data - credit scoring distributions
+# Constants
+MEDIAN_LEVEL = 0.5  # cumulative proportion of the dotted reference line
+Y_TOP = 1.10  # headroom above the ECDFs for the interpretive subtitle
+
+# Columns: set these to your table's column names
+GOOD = "Good Customers"  # role: sample1
+BAD = "Bad Customers"  # role: sample2
+SCORE = "Credit Score (points)"  # role: extra
+GROUP = "Distribution"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-good_scores = np.random.beta(5, 2, 300) * 800 + 200
-bad_scores = np.random.beta(2, 4, 300) * 800 + 200
+df = pd.DataFrame({GOOD: np.random.beta(5, 2, 300) * 800 + 200, BAD: np.random.beta(2, 4, 300) * 800 + 200})
 
-# K-S test
-ks_stat, p_value = stats.ks_2samp(good_scores, bad_scores)
+# Plot: reads only df and the constants above
+good_sorted = np.sort(df[GOOD].dropna().to_numpy())
+bad_sorted = np.sort(df[BAD].dropna().to_numpy())
 
-# Compute ECDFs
-good_sorted = np.sort(good_scores)
-bad_sorted = np.sort(bad_scores)
-good_ecdf = np.arange(1, len(good_sorted) + 1) / len(good_sorted)
-bad_ecdf = np.arange(1, len(bad_sorted) + 1) / len(bad_sorted)
-
-# Find the point of maximum divergence
+# K-S test and the point of maximum divergence
+ks_stat, p_value = stats.ks_2samp(good_sorted, bad_sorted)
 all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
 good_cdf_at_all = np.searchsorted(good_sorted, all_values, side="right") / len(good_sorted)
 bad_cdf_at_all = np.searchsorted(bad_sorted, all_values, side="right") / len(bad_sorted)
 max_idx = np.argmax(np.abs(good_cdf_at_all - bad_cdf_at_all))
 max_x = all_values[max_idx]
-max_y_good = good_cdf_at_all[max_idx]
-max_y_bad = bad_cdf_at_all[max_idx]
-y_lo, y_hi = min(max_y_good, max_y_bad), max(max_y_good, max_y_bad)
+y_lo = min(good_cdf_at_all[max_idx], bad_cdf_at_all[max_idx])
+y_hi = max(good_cdf_at_all[max_idx], bad_cdf_at_all[max_idx])
 
-# Build ECDF DataFrame
-df = pd.concat(
-    [
-        pd.DataFrame({"score": good_sorted, "ecdf": good_ecdf, "group": "Good Customers"}),
-        pd.DataFrame({"score": bad_sorted, "ecdf": bad_ecdf, "group": "Bad Customers"}),
-    ],
-    ignore_index=True,
-)
+# Long format for plotnine's ECDF stat, groups in the data's order
+long = df.melt(var_name=GROUP, value_name=SCORE).dropna()
+groups = df.columns.tolist()
+colors = dict(zip(groups, [COLOR_GOOD, COLOR_BAD], strict=False))
 
 # Axis range — balanced padding on both sides
-x_min, x_max = df["score"].min(), df["score"].max()
+x_min, x_max = all_values.min(), all_values.max()
 x_pad = (x_max - x_min) * 0.04
-
-# Divergence segment DataFrame
-df_seg = pd.DataFrame({"x": [max_x], "xend": [max_x], "y": [y_lo], "yend": [y_hi]})
+x_mid = (x_min + x_max) / 2
 
 # Title with required language token
 title = "ks-test-comparison · python · plotnine · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
+ratio = 67 / len(title) if len(title) > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 
-# Color mapping — semantic exception (good→green, bad→red)
-colors = {"Good Customers": COLOR_GOOD, "Bad Customers": COLOR_BAD}
-
-# Plot
 plot = (
-    ggplot(df, aes(x="score", y="ecdf", color="group"))
-    # Midpoint reference line at 0.5 for structural anchor
-    + geom_hline(yintercept=0.5, color=INK_MUTED, size=0.4, linetype="dotted", inherit_aes=False)
+    ggplot(long, aes(x=SCORE, color=GROUP))
+    # Midpoint reference line for a structural anchor
+    + geom_hline(yintercept=MEDIAN_LEVEL, color=INK_MUTED, size=0.4, linetype="dotted")
     # Max divergence vertical line
-    + geom_segment(
-        aes(x="x", xend="xend", y="y", yend="yend"),
-        data=df_seg,
-        color=COLOR_BAD,
-        size=1.5,
-        linetype="dashed",
-        inherit_aes=False,
-    )
+    + annotate("segment", x=max_x, xend=max_x, y=y_lo, yend=y_hi, color=COLOR_BAD, size=1.5, linetype="dashed")
     # ECDF step functions
-    + geom_step(size=1.2)
+    + stat_ecdf(geom="step", size=1.2, pad=False)
     # D label next to max divergence
     + annotate(
         "text",
-        x=max_x + 18,
-        y=(max_y_good + max_y_bad) / 2,
+        x=max_x + x_pad * 0.5,
+        y=(y_lo + y_hi) / 2,
         label=f"D = {ks_stat:.3f}",
-        size=3.5,
+        size=11,
         ha="left",
         va="center",
         color=COLOR_BAD,
@@ -123,10 +108,10 @@ plot = (
     # Statistical summary box
     + annotate(
         "label",
-        x=x_min + 0.50 * (x_max - x_min),
-        y=0.03,
+        x=x_min + 0.8 * (x_max - x_min),
+        y=Y_TOP * 0.04,
         label=f"K-S Statistic = {ks_stat:.3f}  |  p-value = {p_value:.2e}",
-        size=3.4,
+        size=10,
         ha="center",
         va="center",
         color=COLOR_BAD,
@@ -139,10 +124,12 @@ plot = (
     # Interpretive subtitle above the ECDF area
     + annotate(
         "label",
-        x=x_min + 0.50 * (x_max - x_min),
-        y=1.06,
-        label="Distributions are highly distinct (D > 0.5) — strong evidence the groups differ",
-        size=3.2,
+        x=x_mid,
+        y=Y_TOP * 0.96,
+        label=f"Distributions are highly distinct (D = {ks_stat:.2f}) — strong evidence the groups differ"
+        if p_value < 0.05
+        else f"Distributions are not clearly distinct (D = {ks_stat:.2f})",
+        size=9,
         ha="center",
         va="center",
         color=INK_MUTED,
@@ -152,10 +139,10 @@ plot = (
         label_size=0,
         boxstyle="round",
     )
-    + scale_color_manual(name="Distribution", values=colors)
-    + scale_y_continuous(limits=(0, 1.10), breaks=np.arange(0, 1.1, 0.2))
+    + scale_color_manual(values=colors, limits=groups)
+    + scale_y_continuous(limits=(0, Y_TOP), breaks=np.arange(0, 1.1, 0.2))
     + scale_x_continuous(limits=(x_min - x_pad, x_max + x_pad))
-    + labs(x="Credit Score (points)", y="Cumulative Proportion (0–1)", title=title)
+    + labs(x=SCORE, y="Cumulative Proportion (0–1)", title=title)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),

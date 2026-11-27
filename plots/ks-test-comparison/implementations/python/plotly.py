@@ -53,17 +53,16 @@ bad_sorted = bad_ecdf_result.cdf.quantiles
 bad_cdf = bad_ecdf_result.cdf.probabilities
 
 # K-S test
-ks_stat, p_value = ks_2samp(good_customers, bad_customers)
+ks_result = ks_2samp(good_customers, bad_customers)
+ks_stat, p_value = ks_result.statistic, ks_result.pvalue
 
-# Find point of maximum divergence
+# Point of maximum divergence, as reported by the test
+max_x = ks_result.statistic_location
+max_good_y = good_ecdf_result.cdf.evaluate(max_x)
+max_bad_y = bad_ecdf_result.cdf.evaluate(max_x)
 all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
 good_cdf_at_all = good_ecdf_result.cdf.evaluate(all_values)
 bad_cdf_at_all = bad_ecdf_result.cdf.evaluate(all_values)
-diff = np.abs(good_cdf_at_all - bad_cdf_at_all)
-max_idx = np.argmax(diff)
-max_x = all_values[max_idx]
-max_good_y = good_cdf_at_all[max_idx]
-max_bad_y = bad_cdf_at_all[max_idx]
 y_lo = min(max_good_y, max_bad_y)
 y_hi = max(max_good_y, max_bad_y)
 
@@ -91,7 +90,7 @@ fig.add_trace(
         y=bad_cdf,
         mode="lines",
         name=BAD,
-        line={"color": RED, "width": 3, "shape": "hv"},
+        line={"color": RED, "width": 3, "shape": "hv", "dash": "dash"},
         hovertemplate=f"<b>{BAD}</b><br>Credit Score: %{{x:.1f}}<br>Cumulative: %{{y:.3f}}<extra></extra>",
     )
 )
