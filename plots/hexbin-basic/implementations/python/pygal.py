@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: pending | Created: 2026-11-27
+Quality: 85/100 | Created: 2026-11-27
 """
 
 import math
