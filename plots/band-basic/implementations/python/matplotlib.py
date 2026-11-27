@@ -1,7 +1,7 @@
 """ anyplot.ai
 band-basic: Basic Band Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -67,7 +67,7 @@ for j in range(len(x_fine)):
     hw = (hi_fine[j] - lo_fine[j]) / 2
     C[:, j] = 1 - np.abs(Y[:, j] - c_fine[j]) / hw
 
-cmap = mcolors.LinearSegmentedColormap.from_list("ci", [(*band_rgb, 0.02), (*band_rgb, 0.22), (*band_rgb, 0.45)])
+cmap = mcolors.LinearSegmentedColormap.from_list("ci", [(*band_rgb, 0.2), (*band_rgb, 0.4)])
 ax.pcolormesh(X, Y, C, cmap=cmap, shading="gouraud", rasterized=True, zorder=1)
 
 # Boundary dashed lines
