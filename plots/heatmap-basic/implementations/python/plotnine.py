@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -82,7 +82,7 @@ title_fs = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
 plot = (
     ggplot(df, aes(x=QUARTER, y=DEPARTMENT))
-    + geom_tile(aes(fill=GROWTH), color=INK_SOFT, size=0.6)
+    + geom_tile(aes(fill=GROWTH), color=PAGE_BG, size=0.6)
     + geom_text(aes(label="label", color="text_color"), size=5, fontweight="bold", show_legend=False)
     + scale_fill_gradient2(low="#AE3030", mid=CMAP_MID, high="#4467A3", midpoint=0, limits=(low, high), breaks=breaks)
     + scale_color_identity()
