@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: hexbin-basic
 created: '2025-12-23T01:30:50Z'
-updated: '2026-11-27T19:46:58Z'
+updated: '2026-11-27T19:53:24Z'
 generated_by: claude-sonnet
-workflow_run: 46058296383
+workflow_run: 46059236829
 issue: 859
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,37 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - Regular hexagons binned in screen space so every cell stays regular on the 800x450
     fit layout, tiling the occupied area edge to edge
   - Uses the imprint_seq fields stops per theme with a symlog scale whose domain values
-    are placed at the ramp's stop positions in log space
-  - autosize type fit with contains padding makes the chart fill exactly 3200x1800
-    with no padding frame
+    sit at the ramp's stop positions in log space
   - Custom SVG hexagon path on mark_point is the idiomatic Altair way to draw hexagons
     without a native hexbin transform
   - Tooltips with coordinates and count add inspection in the HTML output
   - Fully theme-adaptive chrome; all text readable in both renders
+  - Color bar labelled at round log ticks 1, 3, 10, 30, 100 computed from the data's
+    count range
   weaknesses:
-  - 'SC-03 (both): the log color bar is labelled only at its ends, 1 and 115, so no
-    value can be read off the colors in between → labelled round ticks through the
-    range, e.g. 1, 3, 10, 30, 100. Likely cause: alt.Legend without values=, so Vega-Lite
-    labels only the domain ends of the symlog gradient.'
   - 'Suggestion: the stale comment above hex_area (''... (calibrated by render)'')
     could state the actual sizing rule.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, plot area and legend on the elevated #FFFDF6 frame
-      Chrome: centered bold title 'hexbin-basic · python · altair · anyplot.ai'; axis titles 'Longitude (°E)' and 'Latitude (°N)' in dark ink; tick labels -122.37 ... -122.30 and 47.59 ... 47.65 in INK_SOFT; subtle grid; all readable
-      Data: about 250 regular pointy-top hexagons tiling three clusters (downtown, shopping district, industrial zone) in the imprint_seq fields ramp from pale mint (1) through brand green #009E73 and deep blue to dark violet (115); thin page-colored outlines; color bar 'Points per hexagon (log)' labelled 1 and 115
+      Background: warm off-white #FAF8F1; legend on the elevated #FFFDF6 frame
+      Chrome: centered bold title 'hexbin-basic · python · altair · anyplot.ai'; axis titles 'Longitude (°E)' and 'Latitude (°N)' in dark ink; ticks -122.37 ... -122.30 and 47.59 ... 47.65; subtle grid; all readable
+      Data: about 250 regular pointy-top hexagons tiling three clusters (downtown, shopping district, industrial zone) in the imprint_seq fields ramp from pale mint (1) through brand green #009E73 and deep blue to dark violet (~115); thin page-colored outlines; color bar 'Points per hexagon (log)' labelled 1, 3, 10, 30, 100
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, legend on #242420
+      Background: warm near-black #1A1A17; legend on #242420
       Chrome: title, axis titles and ticks in light ink; grid subtle; no dark-on-dark text
-      Data: same hexagons with the dark fields stops: dark olive (1) through brand green to pale blue (115), so dense cores are brightest; sparsest olive cells still separate from the page; same color bar labels
+      Data: same hexagons with the dark fields stops: dark olive (1) through brand green to pale blue (~115), dense cores brightest; sparsest olive cells still separate from the page; same color bar ticks 1, 3, 10, 30, 100
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -82,8 +78,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Chart fits the 3200x1800 canvas via autosize fit; plot area, axes
-          and legend fill it with even margins; nothing overflows
+        comment: Fills the 3200x1800 canvas via autosize fit; plot area, axes and
+          legend use it with even margins; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -96,8 +92,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq fields stops per theme (SEQ_FIELDS) for the hexbin field;
-          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'imprint_seq fields stops per theme for the hexbin field; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 9
       max: 20
@@ -115,8 +111,8 @@ review:
         max: 6
         passed: true
         comment: Page-colored 0.6 px hexagon outlines give a crisp tiled surface,
-          and both axis domains are fitted to the data with exactly one hexagon of
-          margin (nice=False)
+          and both axis domains are fitted to the data with one hexagon of margin
+          (nice=False)
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -124,7 +120,7 @@ review:
         passed: true
         comment: Density shown as data; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,17 +135,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Color bar present, perceptually uniform imprint_seq ramp, symlog
-          color scale, HEX_ACROSS controls resolution; C1 regular edge-to-edge hexagons,
-          C2 ramp with visible sparse cells and log-labelled bar, C3 hexagon size
-          reads as a continuous surface
+        comment: Color bar, perceptually uniform imprint_seq ramp, symlog color scale,
+          HEX_ACROSS controls resolution; C1, C2, C3 all met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: x = longitude, y = latitude, color = count; but the log color bar
-          is labelled only at 1 and 115 (defect line)
+        passed: true
+        comment: x = longitude, y = latitude, color = count; log color bar labelled
+          at round ticks 1, 3, 10, 30, 100 so values read off the colors
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -179,7 +173,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Coordinates match downtown Seattle; up to 115 points per hexagon
+        comment: Coordinates match downtown Seattle; up to ~115 points per hexagon
           is plausible for 5,000 points; no Check values in the spec
     code_quality:
       score: 10
@@ -216,8 +210,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the canvas block;
-          current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
       score: 6
       max: 10
@@ -240,12 +233,13 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
-  rendered_at: '2026-11-27T19:42:57Z'
+  rendered_at: '2026-11-27T19:50:34Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - colorbar
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
@@ -255,4 +249,5 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
+  - edge-highlighting
   - grid-styling
