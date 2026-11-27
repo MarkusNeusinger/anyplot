@@ -1,7 +1,7 @@
 # anyplot.ai
 # bullet-basic: Basic Bullet Chart
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-05-29
+# Quality: pending | Created: 2026-05-29
 
 using CairoMakie
 using Colors
