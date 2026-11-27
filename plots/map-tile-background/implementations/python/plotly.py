@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -30,9 +30,9 @@ BRAND = "#009E73"
 
 # Imprint sequential ramp for colored marks, per theme
 SEQ_MARKS = (
-    [[0.0, "#009E73"], [0.338, "#4467A3"], [1.0, "#002850"]]
+    [[0.0, "#009E73"], [0.687, "#024582"], [1.0, "#351E45"]]
     if THEME == "light"
-    else [[0.0, "#007755"], [0.32, "#009E73"], [1.0, "#CDD9FF"]]
+    else [[0.0, "#6F7E20"], [0.21, "#009E73"], [1.0, "#CDD9FF"]]
 )
 
 # Theme-adaptive map tile style (tile providers do not follow the page colors)
@@ -43,6 +43,7 @@ TRAILHEAD = "Trailhead"  # role: label
 LAT = "Latitude"  # role: lat
 LON = "Longitude"  # role: lon
 HIKERS = "Annual hikers (thousands)"  # role: value
+LABEL_SIDE = "Label side"  # role: label position
 
 # Data: replace this block with your own table, for example df = pd.read_csv("trailheads.csv")
 df = pd.DataFrame(
@@ -93,6 +94,21 @@ df = pd.DataFrame(
             -110.7242,
         ],
         HIKERS: [250, 50, 650, 450, 30, 100, 120, 380, 90, 200, 550, 150, 480],
+        LABEL_SIDE: [
+            "right",
+            "left",
+            "right",
+            "right",
+            "right",
+            "left",
+            "right",
+            "right",
+            "right",
+            "top",
+            "left",
+            "right",
+            "right",
+        ],
     }
 )
 
@@ -103,20 +119,14 @@ MAP_W, MAP_H = WIDTH - 40, HEIGHT - 70
 PAD = 1.2
 
 
-def mercator_y(lat):
-    return np.degrees(np.log(np.tan(np.pi / 4 + np.radians(lat) / 2)))
-
-
 lon_span = df[LON].max() - df[LON].min()
-merc_span = mercator_y(df[LAT].max()) - mercator_y(df[LAT].min())
+merc_y = np.degrees(np.log(np.tan(np.pi / 4 + np.radians(df[LAT]) / 2)))
+merc_span = merc_y.max() - merc_y.min()
 zoom = min(np.log2(360 * MAP_W / (512 * lon_span * PAD)), np.log2(360 * MAP_H / (512 * merc_span * PAD)))
 center = {"lat": float(df[LAT].mean()), "lon": float((df[LON].max() + df[LON].min()) / 2)}
 
 # Marker diameters (12-28 px) scale with the visitor count
 size = 12 + (df[HIKERS] - df[HIKERS].min()) / (df[HIKERS].max() - df[HIKERS].min()) * 16
-
-# Labels alternate above and below along the west-east order so neighbors do not collide
-rank = df[LON].rank(method="first").astype(int)
 
 fig = go.Figure()
 
@@ -132,42 +142,65 @@ fig.add_trace(
     )
 )
 
-# Scattermap takes one textposition per trace, so each label side is its own trace
-side = np.where(rank % 2 == 0, "top center", "bottom center")
-for i, position in enumerate(["top center", "bottom center"]):
-    rows = df[side == position]
-    fig.add_trace(
-        go.Scattermap(
-            lat=rows[LAT],
-            lon=rows[LON],
-            mode="markers+text",
-            marker={
-                "size": size[rows.index],
-                "color": rows[HIKERS],
-                "colorscale": SEQ_MARKS,
-                "cmin": df[HIKERS].min(),
-                "cmax": df[HIKERS].max(),
-                "opacity": 0.92,
-                "showscale": i == 0,
-                "colorbar": {
-                    "title": {"text": HIKERS, "side": "right", "font": {"size": 12, "color": INK}},
-                    "tickfont": {"size": 11, "color": INK_SOFT},
-                    "bgcolor": ELEVATED_BG,
-                    "bordercolor": INK_SOFT,
-                    "borderwidth": 1,
-                    "thickness": 18,
-                    "len": 0.6,
-                    "x": 0.995,
-                    "xanchor": "right",
-                    "y": 0.62,
-                },
+# Colored markers carry the value, hover and the colorbar
+fig.add_trace(
+    go.Scattermap(
+        lat=df[LAT],
+        lon=df[LON],
+        mode="markers",
+        marker={
+            "size": size,
+            "color": df[HIKERS],
+            "colorscale": SEQ_MARKS,
+            "cmin": df[HIKERS].min(),
+            "cmax": df[HIKERS].max(),
+            "opacity": 0.92,
+            "colorbar": {
+                "title": {"text": HIKERS, "side": "right", "font": {"size": 12, "color": INK}},
+                "tickfont": {"size": 11, "color": INK_SOFT},
+                "bgcolor": ELEVATED_BG,
+                "bordercolor": INK_SOFT,
+                "borderwidth": 1,
+                "thickness": 18,
+                "len": 0.6,
+                "x": 0.995,
+                "xanchor": "right",
+                "y": 0.62,
             },
-            text=rows[TRAILHEAD],
-            textposition=position,
-            textfont={"size": 12, "color": INK},
-            hovertemplate="<b>%{text}</b><br>" + HIKERS + ": %{marker.color:,.0f}<extra></extra>",
-            showlegend=False,
-        )
+        },
+        text=df[TRAILHEAD],
+        hovertemplate="<b>%{text}</b><br>" + HIKERS + ": %{marker.color:,.0f}<extra></extra>",
+        showlegend=False,
+    )
+)
+
+# Labels are layout annotations at the markers' map pixel positions: MapLibre drops colliding
+# symbol labels, so a point could lose its name. Each sits just outside its marker's radius.
+center_y = np.degrees(np.log(np.tan(np.pi / 4 + np.radians(center["lat"]) / 2)))
+px_per_deg = 512 * 2**zoom / 360
+label_x = 0.5 + (df[LON] - center["lon"]) * px_per_deg / MAP_W
+label_y = 0.5 + (merc_y - center_y) * px_per_deg / MAP_H
+anchors = {"right": ("left", "middle", 1, 0), "left": ("right", "middle", -1, 0), "top": ("center", "bottom", 0, 1)}
+labels = []
+for name, x, y, side_, radius in zip(df[TRAILHEAD], label_x, label_y, df[LABEL_SIDE], size / 2 + 4, strict=True):
+    xanchor, yanchor, dx, dy = anchors[side_]
+    labels.append(
+        {
+            "text": name,
+            "xref": "paper",
+            "yref": "paper",
+            "x": x,
+            "y": y,
+            "xanchor": xanchor,
+            "yanchor": yanchor,
+            "xshift": dx * radius,
+            "yshift": dy * radius,
+            "showarrow": False,
+            "font": {"size": 12, "color": INK},
+            "bgcolor": PAGE_BG,
+            "opacity": 0.95,
+            "borderpad": 1,
+        }
     )
 
 top = df.loc[df[HIKERS].idxmax()]
@@ -182,6 +215,7 @@ fig.update_layout(
     map={"style": MAP_STYLE, "center": center, "zoom": float(zoom)},
     margin={"l": 20, "r": 20, "t": 50, "b": 20},
     annotations=[
+        *labels,
         {
             "text": f"<b>★ Busiest trailhead</b><br>{top[TRAILHEAD]} · {top[HIKERS]:,.0f}k hikers/yr",
             "xref": "paper",
@@ -197,7 +231,7 @@ fig.update_layout(
             "borderwidth": 2,
             "borderpad": 6,
             "align": "left",
-        }
+        },
     ],
 )
 
