@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-27
+Quality: pending | Updated: 2026-11-27
 """
 
 import os
@@ -40,10 +40,10 @@ SCORE = "Test score (points)"  # role: value
 # Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
 scores = {
-    "Class A": np.random.normal(75, 10, 100),
-    "Class B": np.concatenate([np.random.normal(85, 5, 90), np.array([65, 68, 70])]),
-    "Class C": np.clip(np.random.normal(68, 14, 100), 30, None),
-    "Class D": np.concatenate([np.random.normal(78, 8, 95), np.array([100, 102, 50, 52])]),
+    "9A Biology": np.clip(np.random.normal(75, 10, 100), None, 100),
+    "9B Chemistry": np.concatenate([np.random.normal(85, 5, 90), np.array([65, 68, 70])]),
+    "9C Physics": np.clip(np.random.normal(68, 14, 100), 30, 100),
+    "9D History": np.concatenate([np.random.normal(78, 8, 95), np.array([99, 100, 50, 52])]),
 }
 df = pd.DataFrame(
     {CLASS: np.repeat(list(scores), [len(v) for v in scores.values()]), SCORE: np.concatenate(list(scores.values()))}
@@ -133,6 +133,8 @@ whisker = Whisker(
 whisker.upper_head.size = 40
 whisker.lower_head.size = 40
 whisker.upper_head.line_width = 3
+whisker.upper_head.line_color = INK_SOFT
+whisker.lower_head.line_color = INK_SOFT
 whisker.lower_head.line_width = 3
 p.add_layout(whisker)
 
