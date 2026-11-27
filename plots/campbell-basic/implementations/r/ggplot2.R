@@ -73,7 +73,7 @@ zone_data <- data.frame(
 # Engine order label positions — "3x" nudged extra to avoid Axial mode overlap
 order_labels <- data.frame(
   speed     = c(5700, 3550, 2050),
-  frequency = c(5700 / 60 + 4, 2 * 3550 / 60 + 4, 3 * 2050 / 60 + 10),
+  frequency = c(5700 / 60 + 4, 2 * 3550 / 60 + 10, 3 * 2050 / 60 + 10),
   label     = c("1x", "2x", "3x")
 )
 
