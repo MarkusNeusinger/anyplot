@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -6,16 +6,11 @@ Quality: 87/100 | Updated: 2026-05-29
 
 import os
 import re
-import sys
 
-
-# Prevent importing local pygal.py file
-sys.path = [p for p in sys.path if not p.endswith("/implementations/python")]
-
-import cairosvg  # noqa: E402
-import numpy as np  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import cairosvg
+import numpy as np
+import pygal
+from pygal.style import Style
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -23,14 +18,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-
-# Data — 200 points for smooth curves across full [0, 1] probability range
-p = np.linspace(0, 1, 200)
-gini = 2 * p * (1 - p)
-
-with np.errstate(divide="ignore", invalid="ignore"):
-    entropy = -p * np.log2(p) - (1 - p) * np.log2(1 - p)
-entropy = np.nan_to_num(entropy, nan=0.0)
 
 _font = "Helvetica, Arial, sans-serif"
 
@@ -58,8 +45,10 @@ custom_style = Style(
     major_guide_stroke_color=INK_SOFT,
     major_guide_stroke_dasharray="0",
     title_font_size=66,
-    label_font_size=56,
-    major_label_font_size=44,
+    label_font_size=48,
+    major_label_font_size=48,
+    value_colors=(INK,) * 5,
+    value_label_colors=(INK,) * 5,
     legend_font_size=44,
     value_font_size=36,
     value_label_font_size=48,
@@ -73,6 +62,15 @@ custom_style = Style(
     value_label_font_family=_font,
 )
 
+# Data: 200 points across the full [0, 1] probability range
+N_POINTS = 200
+p = np.linspace(0, 1, N_POINTS)
+gini = 2 * p * (1 - p)
+with np.errstate(divide="ignore", invalid="ignore"):
+    entropy = -p * np.log2(p) - (1 - p) * np.log2(1 - p)
+entropy = np.nan_to_num(entropy, nan=0.0)  # entropy is defined as 0 at p = 0 and p = 1
+
+# Plot
 chart = pygal.XY(
     width=3200,
     height=1800,
@@ -116,48 +114,50 @@ chart.add("Gini: 2p(1−p)", gini_points, stroke_style={"width": 5})
 # Series 2: Shannon entropy (normalized to [0,1]) — Imprint lavender
 chart.add("Entropy: −p log₂p − (1−p) log₂(1−p)", entropy_points, stroke_style={"width": 5})
 
-# Series 3: Vertical guide at p=0.5 (both maxima occur here)
-chart.add(None, [(0.5, 0.0), (0.5, 1.05)], stroke_style={"width": 1.5, "dasharray": "8, 6"})
+# Peak positions come from the curves themselves
+gini_peak = (p[gini.argmax()], gini.max())
+entropy_peak = (p[entropy.argmax()], entropy.max())
+
+# Series 3: Vertical guide through the shared peak position
+chart.add(
+    None,
+    [(gini_peak[0], 0.0), (gini_peak[0], float(entropy.max()) * 1.05)],
+    stroke_style={"width": 1.5, "dasharray": "8, 6"},
+)
 
 # Series 4: Gini peak annotation dot at (0.5, 0.5)
 chart.add(
-    None, [{"value": (0.5, 0.5), "label": "Gini peak = 0.50"}], stroke_style={"width": 0}, show_dots=True, dots_size=10
+    None,
+    [{"value": gini_peak, "label": f"Gini peak = {gini_peak[1]:.2f}"}],
+    stroke_style={"width": 0},
+    show_dots=True,
+    dots_size=10,
 )
 
 # Series 5: Entropy peak annotation dot at (0.5, 1.0)
 chart.add(
     None,
-    [{"value": (0.5, 1.0), "label": "Entropy peak = 1.00"}],
+    [{"value": entropy_peak, "label": f"Entropy peak = {entropy_peak[1]:.2f}"}],
     stroke_style={"width": 0},
     show_dots=True,
     dots_size=10,
 )
 
 
-def _render_png(chart, filepath):
-    """Render chart to PNG, softening the default hard rectangular axis border."""
-    svg_bytes = chart.render()
-    svg_str = svg_bytes.decode("utf-8")
-    # Extract chart id to scope the injected rule precisely
-    m = re.search(r'id="(chart-[^"]+)"', svg_str)
-    chart_id = f"#{m.group(1)} " if m else ""
-    # Soften the default axis border lines (left/bottom frame) to INK_MUTED at 45% opacity.
-    # .axis .line targets the axis spine paths; more-specific .axis .major.line continues
-    # to use the theme INK color for the major grid anchors, both at reduced opacity.
-    border_css = (
-        f"\n      {chart_id}.axis .line {{"
-        f" stroke: {INK_MUTED} !important;"
-        f" stroke-opacity: 0.45 !important; }}"
-        f"\n      {chart_id}.axis .major.line {{"
-        f" stroke: {INK_MUTED} !important;"
-        f" stroke-opacity: 0.45 !important; }}"
-        f"\n    "
-    )
-    svg_str = svg_str.replace("</style>", border_css + "</style>", 1)
-    cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to=filepath, output_width=3200, output_height=1800)
-
-
-_render_png(chart, f"plot-{THEME}.png")
+# Save: soften the default axis border lines (left/bottom frame) in the rendered SVG
+svg_str = chart.render().decode("utf-8")
+m = re.search(r'id="(chart-[^"]+)"', svg_str)
+chart_id = f"#{m.group(1)} " if m else ""
+border_css = (
+    f"\n      {chart_id}.axis .line {{ stroke: {INK_MUTED} !important; stroke-opacity: 0.45 !important; }}"
+    f"\n      {chart_id}.axis .major.line {{ stroke: {INK_MUTED} !important; stroke-opacity: 0.45 !important; }}"
+    f"\n      {chart_id}text.value {{ fill: {INK} !important; }}"
+    "\n    "
+)
+svg_str = svg_str.replace("</style>", border_css + "</style>", 1)
+cairosvg.svg2png(
+    bytestring=svg_str.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800
+)
 chart.render_to_file(f"plot-{THEME}.svg")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())
