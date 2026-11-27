@@ -1,11 +1,13 @@
 """ anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-05
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-27
 """
 
 import os
 import sys
+
+import pandas as pd
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -13,7 +15,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 _cwd = sys.path[0] if sys.path[0] else "."
 if _cwd in sys.path:
@@ -60,9 +63,11 @@ class Waffle(Graph):
         waffle_group = self.svg.node(plot_node, class_="waffle-chart")
 
         square_index = 0
+        cumulative = 0
         for serie_index, serie in enumerate(self.series):
-            serie_value = sum(v for v in serie.values if v is not None)
-            num_squares = round(serie_value / total * total_squares)
+            cumulative += sum(v for v in serie.values if v is not None)
+            # Cumulative rounding: blocks stay whole squares and together fill the grid
+            num_squares = round(cumulative / total * total_squares) - square_index
 
             color = self.style.colors[serie_index % len(self.style.colors)]
 
@@ -106,35 +111,44 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    opacity="1",
+    opacity_hover="1",
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-categories = {"Operations": 42, "Marketing": 28, "R&D": 18, "Admin": 12}
+CATEGORY = "category"  # role: category
+VALUE = "value"  # role: value
 
+# Data
+df = pd.DataFrame({CATEGORY: ["Operations", "Marketing", "R&D", "Admin"], VALUE: [42, 28, 18, 12]})
+
+# Plot
 chart = Waffle(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     rows=10,
     cols=10,
     style=custom_style,
-    title="Budget Allocation · waffle-basic · pygal · anyplot.ai",
+    title="Budget Allocation · waffle-basic · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    margin=80,
-    margin_bottom=250,
+    margin=50,
+    margin_bottom=170,
     show_x_labels=False,
     show_y_labels=False,
 )
 
-for category, value in categories.items():
-    chart.add(f"{category} ({value}%)", [value])
+for category, value in zip(df[CATEGORY], df[VALUE], strict=True):
+    chart.add(f"{category} ({value / df[VALUE].sum() * 100:.0f}%)", [value])
 
 chart.render_to_png(f"plot-{THEME}.png")
 
