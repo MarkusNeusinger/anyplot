@@ -1,21 +1,21 @@
 """ anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-29
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
+import os
 import sys
 
 
 sys.path = sys.path[1:]  # prevent this file from shadowing the installed plotly package
 
-import os
-
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -23,300 +23,269 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette: one color per sector in canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Constants
+SECTOR_SYMBOLS = ["circle", "diamond", "square", "triangle-up", "star", "cross", "hexagon", "pentagon"]
+ARC_DEGREES = 270  # three-quarter layout: the open quadrant holds the ring labels
 
-# Data — technology innovations across sectors and time horizons
-sectors = ["AI & ML", "Cloud & Infra", "Sustainability", "Biotech"]
-rings = ["Adopt", "Trial", "Assess", "Hold"]
-# Wider spread separates rings to reduce inner-zone label collision
-ring_radii = {"Adopt": 1.5, "Trial": 2.7, "Assess": 3.9, "Hold": 5.1}
-ring_marker_sizes = {"Adopt": 18, "Trial": 14, "Assess": 11, "Hold": 9}
-ring_boundaries = [2.1, 3.3, 4.5, 5.7]
-R_MAX = 6.3
+# Columns: set these to your table's column names
+NAME = "Innovation"  # role: name
+RING = "Time horizon ring"  # role: ring
+SECTOR = "Sector"  # role: sector
+HORIZON = "Expected adoption"  # role: extra
 
-# Polar domain (landscape): x=[0.02, 0.70], y=[0.04, 0.96]
-# radius limited by y: min(0.34*800, 0.46*450)=min(272,207)=207 px
-POLAR_CX = 0.36
-POLAR_CY = 0.50
-POLAR_RX = 0.259  # paper-x per radial unit (207/800)
-POLAR_RY = 0.460  # paper-y per radial unit (207/450)
-HEADER_R = 5.9
-
-innovations = [
-    # AI & ML — "AI Code Review" flipped to left textpos to prevent right-boundary clipping
-    {"name": "LLM Agents", "sector": "AI & ML", "ring": "Adopt", "textpos": "top center"},
-    {"name": "RAG Pipelines", "sector": "AI & ML", "ring": "Adopt", "textpos": "bottom left"},
-    {"name": "Multimodal Models", "sector": "AI & ML", "ring": "Trial", "textpos": "bottom center"},
-    {"name": "AI Code Review", "sector": "AI & ML", "ring": "Trial", "textpos": "top center"},
-    {"name": "Neuromorphic Chips", "sector": "AI & ML", "ring": "Assess", "textpos": "top center"},
-    {"name": "Autonomous Research", "sector": "AI & ML", "ring": "Hold", "textpos": "bottom center"},
-    {"name": "Quantum ML", "sector": "AI & ML", "ring": "Hold", "textpos": "top center"},
-    # Cloud & Infra — right-edge items flipped to left textpos to prevent boundary clipping
-    {"name": "Platform Engineering", "sector": "Cloud & Infra", "ring": "Adopt", "textpos": "bottom right"},
-    {"name": "FinOps", "sector": "Cloud & Infra", "ring": "Adopt", "textpos": "top right"},
-    {"name": "WebAssembly", "sector": "Cloud & Infra", "ring": "Trial", "textpos": "top center"},
-    {"name": "Edge Computing", "sector": "Cloud & Infra", "ring": "Trial", "textpos": "bottom center"},
-    {"name": "Confidential Computing", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "top left"},
-    {"name": "Serverless GPUs", "sector": "Cloud & Infra", "ring": "Assess", "textpos": "bottom left"},
-    {"name": "Decentralized Cloud", "sector": "Cloud & Infra", "ring": "Hold", "textpos": "top center"},
-    # Sustainability — "Circular Economy Platforms" flipped to left to avoid right clipping
-    {"name": "Carbon Tracking APIs", "sector": "Sustainability", "ring": "Adopt", "textpos": "top left"},
-    {"name": "Green Software", "sector": "Sustainability", "ring": "Trial", "textpos": "top right"},
-    {"name": "Digital Product Passports", "sector": "Sustainability", "ring": "Trial", "textpos": "bottom left"},
-    {"name": "Circular Economy Platforms", "sector": "Sustainability", "ring": "Assess", "textpos": "bottom left"},
-    {"name": "Climate AI", "sector": "Sustainability", "ring": "Assess", "textpos": "top left"},
-    {"name": "Fusion Energy Tech", "sector": "Sustainability", "ring": "Hold", "textpos": "top center"},
-    # Biotech — text positions flipped inward to prevent left-edge clipping
-    {"name": "mRNA Therapeutics", "sector": "Biotech", "ring": "Adopt", "textpos": "top center"},
-    {"name": "CRISPR Diagnostics", "sector": "Biotech", "ring": "Trial", "textpos": "bottom right"},
-    {"name": "Digital Twins (Health)", "sector": "Biotech", "ring": "Assess", "textpos": "bottom right"},
-    {"name": "Synthetic Biology", "sector": "Biotech", "ring": "Assess", "textpos": "top right"},
-    {"name": "Brain-Computer Interfaces", "sector": "Biotech", "ring": "Hold", "textpos": "bottom center"},
-    {"name": "Longevity Engineering", "sector": "Biotech", "ring": "Hold", "textpos": "top right"},
+# Data: replace this block with your own table, for example df = pd.read_csv("radar.csv")
+_horizon = {"Adopt": "now", "Trial": "0–1 yr", "Assess": "1–3 yr", "Hold": "3+ yr"}
+_items = [
+    ("LLM Agents", "Adopt", "AI & ML"),
+    ("RAG Pipelines", "Adopt", "AI & ML"),
+    ("Multimodal Models", "Trial", "AI & ML"),
+    ("AI Code Review", "Trial", "AI & ML"),
+    ("Neuromorphic Chips", "Assess", "AI & ML"),
+    ("Autonomous Research", "Hold", "AI & ML"),
+    ("Quantum ML", "Hold", "AI & ML"),
+    ("Platform Engineering", "Adopt", "Cloud & Infra"),
+    ("FinOps", "Adopt", "Cloud & Infra"),
+    ("WebAssembly", "Trial", "Cloud & Infra"),
+    ("Edge Computing", "Trial", "Cloud & Infra"),
+    ("Confidential Computing", "Assess", "Cloud & Infra"),
+    ("Serverless GPUs", "Assess", "Cloud & Infra"),
+    ("Decentralized Cloud", "Hold", "Cloud & Infra"),
+    ("Carbon Tracking APIs", "Adopt", "Sustainability"),
+    ("Green Software", "Trial", "Sustainability"),
+    ("Digital Product Passports", "Trial", "Sustainability"),
+    ("Circular Economy Platforms", "Assess", "Sustainability"),
+    ("Climate AI", "Assess", "Sustainability"),
+    ("Fusion Energy Tech", "Hold", "Sustainability"),
+    ("mRNA Therapeutics", "Adopt", "Biotech"),
+    ("CRISPR Diagnostics", "Trial", "Biotech"),
+    ("Digital Twins (Health)", "Assess", "Biotech"),
+    ("Synthetic Biology", "Assess", "Biotech"),
+    ("Brain-Computer Interfaces", "Hold", "Biotech"),
+    ("Longevity Engineering", "Hold", "Biotech"),
 ]
+df = pd.DataFrame(
+    {
+        NAME: [n for n, _, _ in _items],
+        RING: [r for _, r, _ in _items],
+        SECTOR: [s for _, _, s in _items],
+        HORIZON: [_horizon[r] for _, r, _ in _items],
+    }
+)
 
-# Sector colors using Imprint palette canonical order
-sector_colors = {
-    "AI & ML": IMPRINT_PALETTE[0],  # #009E73 brand green
-    "Cloud & Infra": IMPRINT_PALETTE[1],  # #C475FD lavender
-    "Sustainability": IMPRINT_PALETTE[2],  # #4467A3 blue
-    "Biotech": IMPRINT_PALETTE[3],  # #BD8233 ochre
+# Plot: reads only df and the constants above
+sectors = list(df[SECTOR].unique())
+rings = list(df[RING].unique())
+horizon_of = df.drop_duplicates(RING).set_index(RING)[HORIZON]
+sector_span = ARC_DEGREES / len(sectors)
+
+HOLE = 1.3  # empty radius at the centre: gives the inner ring room for its labels
+RING_W = 0.85
+R_MAX = HOLE + RING_W * len(rings)
+edges = [HOLE + RING_W * i for i in range(len(rings) + 1)]
+marker_sizes = [max(8, 19 - 3 * i) for i in range(len(rings))]
+
+
+def xy(radius, deg):
+    """Compass angle (clockwise from north) and radius to cartesian coordinates."""
+    rad = np.radians(deg)
+    return radius * np.sin(rad), radius * np.cos(rad)
+
+
+# Positions: items of one cell spread evenly across its sector, alternating radially inside the ring
+rows = []
+for si, sector in enumerate(sectors):
+    start = si * sector_span
+    for ri, ring in enumerate(rings):
+        cell = df[(df[SECTOR] == sector) & (df[RING] == ring)]
+        n = len(cell)
+        for k, name in enumerate(cell[NAME]):
+            if n == 1:
+                deg = start + sector_span * (0.3 if ri % 2 else 0.7)  # lone items alternate sides
+            else:
+                deg = start + sector_span * (0.2 + 0.6 * k / (n - 1))
+            radius = edges[ri] + RING_W * (0.5 + (0.2 if k % 2 else -0.2) * (n > 1))
+            x, y = xy(radius, deg)
+            rows.append({"name": name, "sector": sector, "ring": ring, "ri": ri, "x": x, "y": y, "deg": deg})
+pos = pd.DataFrame(rows)
+
+# Label placement: per item pick the side (right, left, above, below) whose text box overlaps least
+# with the markers and the labels already placed; widths are estimated from the 11 px font
+CHAR_W, TEXT_H = 0.16, 0.36  # text box size in radial units per character / per line
+half = pos["ri"].map(lambda i: marker_sizes[i]) / 36 / 2
+sides = {
+    "middle right": lambda x, y, w, m: (x + m + 0.05, x + m + 0.05 + w, y - TEXT_H / 2, y + TEXT_H / 2),
+    "middle left": lambda x, y, w, m: (x - m - 0.05 - w, x - m - 0.05, y - TEXT_H / 2, y + TEXT_H / 2),
+    "top center": lambda x, y, w, m: (x - w / 2, x + w / 2, y + m, y + m + TEXT_H),
+    "bottom center": lambda x, y, w, m: (x - w / 2, x + w / 2, y - m - TEXT_H, y - m),
 }
 
-sector_symbols = {"AI & ML": "circle", "Cloud & Infra": "diamond", "Sustainability": "square", "Biotech": "triangle-up"}
 
-# 270° layout, 4 equal sectors
-sector_span = 270 / len(sectors)
-sector_starts = {s: i * sector_span for i, s in enumerate(sectors)}
+def overlap(a, b):
+    return max(0, min(a[1], b[1]) - max(a[0], b[0])) * max(0, min(a[3], b[3]) - max(a[2], b[2]))
 
-# Compute item positions within each sector ring
-items_by_sector = {s: [] for s in sectors}
 
-for sector in sectors:
-    start_angle = sector_starts[sector]
-    sector_items = [inn for inn in innovations if inn["sector"] == sector]
+marker_boxes = [(x - m, x + m, y - m, y + m) for x, y, m in zip(pos["x"], pos["y"], half, strict=True)]
+# Ring names sit in the open quadrant (12 px font); their boxes count as obstacles too
+ring_xy = [xy(edges[ri] + RING_W / 2, ARC_DEGREES + (360 - ARC_DEGREES) / 2) for ri in range(len(rings))]
+placed = []
+for ring, (rx, ry) in zip(rings, ring_xy, strict=True):
+    rw = CHAR_W * 1.15 * len(f"{ring} ({horizon_of[ring]})")
+    placed.append((rx - rw / 2, rx + rw / 2, ry - TEXT_H / 2, ry + TEXT_H / 2))
+textpos = []
+for i, row in pos.iterrows():
+    w = CHAR_W * len(str(row["name"]))
+    order = ["middle right", "middle left"] if row["x"] >= 0 else ["middle left", "middle right"]
+    best = None
+    for side in order + ["top center", "bottom center"]:
+        box = sides[side](row["x"], row["y"], w, half[i])
+        cost = sum(overlap(box, b) for b in placed) + 2 * sum(
+            overlap(box, b) for j, b in enumerate(marker_boxes) if j != i
+        )
+        if best is None or cost < best[0] - 1e-9:
+            best = (cost, side, box)
+    textpos.append(best[1])
+    placed.append(best[2])
+pos["textpos"] = textpos
 
-    for ring in rings:
-        ring_items = [it for it in sector_items if it["ring"] == ring]
-        if not ring_items:
-            continue
-        n = len(ring_items)
-        padding = sector_span * 0.22
-        usable_span = sector_span - 2 * padding
-        for idx, item in enumerate(ring_items):
-            if n == 1:
-                angle = start_angle + sector_span / 2
-            else:
-                angle = start_angle + padding + usable_span * idx / (n - 1)
-            base_r = ring_radii[ring]
-            jitter_range = 0.10 if ring == "Adopt" else 0.15
-            jitter = np.random.uniform(-jitter_range, jitter_range)
-            items_by_sector[sector].append(
-                {"name": item["name"], "ring": ring, "angle": angle, "r": base_r + jitter, "textpos": item["textpos"]}
-            )
+ring_fill_alpha = [0.10, 0.07, 0.045, 0.025] if THEME == "light" else [0.18, 0.11, 0.07, 0.04]
+ring_line = "rgba(26,26,23,0.22)" if THEME == "light" else "rgba(240,239,232,0.25)"
+sector_line = "rgba(26,26,23,0.35)" if THEME == "light" else "rgba(240,239,232,0.38)"
 
-# Ring fill colors — theme-adaptive, Imprint green tinted bands
-if THEME == "light":
-    ring_fill_colors = ["rgba(0,158,115,0.10)", "rgba(0,158,115,0.06)", "rgba(0,158,115,0.04)", "rgba(0,158,115,0.02)"]
-else:
-    ring_fill_colors = ["rgba(0,158,115,0.18)", "rgba(0,158,115,0.10)", "rgba(0,158,115,0.06)", "rgba(0,158,115,0.03)"]
-
-ring_line_color = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
-sector_line_color = "rgba(26,26,23,0.18)" if THEME == "light" else "rgba(240,239,232,0.18)"
-
-# Plot
 fig = go.Figure()
 
-# Ring background fills — non-overlapping bands from center outward
-theta_fill = np.linspace(0, 270, 200).tolist()
-ring_bands = [(0, ring_boundaries[0])] + list(zip(ring_boundaries[:-1], ring_boundaries[1:], strict=False))
-for i, (r_inner, r_outer) in enumerate(ring_bands):
+# Ring fills: annular bands over the drawn arc
+arc = np.linspace(0, ARC_DEGREES, 160)
+for ri in range(len(rings)):
+    outer = xy(edges[ri + 1], arc)
+    inner = xy(edges[ri], arc[::-1])
     fig.add_trace(
-        go.Scatterpolar(
-            r=[r_outer] * len(theta_fill) + [r_inner] * len(theta_fill),
-            theta=theta_fill + theta_fill[::-1],
+        go.Scatter(
+            x=np.concatenate([outer[0], inner[0]]),
+            y=np.concatenate([outer[1], inner[1]]),
             fill="toself",
-            fillcolor=ring_fill_colors[i],
-            line={"width": 0},
+            fillcolor=f"rgba(0,158,115,{ring_fill_alpha[min(ri, len(ring_fill_alpha) - 1)]})",
+            mode="none",
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Ring boundary lines
-for radius in ring_boundaries:
-    theta_circle = np.linspace(0, 270, 200)
+# Ring boundaries
+for edge in edges:
+    bx, by = xy(edge, arc)
     fig.add_trace(
-        go.Scatterpolar(
-            r=np.full_like(theta_circle, radius).tolist(),
-            theta=theta_circle.tolist(),
+        go.Scatter(
+            x=bx, y=by, mode="lines", line={"color": ring_line, "width": 1.2}, showlegend=False, hoverinfo="skip"
+        )
+    )
+
+# Sector dividers
+for si in range(len(sectors) + 1):
+    d0 = xy(HOLE, si * sector_span)
+    d1 = xy(R_MAX, si * sector_span)
+    fig.add_trace(
+        go.Scatter(
+            x=[d0[0], d1[0]],
+            y=[d0[1], d1[1]],
             mode="lines",
-            line={"color": ring_line_color, "width": 1.2},
+            line={"color": sector_line, "width": 1, "dash": "dot"},
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Sector divider lines
-for angle in [sector_starts[s] for s in sectors] + [270]:
+# Items: one trace per sector
+for si, sector in enumerate(sectors):
+    cell = pos[pos["sector"] == sector]
     fig.add_trace(
-        go.Scatterpolar(
-            r=[0, R_MAX],
-            theta=[angle, angle],
-            mode="lines",
-            line={"color": sector_line_color, "width": 1, "dash": "dot"},
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
-
-# Innovation items per sector — marker size encodes time horizon priority;
-# inner rings (Adopt/Trial) use smaller textfont (10px) to reduce label crowding
-for sector in sectors:
-    items = items_by_sector[sector]
-    color = sector_colors[sector]
-    fig.add_trace(
-        go.Scatterpolar(
-            r=[it["r"] for it in items],
-            theta=[it["angle"] for it in items],
+        go.Scatter(
+            x=cell["x"],
+            y=cell["y"],
             mode="markers+text",
+            opacity=1,
             marker={
-                "size": [ring_marker_sizes[it["ring"]] for it in items],
-                "color": color,
-                "symbol": sector_symbols[sector],
-                "line": {"color": PAGE_BG, "width": 2},
-                "opacity": [1.0 if it["ring"] == "Adopt" else 0.82 for it in items],
+                "size": [marker_sizes[i] for i in cell["ri"]],
+                "color": IMPRINT_PALETTE[si % len(IMPRINT_PALETTE)],
+                "symbol": SECTOR_SYMBOLS[si % len(SECTOR_SYMBOLS)],
+                "opacity": 1,
+                "line": {"color": PAGE_BG, "width": 1.5},
             },
-            text=[f"<b>{it['name']}</b>" if it["ring"] == "Adopt" else it["name"] for it in items],
-            textposition=[it["textpos"] for it in items],
-            textfont={"size": [10 if it["ring"] in ("Adopt", "Trial") else 12 for it in items], "color": color},
+            text=cell["name"],
+            textposition=cell["textpos"],
+            textfont={"size": 11, "color": INK},
             name=sector,
-            legendgroup=sector,
+            customdata=cell["ring"],
             hovertemplate="%{text}<br>Ring: %{customdata}<extra>" + sector + "</extra>",
-            customdata=[it["ring"] for it in items],
         )
     )
 
-# Ring labels as paper-coordinate annotations in the empty arc gap (270°–360°).
-# Placed at angle=282° (well inside the gap, upper-left of the circle) with
-# xanchor="right" so text extends leftward into the unoccupied region.
-# sin(282°) ≈ -0.978, cos(282°) ≈ 0.208
-_gap_sin = np.sin(np.radians(282))
-_gap_cos = np.cos(np.radians(282))
-ring_label_annotations = []
-for ring_name, label in [
-    ("Adopt", "Adopt (Now)"),
-    ("Trial", "Trial (0–1 yr)"),
-    ("Assess", "Assess (1–3 yr)"),
-    ("Hold", "Hold (3+ yr)"),
-]:
-    r = ring_radii[ring_name]
-    frac = r / R_MAX
-    lx = float(POLAR_CX + frac * POLAR_RX * _gap_sin)
-    ly = float(POLAR_CY + frac * POLAR_RY * _gap_cos)
-    ring_label_annotations.append(
-        {
-            "text": f"<b>{label}</b>",
-            "x": lx,
-            "y": ly,
-            "xref": "paper",
-            "yref": "paper",
-            "xanchor": "right",
-            "yanchor": "middle",
-            "showarrow": False,
-            "font": {"size": 10, "color": INK_SOFT},
-        }
-    )
-
-# Sector header labels in paper coordinates to avoid polar-domain clipping.
-
-sector_header_annotations = []
-for sector in sectors:
-    mid_deg = sector_starts[sector] + sector_span / 2
-    mid_rad = np.radians(mid_deg)
-    frac = HEADER_R / R_MAX
-    px = float(POLAR_CX + frac * POLAR_RX * np.sin(mid_rad))
-    py = float(POLAR_CY + frac * POLAR_RY * np.cos(mid_rad))
-    sector_header_annotations.append(
+annotations = []
+# Sector headers along the outer edge
+for si, sector in enumerate(sectors):
+    hx, hy = xy(R_MAX + 0.55, si * sector_span + sector_span / 2)
+    annotations.append(
         {
             "text": f"<b>{sector}</b>",
-            "x": px,
-            "y": py,
-            "xref": "paper",
-            "yref": "paper",
+            "x": hx,
+            "y": hy,
             "xanchor": "center",
             "yanchor": "middle",
             "showarrow": False,
-            "font": {"size": 17, "color": sector_colors[sector]},
+            "font": {"size": 17, "color": IMPRINT_PALETTE[si % len(IMPRINT_PALETTE)]},
+        }
+    )
+# Ring names in the open quadrant, one per ring, on the diagonal of the gap
+for ri, ring in enumerate(rings):
+    lx, ly = ring_xy[ri]
+    annotations.append(
+        {
+            "text": f"<b>{ring}</b> ({horizon_of[ring]})",
+            "x": lx,
+            "y": ly,
+            "xanchor": "center",
+            "yanchor": "middle",
+            "showarrow": False,
+            "font": {"size": 12, "color": INK_SOFT},
         }
     )
 
-# Title
 title_text = "radar-innovation-timeline · python · plotly · anyplot.ai"
-n_chars = len(title_text)
-title_fontsize = max(11, round(16 * 67 / n_chars)) if n_chars > 67 else 16
+title_fontsize = max(11, round(16 * 67 / len(title_text))) if len(title_text) > 67 else 16
+pad = 0.9
+unit_px = 36  # approximate pixels per radial unit; fixes the horizontal span so the circle sits left
+x_span = 740 / unit_px
 
 fig.update_layout(
     autosize=False,
     title={
-        "text": (
-            title_text + "<br><sup style='color:" + INK_MUTED + "; font-weight:normal'>"
-            "Technology adoption radar — inner rings = near-term, outer = longer horizon"
-            "</sup>"
-        ),
+        "text": title_text,
         "font": {"size": title_fontsize, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.98,
+        "y": 0.97,
     },
-    polar={
-        "radialaxis": {"visible": False, "range": [0, R_MAX]},
-        "angularaxis": {"visible": False, "direction": "clockwise", "rotation": 90},
-        "bgcolor": PAGE_BG,
-        "domain": {"x": [0.02, 0.70], "y": [0.04, 0.96]},
-    },
+    xaxis={"visible": False, "range": [-R_MAX - pad - 3.2, -R_MAX - pad - 3.2 + x_span]},
+    yaxis={"visible": False, "range": [-R_MAX - pad, R_MAX + pad], "scaleanchor": "x", "scaleratio": 1},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "font": {"size": 12, "color": INK_SOFT},
-        "x": 0.72,
-        "y": 0.68,
+        "font": {"size": 13, "color": INK_SOFT},
+        "x": 0.83,
+        "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "title": {"text": "<b>Sectors</b>", "font": {"size": 14, "color": INK}},
+        "title": {"text": f"<b>{SECTOR}</b>", "font": {"size": 14, "color": INK}},
     },
-    paper_bgcolor=PAGE_BG,
-    margin={"l": 30, "r": 30, "t": 70, "b": 30},
-    annotations=sector_header_annotations
-    + ring_label_annotations
-    + [
-        {
-            "text": (
-                "<b>Time Horizons</b><br>"
-                "● <b>Adopt</b> — ready now<br>"
-                "● <b>Trial</b> — evaluating 0–1 yr<br>"
-                "● <b>Assess</b> — exploring 1–3 yr<br>"
-                "● <b>Hold</b> — future watch 3+ yr"
-            ),
-            "x": 0.72,
-            "y": 0.42,
-            "xref": "paper",
-            "yref": "paper",
-            "xanchor": "left",
-            "yanchor": "top",
-            "showarrow": False,
-            "font": {"size": 12, "color": INK_SOFT},
-            "bgcolor": ELEVATED_BG,
-            "bordercolor": INK_SOFT,
-            "borderwidth": 1,
-            "borderpad": 8,
-        }
-    ],
+    margin={"l": 30, "r": 30, "t": 45, "b": 10},
+    annotations=annotations,
 )
 
-# Save — landscape canvas (3200×1800) reduces empty top space and gives more room for labels
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
