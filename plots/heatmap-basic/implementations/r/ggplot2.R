@@ -44,25 +44,18 @@ cor_long <- cor_long[y_idx >= x_idx, ]
 cor_long$x_var <- factor(cor_long$x_var, levels = hc_labels)
 cor_long$y_var <- factor(cor_long$y_var, levels = rev(hc_labels))
 
-# Mark diagonal cells and strong off-diagonal correlations for visual treatment
-cor_long$on_diag   <- as.character(cor_long$x_var) == as.character(cor_long$y_var)
-cor_long$is_strong <- abs(cor_long$correlation) > 0.7 & !cor_long$on_diag
+# Mark diagonal cells; label color follows the tile: page-colored text on the saturated tiles of the light theme
+cor_long$on_diag    <- as.character(cor_long$x_var) == as.character(cor_long$y_var)
+cor_long$label_ink  <- ifelse(THEME == "light" & abs(cor_long$correlation) > 0.75, "#FAF8F1", INK)
 
 plot_title    <- "heatmap-basic · r · ggplot2 · anyplot.ai"
 plot_subtitle <- "MPG clusters negatively with Weight, Displacement, and Cylinders"
 
 p <- ggplot(cor_long, aes(x = x_var, y = y_var, fill = correlation)) +
   geom_tile(color = PAGE_BG, linewidth = 0.8) +
-  # Highlight border on strong off-diagonal correlations (|r| > 0.7)
-  geom_tile(data = cor_long[cor_long$is_strong, ],
-            fill = NA, color = INK, linewidth = 1.0) +
-  # Off-diagonal annotations in INK; diagonal (trivial 1.00) in INK_SOFT
-  geom_text(data = cor_long[!cor_long$on_diag, ],
-            aes(label = sprintf("%.2f", correlation)),
-            color = INK, size = 3.0) +
-  geom_text(data = cor_long[cor_long$on_diag, ],
-            aes(label = sprintf("%.2f", correlation)),
-            color = INK_SOFT, size = 3.0) +
+  geom_text(aes(label = sprintf("%.2f", correlation), color = label_ink),
+            size = 3.6) +
+  scale_color_identity() +
   scale_fill_gradient2(
     low      = "#AE3030",
     mid      = DIV_MID,
@@ -79,15 +72,15 @@ p <- ggplot(cor_long, aes(x = x_var, y = y_var, fill = correlation)) +
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.3),
     panel.grid        = element_blank(),
-    axis.text.x       = element_text(color = INK_SOFT, size = 9,
+    axis.text.x       = element_text(color = INK_SOFT, size = 10,
                                      angle = 35, hjust = 1),
-    axis.text.y       = element_text(color = INK_SOFT, size = 9),
+    axis.text.y       = element_text(color = INK_SOFT, size = 10),
     plot.title        = element_text(color = INK, size = 12, face = "bold",
                                      margin = margin(b = 4)),
     plot.subtitle     = element_text(color = INK_SOFT, size = 9,
                                      margin = margin(b = 10)),
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
-    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.text       = element_text(color = INK_SOFT, size = 9),
     legend.title      = element_text(color = INK, size = 10),
     plot.margin       = margin(20, 20, 20, 20)
   )
