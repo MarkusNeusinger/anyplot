@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-27
@@ -51,8 +51,8 @@ ANCHOR_FRAC = {
     "top": 1,
 }  # share of a label's size left of / below its anchor
 SECTOR_MARKERS = ["o", "s", "D", "^", "P", "X"]
-SIZE_BY_RING = [300, 240, 190, 140]  # nearest horizon gets the largest marker
-RING_FILLS = ["#009E73", "#4467A3", "#BD8233", "#AE3030"]
+MARKER_AREA_NEAR, MARKER_AREA_FAR = 240, 115  # nearest horizon gets the largest marker
+FILL_ALPHA_NEAR, FILL_ALPHA_FAR = 0.03, 0.12  # one neutral tint, deepening with the horizon
 
 # Columns
 NAME = "Innovation"  # role: name
@@ -97,11 +97,13 @@ sectors = list(pd.unique(df[SECTOR]))
 n_rings = len(rings)
 n_sectors = len(sectors)
 sector_width_deg = TOTAL_ANGLE_DEG / n_sectors
-sector_palette = dict(zip(sectors, IMPRINT_PALETTE[:n_sectors], strict=True))
-sector_markers = dict(zip(sectors, SECTOR_MARKERS[:n_sectors], strict=True))
+sector_palette = {s: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, s in enumerate(sectors)}
+sector_markers = {s: SECTOR_MARKERS[i % len(SECTOR_MARKERS)] for i, s in enumerate(sectors)}
+size_by_ring = np.linspace(MARKER_AREA_NEAR, MARKER_AREA_FAR, n_rings)
+fill_alphas = np.linspace(FILL_ALPHA_NEAR, FILL_ALPHA_FAR, n_rings)
 ring_boundaries = np.arange(n_rings + 1) + 0.5
 r_max = ring_boundaries[-1]
-ring_accent = sns.blend_palette(["#009E73", "#BD8233", "#AE3030"], n_colors=n_rings + 1)
+ring_accent = sns.blend_palette([INK_MUTED, INK_SOFT], n_colors=n_rings + 1)
 
 ANGLE = "angle"
 RADIUS = "radius"
@@ -115,7 +117,7 @@ cell_frac = cell_frac.where(cell_count > 1, 0.32)  # a lone item sits off the se
 sector_start = START_ANGLE_DEG - sector_idx * sector_width_deg
 df[ANGLE] = np.deg2rad(sector_start - (0.1 + 0.8 * cell_frac) * sector_width_deg)
 df[RADIUS] = ring_idx + np.where(cell_rank % 2 == 0, 0.2, -0.2) * (cell_count > 1)
-df[SIZE] = ring_idx.map(dict(enumerate(SIZE_BY_RING, start=1)))
+df[SIZE] = ring_idx.map(dict(enumerate(size_by_ring, start=1)))
 
 fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="polar")
@@ -124,10 +126,12 @@ ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
 fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.16)
 
-# Ring fills (Imprint colors at low alpha) and boundary lines
-theta_fill = np.linspace(0, 2 * np.pi, 200)
+# Ring fills (neutral tint, only over the 270° sector span) and boundary lines
+theta_fill = np.deg2rad(np.linspace(START_ANGLE_DEG - TOTAL_ANGLE_DEG, START_ANGLE_DEG, 200))
 for i in range(n_rings):
-    ax.fill_between(theta_fill, ring_boundaries[i], ring_boundaries[i + 1], color=RING_FILLS[i], alpha=0.16, zorder=0)
+    ax.fill_between(
+        theta_fill, ring_boundaries[i], ring_boundaries[i + 1], color=INK, alpha=fill_alphas[i], linewidth=0, zorder=0
+    )
 for i, rb in enumerate(ring_boundaries):
     ax.plot(
         theta_fill,
@@ -151,7 +155,7 @@ sns.scatterplot(
     hue=SECTOR,
     style=SECTOR,
     size=SIZE,
-    sizes=(min(SIZE_BY_RING), max(SIZE_BY_RING)),
+    sizes=(size_by_ring.min(), size_by_ring.max()),
     markers=sector_markers,
     palette=sector_palette,
     edgecolor=PAGE_BG,
@@ -161,7 +165,7 @@ sns.scatterplot(
     ax=ax,
     zorder=5,
 )
-ax.set_ylim(0, r_max + 1.2)
+ax.set_ylim(0, r_max + 0.85)
 ax.set_yticks([])
 ax.set_xticks([])
 ax.set_xlabel("")
@@ -176,7 +180,7 @@ for i, sector_name in enumerate(sectors):
     texts.append(
         ax.text(
             mid,
-            r_max + 0.95,
+            r_max + 0.6,
             sector_name,
             ha="center",
             va="center",
@@ -213,7 +217,7 @@ texts.append(
         ring_boundaries[0] + 0.1,
         "◂ Ready",
         fontsize=9,
-        color=sns.desaturate("#009E73", 0.55),
+        color=INK_SOFT,
         fontweight="bold",
         ha="center",
         va="center",
@@ -226,7 +230,7 @@ texts.append(
         r_max + 0.2,
         "Emerging ▸",
         fontsize=9,
-        color=sns.desaturate("#AE3030", 0.55),
+        color=INK_SOFT,
         fontweight="bold",
         ha="center",
         va="center",
@@ -240,7 +244,7 @@ renderer = fig.canvas.get_renderer()
 PT = fig.dpi / 72.0
 fig_w, fig_h = fig.canvas.get_width_height()
 cx, cy = ax.transData.transform((0, 0))
-rows = df.sort_values(RADIUS, ascending=False)
+rows = df.sort_values(RADIUS, ascending=True)  # crowded inner items choose their label spot first
 placed = [(b.x0, b.y0, b.x1, b.y1) for b in (t.get_window_extent(renderer) for t in texts)]
 marker_boxes = []
 for _, row in rows.iterrows():
@@ -254,7 +258,7 @@ for k, (_, row) in enumerate(rows.iterrows()):
     base = np.arctan2(py - cy, px - cx)
     own = marker_boxes[k]
     best = None
-    for dist in [11, 17, 25, 35, 47, 60, 76, 94, 112, 135]:
+    for dist in [11, 17, 25, 35, 47, 60, 76, 94, 112]:
         for turn in [0, 35, -35, 70, -70, 110, -110, 150, -150, 180]:
             ang = base + np.deg2rad(turn)
             ux, uy = np.cos(ang), np.sin(ang)
@@ -286,6 +290,11 @@ for k, (_, row) in enumerate(rows.iterrows()):
             )
             # keep labels clear of the title (top) and the legend (bottom) bands
             out = (box[0] < 6 * PT) + (box[2] > fig_w - 6 * PT) + (box[1] < 0.17 * fig_h) + (box[3] > 0.925 * fig_h)
+            # the leader runs from the marker edge to the label anchor; count the boxes it crosses
+            leader = [(px + f * dx * PT, py + f * dy * PT) for f in np.linspace(0.3, 1, 12)]
+            hits += sum(
+                any(o[0] <= lx <= o[2] and o[1] <= ly <= o[3] for lx, ly in leader) for o in placed if o is not own
+            )
             score = hits + 5 * out + 0.002 * dist + 0.0005 * abs(turn)
             if best is None or score < best[0]:
                 if best is not None:
@@ -311,7 +320,7 @@ sector_handles = [
         marker=sector_markers[s],
         markerfacecolor=sector_palette[s],
         markeredgecolor=PAGE_BG,
-        markersize=10,
+        markersize=np.sqrt(size_by_ring.max()),
         label=s,
     )
     for s in sectors
@@ -324,10 +333,10 @@ ring_handles = [
         marker="o",
         markerfacecolor=INK_MUTED,
         markeredgecolor=PAGE_BG,
-        markersize=np.sqrt(sz) / 2.2,
+        markersize=np.sqrt(sz),
         label=name,
     )
-    for name, sz in zip(rings, SIZE_BY_RING, strict=True)
+    for name, sz in zip(rings, size_by_ring, strict=True)
 ]
 legend = fig.legend(
     handles=sector_handles + ring_handles,
