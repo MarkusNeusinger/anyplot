@@ -49,12 +49,21 @@ Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, wel
 
 **Paint the whole canvas.** lets-plot paints `plot_background` only behind the plot box it draws, so two kinds of figure leave strips at the canvas edges:
 
-- **A fixed aspect** (`coord_fixed`, `coord_polar`, `coord_map`) narrows the plot box to that aspect and leaves the rest of the canvas **transparent**: strips at the left and right (polar: also top and bottom), 15 to 230 px wide on the square canvas and over 700 px on the landscape one. Keep the canvas Step 0 picks for the plot, and wrap the finished plot in a one-panel `gggrid` of that size that carries the page color.
+- **A fixed aspect** (`coord_fixed`, `coord_polar`, `coord_map`) narrows the plot box to that aspect and leaves the rest of the canvas **transparent**: strips at the left and right (polar: also top and bottom), 15 to 230 px wide on the square canvas and over 700 px on the landscape one. Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color.
 - **A composite** (`gggrid`, `ggbunch`) fills the space around its panels with opaque **white**, about 24 px at each edge in both themes. Give the composite itself the page color.
 
+**Then let a fixed-aspect panel fill the canvas.** The wrap paints the strips but leaves them empty: a panel that keeps its aspect is only as large as the narrower side of the space left for it allows, and the rest of the canvas becomes blank bands. Three choices decide how large it gets:
+
+- **The legend goes where the blank bands are.** Bands above and below a fixed-aspect panel mean that its width limits it, and a legend beside it takes width the panel needs: put the legend below (`theme(legend_position='bottom')`), or inside the panel where the figure leaves an empty corner. Bands at the left and right mean that its height limits it: keep the legend beside it, because a legend below takes height the panel needs. On the square canvas the title already takes height, so a figure about as tall as wide usually has its bands above and below, and its legend goes below. When moving the legend only moves the bands to the other two sides, leave it and widen a map's span instead.
+- **The canvas suits the figure with its title and legend below it**, not only its equal axes. A figure about as tall as wide (a chord, radar or polar chart, a tile grid, a map of a region about as tall as wide) fills the square canvas once its legend is below. A figure that stays clearly wider than tall with all of that (a world map, a hemicycle) suits Step 0's landscape pair.
+- **A map fills the panel through its span.** Widen the shorter of the two coordinate ranges in `coord_fixed(xlim=..., ylim=...)` or `coord_map(xlim=..., ylim=...)` until the panel's shape matches the space the canvas leaves for it: the map shows more of its surroundings instead of empty bands. Both ranges come from the data, as above: the widened one is the data's range with a margin, never a typed number.
+
+Step 4's canvas question checks the result: blank bands on two opposite sides of a fixed-aspect figure mean that one of these three choices is still open.
+
 ```python
-# Fixed aspect: the one-panel grid paints the canvas, the plot keeps its aspect.
+# Fixed aspect: the one-panel grid paints the canvas and the plot keeps its aspect.
 # ggsize is the canvas Step 0 picks, never a third size:
+plot = plot + theme(legend_position='bottom')  # only when the bands are above and below the panel
 plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # square
 plot = gggrid([plot]) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # landscape
 
@@ -142,14 +151,14 @@ geom_density()     # Density
 import math
 from itertools import pairwise
 SEQ_FIELDS = (
-    [(0.0, '#66E2B2'), (0.368, '#009E73'), (0.582, '#4467A3'), (1.0, '#002850')]
+    [(0.0, '#66E2B2'), (0.369, '#009E73'), (0.803, '#024582'), (1.0, '#351E45')]
     if THEME == 'light'
-    else [(0.0, '#00573D'), (0.467, '#009E73'), (1.0, '#CDD9FF')]
+    else [(0.0, '#404C02'), (0.487, '#009E73'), (1.0, '#CDD9FF')]
 )
 SEQ_MARKS = (
-    [(0.0, '#009E73'), (0.338, '#4467A3'), (1.0, '#002850')]
+    [(0.0, '#009E73'), (0.687, '#024582'), (1.0, '#351E45')]
     if THEME == 'light'
-    else [(0.0, '#007755'), (0.32, '#009E73'), (1.0, '#CDD9FF')]
+    else [(0.0, '#6F7E20'), (0.21, '#009E73'), (1.0, '#CDD9FF')]
 )
 
 def ramp_color(stops, t):

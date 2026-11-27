@@ -12,150 +12,145 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 77
 review:
   strengths:
-  - Full GF(256) Reed-Solomon ECC 200 implementation is technically accurate and impressive
-    for inline script code
-  - Educational zone color overlays (Okabe-Ito colors matching labels) create a coherent
-    structural anatomy view
-  - HoverTool with per-module type/row/col information is a genuinely useful Bokeh
-    feature for barcode inspection
-  - 'Both themes work correctly: warm off-white / near-black backgrounds, theme-adaptive
-    text, no dark-on-dark failures'
-  - Square 2400x2400 canvas is the correct choice for a symmetric barcode
+  - L-shaped finder on left and bottom and clock pattern on top and right are in step
+    with the 16x16 grid
+  - Correct ECC 200 size selection with digit-pair compaction and Reed-Solomon codewords
+  - HoverTool bound to the module renderer exposes module type, row and column in
+    the HTML
   weaknesses:
-  - Zone annotation labels (L-finder, Timing, Data) are 18pt — too small for the 2400x2400
-    canvas; at mobile widths (~400px) they would be ~4px and invisible. Increase to
-    at least 28-34pt.
-  - 'Okabe-Ito colors for zone overlays are not in canonical order: L-finder uses
-    blue (#0072B2 = position 3) before green (#009E73 = position 1). Swap so the data
-    region overlay uses #009E73 first.'
+  - 'SC-01 (both): translucent tints over the finder (blue), clock (violet) and data
+    region (green) add highlighted regions the -basic spec excludes → remove the three
+    overlay rect groups. Likely cause: the ''Structural zone overlays'' p.rect calls.'
+  - 'SC-02 (both): ''L-finder'', ''Timing'' and ''Data'' callout labels sit inside
+    the quiet zone, which must be blank → remove them. Likely cause: the zone-label
+    Label loop.'
+  - 'SC-02 (dark): the code is inverted to light modules on a dark green-black field
+    instead of black on white → draw black modules on a light tile in both themes.
+    Likely cause: modules filled with INK, which flips to #F0EFE8 in the dark theme.'
+  - 'SC-02 (both): modules drawn at 95 % of their cell leave visible gaps, so the
+    L finder is a row of separate squares instead of two solid edges → full-cell modules
+    (width=1, height=1). Likely cause: p.rect(width=0.95, height=0.95).'
+  - 'SC-03 (code): data bits are written row by row and every pad is randomised, so
+    module positions do not follow ECC 200 and the symbol will not decode → ECC 200
+    diagonal placement (ISO/IEC 16022 Annex F) and a plain first pad of 129. Likely
+    cause: the row-by-row placement loop and the pad loop.'
+  - 'Suggestion: the callout labels at 18pt read small beside the 50pt title.'
+  - 'Suggestion: the overlay hues do not follow Imprint''s canonical order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "datamatrix-basic · python · bokeh · anyplot.ai" in dark ink (50pt) — clearly readable. Subtitle 'Content: "SERIAL:12345678"' in secondary ink (34pt) — clearly readable. Zone labels "Timing" (orange bordered box, horizontal), "L-finder" (blue bordered box, rotated vertical), "Data" (green bordered box, rotated vertical) at 18pt — readable at full resolution but too small at mobile widths.
-      Data: Barcode cells rendered as near-black (#1A1A17) on light background — high contrast. Zone overlays: teal/mint (#009E73 at 12% alpha) for data region, peach (#D55E00 at 15% alpha) for timing, subtle blue (#0072B2 at 15% alpha) for L-finder column.
-      Legibility verdict: PASS — all primary text readable; zone label size is a minor weakness but not a failure
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'datamatrix-basic · python · bokeh · anyplot.ai' centred in dark ink; subtitle 'Content: "SERIAL:12345678"' at the bottom in INK_SOFT; small boxed callouts 'Timing' (violet, above the symbol), 'L-finder' (blue, rotated, left) and 'Data' (green, rotated, right) in the quiet zone. No axes or grid. All text readable.
+      Data: 16x16 Data Matrix of near-black modules drawn at 95 % of their cell, leaving thin gaps; the data region is tinted mint green, the top row and right column violet, the corner a stronger violet. Finder solid left and bottom, clock alternating top and right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in near-white (#F0EFE8) — clearly readable. Subtitle in near-white — clearly readable. Zone labels retain Okabe-Ito colors on dark background — readable. No dark-on-dark issues detected.
-      Data: Barcode cells render as near-white (#F0EFE8) on dark background — high contrast (polarity inverted vs light theme, which is expected and correct). Zone overlay hues are identical to light render; only the effective tint changes due to dark background (appears as dark teal for data region, dark brown for timing).
-      Legibility verdict: PASS — all text readable against dark background; no chrome failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and subtitle in light ink, readable; the same colored callouts, readable; no dark-on-dark text.
+      Data: polarity inverted: modules are light #F0EFE8 on a dark green-black data region and dark violet clock tints, so the symbol reads as white on black; same 95 % gaps between modules.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title (50pt) and subtitle (34pt) explicitly set and well-proportioned.
-          Zone annotation labels (18pt) too small for 2400x2400 canvas — would be
-          invisible at mobile widths (~4px at 400px). Should be 28-34pt.
+        comment: Title 50pt and subtitle 34pt readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Barcode cells perfectly sized and high-contrast. Zone labels readable
-          at full resolution but could be more prominent.
+        comment: Modules large and high-contrast
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast black/white barcode + Okabe-Ito (colorblind-safe) zone
-          overlays.
+        comment: High contrast modules
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for barcode; fills ~75% of canvas with appropriate
-          quiet zone margins.
+        comment: Square canvas, symbol well centred with margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden; title format correct; subtitle provides encoded
-          content context.
+        comment: N/A for axes; title correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Plot backgrounds correct (#FAF8F1/#1A1A17); chrome tokens correct.
-          Okabe-Ito colors used for zone overlays but not in canonical order: blue
-          (position 3) assigned to L-finder before green (position 1). Fix: assign
-          #009E73 to data region first.'
+        passed: true
+        comment: Backgrounds and chrome tokens correct in both themes
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Educational zone color overlays distinguish L-finder/timing/data
-          with matching bordered label boxes. Clearly above defaults — strong design
-          with thoughtful Okabe-Ito color assignment to structural zones.
+        comment: Baseline; the zone tints are unasked additions and earn no credit
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Axes hidden (correct), no grid, subtle alpha overlays, bordered zone
-          labels with color-matched borders. Good polish.
+        comment: Baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color-coded zones tell a clear educational story about Data Matrix
-          anatomy. Hover tooltips reinforce structural hierarchy interactively.
+        comment: Zone anatomy layer is variant creep on a -basic spec, no credit
     spec_compliance:
-      score: 15
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct Data Matrix 2D barcode with L-shaped finder, alternating
-          timing, and data modules.
+        passed: false
+        comment: Tinted zone overlays and callout labels are layers the -basic spec
+          excludes (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Quiet zone, L-shaped finder, alternating timing, full ECC 200 Reed-Solomon,
-          correct content encoding all present.
+        passed: false
+        comment: C4 quiet zone carries text, C3 black-on-white broken in dark render,
+          C1 finder broken by gaps between modules (defect lines); C2 clock present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Content SERIAL:12345678 correctly encoded through ASCII codeword
-          RS matrix pipeline.
+        passed: false
+        comment: Row-by-row bit placement and randomised first pad do not follow ECC
+          200; the symbol will not decode (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact format; no legend needed for single visual element.
+        comment: Title in the mandated format; legend N/A
     data_quality:
       score: 15
       max: 15
@@ -165,22 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Data Matrix structural features shown and annotated: L-finder,
-          timing edges, data region, quiet zone, ECC 200.'
+        comment: Finder, clock, data region, quiet zone shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SERIAL:12345678 is a canonical real-world Data Matrix use case for
-          component serial numbers in electronics/aerospace.
+        comment: Serial-number part marking
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct proportions for a 26x26 Data Matrix symbol with 44-codeword
-          capacity; encoding is technically accurate.
+        comment: 11 codewords -> 16x16 symbol, correct size
     code_quality:
       score: 10
       max: 10
@@ -190,52 +182,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; inline RS encoding complexity is inherent
-          to the domain.
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic input string; no random seed needed.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: RS encoding necessarily complex; no over-engineering or fake UI.
+        comment: Written-out RS fine, no barcode package installed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html + plot-{THEME}.png correctly; current Bokeh/Selenium
-          API.
+        comment: HTML + PNG per theme
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: ColumnDataSource, figure.rect(), HoverTool with renderers, Label/Title
-          add_layout — textbook Bokeh patterns.
+        comment: ColumnDataSource, rect glyphs, Title/Label layouts
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: HoverTool with per-module type/row/col classification on a barcode
-          is distinctively Bokeh; interactive HTML output alongside PNG is library-specific.
+        comment: HoverTool on the module renderer with type/row/col
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
+  last_kept:
+    pr: 14703
+    code: criterion_below
+    note: '#14703 was kept because it scored below the live version''s re-score on
+      these criteria: VQ-05 3 < 4: Dark render: the light tile runs up to within ~10
+      px of the title and to the canvas sides, crowding the chrome (defect line).
+      Do not score lower than the live version on them.'
 impl_tags:
   dependencies:
   - selenium

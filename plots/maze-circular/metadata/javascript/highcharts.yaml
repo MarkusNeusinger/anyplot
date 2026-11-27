@@ -12,217 +12,244 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Correct maze algorithm: a randomized recursive backtracker builds a perfect spanning
-    tree over every ring cell, guaranteeing exactly one solvable path from entry to
-    goal per the spec.'
-  - 'Theme-adaptive chrome is fully correct: wall geometry and the goal marker are
-    pixel-identical between light and dark renders, only background/ink/wall color
-    flip via ANYPLOT_TOKENS; passes the theme-readability check in both renders with
-    no dark-on-dark or light-on-light failures.'
-  - 'Distinctive Highcharts renderer usage: a native radial gradient (Highcharts.color().brighten())
-    gives the goal hub subtle raised depth, low-level SVG path drawing renders the
-    rings/radial walls/perimeter, and a soft translucent wedge highlights the entry''s
-    first step.'
-  - 'Clear wayfinding: START and GOAL are explicitly labeled with palette-correct
-    accent colors (brand green #009E73 for entry, secondary palette color for goal),
-    and the outer perimeter has a deliberate gap plus a tick mark at the entry point.'
-  - 'Square canvas correctly reserved: the titleClearance offset recenters the maze
-    below the title with no overlap or clipping in either theme.'
+  - A randomized recursive backtracker carves a spanning tree over all 139 cells (hub,
+    then 6/12/24/24/24/48 sectors), so exactly one route leads from the entry to the
+    center, as the spec requires
+  - Rings subdivide adaptively (6 → 12 → 24 → 48 sectors) so the cells stay close
+    to square, which keeps the corridors evenly wide and easy to trace with a pen
+    in every ring
+  - 'Highcharts renderer used in a chart.events.load hook: SVG arc commands draw the
+    ring walls, and Highcharts.color().brighten() with a radialGradient fill gives
+    the goal hub its depth'
+  - 'Theme tokens throughout: walls in t.ink flip from near-black on #FAF8F1 to off-white
+    on #1A1A17, START stays brand green #009E73 and the goal stays Imprint position
+    2 in both renders'
+  - Heavier outer perimeter (5 px against 3.5 px interior walls) with one gap, a faint
+    green tint on the entry cell and a START tick make the entry unmistakable without
+    drawing the solution
   weaknesses:
-  - 'The spec''s `difficulty` parameter (which should affect passage density: ''easy''/''medium''/''hard'')
-    is not implemented or reflected anywhere in the code — only a single fixed-density
-    perfect maze is generated. Consider varying dead-end branching frequency, loop-back
-    edges, or ring/sector granularity based on a difficulty setting.'
-  - Wall thickness is intentionally inconsistent between interior walls (3.5px) and
-    the outer perimeter (5px) — the spec explicitly asks for 'consistent' wall thickness
-    suitable for pen/pencil solving. The heavier perimeter is a defensible print convention
-    but is a direct spec deviation worth calling out.
-  - The generator leans on several small helper functions (cellKey, edgeKey, neighbors,
-    point, cellAngles, wedgePath) for the procedural maze — necessary for the recursive-backtracker
-    algorithm, but it reduces KISS simplicity relative to a typical anyplot chart
-    snippet.
+  - 'CQ-05 (code): the chart config lacks `palette: { colorScheme: t.theme }` and
+    `plotOptions.series.animation: false`, both mandated by the Highcharts library
+    prompt; unpinned, the HTML''s default-colored elements follow the viewer''s OS
+    dark-mode setting → add both keys to the Highcharts.chart options. Likely cause:
+    the script predates the Highcharts 13 colorScheme rule.'
+  - 'CQ-01 (code): seven helper functions (rand, cellKey, edgeKey, neighbors, point,
+    cellAngles, wedgePath) where several are one-line expressions used in a few places
+    → inline cellKey/edgeKey/point/cellAngles and wedgePath (used once) into the drawing
+    loops, keeping only the PRNG and neighbor logic the backtracker needs. Likely
+    cause: a function-per-concept structure instead of the flat data → plot script.'
+  - 'Suggestion: expose the spec''s `difficulty` parameter (for example a sector-count
+    or ring-count choice per level) so the ''medium'' configuration is named in the
+    code.'
+  - 'Suggestion: point the START tick along the exact center of the perimeter gap
+    at the top (angle -90°) so it reads as vertical instead of slightly tilted.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the Imprint light surface.
-      Chrome: Title "maze-circular · javascript · highcharts · anyplot.ai" in dark ink at top center, comfortably ~55% of plot width. "START" label in brand green above a short green tick mark, with a faint green-tinted wedge marking the first step. "GOAL" label in dark ink above the center hub.
-      Data: Maze walls (rings + radial spokes) drawn in dark ink; goal marker is a small purple/lavender circle with a subtle radial gradient for depth.
-      Legibility verdict: PASS — all text and wall geometry read clearly against the light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 across the full 2400x2400 square canvas.
+      Chrome: Title "maze-circular · javascript · highcharts · anyplot.ai" in dark ink, bold 27px, centered at the top (~53% of the width). "START" in brand green above a short green tick at the perimeter gap (top), "GOAL" in dark ink above the center hub. No axes, grid or legend (expected for a maze).
+      Data: Seven concentric rings with near-black walls (3.5 px interior, heavier 5 px outer perimeter), radial walls dividing the rings into 6/12/24/24/24/48 sectors, gaps forming passages. The entry cell has a faint #009E73 tint; the goal is a small lavender (Imprint position 2) circle with a radial gradient at the center.
+      Legibility verdict: PASS — all text and walls read clearly; no light-on-light elements.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the Imprint dark surface.
-      Chrome: Title, "START", and "GOAL" labels render in light ink / brand green, fully legible. Maze walls are drawn in light ink (correctly inverted from dark ink in the light render).
-      Data: Goal marker (purple gradient circle) is pixel-identical in color, size, and position to the light render — confirming data colors do not shift between themes, only chrome.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and wall lines stand out clearly against the near-black background.
+      Background: Warm near-black #1A1A17.
+      Chrome: Title and GOAL in off-white ink, START in brand green; all readable, no dark-on-dark text.
+      Data: Identical maze geometry with off-white walls; the START tick, entry tint and goal circle keep the same Imprint colors as in the light render (only the walls and chrome flip).
+      Legibility verdict: PASS — strong wall/corridor contrast, all text legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, START, GOAL all readable in both themes at appropriate font
-          sizes.
+        comment: Title 27px bold, START/GOAL 15px bold; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: GOAL label sits inside the hub above the marker, START above the
+          gap; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wall lines and markers clearly visible; inner-ring walls are slightly
-          denser but still legible.
+        comment: Walls clearly visible in both themes; markers distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast throughout; no red-green as sole signal.
+        comment: Strong ink-on-page contrast; green and lavender markers also labeled
+          with text
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas correctly reserved; titleClearance keeps maze recentered
-          without overlap or clipping.
+        comment: Square canvas, maze fills ~83% of the width below the title, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the mandated format; no axes needed for this plot type.
+        comment: N/A for axes (maze has none); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'START uses brand green #009E73, backgrounds are theme-correct #FAF8F1/#1A1A17,
-          data colors identical across themes.'
+        comment: 'START #009E73, goal Imprint position 2, backgrounds #FAF8F1/#1A1A17,
+          identical marker colors across themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Native radial gradient on the goal hub and a soft entry-highlight
-          wedge show real design intent beyond defaults.
+        passed: true
+        comment: Radial-gradient goal hub and a soft entry-cell tint are design decisions
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        comment: Rounded line caps, weighted perimeter, no clutter, generous whitespace.
+        passed: true
+        comment: Round line caps that join wall segments cleanly, a heavier framing
+          perimeter, title clearance that recenters the maze
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        comment: START/GOAL callouts and the entry highlight guide the viewer, but
-          a puzzle has limited room for classic data storytelling.
+        passed: true
+        comment: Entry-cell tint hints at the first step without revealing the route,
+          beyond the Notes' entry/goal marking
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correctly a circular maze puzzle with concentric rings and radial
-          sectors.
+        passed: true
+        comment: Circular theta maze with concentric rings and radial walls
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Entry/goal marking, ring/sector walls, and single-solution guarantee
-          all present; the `difficulty` parameter from the spec is not implemented.
+        passed: true
+        comment: Ring walls, radial walls, passages, marked entry and goal, single
+          solution, consistent interior walls with a heavier perimeter (C1–C4 all
+          met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Ring/sector topology maps correctly to radial screen position.
+        passed: true
+        comment: Construction geometry centered on one common center; no data axes
+          needed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format exactly; no legend needed.
+        passed: true
+        comment: Mandated title format; legend N/A, markers labeled directly
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Covers rings, sectors, radial passages, entry, and goal; missing
-          difficulty variation.
+        passed: true
+        comment: More sectors in outer rings, dead ends, long curved corridors, ring-to-ring
+          openings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible puzzle content.
+        passed: true
+        comment: Neutral puzzle content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 7 rings with sensible sector growth is an appropriately complex,
-          solvable puzzle.
+        passed: true
+        comment: 7 rings as in the spec example; no Check values in the Notes
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        comment: Several helper functions are used, but they're necessary for the
-          recursive-backtracker maze algorithm rather than gratuitous abstraction.
+        passed: false
+        comment: Seven helper functions, several of them inlinable one-liners (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic fixed-seed LCG.
+        passed: true
+        comment: Seeded LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports beyond the Highcharts global.
+        passed: true
+        comment: No imports; Highcharts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for the algorithm; no fake UI or simulated
-          interactivity.
+        passed: true
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        comment: Correct mount-node contract, animation disabled, credits disabled.
+        passed: false
+        comment: Mount-node contract and chart.animation false, but palette.colorScheme
+          is not pinned and plotOptions.series.animation is not disabled (defect line)
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic use of the SVG renderer API for a chart type with no native
-          series support; bypasses the series/plotOptions system by necessity.
+        passed: true
+        comment: Custom drawing via chart.events.load and this.renderer path/circle/text
+          with SVG arc commands — the idiomatic route for a type with no native series
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
-        comment: Native color gradient utility (Highcharts.color().brighten()), custom
-          renderer.path/circle/text drawing, load event hook.
+        passed: true
+        comment: Highcharts.color().brighten() and a radialGradient fill object on
+          the renderer circle
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-06168f0957
+  last_kept:
+    pr: 14720
+    code: no_visible_improvement
+    note: '#14720 was kept because the review saw no visible improvement over the
+      live version.'
 impl_tags:
   dependencies: []
   techniques:

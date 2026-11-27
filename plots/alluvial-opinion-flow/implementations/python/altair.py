@@ -1,13 +1,12 @@
 """ anyplot.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-30
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-27
 """
 
 import os
 
 import altair as alt
-import numpy as np
 import pandas as pd
 from PIL import Image
 
@@ -15,181 +14,206 @@ from PIL import Image
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic mapping: positive→green, negative→red, neutral→muted anchor
-CATEGORY_COLORS = {
-    "Strongly Agree": "#009E73",  # Imprint green (positive anchor)
-    "Agree": "#99B314",  # Imprint lime (mildly positive)
-    "Neutral": INK_MUTED,  # theme-adaptive muted anchor
-    "Disagree": "#BD8233",  # Imprint ochre (mildly negative)
-    "Strongly Disagree": "#AE3030",  # Imprint matte red (negative anchor)
-}
+# Constants: ordered Likert levels take steps of one ramp: green pole, grey midpoint, red pole (Imprint marks ramp)
+RAMP_POLES = ["#009E73", "#6B6A63" if THEME == "light" else "#686762", "#AE3030"]
 
-# Wave-column background band — theme-adaptive
-BAND_COLOR = "#DDE5EE" if THEME == "light" else "#1C2B36"
+# Columns: set these to your table's column names
+WAVE = "Quarter"  # role: wave
+NEXT_WAVE = "Next quarter"  # role: extra
+SOURCE = "Opinion"  # role: source_category
+TARGET = "Opinion next quarter"  # role: target_category
+FLOW = "Respondents"  # role: flow_count
 
-np.random.seed(42)
-
-# Data — employee engagement survey: 1,000 staff tracked across 4 quarterly waves
-categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
-waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
-n_cats = len(categories)
-initial_counts = [180, 250, 200, 220, 150]
-
+# Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+# Employee engagement survey: 1,000 staff tracked across 4 quarterly waves, one row per transition
+levels = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
+quarters = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
 transitions = [
-    np.array(
-        [[140, 25, 10, 5, 0], [20, 170, 40, 15, 5], [5, 30, 120, 35, 10], [0, 10, 25, 150, 35], [0, 5, 5, 20, 120]]
-    ),
-    np.array([[135, 20, 8, 2, 0], [25, 155, 35, 20, 5], [5, 25, 105, 45, 20], [0, 8, 20, 145, 52], [0, 2, 7, 18, 143]]),
-    np.array([[140, 18, 5, 2, 0], [22, 135, 30, 18, 5], [3, 22, 100, 35, 15], [0, 5, 15, 155, 55], [0, 2, 5, 15, 198]]),
+    [[140, 25, 10, 5, 0], [20, 170, 40, 15, 5], [5, 30, 120, 35, 10], [0, 10, 25, 150, 35], [0, 5, 5, 20, 120]],
+    [[135, 20, 8, 2, 0], [25, 155, 35, 20, 5], [5, 25, 105, 45, 20], [0, 8, 20, 145, 52], [0, 2, 7, 18, 143]],
+    [[140, 18, 5, 2, 0], [22, 135, 30, 18, 5], [3, 22, 100, 35, 15], [0, 5, 15, 155, 55], [0, 2, 5, 15, 198]],
 ]
+df = pd.DataFrame(
+    [
+        {WAVE: quarters[w], NEXT_WAVE: quarters[w + 1], SOURCE: levels[s], TARGET: levels[t], FLOW: matrix[s][t]}
+        for w, matrix in enumerate(transitions)
+        for s in range(len(levels))
+        for t in range(len(levels))
+        if matrix[s][t] > 0
+    ]
+)
 
-wave_totals = [dict(zip(categories, initial_counts, strict=True))]
-for trans in transitions:
-    wave_totals.append(dict(zip(categories, trans.sum(axis=0).tolist(), strict=True)))
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+f_source, f_target, f_flow, f_wave = (c.translate(ESCAPE) for c in (SOURCE, TARGET, FLOW, WAVE))
 
-# Layout — coordinate space matches view dimensions (620 × 320 CSS px)
-view_w = 620
-view_h = 320
-top_margin = 42  # space for wave-column headers inside view
-bottom_margin = 22  # space for trend annotation
-left_margin = 185  # space for left side-labels
-right_margin = 125  # space for right side-labels
-node_w = 20
-node_gap = 7
-n_waves = len(waves)
+waves = list(df[WAVE].unique()) + [df[NEXT_WAVE].iloc[-1]]
+categories = list(pd.unique(pd.concat([df[SOURCE], df[TARGET]])))
+n_cats_total = len(categories)
+ramp_rgb = [[int(c[k : k + 2], 16) for k in (1, 3, 5)] for c in RAMP_POLES]
+cat_colors = []
+for i in range(n_cats_total):
+    pos = 2 * i / max(n_cats_total - 1, 1)
+    lo = min(int(pos), 1)
+    mix = [a + (b - a) * (pos - lo) for a, b in zip(ramp_rgb[lo], ramp_rgb[lo + 1], strict=True)]
+    cat_colors.append("#" + "".join(f"{round(v):02X}" for v in mix))
+n_waves, n_cats = len(waves), len(categories)
 
+# Respondents per category and wave. A block is as tall as the flows leaving it (first wave) or
+# arriving in it (later waves); flows are scaled by the outgoing and incoming sums of their block.
+out_sum = [df[df[WAVE] == wave].groupby(SOURCE)[FLOW].sum().to_dict() for wave in waves[:-1]] + [{}]
+in_sum = [{}] + [df[df[WAVE] == wave].groupby(TARGET)[FLOW].sum().to_dict() for wave in waves[:-1]]
+totals = [{cat: (out_sum[i] if i == 0 else in_sum[i]).get(cat, 0) for cat in categories} for i in range(n_waves)]
+
+# Layout in view units: the view fills the 800 x 450 chart minus title, subtitle and legend
+view_w, view_h = 780, 352
+top_margin, bottom_margin = 36, 26
+left_margin, right_margin = 190, 150
+node_w, node_gap = 20, 7
 avail_h = view_h - top_margin - bottom_margin
-avail_w = view_w - left_margin - right_margin
-x_pos = [left_margin + i * avail_w / (n_waves - 1) for i in range(n_waves)]
+x_pos = [left_margin + i * (view_w - left_margin - right_margin) / (n_waves - 1) for i in range(n_waves)]
 
-# Node positions for each wave
-node_pos = {}
-for wi in range(n_waves):
-    total = sum(wave_totals[wi].values())
-    usable = avail_h * 0.88 - node_gap * (n_cats - 1)
-    cy = top_margin + (avail_h - usable - node_gap * (n_cats - 1)) / 2
-    node_pos[wi] = {}
-    for cat in categories:
-        ct = wave_totals[wi][cat]
-        nh = (ct / total) * usable
-        node_pos[wi][cat] = {"y": cy, "h": nh, "x": x_pos[wi] - node_w / 2, "total": ct}
-        cy += nh + node_gap
-
-# Flow polygon data (smooth bezier-like curves)
-src_off = {w: {c: node_pos[w][c]["y"] for c in categories} for w in range(n_waves)}
-tgt_off = {w: {c: node_pos[w][c]["y"] for c in categories} for w in range(n_waves)}
-flow_rows = []
-ncp = 40
-
-for ti, trans in enumerate(transitions):
-    for si, sc in enumerate(categories):
-        for tci, tc in enumerate(categories):
-            val = int(trans[si, tci])
-            if val == 0:
-                continue
-            sp = node_pos[ti][sc]
-            tp = node_pos[ti + 1][tc]
-            is_stable = si == tci
-            sh = (val / wave_totals[ti][sc]) * sp["h"]
-            th = (val / wave_totals[ti + 1][tc]) * tp["h"]
-            syt = src_off[ti][sc]
-            syb = syt + sh
-            tyt = tgt_off[ti + 1][tc]
-            tyb = tyt + th
-            src_off[ti][sc] += sh
-            tgt_off[ti + 1][tc] += th
-            xs = x_pos[ti] + node_w / 2
-            xe = x_pos[ti + 1] - node_w / 2
-            fid = f"w{ti}_{sc}_{tc}"
-            pts = []
-            for i in range(ncp):
-                t = i / (ncp - 1)
-                s = t * t * (3 - 2 * t)
-                pts.append((xs + t * (xe - xs), syt + s * (tyt - syt)))
-            for i in range(ncp - 1, -1, -1):
-                t = i / (ncp - 1)
-                s = t * t * (3 - 2 * t)
-                pts.append((xs + t * (xe - xs), syb + s * (tyb - syb)))
-            for pi, (px, py) in enumerate(pts):
-                flow_rows.append(
-                    {
-                        "fid": fid,
-                        "src": sc,
-                        "tgt": tc,
-                        "name": sc,
-                        "val": val,
-                        "x": px,
-                        "y": py,
-                        "ord": pi,
-                        "stable": is_stable,
-                    }
-                )
-
-flows_df = pd.DataFrame(flow_rows)
-
-# Node rectangle data
 node_rows = []
-for wi in range(n_waves):
+for wi, wave in enumerate(waves):
+    wave_total = sum(totals[wi].values())
+    usable = avail_h - node_gap * (n_cats - 1)
+    cy = top_margin
     for cat in categories:
-        p = node_pos[wi][cat]
+        nh = totals[wi][cat] / wave_total * usable
         node_rows.append(
+            {WAVE: wave, SOURCE: cat, FLOW: totals[wi][cat], "wi": wi, "x": x_pos[wi] - node_w / 2, "y": cy, "h": nh}
+        )
+        cy += nh + node_gap
+nodes_df = pd.DataFrame(node_rows)
+nodes_df["x2"] = nodes_df["x"] + node_w
+nodes_df["y2"] = nodes_df["y"] + nodes_df["h"]
+nodes_df["cx"] = nodes_df["x"] + node_w / 2
+nodes_df["cy"] = nodes_df["y"] + nodes_df["h"] / 2
+nodes_df["lbl"] = [f"{v:g}" for v in nodes_df[FLOW]]
+# Count text: white on dark blocks, page ink on light blocks (relative luminance of the block color)
+block_rgb = {
+    cat: [int(col[k : k + 2], 16) / 255 for k in (1, 3, 5)] for cat, col in zip(categories, cat_colors, strict=True)
+}
+block_lum = {cat: 0.2126 * r + 0.7152 * g + 0.0722 * b for cat, (r, g, b) in block_rgb.items()}
+nodes_df["txt"] = ["#1A1A17" if block_lum[cat] > 0.5 else "#FFFFFF" for cat in nodes_df[SOURCE]]
+node_at = nodes_df.set_index(["wi", SOURCE])
+
+# Flow polygons: a smoothstep band from the source block to the target block, stacked inside each block
+out_off = node_at["y"].to_dict()
+in_off = node_at["y"].to_dict()
+n_pts = 40
+flow_rows = []
+for _, row in df.iterrows():
+    wi = waves.index(row[WAVE])
+    src, tgt, val = row[SOURCE], row[TARGET], row[FLOW]
+    s_node, t_node = node_at.loc[(wi, src)], node_at.loc[(wi + 1, tgt)]
+    s_top = out_off[(wi, src)]
+    t_top = in_off[(wi + 1, tgt)]
+    s_h = val / out_sum[wi][src] * s_node["h"]
+    t_h = val / in_sum[wi + 1][tgt] * t_node["h"]
+    out_off[(wi, src)] += s_h
+    in_off[(wi + 1, tgt)] += t_h
+    xs, xe = s_node["x"] + node_w, t_node["x"]
+    ts = [i / (n_pts - 1) for i in range(n_pts)]
+    top_edge = [(xs + t * (xe - xs), s_top + t * t * (3 - 2 * t) * (t_top - s_top)) for t in ts]
+    bottom_edge = [(xs + t * (xe - xs), s_top + s_h + t * t * (3 - 2 * t) * (t_top + t_h - s_top - s_h)) for t in ts]
+    for k, (px, py) in enumerate(top_edge + bottom_edge[::-1]):
+        flow_rows.append(
             {
-                "name": cat,
-                "wave": waves[wi],
-                "wave_idx": wi,
-                "x": p["x"],
-                "y": p["y"],
-                "x2": p["x"] + node_w,
-                "y2": p["y"] + p["h"],
-                "cx": p["x"] + node_w / 2,
-                "cy": p["y"] + p["h"] / 2,
-                "total": p["total"],
+                "fid": f"{wi}|{src}|{tgt}",
+                SOURCE: src,
+                TARGET: tgt,
+                FLOW: val,
+                "x": px,
+                "y": py,
+                "ord": k,
+                "stable": src == tgt,
             }
         )
-nodes_df = pd.DataFrame(node_rows)
+flows_df = pd.DataFrame(flow_rows)
 
-xs = alt.Scale(domain=[0, view_w])
-ys = alt.Scale(domain=[0, view_h])
-cdom = list(CATEGORY_COLORS.keys())
-crange = list(CATEGORY_COLORS.values())
+# Side labels: first-wave count on the left, last-wave count with the change since the first wave on the right
+first_wave = nodes_df[nodes_df["wi"] == 0]
+last_wave = nodes_df[nodes_df["wi"] == n_waves - 1]
+label_rows = [
+    {"x": r["x"] - 6, "y": r["cy"], "text": f"{r[SOURCE]} ({r[FLOW]:g})", "side": "left"}
+    for _, r in first_wave.iterrows()
+]
+for _, r in last_wave.iterrows():
+    delta = r[FLOW] - totals[0][r[SOURCE]]
+    label_rows.append({"x": r["x2"] + 6, "y": r["cy"], "text": f"({r[FLOW]:g}) {delta:+g}", "side": "right"})
+labels_df = pd.DataFrame(label_rows)
 
-hover = alt.selection_point(fields=["name"], on="pointerover")
+# Wave headers above the blocks, faint bands behind each column
+headers_df = pd.DataFrame({"x": x_pos, "y": top_margin - 14, "text": waves})
+bands_df = pd.DataFrame(
+    {
+        "x": [x - node_w for x in x_pos],
+        "x2": [x + node_w for x in x_pos],
+        "y": top_margin - 6,
+        "y2": nodes_df["y2"].max() + 6,
+    }
+)
 
+# Trend note: share of respondents in the two extreme categories, first versus last wave
+extreme_share = [(totals[i][categories[0]] + totals[i][categories[-1]]) / sum(totals[i].values()) for i in (0, -1)]
+trend_df = pd.DataFrame(
+    [
+        {
+            "x": view_w / 2,
+            "y": nodes_df["y2"].max() + 16,
+            "text": f"{categories[0]} + {categories[-1]}: {extreme_share[0]:.0%} of respondents in {waves[0]}, "
+            f"{extreme_share[1]:.0%} in {waves[-1]}",
+        }
+    ]
+)
+
+xs_scale = alt.Scale(domain=[0, view_w])
+ys_scale = alt.Scale(domain=[0, view_h], reverse=True)
+color_scale = alt.Scale(domain=categories, range=cat_colors)
+hover = alt.selection_point(fields=[SOURCE.translate(ESCAPE)], on="pointerover")
+
+
+def_x = alt.X("x:Q", scale=xs_scale, axis=None)
+def_y = alt.Y("y:Q", scale=ys_scale, axis=None)
+
+flow_color = alt.Color(f_source, type="nominal", scale=color_scale, legend=None)
 stable_flows = (
     alt.Chart(flows_df)
     .transform_filter("datum.stable")
     .mark_line(filled=True, strokeWidth=0)
     .encode(
-        x=alt.X("x:Q", scale=xs, axis=None),
-        y=alt.Y("y:Q", scale=ys, axis=None),
-        color=alt.Color("src:N", scale=alt.Scale(domain=cdom, range=crange), legend=None),
+        x=def_x,
+        y=def_y,
+        color=flow_color,
         detail="fid:N",
         order="ord:Q",
-        opacity=alt.condition(hover, alt.value(0.70), alt.value(0.55)),
-        tooltip=[alt.Tooltip("src:N", title="Category"), alt.Tooltip("val:Q", title="Stable respondents")],
+        opacity=alt.condition(hover, alt.value(0.75), alt.value(0.6)),
+        tooltip=[
+            alt.Tooltip(f_source, type="nominal", title="Stays in"),
+            alt.Tooltip(f_flow, type="quantitative", title=FLOW),
+        ],
     )
 )
-
 change_flows = (
     alt.Chart(flows_df)
     .transform_filter("!datum.stable")
     .mark_line(filled=True, strokeWidth=0)
     .encode(
-        x=alt.X("x:Q", scale=xs, axis=None),
-        y=alt.Y("y:Q", scale=ys, axis=None),
-        color=alt.Color("src:N", scale=alt.Scale(domain=cdom, range=crange), legend=None),
+        x=def_x,
+        y=def_y,
+        color=flow_color,
         detail="fid:N",
         order="ord:Q",
-        opacity=alt.condition(hover, alt.value(0.50), alt.value(0.30)),
+        opacity=alt.condition(hover, alt.value(0.5), alt.value(0.3)),
         tooltip=[
-            alt.Tooltip("src:N", title="From"),
-            alt.Tooltip("tgt:N", title="To"),
-            alt.Tooltip("val:Q", title="Respondents"),
+            alt.Tooltip(f_source, type="nominal", title=SOURCE),
+            alt.Tooltip(f_target, type="nominal", title=TARGET),
+            alt.Tooltip(f_flow, type="quantitative", title=FLOW),
         ],
     )
 )
@@ -198,28 +222,15 @@ nodes_layer = (
     alt.Chart(nodes_df)
     .mark_rect(stroke=INK_SOFT, strokeWidth=0.8, cornerRadius=3)
     .encode(
-        x=alt.X("x:Q", scale=xs),
-        y=alt.Y("y:Q", scale=ys),
+        x=alt.X("x:Q", scale=xs_scale, axis=None),
+        y=alt.Y("y:Q", scale=ys_scale, axis=None),
         x2="x2:Q",
         y2="y2:Q",
-        color=alt.Color(
-            "name:N",
-            scale=alt.Scale(domain=cdom, range=crange),
-            legend=alt.Legend(
-                title="Sentiment",
-                orient="bottom",
-                direction="horizontal",
-                titleFontSize=12,
-                labelFontSize=11,
-                titlePadding=6,
-                symbolSize=200,
-                padding=4,
-            ),
-        ),
+        color=alt.Color(f_source, type="nominal", scale=color_scale, legend=None),
         tooltip=[
-            alt.Tooltip("wave:N", title="Quarter"),
-            alt.Tooltip("name:N", title="Sentiment"),
-            alt.Tooltip("total:Q", title="Respondents"),
+            alt.Tooltip(f_wave, type="nominal", title=WAVE),
+            alt.Tooltip(f_source, type="nominal", title=SOURCE),
+            alt.Tooltip(f_flow, type="quantitative", title=FLOW),
         ],
     )
     .add_params(hover)
@@ -227,105 +238,59 @@ nodes_layer = (
 
 count_labels = (
     alt.Chart(nodes_df)
-    .transform_filter(alt.datum.y2 - alt.datum.y >= 8)
-    .transform_calculate(lbl="'' + datum.total")
-    .mark_text(fontSize=10, fontWeight="bold", color="#FFFFFF", baseline="middle", align="center")
-    .encode(x=alt.X("cx:Q", scale=xs), y=alt.Y("cy:Q", scale=ys), text="lbl:N")
+    .transform_filter(alt.datum.h >= 12)
+    .mark_text(fontSize=11, fontWeight="bold", baseline="middle", align="center")
+    .encode(
+        x=alt.X("cx:Q", scale=xs_scale),
+        y=alt.Y("cy:Q", scale=ys_scale),
+        text="lbl:N",
+        color=alt.Color("txt:N", scale=None, legend=None),
+    )
 )
 
-# Left labels: category name + Q1 count
-label_rows = []
-for _, row in nodes_df.iterrows():
-    yc = (row["y"] + row["y2"]) / 2
-    if row["wave_idx"] == 0:
-        label_rows.append({"x": row["x"] - 5, "y": yc, "text": f"{row['name']} ({int(row['total'])})", "side": "left"})
-    elif row["wave_idx"] == n_waves - 1:
-        cat = row["name"]
-        delta = wave_totals[n_waves - 1][cat] - wave_totals[0][cat]
-        sign = "+" if delta >= 0 else ""
-        label_rows.append(
-            {"x": row["x2"] + 5, "y": yc, "text": f"({int(row['total'])}) {sign}{delta}", "side": "right"}
-        )
-labels_df = pd.DataFrame(label_rows)
-
-left_labels = (
+side_labels = [
     alt.Chart(labels_df)
-    .transform_filter(alt.datum.side == "left")
-    .mark_text(fontSize=11, color=INK_SOFT, align="right", baseline="middle")
-    .encode(x=alt.X("x:Q", scale=xs), y=alt.Y("y:Q", scale=ys), text="text:N")
-)
+    .transform_filter(alt.datum.side == side)
+    .mark_text(fontSize=12, color=INK_SOFT, align=align, baseline="middle")
+    .encode(x=alt.X("x:Q", scale=xs_scale), y=alt.Y("y:Q", scale=ys_scale), text="text:N")
+    for side, align in (("left", "right"), ("right", "left"))
+]
 
-right_labels = (
-    alt.Chart(labels_df)
-    .transform_filter(alt.datum.side == "right")
-    .mark_text(fontSize=11, color=INK_SOFT, align="left", baseline="middle")
-    .encode(x=alt.X("x:Q", scale=xs), y=alt.Y("y:Q", scale=ys), text="text:N")
-)
-
-# Wave-column headers — positioned just above the node area inside the view
-hdr_y = top_margin - 10
-hdr_data = pd.DataFrame([{"x": x_pos[i], "y": hdr_y, "text": waves[i]} for i in range(n_waves)])
 wave_headers = (
-    alt.Chart(hdr_data)
-    .mark_text(fontSize=12, fontWeight="bold", color=INK, baseline="bottom", align="center")
-    .encode(x=alt.X("x:Q", scale=xs), y=alt.Y("y:Q", scale=ys), text="text:N")
+    alt.Chart(headers_df)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK, baseline="bottom", align="center")
+    .encode(x=alt.X("x:Q", scale=xs_scale), y=alt.Y("y:Q", scale=ys_scale), text="text:N")
 )
 
-# Trend annotation — bottom of view
-max_y = max(node_pos[w][c]["y"] + node_pos[w][c]["h"] for w in range(n_waves) for c in categories)
-trend_y = max_y + 14
-trend_data = pd.DataFrame(
-    [
-        {
-            "x": view_w / 2,
-            "y": trend_y,
-            "text": "Polarization trend: extreme sentiments grow while moderate opinions decline",
-        }
-    ]
-)
-trend_ann = (
-    alt.Chart(trend_data)
-    .mark_text(fontSize=10, fontStyle="italic", color=INK_MUTED, baseline="top", align="center")
-    .encode(x=alt.X("x:Q", scale=xs), y=alt.Y("y:Q", scale=ys), text="text:N")
+trend_note = (
+    alt.Chart(trend_df)
+    .mark_text(fontSize=11, fontStyle="italic", color=INK_MUTED, baseline="top", align="center")
+    .encode(x=alt.X("x:Q", scale=xs_scale), y=alt.Y("y:Q", scale=ys_scale), text="text:N")
 )
 
-# Subtle column background bands
-bw = 14
-band_data = pd.DataFrame(
-    [{"x": x_pos[i] - bw, "x2": x_pos[i] + bw, "y": top_margin - 5, "y2": max_y + 5} for i in range(n_waves)]
-)
 wave_bands = (
-    alt.Chart(band_data)
-    .mark_rect(color=BAND_COLOR, opacity=0.6, cornerRadius=4)
-    .encode(x=alt.X("x:Q", scale=xs, axis=None), x2="x2:Q", y=alt.Y("y:Q", scale=ys, axis=None), y2="y2:Q")
+    alt.Chart(bands_df)
+    .mark_rect(color=INK_MUTED, opacity=0.12, cornerRadius=4)
+    .encode(x=alt.X("x:Q", scale=xs_scale, axis=None), x2="x2:Q", y=alt.Y("y:Q", scale=ys_scale, axis=None), y2="y2:Q")
 )
 
+# Title: mandated format, font size scaled down for long titles
 title_str = "alluvial-opinion-flow · python · altair · anyplot.ai"
-n_chars = len(title_str)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
-title_fs = max(11, round(16 * ratio))
+title_fs = max(11, round(16 * (67 / len(title_str) if len(title_str) > 67 else 1.0)))
 
 chart = (
-    alt.layer(
-        wave_bands,
-        change_flows,
-        stable_flows,
-        nodes_layer,
-        count_labels,
-        left_labels,
-        right_labels,
-        wave_headers,
-        trend_ann,
-    )
+    alt.layer(wave_bands, change_flows, stable_flows, nodes_layer, count_labels, *side_labels, wave_headers, trend_note)
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
         title=alt.Title(
             text=title_str,
             subtitle="Employee Engagement Survey — 1,000 Staff Quarterly Sentiment Tracking",
             fontSize=title_fs,
-            subtitleFontSize=10,
+            subtitleFontSize=11,
             subtitleColor=INK_MUTED,
             anchor="middle",
             color=INK,
@@ -333,24 +298,18 @@ chart = (
         ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .interactive()
 )
 
-# Save — canvas hard contract: 3200 × 1800 (landscape)
-TW, TH = 3200, 1800
+# Save: 3200 x 1800 landscape
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
+    _canvas.save(f"plot-{THEME}.png")

@@ -1,7 +1,7 @@
 """ anyplot.ai
 arc-basic: Basic Arc Diagram
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -9,8 +9,9 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem, Range1d, Title
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -23,61 +24,100 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint sequential colormap stops: brand green → blue
-# Brief (1): #009E73, Moderate (2): midpoint, Frequent (3): #4467A3
-WEIGHT_COLORS = {1: "#009E73", 2: "#22838B", 3: "#4467A3"}
-WEIGHT_LABELS = {1: "Brief", 2: "Moderate", 3: "Frequent"}
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — character interactions in a story chapter
-nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry"]
-edges = [
-    (0, 1, 3),  # Alice–Bob: frequent
-    (0, 2, 2),  # Alice–Carol: moderate
-    (1, 3, 1),  # Bob–David: brief
-    (2, 4, 2),  # Carol–Eve: moderate
-    (0, 5, 1),  # Alice–Frank: brief
-    (3, 6, 2),  # David–Grace: moderate
-    (4, 7, 1),  # Eve–Henry: brief
-    (0, 7, 3),  # Alice–Henry: frequent (long-range)
-    (1, 4, 2),  # Bob–Eve: moderate
-    (2, 6, 1),  # Carol–Grace: brief
-    (5, 7, 2),  # Frank–Henry: moderate
-    (1, 2, 1),  # Bob–Carol: brief (short-range)
-]
+# Imprint sequential ramp for marks (arcs are lines on the page), low -> high
+SEQ_MARKS = (
+    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    if THEME == "light"
+    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-n_nodes = len(nodes)
-x_positions = np.linspace(0.5, 10.5, n_nodes)
-y_baseline = 0.0
+# Constants
+ARC_RATIO = 0.5  # arc height per unit of distance between the two nodes
 
-# Weighted degree — hub characters get larger, darker nodes
-weighted_degrees = np.zeros(n_nodes)
-for src, tgt, w in edges:
-    weighted_degrees[src] += w
-    weighted_degrees[tgt] += w
+# Columns: set these to your table's column names
+SOURCE = "Speaker"  # role: edges
+TARGET = "Responder"  # role: extra
+WEIGHT = "Shared scenes"  # role: weights
 
-min_wd, max_wd = weighted_degrees.min(), weighted_degrees.max()
-node_sizes = 28 + (weighted_degrees - min_wd) / (max_wd - min_wd) * 28
+# Data: replace this block with your own edge list, for example df = pd.read_csv("edges.csv")
+# Character interactions in chapter 1 of a fictional harbour-town story; nodes follow the order of first appearance.
+df = pd.DataFrame(
+    {
+        SOURCE: [
+            "Mara",
+            "Mara",
+            "Tobias",
+            "Ingrid",
+            "Mara",
+            "Jonas",
+            "Elsie",
+            "Mara",
+            "Tobias",
+            "Ingrid",
+            "Corin",
+            "Wren",
+            "Odile",
+            "Mara",
+            "Silas",
+        ],
+        TARGET: [
+            "Tobias",
+            "Ingrid",
+            "Jonas",
+            "Elsie",
+            "Corin",
+            "Wren",
+            "Silas",
+            "Silas",
+            "Elsie",
+            "Wren",
+            "Odile",
+            "Peregrine",
+            "Hester",
+            "Hester",
+            "Peregrine",
+        ],
+        WEIGHT: [3, 2, 1, 2, 1, 2, 1, 3, 2, 1, 2, 1, 1, 2, 2],
+    }
+)
 
-# Node colors on imprint_seq (brand green → blue by degree)
-node_colors = []
-for wd in weighted_degrees:
-    t = float(wd - min_wd) / float(max_wd - min_wd)
-    r = int(round(0x00 + t * (0x44 - 0x00)))
-    g = int(round(0x9E + t * (0x67 - 0x9E)))
-    b_val = int(round(0x73 + t * (0xA3 - 0x73)))
-    node_colors.append(f"#{r:02X}{g:02X}{b_val:02X}")
+# Plot: reads only df and the constants above
+nodes = list(pd.unique(df[[SOURCE, TARGET]].to_numpy().ravel()))
+position = {name: float(i) for i, name in enumerate(nodes)}
 
-# Figure — 3200×1800 landscape, no toolbar (toolbar adds ~30–50 px and breaks PNG height)
+arcs = pd.DataFrame(
+    {
+        SOURCE: df[SOURCE],
+        TARGET: df[TARGET],
+        WEIGHT: df[WEIGHT],
+        "x0": df[SOURCE].map(position),
+        "x1": df[TARGET].map(position),
+    }
+)
+arcs["y0"] = 0.0
+arcs["y1"] = 0.0
+arcs["cx0"] = arcs["x0"] + (arcs["x1"] - arcs["x0"]) / 3
+arcs["cx1"] = arcs["x0"] + 2 * (arcs["x1"] - arcs["x0"]) / 3
+arcs["cy"] = (arcs["x1"] - arcs["x0"]).abs() * ARC_RATIO
+peak = arcs["cy"].max() * 0.75  # a cubic bezier with both controls at height h peaks at 0.75 h
+
+w_min, w_max = df[WEIGHT].min(), df[WEIGHT].max()
+stop_pos = [s[0] for s in SEQ_MARKS]
+stop_rgb = list(zip(*[[int(s[1][k : k + 2], 16) for k in (1, 3, 5)] for s in SEQ_MARKS], strict=True))
+
 p = figure(
     width=3200,
     height=1800,
     title="arc-basic · python · bokeh · anyplot.ai",
-    x_range=(-0.5, 11.5),
-    y_range=(-0.5, 3.5),
+    x_range=Range1d(-0.6, len(nodes) - 0.4),
+    y_range=Range1d(-0.5, peak * 1.1),
     toolbar_location=None,
-    min_border_bottom=70,
+    min_border_bottom=60,
     min_border_left=60,
-    min_border_top=110,
+    min_border_top=40,
     min_border_right=60,
 )
 
@@ -91,122 +131,76 @@ p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-
-# Subtitle — centered over the arc area
 p.add_layout(
-    Label(
-        x=5.5,
-        y=3.22,
-        text="Character Interaction Frequency · Chapter 1",
-        text_font_size="26pt",
-        text_font_style="italic",
-        text_color=INK_SOFT,
-        text_align="center",
-    )
+    Title(
+        text="Character interactions in The Harbour at Saltmere · Chapter 1", text_font_size="30pt", text_color=INK_SOFT
+    ),
+    "above",
 )
 
-# Arcs — arc_height = 0.30 × distance keeps all arcs inside y_range
-arc_renderers_by_weight = {1: [], 2: [], 3: []}
-
-for src_idx, tgt_idx, weight in edges:
-    x_src = x_positions[src_idx]
-    x_tgt = x_positions[tgt_idx]
-    distance = abs(x_tgt - x_src)
-    arc_height = distance * 0.30
-    cx0 = x_src + (x_tgt - x_src) / 3
-    cx1 = x_src + 2 * (x_tgt - x_src) / 3
-
-    line_width = 4.0 + weight * 2.5  # 6.5 / 9.0 / 11.5 px — Brief clearly visible
-    alpha = 0.60 + weight * 0.10  # 0.70 / 0.80 / 0.90 — Brief arcs fully legible
-
-    arc_src = ColumnDataSource(
-        data={
-            "x0": [x_src],
-            "y0": [y_baseline],
-            "x1": [x_tgt],
-            "y1": [y_baseline],
-            "cx0": [cx0],
-            "cy0": [arc_height],
-            "cx1": [cx1],
-            "cy1": [arc_height],
-            "source_name": [nodes[src_idx]],
-            "target_name": [nodes[tgt_idx]],
-            "weight_label": [WEIGHT_LABELS[weight]],
-        }
-    )
+# Arcs: one renderer per weight level, ordered levels run along the sequential ramp
+legend_items = []
+for level, rows in arcs.groupby(WEIGHT):
+    share = (level - w_min) / (w_max - w_min) if w_max > w_min else 0.0
+    # on dark, start the ramp at its brand-green stop so the lightest level stays visible on the page
+    t = share if THEME == "light" else stop_pos[1] + (1 - stop_pos[1]) * share
+    color = "#" + "".join(f"{round(np.interp(t, stop_pos, channel)):02X}" for channel in stop_rgb)
     renderer = p.bezier(
         x0="x0",
         y0="y0",
         x1="x1",
         y1="y1",
         cx0="cx0",
-        cy0="cy0",
+        cy0="cy",
         cx1="cx1",
-        cy1="cy1",
-        source=arc_src,
-        line_width=line_width,
-        line_color=WEIGHT_COLORS[weight],
-        line_alpha=alpha,
+        cy1="cy",
+        source=ColumnDataSource(rows),
+        line_width=4 + 8 * level / w_max,
+        line_color=color,
+        line_alpha=0.55 + 0.3 * level / w_max,
     )
-    arc_renderers_by_weight[weight].append(renderer)
-
-arc_hover = HoverTool(
-    tooltips=[("Connection", "@source_name ↔ @target_name"), ("Frequency", "@weight_label")], line_policy="interp"
-)
-p.add_tools(arc_hover)
-
-# Nodes — size and color encode weighted degree (hub visibility)
-node_source = ColumnDataSource(
-    data={
-        "x": x_positions,
-        "y": [y_baseline] * n_nodes,
-        "name": nodes,
-        "size": node_sizes,
-        "color": node_colors,
-        "connections": [int(wd) for wd in weighted_degrees],
-    }
-)
-node_renderer = p.scatter(
-    x="x", y="y", source=node_source, size="size", fill_color="color", line_color=PAGE_BG, line_width=4
-)
-node_hover = HoverTool(
-    tooltips=[("Character", "@name"), ("Connection Strength", "@connections")], renderers=[node_renderer]
-)
-p.add_tools(node_hover)
-
-# Node labels
-for i, name in enumerate(nodes):
-    p.add_layout(
-        Label(
-            x=x_positions[i],
-            y=-0.20,
-            text=name,
-            text_font_size="26pt",
-            text_align="center",
-            text_baseline="top",
-            text_color=INK,
+    legend_items.append(LegendItem(label=str(level), renderers=[renderer]))
+    p.add_tools(
+        HoverTool(
+            renderers=[renderer],
+            tooltips=[("Connection", f"@{{{SOURCE}}} ↔ @{{{TARGET}}}"), (WEIGHT, f"@{{{WEIGHT}}}")],
+            line_policy="interp",
         )
     )
 
-# Legend — larger text + integrated styling to address previous "slightly small/detached"
-legend_items = [
-    LegendItem(label=WEIGHT_LABELS[w], renderers=[arc_renderers_by_weight[w][0]])
-    for w in [3, 2, 1]
-    if arc_renderers_by_weight[w]
-]
+# Nodes on the baseline, labels below
+node_source = ColumnDataSource({"x": list(position.values()), "y": [0.0] * len(nodes), "name": nodes})
+p.scatter(x="x", y="y", source=node_source, size=44, fill_color=IMPRINT_PALETTE[0], line_color=PAGE_BG, line_width=4)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="name",
+        source=node_source,
+        y_offset=-40,
+        text_font_size="34pt",
+        text_align="center",
+        text_baseline="top",
+        text_color=INK,
+    )
+)
+
 legend = Legend(
     items=legend_items,
+    title=WEIGHT,
     location="top_right",
-    label_text_font_size="30pt",
+    title_text_font_size="34pt",
+    title_text_color=INK,
+    label_text_font_size="34pt",
     label_text_color=INK_SOFT,
     border_line_color=INK_SOFT,
     border_line_alpha=0.5,
     background_fill_color=ELEVATED_BG,
-    background_fill_alpha=0.95,
     glyph_width=70,
-    glyph_height=12,
-    spacing=18,
-    padding=24,
+    glyph_height=40,
+    label_standoff=16,
+    spacing=12,
+    padding=20,
 )
 p.add_layout(legend)
 
@@ -215,8 +209,6 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome via Selenium (export_png uses snap chromedriver which fails)
-# CDP setDeviceMetricsOverride forces the exact inner viewport — --window-size alone is
-# consumed by browser chrome in headless mode and shrinks the rendered height.
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -229,20 +221,14 @@ for arg in (
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Belt-and-braces: pad/crop to exact dims so the post-render gate always passes
-from PIL import Image as _PILImage
-
-
-_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (W, H):
-    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")

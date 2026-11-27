@@ -1,79 +1,76 @@
 """ anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 78/100 | Updated: 2026-04-26
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — first stage is brand green (#009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
-# Light orange #AE3030 needs dark text; pick INK so the label also
-# stays legible where it overflows the narrow bottom segment.
-TEXT_ON_FILL = ["white", "white", "white", "white", INK]
+# Imprint palette: all eight positions, one per stage in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — sales funnel example from specification
-stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
-values = np.array([1000, 600, 400, 200, 100])
+# Columns: set these to your table's column names
+STAGE = "Stage"  # role: stage
+VISITORS = "Visitors"  # role: value
 
-# Geometry: widths proportional to first stage value, equal-height segments
-max_value = values[0]
-widths = values / max_value
-n = len(stages)
+# Data: replace this block with your own table, for example df = pd.read_csv("funnel.csv")
+df = pd.DataFrame(
+    {STAGE: ["Awareness", "Interest", "Consideration", "Intent", "Purchase"], VISITORS: [1000, 600, 400, 200, 100]}
+)
+
+# Plot: reads only df and the constants above
+n = len(df)
+values = df[VISITORS].to_numpy(dtype=float)
+widths = values / values[0]
 y_edges = np.linspace(n, 0, n + 1)
 gap = 0.06
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 for i in range(n):
     y_top = y_edges[i] - gap / 2
     y_bot = y_edges[i + 1] + gap / 2
     w_top = widths[i]
-    # Flat bottom on the last segment — trapezoid ends at the actual
-    # data width instead of tapering to a decorative point.
+    # Flat bottom on the last segment: it ends at its own data width
     w_bot = widths[i + 1] if i + 1 < n else widths[i]
-
-    y = np.array([y_top, y_bot])
-    x_left = np.array([-w_top / 2, -w_bot / 2])
-    x_right = np.array([w_top / 2, w_bot / 2])
-    ax.fill_betweenx(y, x_left, x_right, facecolor=IMPRINT[i], edgecolor=PAGE_BG, linewidth=2)
-
+    ax.fill_betweenx(
+        [y_top, y_bot],
+        [-w_top / 2, -w_bot / 2],
+        [w_top / 2, w_bot / 2],
+        facecolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
+        edgecolor=PAGE_BG,
+        linewidth=1,
+    )
     y_mid = (y_top + y_bot) / 2
-    pct = (values[i] / max_value) * 100
     ax.text(
         0,
         y_mid,
-        f"{stages[i]}\n{values[i]:,}  ·  {pct:.0f}%",
+        f"{values[i]:,.0f}\n{widths[i]:.0%}",
         ha="center",
         va="center",
-        fontsize=18,
+        fontsize=9,
         fontweight="bold",
-        color=TEXT_ON_FILL[i],
+        color="white",
+        linespacing=1.3,
     )
+    # Stage name in a column left of the widest segment
+    ax.text(-0.56, y_mid, df[STAGE].iloc[i], ha="right", va="center", fontsize=10, color=INK)
 
 # Style
-ax.set_xlim(-0.65, 0.65)
-ax.set_ylim(-0.2, n + 0.2)
-ax.set_aspect("auto")
+ax.set_xlim(-0.95, 0.6)
+ax.set_ylim(-0.1, n + 0.1)
 ax.axis("off")
-ax.set_title("funnel-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-
-# Stage index axis on the left
-for i in range(n):
-    y_mid = (y_edges[i] + y_edges[i + 1]) / 2
-    ax.text(-0.62, y_mid, f"Stage {i + 1}", ha="left", va="center", fontsize=14, color=INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+ax.set_title("funnel-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+fig.subplots_adjust(left=0.03, right=0.97, top=0.9, bottom=0.04)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

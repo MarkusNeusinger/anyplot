@@ -45,7 +45,7 @@ using PrecompileTools: @compile_workload, @setup_workload
         palette = [colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233"]
         grid = RGBAf(ink.r, ink.g, ink.b, 0.15)
         # The light fields ramp of `imprint_seq`, built with its stop positions as `prompts/library/makie.md` builds it.
-        seq = cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.368, 0.582, 1.0])
+        seq = cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.369, 0.803, 1.0])
         x = collect(1.0:12.0)
         y = sin.(x) .+ 2.0
         ints = collect(1:12)

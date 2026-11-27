@@ -92,14 +92,19 @@ Each ramp is a list of `(position, hex)` stops from the lowest value (position 0
 - **Fields:** colored areas whose cells touch and fill the plot — heatmaps, spectrograms, filled contours, maps, tiles, hexbins.
 - **Marks:** colored marks that sit on the page themselves — points, lines, outlines, and bars colored by a value.
 
-**`imprint_seq` (sequential):** for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). The ramp passes through brand green `#009E73`. In both themes the high values stand out from the page and the low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. A spec that asks for "light to dark" means low to high: in the dark render the ramp runs dark to bright, and that fulfils the spec.
+**`imprint_seq` (sequential):** for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). The ramp passes through brand green `#009E73`. In both themes the high values stand out from the page and the low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. Its other stops take the hue of a palette color at the lightness their position needs, in one order from low to high, lime → green → blue → lavender, so its long stretches change in hue as well as in lightness: a stretch that changes in lightness only reads as one color. A spec that asks for "light to dark" means low to high: in the dark render the ramp runs dark to bright, and that fulfils the spec.
 
 | Use | Light theme, low → high | Dark theme, low → high |
 |-----|-------------------------|------------------------|
-| Fields | `(0, "#66E2B2")`, `(0.368, "#009E73")`, `(0.582, "#4467A3")`, `(1, "#002850")`: pale mint → brand green → blue → navy | `(0, "#00573D")`, `(0.467, "#009E73")`, `(1, "#CDD9FF")`: deep green → brand green → pale blue |
-| Marks | `(0, "#009E73")`, `(0.338, "#4467A3")`, `(1, "#002850")`: brand green → blue → navy | `(0, "#007755")`, `(0.32, "#009E73")`, `(1, "#CDD9FF")`: dark green → brand green → pale blue |
+| Fields | `(0, "#66E2B2")`, `(0.369, "#009E73")`, `(0.803, "#024582")`, `(1, "#351E45")`: pale mint → brand green → deep blue → dark violet | `(0, "#404C02")`, `(0.487, "#009E73")`, `(1, "#CDD9FF")`: dark olive → brand green → pale blue |
+| Marks | `(0, "#009E73")`, `(0.687, "#024582")`, `(1, "#351E45")`: brand green → deep blue → dark violet | `(0, "#6F7E20")`, `(0.21, "#009E73")`, `(1, "#CDD9FF")`: olive → brand green → pale blue |
 
-The fields ramps span the wider lightness range, and their low end sits close to the page: right for a field, whose cells are read against each other, wrong for a mark, which is read against the page. Every color of the sequential marks ramps keeps WCAG 3:1 against its page (WCAG 2.1 SC 1.4.11), so no mark fades into the page.
+The fields ramps span the wider lightness range, and their low end sits close to the page: right for a field, whose cells are read against each other, wrong for a mark, which is read against the page. Every color of the sequential marks ramps keeps WCAG 3:1 against its page (WCAG 2.1 SC 1.4.11), so no mark fades into the bare page.
+
+A thin line or small marker colored by a ramp (a route, a flow arc, a point on a map) is read against whatever lies under it, which on a map is the land fill or a tile, not the page. Lines and points on a map take the marks ramp, also over a filled map. Two things keep their low end visible:
+
+- **Opacity:** draw everything colored by a ramp opaque, cells too, unless the spec asks for the ground to show through. Transparency mixes the color with the ground, so the plot no longer shows the key's colors and a mark's low end fades: at alpha 0.65 the dark marks ramp's low end falls from 3.9:1 on the page to 2.4:1. When a spec asks for translucent lines so that overlaps show, let the opacity fall from 1 at the low end to the spec's alpha at the high end: the thin low-value lines keep their contrast and the overlaps still build up. This holds for single-color lines on a basemap too, when their width carries the value. Otherwise separate overlapping lines by width or a thin page-colored edge; transparency stays for the dense scatters of the Data-density Heuristic.
+- **Ground:** on the dark page, keep the land fill within about 1.25:1 of the page, and let a coastline mark where land meets water. The dark marks ramp's low end keeps 3:1 against the page, the elevated shade `#242420` (1.12:1 from the page) and land up to that ceiling; on lighter land it falls below (2.6:1 on a fill 1.5:1 from the page), so darken the land, not the line.
 
 **`imprint_div` (diverging):** matte red ↔ midpoint ↔ blue, `(0, "#AE3030")`, `(0.5, midpoint)`, `(1, "#4467A3")`, for data with a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps); the midpoint sits at the data's meaningful value, often 0.
 
@@ -238,11 +243,11 @@ ANYPLOT_MUTED   = INK_MUTED     # other / rest / disabled    (theme-adaptive)
 
 # continuous ramps — (position, hex) stops, low → high, per theme (see "Continuous Data")
 if THEME == "light":
-    SEQ_FIELDS = [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
-    SEQ_MARKS  = [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    SEQ_FIELDS = [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    SEQ_MARKS  = [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
 else:
-    SEQ_FIELDS = [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
-    SEQ_MARKS  = [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    SEQ_FIELDS = [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+    SEQ_MARKS  = [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 DIV_FIELDS = [(0.0, "#AE3030"), (0.5, PAGE_BG), (1.0, "#4467A3")]    # midpoint: the page
 DIV_MARKS  = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]  # midpoint: a grey that keeps 3:1
 ```

@@ -217,11 +217,29 @@ The script MUST:
 - Save output as `plot-{THEME}.png` (theme-suffixed). Python/R/Julia save it themselves; **JavaScript snippets do NOT save** — the render harness screenshots `#container` and writes the PNG (and HTML) for you.
 - For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant. **JavaScript** (chartjs, d3, echarts, muix) is interactive, but the harness emits the HTML — the snippet must not.
 - Use `#009E73` (Imprint palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→ochre, blood→red, sky→blue) — see `prompts/default-style-guide.md` "Semantic exception". Three semantic anchors outside the categorical pool: `#DDCC77` (amber, warning), theme-adaptive `palette.neutral` (totals/baseline), theme-adaptive `palette.muted` (other/rest).
-- For continuous data: build `imprint_seq` (single-polarity) or `imprint_div` (diverging) from the `(position, hex)` stops in `prompts/default-style-guide.md` "Continuous Data". Each has its own stops per theme and per use: the fields stops where colored cells fill the plot (heatmaps, spectrograms, filled contours, maps, tiles), the marks stops where colored points, lines, outlines or bars sit on the page. Light theme, fields: `(0, #66E2B2)`, `(0.368, #009E73)`, `(0.582, #4467A3)`, `(1, #002850)`; marks: `(0, #009E73)`, `(0.338, #4467A3)`, `(1, #002850)`. Dark theme, fields: `(0, #00573D)`, `(0.467, #009E73)`, `(1, #CDD9FF)`; marks: `(0, #007755)`, `(0.32, #009E73)`, `(1, #CDD9FF)`. `imprint_div` is `(0, #AE3030)`, `(0.5, midpoint)`, `(1, #4467A3)`, with the page color as midpoint for fields and, for marks, `#6B6A63` on light and `#686762` on dark. Use the positions, not evenly spaced colors; `prompts/library/{LIBRARY}.md` shows the library's form. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
+- For continuous data: build `imprint_seq` (single-polarity) or `imprint_div` (diverging) from the `(position, hex)` stops in `prompts/default-style-guide.md` "Continuous Data". Each has its own stops per theme and per use: the fields stops where colored cells fill the plot (heatmaps, spectrograms, filled contours, maps, tiles), the marks stops where colored points, lines, outlines or bars sit on the page. Light theme, fields: `(0, #66E2B2)`, `(0.369, #009E73)`, `(0.803, #024582)`, `(1, #351E45)`; marks: `(0, #009E73)`, `(0.687, #024582)`, `(1, #351E45)`. Dark theme, fields: `(0, #404C02)`, `(0.487, #009E73)`, `(1, #CDD9FF)`; marks: `(0, #6F7E20)`, `(0.21, #009E73)`, `(1, #CDD9FF)`. Draw what a ramp colors opaque, or with the opacity falling from 1 at the low end when the spec asks for translucency; lines and points on a map take the marks ramp (style guide, "Continuous Data"). `imprint_div` is `(0, #AE3030)`, `(0.5, midpoint)`, `(1, #4467A3)`, with the page color as midpoint for fields and, for marks, `#6B6A63` on light and `#686762` on dark. Use the positions, not evenly spaced colors; `prompts/library/{LIBRARY}.md` shows the library's form. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
 - Theme-adaptive chrome (title, axis labels, tick labels, grid, spines, legend frames, annotation boxes) — see `prompts/default-style-guide.md` "Theme-adaptive Chrome" and the library-specific mapping in `prompts/library/{LIBRARY}.md`.
 
 **DO NOT SKIP THIS STEP. The file MUST be created.**
+
+### Step 2b: Contract self-check (every language)
+
+Before the first render, check the file against what the prompts mandate where the source shows it: the title, the theme read, the save target, the palette, and the settings `prompts/library/{LIBRARY}.md` states as mandatory, as a hard rule or as forbidden. The check reads the file, never runs it, and takes a second. Run it from the repository root:
+
+```bash
+cd "$GITHUB_WORKSPACE"
+.venv/bin/python -I automation/scripts/contract_check.py selfcheck \
+    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} --library {LIBRARY}
+```
+
+It prints one line per rule the file breaks: what it found and, after `→`, the words of the prompt that set the rule, with their file. Its last line is the verdict: `contract: pass`, `contract: pass (advisory: palette)`, `contract: fix (<keys>)` or `contract: not run (<reason>)`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.
+
+- **Fix every line that is not marked `(advisory)`,** then run the check again. The fix is the setting the quoted words ask for, written the way `prompts/library/{LIBRARY}.md` shows it. The output is the whole rule: don't read the script for its patterns.
+- **On a regeneration, also fix the lines the previous file already broke.** "Base style wins on everything else" makes each of them a named item of this regeneration, like a CQ-04 weakness.
+- **The `palette (advisory)` line** lists colours outside the style guide's palette. Keep one only for a reason that holds, such as a semantic exception of the style guide or a colour the spec names, and name the colour and the reason in the commit line; replace the others with Imprint colours or theme tokens.
+- **Never trade a defect in the render for a clean check,** and never remove an element the spec asks for to silence a line.
+- If the command cannot run (exit 2, or a runner error), say so in the commit line and go on; it never blocks the implementation. `impl-review.yml` runs the same check on the committed file again, record-only.
 
 ## Step 3: Test and fix (up to 3 attempts)
 
@@ -353,10 +371,27 @@ Use the Read tool to open `plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light
 - **Axes:** do the axis titles say what they show, with units where the data has them? (VQ-06)
 - **On a regeneration:** is every `(defect)` weakness you acted on now gone from both renders, and does every strength of `/tmp/anyplot-prev-review.md` you kept still hold? The gate keeps the previous file when anything it did right got worse.
 
+**What the plot claims (computed, not by eye)**
+
+The questions above are answered by eye. These are answered by a computation, because the review reads the picture and cannot recompute it: a label that contradicts the data, a legend entry for a series that is not drawn, or a maze whose goal no corridor reaches passes the review and still misleads a reader.
+
+- **List the claims.** Everything the plot states that its own data or structure can confirm or refute:
+  - a number or a word printed on it: a value label, a total, a peak or a low, a duration, a statistic in a text box, a change indicator, a comparison such as "above", "rising" or "fat tails";
+  - two parts that show one quantity: a change indicator and the line beside it, a marker's label and the contour it sits in, a colour class and the glyph it colours, a bar and its column in a matrix;
+  - the legend: does each entry name something drawn, with its glyph, and is every encoded series in it?
+  - an axis title against its tick values: its unit, and its sign (a "°W" title over negative longitudes says the sign twice);
+  - a named method or property: a projection named in the title, an interval and the share of points it should hold, a fit and the range it was fitted on;
+  - a structural rule the spec states: a maze with exactly one route from the entry to the goal, a legal position in a game, a symbology's module widths, guard bars and check digit, the order in which a profile's levels are joined.
+- **Check each one with a short computation in the session, never in the file.** Write the check outside the repository, as one file directly under `/tmp` whose name starts with `anyplot-claims` (for example `/tmp/anyplot-claims.py`): it reads the values the plot is drawn from and prints each claim beside the value it computes. In Python, R and Julia one way is a copy of your file whose save section is replaced by the checks, so they see the very values the file computed; in JavaScript, copy the data and the computation into a short script. The scratch files are never staged, and the implementation never carries checking code.
+- **Check what is drawn, not only what produced it.** Test the coordinates, segments and labels the file hands to its plot calls: a maze generator that builds a spanning tree can still draw a closed ring around the goal or wall pieces that stand free, and a check of the generator alone passes that maze.
+- **A failed claim is a "no" like the others,** fixed in the round below: derive the claim from the data it describes (a change indicator from the history beside it, a peak label from the maximum), correct the structure (open the ring around the goal, join the free wall pieces), or correct the claim's words where the drawing is right. Never shape the data only to make a claim come true.
+- Count the claims you checked: the commit line names the number.
+
 **When an answer is no**
 - Fix the cause in the code, render both themes again (Step 3), re-run Step 3b, and answer the questions again.
 - Never answer a "no" by deleting the element: move a colliding label or change the layout, make room for a cut-off one, and keep every element the spec asks for. Data marks stay at their data values, as the regeneration rules above say.
 - This step has one fix round of its own, apart from the three attempts of Step 3. If a question still fails after that round, keep the better version, as long as it renders in both themes and passes Step 3b, and name what remains in the commit body. If the better version is the one from before the round, restore it and render both themes again, so the PNGs show the file you commit.
+- In every language, run the contract self-check of Step 2b once more when anything changed the file after its last run (a fix in Step 3, Step 3c or this round). Fix what it reports as Step 2b says, within this round and before the run of the next bullet, and render both themes again when the fix shows. Its last verdict goes into the `Contract self-check:` line.
 - For Python (`LANGUAGE=python`), run Step 3c once more when the round changed the file, so its two commit lines describe the committed file. This run only records: it is not a new attempt, and nothing in the file changes after it, advisory lines included, apart from the formatting of Step 5. Give the self-check its own log, so that `/tmp/anyplot-selfcheck.jsonl` keeps counting the attempts of Step 3c only: `python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --log /tmp/anyplot-selfcheck-final.jsonl`. What it and the readiness check report goes into the `Adaptability self-check:` and `Readiness self-check:` lines, and the `Adaptability self-check:` line keeps the attempt number Step 3c reached, not the one this run prints. A command that could not run in Step 3c is not run here either.
 - On a regeneration, a fix made here repairs something visible, so it is never "code for changes that don't show".
 
@@ -406,18 +441,29 @@ git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`, because a re-resolved lock file moves the library version for every implementation of the language.
 
-In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions the fix round fixed, by their short names (spec, theme, palette, color vision, text size, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration); or `open` with the questions that still fail after the fix round. For R, Julia and JavaScript it is the only line:
+In every language, first generations included, the commit body carries the result of Step 4 in one `Visual self-check:` line. It says `pass` when every answer was yes at the first look; `fixed` with the questions the fix round fixed, by their short names (spec, theme, palette, color vision, text size, canvas, cut off, overlap, text on marks, legend, dark page, axes, regeneration); or `open` with the questions that still fail after the fix round.
+
+Two more lines follow it in every language, as the last lines of the body:
+
+- The `Contract self-check:` line gives the result of Step 2b and its last run in Step 4: `pass` when the first run printed nothing to fix, `fixed` with the keys you fixed, `open` with the keys the last run still printed, or `not run` with the reason. A colour of the `palette (advisory)` line that you kept is added after a semicolon, with its reason.
+- The `Claims self-check:` line gives the result of the claims in Step 4: `pass` when every claim held at the first check, `fixed` with a few words for each claim the fix round fixed, `open` with the claims that still fail after it, each with the number of claims checked; or `none` when the plot states nothing its data can confirm.
+
+For R, Julia and JavaScript these are the three lines:
 
 ```bash
-git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed (canvas, legend)"
+git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: fixed (canvas, legend)
+Contract self-check: pass
+Claims self-check: pass (3 checked)"
 ```
 
-For Python (`LANGUAGE=python`), the commit body also carries the result of the last Step 3c run in two more lines. The `Adaptability self-check:` line says `pass`, or `fail` with the rule classes of the remaining non-advisory lines and the names of the remaining failed perturbations, and the attempt number. The `Readiness self-check:` line right below it gives the verdict of the last readiness check: `accepted`, `excluded`, `refused` with the keys of its verdict line and, for each key you left, why it stays, or `not run` with the reason. Pass the three lines in one `-m`:
+For Python (`LANGUAGE=python`), the commit body also carries the result of the last Step 3c run in two more lines, right below the `Visual self-check:` line. The `Adaptability self-check:` line says `pass`, or `fail` with the rule classes of the remaining non-advisory lines and the names of the remaining failed perturbations, and the attempt number. The `Readiness self-check:` line right below it gives the verdict of the last readiness check: `accepted`, `excluded`, `refused` with the keys of its verdict line and, for each key you left, why it stays, or `not run` with the reason. Pass the five lines in one `-m`:
 
 ```bash
 git commit -m "feat({LIBRARY}): implement {SPEC_ID}" -m "Visual self-check: pass
 Adaptability self-check: pass, attempt 1
-Readiness self-check: accepted"
+Readiness self-check: accepted
+Contract self-check: fixed (bokeh-page-paint)
+Claims self-check: fixed (peak label), 4 checked"
 ```
 
 Other forms of the lines, such as a question still open after the fix round or three attempts:
@@ -428,6 +474,12 @@ Adaptability self-check: fail (palette, more_categories), attempt 3
 Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace
 Readiness self-check: excluded
 Readiness self-check: not run (exit 2, the validator copy is missing)
+Contract self-check: pass; palette kept: #C0C0C0, the silver medal the spec names
+Contract self-check: open (pygal-tick-sizes)
+Contract self-check: not run (exit 2, the file is not UTF-8 text)
+Claims self-check: fixed (maze route, legend entry), 5 checked
+Claims self-check: open (change indicator), 6 checked
+Claims self-check: none
 ```
 
 If `IS_REGENERATION=true`, use an expanded commit body that names the weaknesses you addressed and the ones you declined, by W id with the tag the previous review gave them, each declined one with its reason. Example:
@@ -449,6 +501,8 @@ Declined:
 Visual self-check: fixed (text on marks)
 Adaptability self-check: pass, attempt 2
 Readiness self-check: accepted
+Contract self-check: fixed (bbox-tight)
+Claims self-check: pass (2 checked)
 ```
 
 Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
@@ -466,5 +520,7 @@ Before finishing, confirm:
 8. ✅ If regenerating: the title ends in `{spec-id} · {language} · {library} · anyplot.ai` with the real language (`python`, `r`, `julia`, `javascript`), whatever the previous title said, after the optional `{Descriptive Title} · ` prefix of `prompts/plot-generator.md`
 9. ✅ For Python (`LANGUAGE=python`): Step 3c ran (at most three attempts, both commands in each) and the commit body carries its `Adaptability self-check:` and `Readiness self-check:` lines; for every language, the file follows the zones of `prompts/adaptable-code.md`
 10. ✅ Step 4 asked every question of both renders, fixed what failed in its one fix round without deleting an element, and the commit body carries its `Visual self-check:` line
+11. ✅ Step 2b ran on the file, again in Step 4 when the file changed after it, and the commit body carries its `Contract self-check:` line; every line not marked `(advisory)` was fixed or is named as open
+12. ✅ Every claim the plot states that its data or structure can confirm was checked by a computation outside the file, what failed was fixed in Step 4's fix round, no checking code is in the committed file, and the commit body carries its `Claims self-check:` line
 
 If any of these failed, DO NOT report success.

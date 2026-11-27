@@ -1163,8 +1163,10 @@ Each color's name sits in the same column as the color, so it moves with it. Whi
 
 imprint is a **categorical** palette — it's for distinct categories, not ordered or continuous data. For other data types, anyplot ships two palette-derived cmaps. Unlike the categorical hues, each has its own stops per theme and per use: **fields** for colored cells that fill the plot (heatmaps, spectrograms, filled contours, maps, tiles), and **marks** for colored points, lines, outlines, and bars that sit on the page. The stops are listed in [`prompts/default-style-guide.md`](../../prompts/default-style-guide.md) ("Continuous Data") and in `core/palette.py`.
 
-- **`imprint_seq` (sequential)**: through brand green and blue. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). In both themes high values stand out from the page and low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. The fields ramps span the wider lightness range; every color of the sequential marks ramps keeps 3:1 against its page.
+- **`imprint_seq` (sequential)**: through brand green, with the hue turning from lime through green and blue to lavender from low to high values. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). In both themes high values stand out from the page and low values recede into it, so the ramp runs light → dark on the light page and dark → bright on the dark page. The fields ramps span the wider lightness range; every color of the sequential marks ramps keeps 3:1 against its page, and on a dark map also against a land fill close to the page.
 - **`imprint_div` (diverging)**: matte red ↔ midpoint ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations). For fields the midpoint is the page — `#FAF8F1` on cream bg, `#1A1A17` on dark bg; for marks it is a grey that keeps at least 3:1 against the page, level with the poles — the `muted` anchor `#6B6A63` on cream bg, `#686762` on dark bg — so marks near the midpoint don't vanish against the page and the extremes lead. On dark bg the `muted` ink `#A8A79F` would outshine the poles; `#686762` is a stop of this ramp only, not a palette color.
+
+Whatever a ramp colors is drawn opaque, unless the spec asks for the ground to show through. Where a spec asks for translucent lines, the opacity falls from 1 at the low end to the spec's alpha. Lines and points on a map take the marks ramp, and a dark map's land fill stays close to the page, so the ramp's low end stays visible against the land.
 
 A label on a colored fill (a bar segment, a heatmap cell) takes the light or dark ink that reads on that fill, or a halo carries it.
 
@@ -1222,7 +1224,7 @@ palette.semantic.info           # → cyan
 
 # continuous ramps — (position, hex) stops, low → high, per theme and per use
 from core.palette import diverging, diverging_stops, register_with_matplotlib, sequential, sequential_stops
-sequential_stops("dark", "marks")   # ((0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF"))
+sequential_stops("dark", "marks")   # ((0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF"))
 diverging_stops("light", "marks")   # ((0.0, "#AE3030"), (0.5, "#6B6A63"), (1.0, "#4467A3"))
 sequential("light")                 # matplotlib cmap "imprint_seq_light" (fields)
 diverging("dark", "marks")          # matplotlib cmap "imprint_div_marks_dark"
