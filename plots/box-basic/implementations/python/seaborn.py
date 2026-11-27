@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -88,12 +88,7 @@ sns.boxplot(
 )
 
 # Style
-title = "box-basic · python · seaborn · anyplot.ai"
-n_chars = len(title)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
-title_fontsize = max(8, round(12 * ratio))
-
-ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.set_title("box-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.set_xlabel(ZONE, fontsize=10, color=INK)
 ax.set_ylabel(PM25, fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
