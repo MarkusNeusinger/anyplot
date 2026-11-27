@@ -2,53 +2,49 @@ library: matplotlib
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:11Z'
-updated: '2026-05-28T13:46:57Z'
+updated: '2026-11-27T16:17:47Z'
 generated_by: claude-sonnet
-workflow_run: 26576794897
+workflow_run: 46031527824
 issue: 689
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - Correct Imprint palette in canonical order with full theme-adaptive chrome in
-    both renders
-  - matplotlib.patheffects.withStroke on box patches adds distinctive depth without
-    visual noise
-  - Three strategic annotations create a clear data narrative; annotation color matches
-    data series for instant identification
-  - Deliberate outlier injection demonstrates feature coverage (varied spread, realistic
-    extremes)
-  - 'All spec requirements met: median line, outliers, 1.5xIQR whiskers, per-category
-    colors'
-  - Notched boxes and mean diamond markers add statistical depth beyond basic box
-    plot
+  - 'Clean basic box plot: median line, 1.5*IQR whiskers and outliers as points, nothing
+    the basic variant excludes'
+  - Median line flips between INK and light ink so it stands out against every box
+    fill in both themes
+  - Imprint positions 1-5 in canonical order with fully theme-adaptive chrome
+  - Idiomatic ax.boxplot with patch_artist and per-part prop dicts, plus patheffects.withStroke
+    framing each translucent box
+  - Data block ends in one tidy DataFrame with column constants, so the plot reads
+    only df
   weaknesses:
-  - 'DE-01 not at publication level: path effects are subtle — could push further
-    with a more deliberate typographic hierarchy between annotation labels and axis
-    text'
-  - 'LM-02 gap: path effects and notched boxes are good but do not reach uniquely
-    matplotlib ceiling — could explore ax.bxp() with pre-computed statistics or custom
-    PathPatch for box shapes'
+  - 'Suggestion: the whisker lines show through the translucent (alpha 0.75) box edges
+    as short stubs; a slightly higher box alpha or whisker zorder below the boxes
+    would give cleaner box ends.'
+  - 'Suggestion: the fill-colored edge inside the INK_SOFT stroke reads as a double
+    outline; a single edge stroke would look crisper.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "box-basic · python · matplotlib · anyplot.ai" readable in dark ink; axis labels "Sector" and "Annual Salary (USD thousands)" clear at 10pt; tick labels at 8pt readable for both axes; all text dark-on-light with good contrast
-      Data: Five notched box plots — Technology #009E73, Finance #C475FD, Healthcare #4467A3, Education #BD8233, Retail #AE3030; dashed whiskers, mean diamond markers (PAGE_BG fill), muted outlier dots; three annotation callouts with palette-matching borders and arrow lines
+      Background: warm off-white #FAF8F1, matches the light surface
+      Chrome: title 'box-basic · python · matplotlib · anyplot.ai' in dark ink, axis titles 'Sector' and 'Annual Salary (USD thousands)', tick labels in INK_SOFT; top and right spines removed, subtle y-only grid; all readable
+      Data: five boxes Technology #009E73, Finance #C475FD, Healthcare #4467A3, Education #BD8233, Retail #AE3030 at alpha 0.75 with a soft outline stroke; near-black median lines; solid whiskers and caps; grey outlier dots (Technology 2, Finance 4, Healthcare 1, none for Education and Retail)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title and axis labels render in light ink (#F0EFE8); tick labels in #B8B7B0; annotation boxes use elevated dark bg #242420 with palette-color borders; no dark-on-dark failures detected
-      Data: Identical data colors to light render — no hue shift between themes; annotation text for "Tightest spread" correctly uses INK (light) instead of matte-red for dark-mode readability; brand green #009E73 on Technology clearly visible
+      Background: warm near-black #1A1A17, matches the dark surface
+      Chrome: title and axis titles in light ink, ticks in #B8B7B0, whiskers and caps light grey; no dark-on-dark text
+      Data: box colors identical to the light render; median lines flip to light ink and stand out on every fill; outliers light grey and visible; brand green clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,75 +52,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt,
-          annotations 8pt); balanced proportions; readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt set explicitly; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Three annotations at distinct x/y positions; no collisions with boxes,
-          whiskers, or each other
+        comment: No text collisions; outliers, whiskers and boxes all clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, whiskers, outliers, median lines, mean diamonds all clearly
-          visible; alpha=0.75 on boxes
+        comment: Boxes at alpha 0.75, 5 px outliers with page-colored edge, 2.5 px
+          median line visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; annotation colors provide redundant
-          encoding
+        comment: Imprint palette; categories also named on the axis, color is not
+          the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; explicit subplots_adjust; annotations stay
-          within bounds
+        comment: 3200x1800 canvas well used, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (USD thousands); X-axis descriptive; title
-          format correct
+        comment: '''Annual Salary (USD thousands)'' with unit, ''Sector'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical palette order positions 2-5; correct
-          backgrounds; full theme-adaptive chrome'
+        comment: 'Imprint positions 1-5 in canonical order, first #009E73; #FAF8F1
+          / #1A1A17 backgrounds; theme chrome correct'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Notched boxes, withStroke path effects on patches, mean diamond markers,
-          coordinated annotation color scheme — clearly above configured defaults
+        comment: 'Style-guide baseline: clean typography and hierarchy, nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; y-only grid alpha=0.15; x-tick marks suppressed;
-          ELEVATED_BG annotation boxes; multiple polished details
+        comment: 'Beyond spine/grid rules: x tick marks removed on the categorical
+          axis with extra pad, an INK_SOFT stroke framing each translucent box'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Three targeted annotations highlight highest median, widest spread,
-          tightest spread; color-coded callouts tie insights to categories
+        passed: false
+        comment: Data displayed in natural order; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot with notches
+        comment: Basic box plot, no notches, means, callouts or overlays
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outliers as points, 1.5xIQR whiskers, per-category colors
-          — all present
+        comment: Median line, 1.5*IQR whiskers, outliers as points, one color per
+          category; C1-C4 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all 5 sectors visible
+        comment: Sectors on x, salary on y, shared axis not forced to zero, all outliers
+          in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed as categories are x-axis tick
-          labels
+        comment: Title in the mandated format; no legend needed (categories are tick
+          labels)
     data_quality:
       score: 15
       max: 15
@@ -164,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varied distributions, explicit outlier injection, different medians
-          and IQRs across all categories
+        comment: Different medians, spreads and skews; outliers in three sectors,
+          none in two
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual salary by sector — real, neutral, comprehensible; US salary
-          ordering factually correct
+        comment: 'Annual salary by sector: real, neutral, plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Medians $50K-$115K plausible for US sectors; Finance outliers at
-          $270-290K realistic for senior roles
+        comment: Medians ~50K (Retail) to ~115K (Technology) plausible; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -189,59 +181,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> plot -> style -> save'
+        comment: 'Flat script: imports, tokens, data, plot, style, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.RandomState(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports actively used
+        comment: os, sys, patheffects, pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic structure; strict=False in zip; no fake functionality
+        comment: Appropriate complexity; boxplot computes the statistics; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses modern tick_labels; no bbox_inches=tight
+        comment: Saves plot-{THEME}.png; current tick_labels API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ax.boxplot() with full property customization; Axes-method API; patch_artist=True;
-          correct modern tick_labels parameter
+        comment: ax.boxplot with patch_artist and per-part prop dicts (medianprops,
+          flierprops, whiskerprops, capprops) and the returned artist dict
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: matplotlib.patheffects.withStroke on box patches is distinctive;
-          notched boxes and custom meanprops with diamond marker — solid matplotlib-specific
-          usage
+        passed: false
+        comment: matplotlib.patheffects.withStroke on the box patches
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T16:14:39Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - patheffects
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
