@@ -1,7 +1,7 @@
 # anyplot.ai
 # hexbin-basic: Basic Hexbin Plot
 # Library: makie 0.24.16 | Julia 1.13.4
-# Quality: 84/100 | Updated: 2026-11-27
+# Quality: pending | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
