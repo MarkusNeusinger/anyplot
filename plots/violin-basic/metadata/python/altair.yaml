@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:38:09Z'
-updated: '2026-11-27T20:14:30Z'
+updated: '2026-11-27T20:21:32Z'
 generated_by: claude-sonnet
-workflow_run: 46061501480
+workflow_run: 46062400557
 issue: 722
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,40 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
   - 'Idiomatic Vega-Lite violin: transform_density + mark_area(orient=''horizontal'')
-    with stack=''center'' mirrors the KDE declaratively'
+    with stack=''center'' mirrors the KDE declaratively, and each violin now ends
+    at its own department''s data range'
   - Quartiles and median computed in-chart with transform_aggregate (q1/q3/median)
-    and layered as rules; median in the page color cuts through the ink IQR bar and
-    stays visible in both themes
-  - Bimodal Sales department shows what a violin reveals that a box plot hides
+    and layered as rules; the page-colored median line cuts through the ink IQR bar
+    and stays visible in both themes
+  - Bimodal Sales and right-skewed Marketing show what a violin reveals that a box
+    plot hides
   - 'Theme tokens threaded through axis, title, facet headers and view; Imprint order
     with #009E73 first'
   - resolve_scale(x='independent') gives each facet its own density width while the
     salary axis stays shared
   - Tooltips with formatted salary and median values in the HTML output
   weaknesses:
-  - 'SC-02 (both): every violin''s density runs over the shared extent of about $20,000-$135,000
-    (global min - 8,000 to global max + 8,000), so Marketing trails hairline tails
-    to both ends, Engineering down to about $40,000 and Support down to $20,000, far
-    beyond each department''s data → end each violin near its own data range (C4).
-    Likely cause: transform_density extent= on line 65 set from the whole table''s
-    min/max instead of per department.'
-  - 'VQ-05 (both): facet category labels at 16 px dwarf the 10 px y tick labels and
-    the 12 px y axis title → about 12 px (-4 px). Likely cause: alt.Header(labelFontSize=16)
-    on line 118.'
-  - 'CQ-04 (code): lines 106-109 (title_str length, ratio, max/round) compute a constant
-    16 for the fixed mandated title → pass fontSize=16 directly. Likely cause: a generic
-    title-shrink formula kept for a title that never exceeds 67 characters.'
-  - 'Suggestion: the IQR rule sits about 20 px right of the violin''s centre axis;
-    aligning it with the mirrored density''s centre would look more precise.'
+  - 'Suggestion: the IQR rule sits a few pixels right of the violin''s centre in the
+    Support panel; aligning it with the mirrored density''s centre would look more
+    precise.'
+  - 'Suggestion: the KDE is cut flat at each department''s min and max (visible at
+    the Sales and Engineering ends); a small per-group margin beyond the data range
+    would taper the ends while still ending near the data.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white
-      Chrome: bold dark title 'violin-basic · python · altair · anyplot.ai' centred at top; y axis title 'Salary ($)' and tick labels 20,000-140,000 in dark text; facet labels Support / Marketing / Engineering / Sales in soft dark text below each panel; subtle horizontal grid. All readable
-      Data: four mirrored KDE violins in Imprint order: Support #009E73 green, Marketing #C475FD lavender, Engineering #4467A3 blue, Sales #BD8233 ochre (bimodal). Each has a thick near-black IQR bar and an off-white median line. Tails run over a shared extent: Marketing hairlines to 20,000 and 135,000, Engineering down to about 40,000
+      Chrome: bold dark title 'violin-basic · python · altair · anyplot.ai' centred at top; y axis title 'Salary ($)' and tick labels 20,000-130,000 in dark text; facet labels Support / Marketing / Engineering / Sales in soft dark text at 12 below each panel; subtle horizontal grid. All readable
+      Data: four mirrored KDE violins in Imprint order: Support #009E73 green, Marketing #C475FD lavender (long thin right-skewed tails), Engineering #4467A3 blue, Sales #BD8233 ochre (bimodal). Each has a thick near-black IQR bar and an off-white median line. Each violin ends at its own data range (Support ~29K-80K, Engineering ~58K-127K, Sales ~32K-117K), cut flat at the extremes
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -55,7 +49,7 @@ review:
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -63,8 +57,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set explicitly (title 16, axis title 12, ticks 10,
-          facet labels 16 at scale 4); every text reads clearly on both backgrounds
+        comment: Font sizes set explicitly (title 16, axis title 12, ticks 10, facet
+          labels 12 at scale 4); all text reads clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,29 +70,28 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Violins prominent at opacity 0.75; IQR bars and median lines clearly
-          visible inside every violin in both themes
+        comment: Violins at opacity 0.75 are prominent; IQR bars and median lines
+          clearly visible inside every violin in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-4 (green, lavender, blue, ochre) are CVD-safe
-          and well separated; no red-green signal
+        comment: Imprint positions 1-4 are well separated and CVD-safe; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Four panels use the canvas well with balanced margins; facet category
-          labels (16) are much larger than the y tick labels (10) and axis title (12)
-          (defect line)
+        comment: Four panels fill the canvas with balanced margins; facet labels (12)
+          now balance the axis title (12) and ticks (10)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Salary ($)'' carries the unit; categories labelled by facet headers'
+        comment: '''Salary ($)'' carries the unit; facet headers name each department'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -114,7 +107,7 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: Imprint palette, theme tokens, explicit sizes;
           nothing beyond it'
       - id: DE-02
@@ -131,7 +124,7 @@ review:
         passed: false
         comment: Data displayed by department, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,26 +136,26 @@ review:
           no unasked layers'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Mirrored density, quartile (IQR) markers and median line present;
-          C4 missed: every violin''s tails run over the shared global extent far beyond
-          its own data (defect line)'
+        comment: Mirrored density (C1), IQR quartile markers and median line visible
+          in both themes (C3), shared salary axis not forced to zero with each violin
+          ending at its own data range (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Salary on one shared y axis not forced to zero; departments as facet
-          columns; marks at their values
+        comment: Salary on one shared y axis (20,000-130,000) fitted to the data;
+          departments as facet columns; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'violin-basic · python · altair · anyplot.ai' correct; no legend
-          needed, facet headers name each colored violin
+        comment: Title 'violin-basic · python · altair · anyplot.ai' correct; N/A
+          legend, facet headers name each colored violin
     data_quality:
       score: 15
       max: 15
@@ -172,8 +165,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows different centres, spreads and a bimodal Sales shape: the
-          full range of what a violin plot reveals'
+        comment: 'Different centres, spreads, a right-skewed Marketing tail and a
+          bimodal Sales shape: the full range a violin reveals'
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -185,10 +178,10 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Salaries ~$50K-$95K are plausible; 150 rows per department sensible
-          for a KDE; no Check values in the spec
+        comment: Salaries ~$30K-$127K plausible; 150 rows per department, inside the
+          spec's 30-1000; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -196,8 +189,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat notebook order: column constants, Data block, layers, facet,
-          save; no functions or classes'
+        comment: 'Flat notebook order: constants, Data block, layers, facet, save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,11 +205,11 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: lines 106-109 compute a constant fontSize of 16 for a fixed title
-          (defect line)
+        comment: Appropriate complexity; quartiles, median and KDE computed by Vega-Lite
+          transforms; fixed title size passed directly
       - id: CQ-05
         name: Output & API
         score: 1
@@ -232,9 +225,9 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Declarative Altair grammar beyond the mandate: transform_density,
-          transform_aggregate (q1/q3/median), alt.layer, .facet with resolve_scale(x=''independent'')'
+        passed: false
+        comment: 'Declarative grammar beyond the mandate: transform_density, transform_aggregate
+          (q1/q3/median), alt.layer, .facet with resolve_scale(x=''independent'')'
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -245,19 +238,17 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
-  rendered_at: '2026-11-27T20:10:43Z'
+  rendered_at: '2026-11-27T20:18:20Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
   - faceting
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  - groupby-aggregation
   dataprep:
   - kde
   styling:
