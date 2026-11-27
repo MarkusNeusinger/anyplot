@@ -1,11 +1,9 @@
 #' anyplot.ai
 #' line-impurity-comparison: Gini Impurity vs Entropy Comparison
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 81/100 | Updated: 2026-11-27
 
 library(ggplot2)
-library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -54,6 +52,11 @@ df <- data.frame(
 )
 
 # Plot
+# Legend entries set as mathematics (plotmath), not raw text
+LEGEND_LABELS <- c(
+  expression(paste("Gini: ", 2*p*(1 - p))),
+  expression(paste("Entropy: ", -p*log[2](p) - (1 - p)*log[2](1 - p)))
+)
 plot_title <- "line-impurity-comparison · r · ggplot2 · anyplot.ai"
 
 p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)) +
@@ -67,15 +70,16 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
   ) +
   annotate(
     "text",
-    x      = 0.53,
-    y      = 0.88,
+    x      = 0.5,
+    y      = 1.09,
     label  = "p = 0.5 (max impurity)",
     color  = INK_SOFT,
-    size   = 3,
-    hjust  = 0
+    size   = 3.5,
+    hjust  = 0.5
   ) +
   scale_color_manual(
     name   = "Splitting Criterion",
+    labels = LEGEND_LABELS,
     values = c(
       "Gini: 2p(1-p)"                                    = IMPRINT_PALETTE[1],
       "Entropy: -p log2(p) - (1-p) log2(1-p)"            = IMPRINT_PALETTE[2]
@@ -90,6 +94,7 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
   ) +
   scale_linetype_manual(
     name   = "Splitting Criterion",
+    labels = LEGEND_LABELS,
     values = c(
       "Gini: 2p(1-p)"                                    = "solid",
       "Entropy: -p log2(p) - (1-p) log2(1-p)"            = "dashed"
@@ -101,7 +106,7 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
   ) +
   scale_y_continuous(
     breaks = seq(0, 1, 0.25),
-    limits = c(0, 1.08)
+    limits = c(0, 1.14)
   ) +
   labs(
     title = plot_title,
@@ -116,6 +121,7 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
       color     = adjustcolor(INK_SOFT, alpha.f = 0.25),
       linewidth = 0.3
     ),
+    panel.grid.major.x = element_blank(),
     panel.grid.minor  = element_blank(),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.title        = element_text(color = INK,      size = 10),
