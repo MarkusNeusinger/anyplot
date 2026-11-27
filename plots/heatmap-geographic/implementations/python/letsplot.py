@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-26
@@ -25,6 +25,7 @@ from lets_plot import (
     gggrid,
     ggplot,
     ggsize,
+    ggtb,
     labs,
     layer_tooltips,
     scale_fill_gradientn,
@@ -51,9 +52,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for filled fields, as (position, hex) stops, low -> high
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -85,7 +86,7 @@ CA_COAST = pd.DataFrame(
         + [33.20, 32.85, 32.70, 32.53],
     }
 )
-CITIES = pd.DataFrame({"lon": [-122.42, -118.25], "lat": [39.0, 35.3], "city": ["San Francisco", "Los Angeles"]})
+CITIES = pd.DataFrame({"lon": [-122.42, -118.25], "lat": [39.0, 36.3], "city": ["San Francisco", "Los Angeles"]})
 
 # Columns: set these to your table's column names
 LATITUDE = "Latitude"  # role: latitude
@@ -99,15 +100,15 @@ n_points = 600
 
 la_lat = np.random.normal(34.05, 0.6, n_points // 3)
 la_lon = np.random.normal(-118.25, 0.6, n_points // 3)
-la_magnitude = np.random.exponential(2.0, n_points // 3) + 1
+la_magnitude = np.random.exponential(1.0, n_points // 3) + 1.5
 
 sf_lat = np.random.normal(37.77, 0.4, n_points // 3)
 sf_lon = np.random.normal(-122.42, 0.4, n_points // 3)
-sf_magnitude = np.random.exponential(2.2, n_points // 3) + 1.2
+sf_magnitude = np.random.exponential(1.2, n_points // 3) + 1.8
 
 cv_lat = np.random.uniform(35.5, 37.5, n_points // 3)
 cv_lon = np.random.uniform(-121.5, -119.5, n_points // 3)
-cv_magnitude = np.random.exponential(1.5, n_points // 3) + 0.8
+cv_magnitude = np.random.exponential(0.9, n_points // 3) + 1.2
 
 df = pd.DataFrame(
     {
@@ -120,6 +121,11 @@ df = pd.DataFrame(
 # Plot: reads only df and the constants above
 lon_min, lon_max = df[LONGITUDE].min() - MAP_PAD, df[LONGITUDE].max() + MAP_PAD
 lat_min, lat_max = df[LATITUDE].min() - MAP_PAD, df[LATITUDE].max() + MAP_PAD
+# Widen the shorter range to the longer one so the fixed-aspect map fills the square canvas
+span = max(lon_max - lon_min, lat_max - lat_min)
+lon_mid, lat_mid = (lon_min + lon_max) / 2, (lat_min + lat_max) / 2
+lon_min, lon_max = lon_mid - span / 2, lon_mid + span / 2
+lat_min, lat_max = lat_mid - span / 2, lat_mid + span / 2
 
 # KDE on a regular grid for the continuous density heatmap
 lon_mesh, lat_mesh = np.meshgrid(np.linspace(lon_min, lon_max, GRID_SIZE), np.linspace(lat_min, lat_max, GRID_SIZE))
@@ -136,7 +142,7 @@ plot = (
         aes(x=LONGITUDE, y=LATITUDE, size=MAGNITUDE),
         data=df,
         color=IMPRINT_PALETTE[2],
-        alpha=0.5,
+        alpha=0.25,
         shape=21,
         fill=IMPRINT_PALETTE[4],
         stroke=0.5,
@@ -146,11 +152,12 @@ plot = (
         .line(f"Magnitude: @{{{MAGNITUDE}}}{{.1f}}"),
     )
     + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Event\nDensity")
-    + scale_size(range=[1, 5], name=MAGNITUDE)
+    + scale_size(range=[1, 4], name=MAGNITUDE)
     + labs(
         x=LONGITUDE, y=LATITUDE, title="Seismic Activity Density · heatmap-geographic · python · letsplot · anyplot.ai"
     )
     + coord_fixed(ratio=1.0, xlim=[lon_min, lon_max], ylim=[lat_min, lat_max])
+    + ggtb()
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -161,6 +168,7 @@ plot = (
         legend_title=element_text(size=10, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="bottom",
         panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
     )
