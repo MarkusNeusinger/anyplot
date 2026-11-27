@@ -1,24 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-29
 """
 
 import os
-import sys
-
-
-# Script is named plotnine.py — remove its directory from sys.path so the
-# installed plotnine package is found instead of this file.
-_this_dir = os.path.abspath(os.path.dirname(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _this_dir]
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
-    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
@@ -39,12 +30,17 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — first series is always #009E73
 BRAND = "#009E73"
 
-# Data: sensor readings with 95% confidence interval
+# Column constants
+TIME = "Time (days)"  # role: x
+LOWER = "Lower 95% bound (°C)"  # role: y_lower
+UPPER = "Upper 95% bound (°C)"  # role: y_upper
+CENTER = "Temperature (°C)"  # role: y_center
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sensor.csv")
 np.random.seed(42)
 n_points = 60
 days = np.linspace(0, 30, n_points)
@@ -56,41 +52,24 @@ temperature = temperature + np.random.normal(0, 0.3, n_points)
 # Uncertainty narrows as model calibrates, then widens for extrapolation
 uncertainty = 1.8 * np.exp(-0.08 * days) + 0.3 + 0.04 * np.maximum(days - 20, 0)
 
-temp_lower = temperature - 1.96 * uncertainty
-temp_upper = temperature + 1.96 * uncertainty
+df = pd.DataFrame(
+    {TIME: days, LOWER: temperature - 1.96 * uncertainty, UPPER: temperature + 1.96 * uncertainty, CENTER: temperature}
+)
 
-df = pd.DataFrame({"days": days, "temperature": temperature, "temp_lower": temp_lower, "temp_upper": temp_upper})
-
+# Plot
 # Title length ~73 chars → scale down: round(12 × 67 / 73) = 11
 plot = (
-    ggplot(df, aes(x="days"))
-    + geom_ribbon(aes(ymin="temp_lower", ymax="temp_upper"), fill=BRAND, alpha=0.35)
-    + geom_line(aes(y="temperature"), color=INK, size=1.0)
-    + annotate(
-        "text", x=7, y=temp_lower.min() - 0.8, label="Calibration Phase", size=3.5, color=INK_SOFT, fontstyle="italic"
-    )
-    + annotate(
-        "text", x=25, y=temp_lower.min() - 0.8, label="Extrapolation", size=3.5, color=INK_SOFT, fontstyle="italic"
-    )
-    + annotate(
-        "segment",
-        x=15,
-        xend=15,
-        y=temp_lower.min() - 1.6,
-        yend=temp_upper.max() + 0.5,
-        color=INK_SOFT,
-        size=0.5,
-        linetype="dashed",
-    )
+    ggplot(df, aes(x=TIME))
+    + geom_ribbon(aes(ymin=LOWER, ymax=UPPER), fill=BRAND, alpha=0.35)
+    + geom_line(aes(y=CENTER), color=INK, size=1.0)
     + labs(
-        x="Time (days)",
-        y="Temperature (°C)",
+        x=TIME,
+        y=CENTER,
         title="Sensor Calibration Forecast · band-basic · python · plotnine · anyplot.ai",
         subtitle="Shaded region shows 95% confidence interval — narrowing during calibration, widening for extrapolation",
     )
-    + scale_x_continuous(breaks=range(0, 31, 5))
+    + scale_x_continuous(breaks=np.arange(0, df[TIME].max() + 1, 5))
     + scale_y_continuous(labels=lambda lst: [f"{v:.0f}°C" for v in lst])
-    + coord_cartesian(expand=True)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
