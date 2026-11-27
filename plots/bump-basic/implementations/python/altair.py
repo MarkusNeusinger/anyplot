@@ -98,7 +98,7 @@ chart = (
     .properties(
         width=800,
         height=450,
-        padding=10,
+        padding={"left": 10, "top": 10, "bottom": 10, "right": 30},
         autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(title, fontSize=18),

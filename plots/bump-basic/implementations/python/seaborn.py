@@ -1,7 +1,7 @@
 """ anyplot.ai
 bump-basic: Basic Bump Chart
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -45,13 +45,13 @@ QUARTER = "Quarter"  # role: period
 RANK = "Market cap rank"  # role: rank
 
 # Data: replace this block with your own table, for example df = pd.read_csv("ranks.csv")
-quarters = ["Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23"]
+quarters = ["Q1'23", "Q2'23", "Q3'23", "Q4'23", "Q1'24", "Q2'24", "Q3'24", "Q4'24"]
 ranks_data = {
-    "Apple": [1, 1, 1, 1, 1, 1, 2, 2],
-    "Microsoft": [2, 2, 2, 2, 2, 2, 1, 1],
-    "Amazon": [3, 3, 4, 4, 4, 5, 5, 5],
-    "Alphabet": [4, 4, 3, 3, 3, 3, 4, 4],
-    "Nvidia": [5, 5, 5, 5, 5, 4, 3, 3],
+    "Apple": [1, 1, 1, 1, 2, 1, 1, 1],
+    "Microsoft": [2, 2, 2, 2, 1, 2, 3, 3],
+    "Amazon": [4, 4, 4, 4, 4, 5, 5, 4],
+    "Alphabet": [3, 3, 3, 3, 5, 4, 4, 5],
+    "Nvidia": [5, 5, 5, 5, 3, 3, 2, 2],
 }
 df = pd.DataFrame(
     [
@@ -109,7 +109,7 @@ for i, company in enumerate(companies):
         textcoords="offset points",
         fontsize=9,
         fontweight="bold",
-        color=palette[i],
+        color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
         va="center",
     )
 
