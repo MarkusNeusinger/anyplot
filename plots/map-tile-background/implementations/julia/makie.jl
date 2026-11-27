@@ -18,8 +18,8 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 # Imprint sequential ramp for marks (colored points on the page)
 const ANYPLOT_SEQ = THEME == "light" ?
-    cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
-    cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
+    cgrad([colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.687, 1.0]) :
+    cgrad([colorant"#6F7E20", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.21, 1.0])
 
 # OpenStreetMap tiles; the dark theme inverts their lightness (keyless dark
 # basemaps now serve watermarked tiles)
@@ -185,8 +185,11 @@ for i in top8
         text     = city_names[i],
         fontsize = 11,
         color    = INK,
-        offset   = city_names[i] == "London" ? (-8, 5) : (8, 5),   # London's label goes west, clear of Amsterdam
-        align    = (city_names[i] == "London" ? :right : :left, :bottom),
+        # offset clears the marker edge; London goes west (clear of Amsterdam), Bangkok drops
+        # below-right so it does not overprint the tile's own "Bangkok" label
+        offset   = city_names[i] == "London" ? (-(marker_sizes[i] / 2 + 4), 5) :
+                   city_names[i] == "Bangkok" ? (marker_sizes[i] / 2 + 4, -4) : (marker_sizes[i] / 2 + 4, 5),
+        align    = (city_names[i] == "London" ? :right : :left, city_names[i] == "Bangkok" ? :top : :bottom),
     )
 end
 
