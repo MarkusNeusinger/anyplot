@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -81,7 +81,7 @@ source_bullish = ColumnDataSource(bullish_df)
 source_bearish = ColumnDataSource(bearish_df)
 
 # Figure — 3200×1800 landscape; reserved borders for 42pt axis labels
-title = "ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai"
+title = "Northwind (NWLG) · candlestick-basic · python · bokeh · anyplot.ai"
 p = figure(
     width=3200,
     height=1800,
