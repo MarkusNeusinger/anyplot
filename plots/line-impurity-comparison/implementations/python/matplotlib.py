@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-29
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -98,7 +98,7 @@ ax.annotate(
     "Entropy max = 1.0\n$p = 0.5$",
     xy=(0.5, entropy_at_half),
     xytext=(0.15, 0.86),
-    fontsize=7,
+    fontsize=8,
     color=IMPRINT_PALETTE[1],
     fontweight="medium",
     arrowprops={"arrowstyle": "->", "color": IMPRINT_PALETTE[1], "lw": 1.2, "connectionstyle": "arc3,rad=-0.15"},
@@ -109,7 +109,7 @@ ax.annotate(
     "Gini max = 0.5\n$p = 0.5$",
     xy=(0.5, gini_at_half),
     xytext=(0.78, 0.40),
-    fontsize=7,
+    fontsize=8,
     color=IMPRINT_PALETTE[0],
     fontweight="medium",
     arrowprops={"arrowstyle": "->", "color": IMPRINT_PALETTE[0], "lw": 1.2, "connectionstyle": "arc3,rad=0.15"},
@@ -119,7 +119,7 @@ ax.annotate(
 
 # Reference line at maximum impurity point
 ax.axvline(x=0.5, color=INK_MUTED, linestyle=":", linewidth=1.0, zorder=1)
-ax.text(0.5, 0.04, "Maximum impurity", fontsize=7, color=INK_MUTED, ha="center", va="bottom", fontstyle="italic")
+ax.text(0.5, 0.04, "Maximum impurity", fontsize=8, color=INK_MUTED, ha="center", va="bottom", fontstyle="italic")
 
 # Style
 ax.set_xlabel("Probability of Class 1 ($p$)", fontsize=10, color=INK)
@@ -131,7 +131,6 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-ax.xaxis.grid(True, alpha=0.08, linewidth=0.5, color=INK)
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(-0.03, 1.08)
 
