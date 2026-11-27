@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:49:01Z'
-updated: '2026-11-27T23:44:35Z'
+updated: '2026-11-27T23:52:02Z'
 generated_by: claude-sonnet
-workflow_run: 46083449734
+workflow_run: 46084264492
 issue: 4434
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-le
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
   - Nonlinear sign(E)·sqrt(|E|) transform with ticks at the true eV values spreads
@@ -27,69 +27,65 @@ review:
   - Idiomatic plotnine layering with arrow() on geom_segment and scale_fill_identity
     for the theme-adaptive bands
   weaknesses:
-  - 'VQ-01 (both): the level labels (geom_text size 3.5), wavelength labels (3.2)
-    and series titles (4) render at roughly 3–4 pt, about half the height of the 8
-    pt tick labels, although they carry the diagram''s main content; in dark the #AE3030
-    ''Balmer Series (Visible)'' title is also faint at that size → render them at
-    about tick-label size (≈8 pt, +4 pt). Likely cause: geom_text size values chosen
-    as if in mm, but this plotnine version draws them as points.'
-  - 'VQ-05 (both): the x range runs to 1.18 while the level labels end near 1.03,
-    leaving about 15 % of the panel width as an empty strip with grid lines running
-    into it → end the x range just past the labels (about 1.05, −0.13). Likely cause:
-    scale_x_continuous(limits=(0.0, 1.18)).'
+  - 'VQ-05 (both): the level lines start at x = 0.15 on a panel that begins at 0,
+    leaving about 14 % of the panel width as an empty strip between the tick labels
+    and the diagram, with grid lines running through it → start the panel just before
+    the level lines (about 0.10, −0.05) or start the lines nearer 0.05. Likely cause:
+    X_LEFT = 0.15 with scale_x_continuous(limits=(0.0, X_MAX)).'
   - 'Suggestion: one or two absorption (upward) arrows would show both directions
     the Notes describe.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white
-      Chrome: bold dark title "energy-level-atomic · python · plotnine · anyplot.ai" (~68 % width), soft-ink subtitle, "Energy (eV)" axis title and ticks -13.6 / -3.4 / -1.51 / -0.85 / 0 clearly readable; right-hand labels "n = 1 (-13.60 eV)" … "n = 6 (-0.38 eV)" with leader lines and wavelength labels readable but very small beside the ticks
-      Data: six dark-gray partial-width level lines with endpoint dots on a sqrt-compressed energy axis; dashed brand-green #009E73 ionization line at 0 eV with green label; three lavender (#C475FD) Lyman arrows down to n=1 in a pale lavender band, three red (#AE3030) Balmer arrows down to n=2 in a pale pink band; wavelength labels (122/103/97, 656/486/434 nm) clear of the level lines
-      Legibility verdict: PASS (annotations small)
+      Chrome: bold dark title "energy-level-atomic · python · plotnine · anyplot.ai" (~68 % width), soft-ink subtitle, "Energy (eV)" axis title and ticks -13.6 / -3.4 / -1.51 / -0.85 / 0 readable; right-hand labels "n = 1 (-13.60 eV)" … "n = 6 (-0.38 eV)" with leader lines, at tick-label size
+      Data: six dark-gray partial-width level lines with endpoint dots on a sqrt-compressed energy axis; dashed brand-green #009E73 ionization line at 0 eV with green two-line label; three lavender (#C475FD) Lyman arrows down to n=1 in a pale lavender band, three red (#AE3030) Balmer arrows down to n=2 in a pale pink band; wavelength labels (Ly-α 122, Ly-β 103, Ly-γ 97, Hα 656, Hβ 486, Hγ 434 nm) at tick size, clear of the level lines; series titles "Lyman Series (UV)" and "Balmer Series (Visible)" in series colors above the ionization line; empty strip left of the level lines
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black
-      Chrome: light title, light-gray subtitle, axis title and ticks readable; level labels in light ink readable; no dark-on-dark text; the "Balmer Series (Visible)" title in #AE3030 is faint at its small size
-      Data: arrow, ionization and series colors identical to the light render; level lines flip to light gray; bands flip to dark indigo and dark red-brown; Balmer wavelength labels switch to soft ink for contrast
-      Legibility verdict: PASS (annotations small)
+      Chrome: light title, light-gray subtitle, axis title and ticks readable; level labels in light ink readable; no dark-on-dark text
+      Data: arrow, ionization and series-title colors identical to the light render; level lines flip to light gray; bands flip to dark indigo and dark red-brown; Balmer wavelength labels switch to soft ink for contrast on the dark band
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Level, wavelength and series labels render far smaller than the 8
-          pt tick labels (defect line)
+        passed: true
+        comment: All text readable in both themes; level, wavelength and series labels
+          at about tick-label size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: No text collisions; wavelength labels sit in the lower third of their
-          arrows, clear of the level lines
+          arrows, clear of the level lines; series titles apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Level lines, endpoint dots, arrows and the dashed ionization line
-          all clearly visible in both themes
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Lavender/red/green from Imprint, CVD-distinct; series also separated
-          by position and band
+        comment: Lavender, red and green from Imprint, CVD-distinct; the series are
+          also separated by position and band
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: false
-        comment: Right ~15 % of the panel is an empty strip past the level labels
+        comment: Right edge now ends just past the labels, but the panel's left ~14
+          % (x 0–0.15) is an empty strip between the tick labels and the level lines
           (defect line)
       - id: VQ-06
         name: Axis Labels & Title
@@ -102,9 +98,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint colors only; spectral semantic mapping (UV lavender, visible
+        comment: 'Imprint colors with a spectral semantic mapping (UV lavender, visible
           red), brand green for the ionization limit; backgrounds #FAF8F1 / #1A1A17
-          correct'
+          correct in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -114,22 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: deliberate label hierarchy (bold title, soft subtitle, series
+        comment: 'Raised: deliberate hierarchy (bold title, soft subtitle, series
           titles in series color) and series-tinted bands within Imprint'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Raised: leader lines from level ends to spread right-hand labels,
+        comment: 'Raised: leader lines from the level ends to spread right-hand labels,
           endpoint dots, y grid only at ticked levels'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Raised: bands group each spectral series and wavelength labels make
-          the series contrast (UV vs visible) the focal story'
+        comment: 'Raised: bands group each spectral series and the wavelength labels
+          make the UV vs visible contrast the focal story'
     spec_compliance:
       score: 15
       max: 15
@@ -153,15 +149,15 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Levels at sqrt-transformed energies with ticks at true eV values;
-          arrows start and end on their levels
+        comment: Levels at sqrt-transformed energies with ticks at the true eV values;
+          arrows run from level to level
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in mandated format; series titles act as inline legend in matching
-          colors
+        comment: Title in mandated format; series titles in series colors act as an
+          inline legend
     data_quality:
       score: 15
       max: 15
@@ -185,8 +181,8 @@ review:
         max: 4
         passed: true
         comment: 'Checked: E_n = -13.6/n² gives -13.6, -3.40, -1.51, -0.85, -0.54,
-          -0.38 eV; wavelengths 122/103/97 nm (Lyman) and 656/486/434 nm (Balmer)
-          correct'
+          -0.38 eV; wavelengths from hc/ΔE: 122/103/97 nm (Lyman) and 656/486/434
+          nm (Balmer), all correct'
     code_quality:
       score: 10
       max: 10
@@ -223,7 +219,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png with current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -235,24 +231,22 @@ review:
           scale_color_manual, scale_fill_identity, coord_cartesian'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
         comment: 'Raised: arrow() on geom_segment and scale_fill_identity for literal
-          fills are ggplot-grammar specific'
+          theme-adaptive fills are ggplot-grammar specific'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
-  rendered_at: '2026-11-27T23:41:02Z'
+  rendered_at: '2026-11-27T23:48:40Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
-  - custom-legend
+  - manual-ticks
   patterns:
-  - data-generation
   - groupby-aggregation
   dataprep: []
   styling:
