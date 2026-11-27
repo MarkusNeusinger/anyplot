@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -6,49 +6,62 @@ Quality: 87/100 | Updated: 2026-05-29
 
 import os
 
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic assignment for F1 teams:
-# McLaren (protagonist, rising) → brand green; Ferrari → matte-red (iconic);
-# Red Bull → blue (close to livery); others → canonical tail positions
-SERIES_COLORS = (
-    "#009E73",  # McLaren — brand green, first series
-    "#AE3030",  # Ferrari — matte red, semantic: iconic Ferrari red
-    "#4467A3",  # Red Bull Racing — blue, close to livery
-    "#BD8233",  # Mercedes — ochre
-    "#C475FD",  # Aston Martin — lavender
-)
+# Imprint palette: all eight positions, one per entity in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — F1 constructor standings across 6 Grand Prix weekends
-entities = ["McLaren", "Ferrari", "Red Bull Racing", "Mercedes", "Aston Martin"]
-periods = ["Bahrain", "Jeddah", "Melbourne", "Imola", "Monaco", "Barcelona"]
+# Constants: teams with a livery cue keep a semantic Imprint color, the rest follow the palette
+SEMANTIC = {"McLaren": "#009E73", "Ferrari": "#AE3030", "Red Bull Racing": "#4467A3"}
 
-# Rankings (1 = leading); McLaren surges from P4 to lead by Melbourne
-rankings = {
+# Columns: set these to your table's column names
+ENTITY = "Constructor"  # role: entity
+PERIOD = "Grand Prix"  # role: period
+RANK = "Constructor Standing"  # role: rank
+
+# Data: replace this block with your own table, for example df = pd.read_csv("standings.csv")
+# F1 constructor standings across six Grand Prix weekends (1 = leading)
+_periods = ["Bahrain", "Jeddah", "Melbourne", "Imola", "Monaco", "Barcelona"]
+_ranks = {
     "McLaren": [4, 3, 1, 1, 1, 1],
     "Ferrari": [2, 2, 3, 3, 2, 2],
     "Red Bull Racing": [1, 1, 2, 2, 3, 3],
     "Mercedes": [3, 4, 4, 4, 4, 4],
     "Aston Martin": [5, 5, 5, 5, 5, 5],
 }
+df = pd.DataFrame(
+    {
+        ENTITY: [e for e, r in _ranks.items() for _ in r],
+        PERIOD: _periods * len(_ranks),
+        RANK: [v for r in _ranks.values() for v in r],
+    }
+)
 
-max_rank = len(entities)
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=PERIOD, columns=ENTITY, values=RANK, sort=False)
+entities = df[ENTITY].drop_duplicates().tolist()
+max_rank = int(df[RANK].max())
+min_rank = int(df[RANK].min())
 
-# Y-axis is inverted: rank 1 at top, rank 5 at bottom
-inverted_rankings = {e: [max_rank + 1 - r for r in ranks] for e, ranks in rankings.items()}
+# pygal has no reversed axis: plot (max + min - rank) so rank 1 sits at the top, label the ticks with the real rank
+flip = max_rank + min_rank
 
-# Title font size — mandated format is ~40 chars (<67 baseline), no shrink needed
+# Title font size shrinks only when the mandated title is longer than the canvas fits
 title_str = "bump-basic · python · pygal · anyplot.ai"
-n = len(title_str)
-ratio = 67 / n if n > 67 else 1.0
-title_font_size = max(44, round(66 * ratio))
+title_font_size = max(44, round(66 * min(1.0, 67 / len(title_str))))
+
+# Semantic colors first; the other entities take the unused palette entries in order
+spare = iter(c for c in IMPRINT_PALETTE if c not in SEMANTIC.values())
+team_colors = [SEMANTIC[e] if e in SEMANTIC else next(spare, IMPRINT_PALETTE[i % 8]) for i, e in enumerate(entities)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -56,64 +69,46 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=SERIES_COLORS,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=team_colors,
     title_font_size=title_font_size,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=6,
+    stroke_width=14,
     opacity=1.0,
     opacity_hover=1.0,
-    transition="200ms ease-in",
 )
-
-# Per-series stroke and dot sizes — visual hierarchy: protagonist boldest
-stroke_widths = {"McLaren": 18, "Ferrari": 12, "Red Bull Racing": 14, "Mercedes": 10, "Aston Martin": 12}
-dot_sizes_map = {"McLaren": 22, "Ferrari": 16, "Red Bull Racing": 18, "Mercedes": 14, "Aston Martin": 16}
 
 chart = pygal.Line(
     width=3200,
     height=1800,
     style=custom_style,
     title=title_str,
-    x_title="Grand Prix",
-    y_title="Constructor Standing",
+    x_title=PERIOD,
+    y_title=RANK,
     show_dots=True,
-    dots_size=14,
+    dots_size=18,
     show_x_guides=False,
     show_y_guides=False,
     x_label_rotation=0,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=len(entities),
     truncate_legend=-1,
-    show_legend=True,
     interpolate=None,
-    min_scale=1,
-    max_scale=max_rank,
-    margin_top=80,
+    range=(min_rank - 0.4, max_rank + 0.4),
     margin_right=160,
-    margin_bottom=40,
-    margin_left=80,
-    value_formatter=lambda v: f"P{max_rank + 1 - int(v)}" if v == int(v) else "",
-    tooltip_border_radius=10,
-    tooltip_fancy_mode=True,
+    value_formatter=lambda v: f"P{flip - round(v)}" if v == v else "",
     human_readable=True,
-    pretty_print=True,
 )
 
-chart.x_labels = periods
-
-# Dict-format y_labels map inverted values to human-readable rank positions (P1–P5)
-chart.y_labels = [{"value": max_rank + 1 - i, "label": f"P{i}"} for i in range(1, max_rank + 1)]
+chart.x_labels = table.index.tolist()
+chart.y_labels = [{"value": flip - r, "label": f"P{r}"} for r in range(min_rank, max_rank + 1)]
 
 for entity in entities:
-    chart.add(
-        entity,
-        inverted_rankings[entity],
-        stroke_style={"width": stroke_widths[entity]},
-        dots_size=dot_sizes_map[entity],
-    )
+    chart.add(entity, (flip - table[entity]).tolist())
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
