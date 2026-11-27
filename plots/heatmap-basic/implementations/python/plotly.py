@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-28
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
