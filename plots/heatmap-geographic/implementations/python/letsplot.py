@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -26,6 +26,8 @@ from lets_plot import (
     ggplot,
     ggsize,
     ggtb,
+    guide_legend,
+    guides,
     labs,
     layer_tooltips,
     scale_fill_gradientn,
@@ -73,7 +75,7 @@ def ramp_color(stops, t):
 # Constants: California reference geography (coastline, city labels) and KDE settings
 BANDWIDTH = 0.15  # gaussian_kde bandwidth factor
 GRID_SIZE = 80  # KDE grid resolution per axis
-MAP_PAD = 1.0  # degrees of map around the events
+MAP_PAD = 0.9  # degrees of map around the events
 CA_COAST = pd.DataFrame(
     {
         "lon": [-124.21, -124.20, -124.10, -124.41, -124.35, -123.78, -123.70, -123.10, -123.05, -122.97]
@@ -86,7 +88,7 @@ CA_COAST = pd.DataFrame(
         + [33.20, 32.85, 32.70, 32.53],
     }
 )
-CITIES = pd.DataFrame({"lon": [-122.42, -118.25], "lat": [39.0, 36.3], "city": ["San Francisco", "Los Angeles"]})
+CITIES = pd.DataFrame({"lon": [-122.85, -119.1], "lat": [37.77, 33.75], "city": ["San Francisco", "Los Angeles"]})
 
 # Columns: set these to your table's column names
 LATITUDE = "Latitude"  # role: latitude
@@ -126,6 +128,8 @@ span = max(lon_max - lon_min, lat_max - lat_min)
 lon_mid, lat_mid = (lon_min + lon_max) / 2, (lat_min + lat_max) / 2
 lon_min, lon_max = lon_mid - span / 2, lon_mid + span / 2
 lat_min, lat_max = lat_mid - span / 2, lat_mid + span / 2
+# Shift the window west so the offshore city labels fit inside the panel
+lon_min, lon_max = lon_min - 0.45, lon_max - 0.45
 
 # KDE on a regular grid for the continuous density heatmap
 lon_mesh, lat_mesh = np.meshgrid(np.linspace(lon_min, lon_max, GRID_SIZE), np.linspace(lat_min, lat_max, GRID_SIZE))
@@ -137,7 +141,7 @@ plot = (
     ggplot()
     + geom_contourf(aes(x=LONGITUDE, y=LATITUDE, z="density", fill="..level.."), data=df_grid, bins=12, alpha=0.85)
     + geom_path(aes(x="lon", y="lat"), data=CA_COAST, color=INK_SOFT, size=1.0)
-    + geom_text(aes(x="lon", y="lat", label="city"), data=CITIES, color=INK, size=5, hjust=0.5, fontface="bold")
+    + geom_text(aes(x="lon", y="lat", label="city"), data=CITIES, color=INK, size=5, hjust=1, fontface="bold")
     + geom_point(
         aes(x=LONGITUDE, y=LATITUDE, size=MAGNITUDE),
         data=df,
@@ -153,6 +157,7 @@ plot = (
     )
     + scale_fill_gradientn(colors=[ramp_color(SEQ_FIELDS, k / 255) for k in range(256)], name="Event\nDensity")
     + scale_size(range=[1, 4], name=MAGNITUDE)
+    + guides(size=guide_legend(nrow=1, override_aes={"alpha": 0.25}))
     + labs(
         x=LONGITUDE, y=LATITUDE, title="Seismic Activity Density · heatmap-geographic · python · letsplot · anyplot.ai"
     )
@@ -169,6 +174,7 @@ plot = (
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="bottom",
+        legend_box="horizontal",
         panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
     )
