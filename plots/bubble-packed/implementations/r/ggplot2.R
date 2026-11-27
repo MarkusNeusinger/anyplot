@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-packed: Basic Packed Bubble Chart
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: pending | Updated: 2026-11-27
+#' Quality: 81/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(dplyr)
