@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-29
@@ -7,6 +7,7 @@ Quality: 93/100 | Updated: 2026-05-29
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import ecdf, ks_2samp
 
@@ -23,12 +24,25 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 # Imprint categorical colors — semantic mapping: green=good/pass, red=bad/fail
 GREEN = "#009E73"  # Imprint slot 1 — Good Customers
 RED = "#AE3030"  # Imprint slot 5 — Bad Customers (semantic bad/fail anchor)
-BLUE = "#4467A3"  # Imprint slot 3 — max divergence marker
+BLUE_RGB = "68,103,163"  # Imprint slot 3 — max divergence marker
+BLUE = f"rgb({BLUE_RGB})"
 
-# Data — credit scoring; symmetric betas ensure ECDFs cross near score 50
+# Constants
+P_FLOOR = 0.001  # p-values below this are reported as "p < P_FLOOR"
+REGION_WIDTH = 5  # half-width (score units) of the shaded band around the maximum gap
+
+# Columns: set these to your table's column names
+GOOD = "Good Customers"  # role: sample1
+BAD = "Bad Customers"  # role: sample2
+SCORE_LABEL = "Credit Score (0–100)"  # axis title for both samples
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-good_customers = np.random.beta(5, 3, size=200) * 100
-bad_customers = np.random.beta(3, 5, size=200) * 100
+df = pd.DataFrame({GOOD: np.random.beta(5, 3, size=200) * 100, BAD: np.random.beta(3, 5, size=200) * 100})
+
+# Plot: reads only df and the constants above
+good_customers = df[GOOD].dropna().to_numpy()
+bad_customers = df[BAD].dropna().to_numpy()
 
 # ECDFs via scipy
 good_ecdf_result = ecdf(good_customers)
@@ -53,7 +67,7 @@ max_bad_y = bad_cdf_at_all[max_idx]
 y_lo = min(max_good_y, max_bad_y)
 y_hi = max(max_good_y, max_bad_y)
 
-p_text = f"p = {p_value:.2e}" if p_value >= 0.001 else "p < 0.001"
+p_text = f"p = {p_value:.2e}" if p_value >= P_FLOOR else f"p < {P_FLOOR}"
 
 # Figure
 fig = go.Figure()
@@ -64,9 +78,9 @@ fig.add_trace(
         x=good_sorted,
         y=good_cdf,
         mode="lines",
-        name="Good Customers",
+        name=GOOD,
         line={"color": GREEN, "width": 3, "shape": "hv"},
-        hovertemplate="<b>Good Customers</b><br>Credit Score: %{x:.1f}<br>Cumulative: %{y:.3f}<extra></extra>",
+        hovertemplate=f"<b>{GOOD}</b><br>Credit Score: %{{x:.1f}}<br>Cumulative: %{{y:.3f}}<extra></extra>",
     )
 )
 
@@ -76,15 +90,14 @@ fig.add_trace(
         x=bad_sorted,
         y=bad_cdf,
         mode="lines",
-        name="Bad Customers",
+        name=BAD,
         line={"color": RED, "width": 3, "shape": "hv"},
-        hovertemplate="<b>Bad Customers</b><br>Credit Score: %{x:.1f}<br>Cumulative: %{y:.3f}<extra></extra>",
+        hovertemplate=f"<b>{BAD}</b><br>Credit Score: %{{x:.1f}}<br>Cumulative: %{{y:.3f}}<extra></extra>",
     )
 )
 
 # Shaded region between ECDFs around point of maximum divergence
-region_width = 5
-region_mask = (all_values >= max_x - region_width) & (all_values <= max_x + region_width)
+region_mask = (all_values >= max_x - REGION_WIDTH) & (all_values <= max_x + REGION_WIDTH)
 region_x = all_values[region_mask]
 region_upper = np.maximum(good_cdf_at_all[region_mask], bad_cdf_at_all[region_mask])
 region_lower = np.minimum(good_cdf_at_all[region_mask], bad_cdf_at_all[region_mask])
@@ -94,8 +107,8 @@ fig.add_trace(
         x=np.concatenate([region_x, region_x[::-1]]),
         y=np.concatenate([region_upper, region_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(68,103,163,0.12)",
-        line={"color": "rgba(68,103,163,0.25)", "width": 1},
+        fillcolor=f"rgba({BLUE_RGB},0.12)",
+        line={"color": f"rgba({BLUE_RGB},0.25)", "width": 1},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -124,8 +137,8 @@ fig.add_annotation(
     arrowsize=1.0,
     arrowwidth=2,
     arrowcolor=BLUE,
-    ax=90,
-    ay=-40,
+    ax=217,
+    ay=56,
     font={"size": 12, "color": INK, "family": "Arial, sans-serif"},
     bordercolor=BLUE,
     borderwidth=1.5,
@@ -151,7 +164,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Credit Score (0–100)", "font": {"size": 12, "color": INK}, "standoff": 12},
+        "title": {"text": SCORE_LABEL, "font": {"size": 12, "color": INK}, "standoff": 12},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
