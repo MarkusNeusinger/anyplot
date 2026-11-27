@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-27
@@ -17,7 +17,6 @@ from plotnine import (
     element_text,
     geom_line,
     geom_point,
-    geom_vline,
     ggplot,
     labs,
     scale_color_manual,
@@ -73,15 +72,15 @@ title_fontsize = max(8, round(12 * (67 / n if n > 67 else 1.0)))
 
 plot = (
     ggplot(df, aes(x=P, y=IMPURITY, color=MEASURE, linetype=MEASURE))
-    + geom_vline(xintercept=peak_p, color=INK_SOFT, size=0.6, linetype="dashed", alpha=0.5)
+    + annotate("segment", x=peak_p, xend=peak_p, y=0, yend=top, color=INK_SOFT, size=0.6, linetype="dashed", alpha=0.5)
     + geom_line(size=2.5)
     + geom_point(data=peaks, size=5, show_legend=False)
     + annotate(
         "text",
         x=peak_p,
-        y=top * 1.07,
+        y=top * 1.08,
         label=f"Both maxima at p = {peak_p:.1f}",
-        size=5.5,
+        size=8,
         ha="center",
         color=INK_SOFT,
         fontstyle="italic",
