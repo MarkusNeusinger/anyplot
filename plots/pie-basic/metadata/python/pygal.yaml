@@ -12,148 +12,149 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 76
 review:
   strengths:
-  - 'Perfect spec compliance: all four required features (percentages, distinct colors,
-    legend, explode) fully implemented and visually verified'
-  - 'Clean theme adaptation: both renders pass the readability checklist with no dark-on-dark
-    failures; theme-adaptive stroke between slices is an elegant detail'
-  - Enriched legend labels ('Netflix (#1 globally)', 'Others (combined)') add narrative
-    context beyond bare category names
-  - Netflix explode effect clearly communicates market leadership as a design intention
-  - Title font-size auto-scaling formula prevents overflow on longer titles
-  - Fully idiomatic pygal code using node transform for SVG-level slice translation
-    — a distinctive library technique
+  - Explode of the largest slice through pygal's SVG node transform
+  - Page-colored slice strokes separate the slices in both themes
+  - 'Imprint order starting at #009E73 with correct theme backgrounds'
+  - Interactive HTML output with native tooltips
   weaknesses:
-  - 'White percentage labels in the two smallest 7.8% slices (cyan #2ABCCD and red
-    #AE3030) have marginal contrast at small print sizes — consider using page background
-    color for labels in lighter slices, or increase value_font_size slightly'
-  - 'Design excellence has room to grow: stronger typographic hierarchy (e.g., bolder/larger
-    title weight) and a more deliberate slice gap width could push DE-01 and DE-02
-    higher'
-  - LM-02 could be improved by leveraging pygal's print_labels=True alongside category-level
-    styling per-slice for a more differentiated presentation
+  - 'VQ-07 (both): pygal''s default 0.7 opacity blends every slice with the page,
+    so the categorical colors differ from the Imprint hexes and between the light
+    and dark renders → the exact Imprint colors in both themes. Likely cause: Style
+    without opacity=1.'
+  - 'VQ-01 (light): white value labels on the washed-out cyan (7.8%), lavender (22.2%)
+    and ochre (14.1%) fills read faint → dark ink on the light fills or full-opacity
+    fills. Likely cause: value_colors all white combined with the 0.7 default opacity.'
+  - 'SC-01 (both): legend entries ''Netflix (#1 globally)'' and ''Others (combined)''
+    add a callout the basic variant does not ask for → the plain category names. Likely
+    cause: the legend_names mapping.'
+  - 'DQ-02 (both): real company names (Netflix, Amazon Prime Video, YouTube Premium,
+    Disney+, Apple TV+) carry invented 2024 market shares → a scenario without real
+    names carrying invented numbers. Likely cause: the categories list.'
+  - 'CQ-01 (code): line 21 opens the Data block with no column-0 # Plot marker after
+    it → one block between # Data and # Plot markers that ends by binding df. Likely
+    cause: the plot code is not separated from the data generation.'
+  - 'CQ-01 (code): no column constant for the required roles category and value →
+    one string constant per role above the Data block with a # role: comment. Likely
+    cause: column names typed where they are used.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Two-line title "Streaming Video Market · pie-basic · python · pygal · anyplot.ai" in dark ink — clearly readable. Legend text in dark ink on off-white background — all labels readable. White percentage labels on colored slices — readable on larger slices; marginally tight on smallest 7.8% slices.
-      Data: Six slices in anyplot canonical palette order — Netflix #009E73 (green, 29.5%), Amazon Prime Video #C475FD (lavender, 22.2%), YouTube Premium #4467A3 (blue, 18.6%), Disney+ #BD8233 (ochre, 14.1%), Apple TV+ #AE3030 (red, 7.8%), Others #2ABCCD (cyan, 7.8%). Netflix slice is translated upward (explode effect) with a cream-colored gap visible at the separation. Three-column legend at bottom with enriched names.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: warm off-white #FAF8F1.
+      Chrome: two-line title 'Streaming Video Market · pie-basic · python · pygal · anyplot.ai' and a three-column legend in dark ink — readable.
+      Data: six slices at pygal's default 0.7 opacity, so the Imprint colors appear lightened (green, lavender, blue, ochre, red, cyan); Netflix 29.5% pulled straight up out of the pie; white percentage labels at the slice centers, faint on the light cyan, lavender and ochre fills. Legend entries 'Netflix (#1 globally)' and 'Others (combined)'.
+      Legibility verdict: PASS (minor: faint white labels on the light fills)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Same two-line title in light cream text — clearly readable against dark background. Legend text in light color — all labels readable. White percentage labels on colored slices — same readability as light render. No dark-on-dark failures observed.
-      Data: All six slice colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD) — data palette is theme-invariant as required. Theme-adaptive stroke now matches the dark background, creating clean visual gaps between slices. Netflix explode effect preserved.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; chrome adapts correctly to dark theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title and legend in light cream, readable; no dark-on-dark text.
+      Data: the same slices blend with the dark page and appear darker than in the light render, so the categorical colors differ between the themes; white labels readable on the darker fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes. Minor: white
-          labels in 7.8% slices slightly tight at small sizes.'
+        comment: White value labels on the washed-out light fills (cyan 7.8%, lavender
+          22.2%, ochre 14.1%) read faint in the light render (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: No text collisions; every label inside its slice
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All six slices clearly visible; value labels correctly positioned.
+        comment: All six slices and legend swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; white labels conventional for pie charts.
+        comment: Imprint palette CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 appropriate for pie; canvas gate passed; balanced
-          margins.
+        comment: Square canvas well used, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; no axis labels needed for pie chart.
+        comment: Title with descriptive prefix; no axes on a pie (N/A)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical palette order; correct backgrounds;
-          data colors identical across themes.'
+        comment: pygal's default 0.7 opacity blends the slices with the page, so the
+          categorical colors differ from the Imprint hexes and between the two themes
+          (defect line)
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above default: enriched legend names, theme-adaptive slice strokes,
-          title auto-scaling, Netflix explode as intentional design. Not yet strong
-          design level.'
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean minimal layout; deliberate margin control and 3-column legend
-          organization. Pie inherently has no spines to remove.
+        comment: Page-colored slice strokes give a clean gap between slices in both
+          themes
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Netflix explode communicates market leadership; enriched legend labels
-          guide interpretation. Above default 'data displayed but not interpreted'.
+        passed: false
+        comment: Explode is what the Notes prescribe; no further hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct pie chart implementation.
+        comment: Legend entry 'Netflix (#1 globally)' adds a callout the basic variant
+          does not ask for (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentage labels, distinct colors, legend, and explode largest slice
-          all present.
+        comment: Percentage labels, colors, legend and exploded largest slice present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 6 categories with correct proportions; all data visible.
+        comment: Slices proportional and close the circle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with optional descriptive prefix; legend labels
-          descriptively enriched.
+        comment: Title format correct; legend names the categories
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -161,76 +162,79 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all pie chart features: proportional slices, percentages,
-          legend, emphasis, range from 7.8% to 29.5%.'
+        comment: Range 7.8%–29.5% shows proportions well
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Global streaming video market share (2024) — real, comprehensible,
-          neutral business scenario.
+        comment: Real company names carry invented 2024 market shares (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 7.8%–29.5% summing to 100%; consistent with known streaming
-          market data.
+        comment: Shares sum to 100% and the labels match the values
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Flat linear structure: imports → tokens → data → style → chart →
-          render.'
+        passed: false
+        comment: No Data/Plot block markers and no column constants (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded data with no randomness.
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, and pygal.style.Style imported; all used.
+        comment: os, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; title font-size formula is pragmatic; no over-engineering.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper use of pygal.Pie with Style, chart.add() with metadata dicts,
-          render_to_png. Well above basic API usage.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses SVG node transform for explode, value_formatter lambda, legend_at_bottom_columns,
-          truncate_legend=-1 — distinctive pygal-specific features.
+        comment: Standard pygal.Pie with Style and value dicts
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: SVG node transform on one value for the explode
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
+  last_kept:
+    pr: 14710
+    code: regression
+    note: '#14710 was kept because the review found it worse than the live version
+      here: The smallest slice''s label (6.2%) now reaches the slice edge at the explode
+      gap; every predecessor label sat fully inside its slice (Entertainment slice
+      label beside the gap, both renders). Keep these as the live version has them.'
 impl_tags:
   dependencies: []
   techniques:
