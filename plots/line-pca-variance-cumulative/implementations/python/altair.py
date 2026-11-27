@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-29
@@ -20,147 +20,139 @@ from sklearn.preprocessing import StandardScaler
 sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 alt = importlib.import_module("altair")
 
-# Theme tokens (Imprint palette — theme-adaptive chrome)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette positions
-BRAND = "#009E73"  # position 1 — always first categorical series
-THRESH_90 = "#4467A3"  # position 3 — blue
-THRESH_95 = "#BD8233"  # position 4 — ochre
-ELBOW_COLOR = "#AE3030"  # position 5 — matte red (semantic: key decision point)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # the cumulative curve
+THRESH_COLORS = [IMPRINT_PALETTE[2], IMPRINT_PALETTE[3]]  # blue, ochre: one per threshold
+ELBOW_COLOR = IMPRINT_PALETTE[4]  # matte red: the key decision point
 
-# Data — PCA on the Wine dataset (13 features)
+# Constants
+THRESHOLDS = [90, 95]  # percent of variance to retain, as the spec's reference lines
+
+# Columns: set these to your table's column names
+COMPONENT = "Number of components"  # role: n_components
+RATIO = "Explained variance ratio"  # role: explained_variance_ratio
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pca_variance.csv")
 wine = load_wine()
-X_scaled = StandardScaler().fit_transform(wine.data)
-pca = PCA().fit(X_scaled)
+pca = PCA().fit(StandardScaler().fit_transform(wine.data))
+df = pd.DataFrame(
+    {COMPONENT: np.arange(1, len(pca.explained_variance_ratio_) + 1), RATIO: pca.explained_variance_ratio_}
+)
 
-cumulative_variance = np.cumsum(pca.explained_variance_ratio_) * 100
-n_components = np.arange(1, len(cumulative_variance) + 1)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+CUMULATIVE = "Cumulative explained variance (%)"
+CROSSING = "Components needed"
+THRESHOLD = "Threshold"
+ELBOW = "Elbow"
 
-df = pd.DataFrame({"Component": n_components, "Cumulative Variance": cumulative_variance})
+n_components = df[COMPONENT].to_numpy()
+cumulative = df[RATIO].cumsum().to_numpy() * 100
+cum_df = pd.DataFrame({COMPONENT: n_components, CUMULATIVE: cumulative})
 
-# Elbow point via kneedle method (max distance from diagonal)
+# Elbow via kneedle: the point farthest from the diagonal between first and last component
 x_norm = (n_components - n_components[0]) / (n_components[-1] - n_components[0])
-y_norm = (cumulative_variance - cumulative_variance[0]) / (cumulative_variance[-1] - cumulative_variance[0])
+y_norm = (cumulative - cumulative[0]) / (cumulative[-1] - cumulative[0])
 elbow_idx = int(np.argmax(np.abs(y_norm - x_norm)))
-elbow_component = n_components[elbow_idx]
-elbow_value = cumulative_variance[elbow_idx]
-
-# Threshold crossing points
-thresholds = pd.DataFrame({"Threshold": [90, 95], "Label": ["90 %", "95 %"]})
-crossing_points = []
-for thresh in [90, 95]:
-    idx = int(np.searchsorted(cumulative_variance, thresh))
-    if idx < len(cumulative_variance):
-        crossing_points.append(
-            {
-                "Component": idx + 1,
-                "Cumulative Variance": cumulative_variance[idx],
-                "Label": f"{thresh} %",
-                "Annotation": f"{idx + 1} components",
-            }
-        )
-crossing_df = pd.DataFrame(crossing_points)
-
 elbow_df = pd.DataFrame(
-    [{"Component": elbow_component, "Cumulative Variance": elbow_value, "Marker": f"Elbow (PC {elbow_component})"}]
+    {
+        COMPONENT: [n_components[elbow_idx]],
+        CUMULATIVE: [cumulative[elbow_idx]],
+        ELBOW: [f"Elbow (PC {n_components[elbow_idx]})"],
+    }
 )
 
-# Shared scales
-y_scale = alt.Scale(domain=[20, 105])
-x_scale = alt.Scale(domain=[0.5, len(cumulative_variance) + 0.5], nice=False)
-threshold_scale = alt.Scale(domain=["90 %", "95 %"], range=[THRESH_90, THRESH_95])
+# First component count that reaches each threshold
+threshold_df = pd.DataFrame({THRESHOLD: [f"{t} %" for t in THRESHOLDS], CUMULATIVE: THRESHOLDS})
+reached = [int(np.searchsorted(cumulative, t)) for t in THRESHOLDS]
+crossing_df = pd.DataFrame(
+    {
+        COMPONENT: [n_components[i] for i in reached if i < len(cumulative)],
+        CUMULATIVE: [cumulative[i] for i in reached if i < len(cumulative)],
+        THRESHOLD: [f"{t} %" for t, i in zip(THRESHOLDS, reached, strict=True) if i < len(cumulative)],
+        CROSSING: [f"{n_components[i]} components" for i in reached if i < len(cumulative)],
+    }
+)
 
-# Area fill under curve — reduced opacity to preserve grid contrast
+x_scale = alt.Scale(domain=[n_components.min() - 0.5, n_components.max() + 0.5], nice=False)
+y_scale = alt.Scale(domain=[cumulative.min() - 12, cumulative.max() + 5], nice=False)
+threshold_scale = alt.Scale(domain=list(threshold_df[THRESHOLD]), range=THRESH_COLORS)
+
+x_enc = alt.X(COMPONENT.translate(ESCAPE), type="quantitative", title=COMPONENT, scale=x_scale)
+y_enc = alt.Y(CUMULATIVE.translate(ESCAPE), type="quantitative", title=CUMULATIVE, scale=y_scale)
+x_axis = alt.X(
+    COMPONENT.translate(ESCAPE), type="quantitative", title=COMPONENT, scale=x_scale, axis=alt.Axis(tickMinStep=1)
+)
+y_axis = alt.Y(
+    CUMULATIVE.translate(ESCAPE), type="quantitative", title=CUMULATIVE, scale=y_scale, axis=alt.Axis(format=".0f")
+)
+threshold_color = alt.Color(THRESHOLD.translate(ESCAPE), type="nominal", scale=threshold_scale, legend=None)
+
 area = (
-    alt.Chart(df)
-    .mark_area(opacity=0.05, color=BRAND)
-    .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
-        y2=alt.value({"expr": "height"}),
-    )
+    alt.Chart(cum_df)
+    .mark_area(opacity=0.06, color=BRAND)
+    .encode(x=x_enc, y=y_enc, y2=alt.datum(float(y_scale.domain[0])))
 )
 
-# Cumulative variance line
-line = (
-    alt.Chart(df)
-    .mark_line(strokeWidth=3, color=BRAND, interpolate="monotone")
-    .encode(
-        x=alt.X(
-            "Component:Q", title="Number of Components", scale=x_scale, axis=alt.Axis(tickMinStep=1, titlePadding=10)
-        ),
-        y=alt.Y(
-            "Cumulative Variance:Q",
-            title="Cumulative Explained Variance (%)",
-            scale=y_scale,
-            axis=alt.Axis(titlePadding=10, format=".0f"),
-        ),
-    )
-)
+line = alt.Chart(cum_df).mark_line(strokeWidth=3, color=BRAND, interpolate="monotone").encode(x=x_axis, y=y_axis)
 
-# Data point markers
 points = (
-    alt.Chart(df)
-    .mark_point(size=120, color=BRAND, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
+    alt.Chart(cum_df)
+    .mark_point(size=130, color=BRAND, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
+        x=x_enc,
+        y=y_enc,
         tooltip=[
-            alt.Tooltip("Component:Q", title="Component"),
-            alt.Tooltip("Cumulative Variance:Q", format=".1f", title="Cumulative Variance (%)"),
+            alt.Tooltip(COMPONENT.translate(ESCAPE), type="quantitative", title=COMPONENT),
+            alt.Tooltip(CUMULATIVE.translate(ESCAPE), type="quantitative", format=".1f", title=CUMULATIVE),
         ],
     )
 )
 
-# Interactive nearest-point selection (Altair's distinctive hover capability)
-nearest = alt.selection_point(nearest=True, on="pointerover", fields=["Component"], empty=False)
+# Interactive nearest-point highlight with a guide rule (HTML output)
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=[COMPONENT.translate(ESCAPE)], empty=False)
 
-invisible_selector = (
-    alt.Chart(df)
-    .mark_point(size=300, opacity=0)
-    .encode(x=alt.X("Component:Q", scale=x_scale), y=alt.Y("Cumulative Variance:Q", scale=y_scale))
-    .add_params(nearest)
-)
+invisible_selector = alt.Chart(cum_df).mark_point(size=300, opacity=0).encode(x=x_enc, y=y_enc).add_params(nearest)
 
 highlight_point = (
-    alt.Chart(df)
-    .mark_point(size=180, color=BRAND, filled=True, stroke=INK, strokeWidth=2)
-    .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
-        opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
-    )
+    alt.Chart(cum_df)
+    .mark_point(size=190, color=BRAND, filled=True, stroke=INK, strokeWidth=2)
+    .encode(x=x_enc, y=y_enc, opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
 )
 
 hover_rule = (
-    alt.Chart(df)
+    alt.Chart(cum_df)
     .mark_rule(color=INK_SOFT, strokeDash=[3, 3], strokeWidth=1, opacity=0.5)
-    .encode(x=alt.X("Component:Q", scale=x_scale))
+    .encode(x=x_enc)
     .transform_filter(nearest)
 )
 
-# Threshold reference lines
 threshold_lines = (
-    alt.Chart(thresholds)
-    .mark_rule(strokeDash=[8, 5], strokeWidth=1.5, opacity=0.65)
+    alt.Chart(threshold_df)
+    .mark_rule(strokeDash=[8, 5], strokeWidth=2, opacity=0.8)
     .encode(
-        y=alt.Y("Threshold:Q", scale=y_scale),
+        y=y_enc,
         color=alt.Color(
-            "Label:N",
+            THRESHOLD.translate(ESCAPE),
+            type="nominal",
+            title=THRESHOLD,
             scale=threshold_scale,
             legend=alt.Legend(
-                title="Threshold",
-                titleFontSize=10,
+                titleFontSize=12,
                 titleFontWeight="bold",
-                labelFontSize=10,
+                labelFontSize=11,
                 orient="right",
                 symbolStrokeWidth=2,
-                symbolSize=100,
+                symbolSize=140,
+                symbolType="stroke",
                 symbolDash=[8, 5],
                 offset=8,
             ),
@@ -168,63 +160,47 @@ threshold_lines = (
     )
 )
 
-# Threshold crossing markers
 crossing_markers = (
     alt.Chart(crossing_df)
-    .mark_point(shape="diamond", size=180, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_point(shape="diamond", size=200, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
-        color=alt.Color("Label:N", scale=threshold_scale, legend=None),
+        x=x_enc,
+        y=y_enc,
+        color=threshold_color,
         tooltip=[
-            alt.Tooltip("Component:Q", title="Components needed"),
-            alt.Tooltip("Cumulative Variance:Q", format=".1f", title="Variance (%)"),
-            alt.Tooltip("Label:N", title="Threshold"),
+            alt.Tooltip(COMPONENT.translate(ESCAPE), type="quantitative", title=CROSSING),
+            alt.Tooltip(CUMULATIVE.translate(ESCAPE), type="quantitative", format=".1f", title=CUMULATIVE),
+            alt.Tooltip(THRESHOLD.translate(ESCAPE), type="nominal", title=THRESHOLD),
         ],
     )
 )
 
-# Threshold crossing annotations
 crossing_labels = (
     alt.Chart(crossing_df)
-    .mark_text(fontSize=11, fontWeight="bold", dy=-13, align="center")
-    .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
-        text=alt.Text("Annotation:N"),
-        color=alt.Color("Label:N", scale=threshold_scale, legend=None),
-    )
+    .mark_text(fontSize=11, fontWeight="bold", dy=-30, align="center")
+    .encode(x=x_enc, y=y_enc, text=alt.Text(CROSSING.translate(ESCAPE), type="nominal"), color=threshold_color)
 )
 
-# Elbow point marker
 elbow_marker = (
     alt.Chart(elbow_df)
-    .mark_point(shape="triangle-up", size=220, color=ELBOW_COLOR, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_point(shape="triangle-up", size=240, color=ELBOW_COLOR, filled=True, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
+        x=x_enc,
+        y=y_enc,
         tooltip=[
-            alt.Tooltip("Component:Q", title="Elbow at component"),
-            alt.Tooltip("Cumulative Variance:Q", format=".1f", title="Variance (%)"),
+            alt.Tooltip(COMPONENT.translate(ESCAPE), type="quantitative", title="Elbow at component"),
+            alt.Tooltip(CUMULATIVE.translate(ESCAPE), type="quantitative", format=".1f", title=CUMULATIVE),
         ],
     )
 )
 
-# Elbow label — dx=42 offsets right to clear the triangle marker (fixes overlap weakness)
+# dx moves the label right so it clears the triangle
 elbow_label = (
     alt.Chart(elbow_df)
-    .mark_text(fontSize=12, fontWeight="bold", color=ELBOW_COLOR, dy=-16, dx=42)
-    .encode(
-        x=alt.X("Component:Q", scale=x_scale),
-        y=alt.Y("Cumulative Variance:Q", scale=y_scale),
-        text=alt.Text("Marker:N"),
-    )
+    .mark_text(fontSize=12, fontWeight="bold", color=ELBOW_COLOR, dy=20, dx=50)
+    .encode(x=x_enc, y=y_enc, text=alt.Text(ELBOW.translate(ESCAPE), type="nominal"))
 )
 
-# Title — 59 chars, under 67 baseline so no fontsize scaling needed
-title_str = "line-pca-variance-cumulative · python · altair · anyplot.ai"
-
-# Combine all layers
 chart = (
     (
         area
@@ -241,43 +217,41 @@ chart = (
     )
     .properties(
         background=PAGE_BG,
-        width=620,
-        height=320,
-        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
-        title=alt.Title(text=title_str, fontSize=16, anchor="middle", offset=12, color=INK),
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        title=alt.Title(
+            text="line-pca-variance-cumulative · python · altair · anyplot.ai", fontSize=16, anchor="middle", offset=12
+        ),
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         grid=True,
-        gridOpacity=0.12,
-        gridDash=[3, 3],
+        gridOpacity=0.15,
         gridColor=INK,
-        domainColor=INK_SOFT,
+        domain=False,
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=10,
-        titleFontSize=12,
+        labelFontSize=11,
+        titleFontSize=13,
+        titlePadding=10,
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
 )
 
-# Save PNG
+# Save
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Pad PNG to exact 3200×1800 target (vl-convert lands slightly under with inner 620×320)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")
