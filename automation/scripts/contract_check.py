@@ -109,19 +109,25 @@ Subcommands::
 
     contract_check.py check --source NEW --spec-id S --language L --library B \
         [--prev PREV] [--out RECORD.json]
-    contract_check.py selfcheck FILE --spec-id S --language L --library B
+    contract_check.py selfcheck FILE --spec-id S --language L --library B \
+        --regeneration true|false
 
 ``check`` records, for ``impl-review.yml``. ``--source`` and ``--prev`` may
 name files that do not exist: a missing new file reads as ``unreadable``, a
-missing predecessor as a first generation.
+missing predecessor as a first generation. It records ``data-block`` on
+every file, regenerations included.
 
 ``selfcheck`` is the generator's own run on the file it wrote
 (``prompts/workflow-prompts/impl-generate-claude.md``, Step 2b). It prints
 plain lines, writes no record and no job summary: one line per broken rule
 with what it found and the prompt's words (for ``data-block``, each part of
 the layout that is missing), ``palette`` marked advisory, and a verdict line.
-It exits 0 when nothing must be fixed, 1 when something must, and 2 when the
-file cannot be read.
+``--regeneration`` is the session's ``IS_REGENERATION``: on a regeneration
+``data-block`` is advisory as well, because a regeneration in R, Julia and
+JavaScript keeps its working data code (the owner's decision of
+2026-10-23), so the layout is enforced on first generations only. It exits 0
+when nothing must be fixed, 1 when something must, and 2 when the file
+cannot be read.
 """
 
 from __future__ import annotations
@@ -163,6 +169,10 @@ RULES = (
 )
 # A deviation the owner allows with a good reason: the self-check names it, the generator decides.
 ADVISORY = frozenset({"palette"})
+# Enforced on a first generation only: a regeneration in R, Julia or JavaScript keeps working data code
+# (the owner's decision of 2026-10-23), so its self-check reports the layout and the review records it.
+REGENERATION_ADVISORY = frozenset({"data-block"})
+REGENERATION_KEEPS = "a regeneration keeps its working data code, so this is not fixed"
 LANGUAGES = ("python", "r", "julia", "javascript")
 
 # Python blue and yellow, then the variant-D palette. An alpha suffix (#RRGGBBAA) counts too.
@@ -1157,27 +1167,40 @@ def reason(key: str, library: str) -> tuple[str, str, str]:
 
 
 def selfcheck_lines(
-    source: str | None, *, spec_id: str, language: str, library: str, shape: str | None = None
+    source: str | None,
+    *,
+    spec_id: str,
+    language: str,
+    library: str,
+    shape: str | None = None,
+    regeneration: bool = False,
 ) -> tuple[list[str], int]:
     """The generator's own run: one line per broken rule, then the verdict line, and the exit code.
 
     0 when nothing must be fixed (an advisory line may remain), 1 when something must, 2 when there is no file.
+    On a ``regeneration``, ``data-block`` is advisory too (``REGENERATION_ADVISORY``).
     """
     if source is None:
         return ["contract: not run (the file is missing or not UTF-8 text)"], 2
     found, details = check(source, spec_id=spec_id, language=language, library=library, shape=shape)
+    advisory_keys = ADVISORY | (REGENERATION_ADVISORY if regeneration else frozenset())
     lines = []
     for key in found:
         what, path, quote = reason(key, library)
-        if key in ADVISORY:
+        if regeneration and key in REGENERATION_ADVISORY:
+            gaps = "; ".join(details[key])
+            lines.append(
+                f"{key} (advisory on a regeneration): {what}: {gaps}; {REGENERATION_KEEPS} → {path}: “{quote}”"
+            )
+        elif key in advisory_keys:
             listed = ", ".join(details.get(key, []))
             lines.append(f"{key} (advisory): {listed}: {what} → {path}: “{quote}”")
         elif details.get(key):
             lines.append(f"{key}: {what}: {'; '.join(details[key])} → {path}: “{quote}”")
         else:
             lines.append(f"{key}: {what} → {path}: “{quote}”")
-    must = [key for key in found if key not in ADVISORY]
-    advisory = [key for key in found if key in ADVISORY]
+    must = [key for key in found if key not in advisory_keys]
+    advisory = [key for key in found if key in advisory_keys]
     if must:
         lines.append(f"contract: fix ({', '.join(must)})")
     else:
@@ -1192,6 +1215,7 @@ def cmd_selfcheck(args: argparse.Namespace) -> int:
         language=args.language,
         library=args.library,
         shape=_shape_for(args.spec_id, args.library),
+        regeneration=args.regeneration == "true",
     )
     print("\n".join(lines))
     return code
@@ -1234,6 +1258,13 @@ def main(argv: list[str] | None = None) -> int:
     self_parser.add_argument("--spec-id", required=True)
     self_parser.add_argument("--language", required=True, choices=LANGUAGES)
     self_parser.add_argument("--library", required=True)
+    # Required, so a session that leaves it out learns so, instead of a default deciding for it.
+    self_parser.add_argument(
+        "--regeneration",
+        required=True,
+        choices=("true", "false"),
+        help="the session's IS_REGENERATION: on a regeneration, data-block is advisory",
+    )
     self_parser.set_defaults(func=cmd_selfcheck)
     args = parser.parse_args(argv)
     return int(args.func(args))

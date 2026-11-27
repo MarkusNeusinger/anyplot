@@ -223,13 +223,15 @@ Before the first render, check the file against what the prompts mandate where t
 ```bash
 cd "$GITHUB_WORKSPACE"
 .venv/bin/python -I automation/scripts/contract_check.py selfcheck \
-    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} --library {LIBRARY}
+    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} --library {LIBRARY} \
+    --regeneration {IS_REGENERATION}
 ```
 
-It prints one line per rule the file breaks: what it found and, after `→`, the words of the prompt that set the rule, with their file. Its last line is the verdict: `contract: pass`, `contract: pass (advisory: palette)`, `contract: fix (<keys>)` or `contract: not run (<reason>)`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.
+It prints one line per rule the file breaks: what it found and, after `→`, the words of the prompt that set the rule, with their file. Its last line is the verdict: `contract: pass`, `contract: pass (advisory: <keys>)`, `contract: fix (<keys>)` or `contract: not run (<reason>)`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.
 
 - **Fix every line that is not marked `(advisory)`,** then run the check again. The fix is the setting the quoted words ask for, written the way `prompts/library/{LIBRARY}.md` shows it. The output is the whole rule: don't read the script for its patterns.
 - **On a regeneration, also fix the lines the previous file already broke.** "Base style wins on everything else" makes each of them a named item of this regeneration, like a CQ-04 weakness.
+- **On a regeneration, a `data-block` line is not fixed** (R, Julia and JavaScript): the check marks it `(advisory on a regeneration)`, and the working data code stays, as the regeneration mindset above says.
 - **The `palette (advisory)` line** lists colours outside the style guide's palette. Keep one only for a reason that holds, such as a semantic exception of the style guide or a colour the spec names, and name the colour and the reason in the commit line; replace the others with Imprint colours or theme tokens.
 - **Never trade a defect in the render for a clean check,** and never remove an element the spec asks for to silence a line.
 - If the command cannot run (exit 2, or a runner error), say so in the commit line and go on; it never blocks the implementation. `impl-review.yml` runs the same check on the committed file again, record-only.

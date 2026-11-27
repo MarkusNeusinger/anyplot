@@ -1398,7 +1398,7 @@ def test_the_selfcheck_command_prints_plain_lines_and_writes_no_summary(tmp_path
     (tmp_path / "good.py").write_text(PYTHON, encoding="utf-8")
     (tmp_path / "bad.py").write_text(PYTHON.replace('f"plot-{THEME}.png"', '"plot.png"'), encoding="utf-8")
     env = {"PATH": "/usr/bin:/bin", "GITHUB_STEP_SUMMARY": str(tmp_path / "summary")}
-    common = ["--spec-id", SPEC, "--language", "python", "--library", "matplotlib"]
+    common = ["--spec-id", SPEC, "--language", "python", "--library", "matplotlib", "--regeneration", "false"]
     runs = {
         name: subprocess.run(
             [sys.executable, "-I", str(SCRIPT), "selfcheck", name, *common],
@@ -1430,6 +1430,39 @@ def test_the_selfcheck_names_each_missing_part_of_the_data_block():
     ]
     unjudged, code = selfcheck_lines(source, spec_id=SPEC, language="r", library="ggplot2")
     assert (code, unjudged) == (0, ["contract: pass"])
+
+
+def test_a_regeneration_reports_the_data_block_and_never_asks_to_fix_it():
+    """On a regeneration the working data code stays: `data-block` turns advisory, every other rule stays."""
+    source = R.replace("p <- ggplot(df", R_NO_BLOCK + "p <- ggplot(df")
+    kwargs = {"spec_id": SPEC, "language": "r", "library": "ggplot2", "shape": "table"}
+    lines, code = selfcheck_lines(source, regeneration=True, **kwargs)
+    assert code == 0
+    assert lines == [
+        "data-block (advisory on a regeneration): the file misses part of the Data block layout of its library "
+        "prompt: no `# Data` marker line at column 0; no column constant with a trailing `# role:` comment in the "
+        "file; no column-0 `df <-` in the file; a regeneration keeps its working data code, so this is not fixed "
+        "→ prompts/library/ggplot2.md: “the column constants above the block, one `# Data` block that builds a "
+        "`tibble` keyed by them and ends in `df`, and plot code below `# Plot`”",
+        "contract: pass (advisory: data-block)",
+    ]
+    # The other rules are fixed on a regeneration as before, and the palette stays advisory beside it.
+    broken = source.replace('sprintf("plot-%s.png", THEME)', '"plot.png"').replace('"#009E73"', '"#F0D9B5"')
+    lines, code = selfcheck_lines(broken, regeneration=True, **kwargs)
+    assert code == 1
+    assert [line.split(":")[0] for line in lines] == [
+        "save",
+        "palette (advisory)",
+        "data-block (advisory on a regeneration)",
+        "contract",
+    ]
+    assert lines[-1] == "contract: fix (save)"
+    # A first generation must fix it.
+    first, code = selfcheck_lines(source, regeneration=False, **kwargs)
+    assert (code, first[-1]) == (1, "contract: fix (data-block)")
+    # The review keeps recording it on every file, a regeneration's predecessor included.
+    record = build_record(source, source, **kwargs)
+    assert "data-block" in record["violations"] and record["prev_violations"] == record["violations"]
 
 
 def _tree(tmp_path: Path, *, mirror: bool) -> Path:
@@ -1466,20 +1499,41 @@ def test_both_entry_points_read_the_shape_from_the_working_directory(tmp_path, m
     )
     assert review.returncode == 0, review.stderr
     record = json.loads((tmp_path / "record.json").read_text(encoding="utf-8"))
-    generator = subprocess.run(
-        [sys.executable, "-I", str(script), "selfcheck", "new.R", *common],
-        capture_output=True,
-        text=True,
-        cwd=tmp_path,
-        env=env,
+    generator, regenerator = (
+        subprocess.run(
+            [sys.executable, "-I", str(script), "selfcheck", "new.R", *common, "--regeneration", regeneration],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+            env=env,
+        )
+        for regeneration in ("false", "true")
     )
-    assert not generator.stderr
+    assert not generator.stderr and not regenerator.stderr
     if mirror:
         assert record["shape"] == "table" and record["violations"] == ["data-block"]
         assert review.stdout.strip().endswith("violations=data-block prev=n/a new_only=data-block shape=table")
         assert generator.returncode == 1
         assert generator.stdout.splitlines()[-1] == "contract: fix (data-block)"
+        assert regenerator.returncode == 0
+        assert regenerator.stdout.splitlines()[-1] == "contract: pass (advisory: data-block)"
     else:
         assert record["shape"] is None and record["violations"] == []
         assert review.stdout.strip().endswith("status=clean violations=none prev=n/a new_only=none shape=unknown")
         assert (generator.returncode, generator.stdout) == (0, "contract: pass\n")
+        assert (regenerator.returncode, regenerator.stdout) == (0, "contract: pass\n")
+
+
+def test_the_selfcheck_needs_the_sessions_regeneration_flag(tmp_path):
+    """No default decides for a session that leaves the flag out: argparse refuses the call (exit 2)."""
+    (tmp_path / "plot.R").write_text(R, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-I", str(SCRIPT), "selfcheck", "plot.R", "--spec-id", SPEC, "--language", "r"]
+        + ["--library", "ggplot2"],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    assert result.returncode == 2
+    assert "--regeneration" in result.stderr

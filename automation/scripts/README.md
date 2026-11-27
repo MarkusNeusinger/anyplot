@@ -315,11 +315,15 @@ prints a `contract_check` notice, and writes a job-summary line
 workflow's ref). It always exits 0. See
 [Contract check](../../docs/workflows/overview.md#contract-check-record-only).
 
-`selfcheck FILE --spec-id S --language L --library B` is the generator's own
-run on the file it wrote (Step 2b of the generate prompt), from the
-workspace. It prints one line per broken rule with what it found and the
-prompt's words, marks `palette` as advisory, and ends in a verdict line
-(`contract: pass`, `pass (advisory: palette)`, `fix (<keys>)`, or `not run`).
+`selfcheck FILE --spec-id S --language L --library B --regeneration true|false`
+is the generator's own run on the file it wrote (Step 2b of the generate
+prompt), from the workspace. It prints one line per broken rule with what it
+found and the prompt's words, marks `palette` as advisory, and ends in a
+verdict line (`contract: pass`, `pass (advisory: <keys>)`, `fix (<keys>)`, or
+`not run`). The required `--regeneration` is the session's `IS_REGENERATION`.
+On a regeneration `data-block` is advisory too, because a regeneration in R,
+Julia and JavaScript keeps its working data code: the layout is enforced on
+first generations only, and `check` records it on every file.
 It writes no record and no job summary, and exits 0 when nothing must be
 fixed, 1 when something must, and 2 when it can't read the file. See
 [Contract self-check](../../docs/workflows/overview.md#contract-self-check).
