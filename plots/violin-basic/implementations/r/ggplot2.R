@@ -28,7 +28,7 @@ class_b <- c(rnorm(60, mean = 60, sd = 5), rnorm(60, mean = 86, sd = 5))  # bimo
 class_c <- rnorm(120, mean = 83, sd = 6)                                   # high-performing
 class_d <- pmax(50, pmin(100, 58 + rexp(120, rate = 0.10)))                # low, right-skewed
 df <- tibble::tibble(
-  !!CLASS_GROUP := rep(c("Class A", "Class B", "Class C", "Class D"), each = 120),
+  !!CLASS_GROUP := rep(c("Algebra I", "Biology", "Chemistry", "World History"), each = 120),
   !!TEST_SCORE  := c(class_a, class_b, class_c, class_d)
 )
 
