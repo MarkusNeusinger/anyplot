@@ -1,14 +1,12 @@
 # anyplot.ai
 # hexbin-basic: Basic Hexbin Plot
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-05-29
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 84/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
-using ColorSchemes
+using DataFrames
 using Random
-
-Random.seed!(42)
 
 # Theme tokens
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
@@ -17,53 +15,45 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint sequential colormap: brand green → blue (single-polarity density)
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+# Imprint sequential ramp (fields: colored cells fill the plot)
+const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
+    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.369, 0.803, 1.0]) :
+    cgrad([colorant"#404C02", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.487, 1.0])
+
+# Columns: set these to your table's column names
+const LONGITUDE = "Longitude (relative km)"  # role: x
+const LATITUDE = "Latitude (relative km)"    # role: y
 
 # Data: simulated urban GPS coordinates with clustered hotspots (12000 points)
-# City center — highest density
-n1 = 5000
-x1 = randn(n1) .* 0.4 .+ 0.0
-y1 = randn(n1) .* 0.4 .+ 0.0
+Random.seed!(42)
+centers = [(0.0, 0.0, 0.4, 0.4), (-2.0, 2.2, 0.5, 0.4), (2.4, 0.6, 0.5, 0.4), (0.4, -2.5, 0.45, 0.4)]
+sizes = [5000, 2500, 2500, 2000]
+df = DataFrame(
+    LONGITUDE => reduce(vcat, [randn(n) .* c[3] .+ c[1] for (c, n) in zip(centers, sizes)]),
+    LATITUDE => reduce(vcat, [randn(n) .* c[4] .+ c[2] for (c, n) in zip(centers, sizes)]),
+)
 
-# Northern district
-n2 = 2500
-x2 = randn(n2) .* 0.5 .+ -2.0
-y2 = randn(n2) .* 0.4 .+ 2.2
-
-# Eastern commercial zone
-n3 = 2500
-x3 = randn(n3) .* 0.5 .+ 2.4
-y3 = randn(n3) .* 0.4 .+ 0.6
-
-# Southern transit hub
-n4 = 2000
-x4 = randn(n4) .* 0.45 .+ 0.4
-y4 = randn(n4) .* 0.40 .+ -2.5
-
-x_coords = vcat(x1, x2, x3, x4)
-y_coords = vcat(y1, y2, y3, y4)
-
+# Plot
 # Figure
 fig = Figure(
     size            = (1600, 900),
-    fontsize        = 14,
+    fontsize        = 16,
     backgroundcolor = PAGE_BG,
 )
 
 ax = Axis(
     fig[1, 1];
     title              = "hexbin-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 24,
     titlecolor         = INK,
-    xlabel             = "Longitude (relative km)",
-    ylabel             = "Latitude (relative km)",
-    xlabelsize         = 14,
-    ylabelsize         = 14,
+    xlabel             = LONGITUDE,
+    ylabel             = LATITUDE,
+    xlabelsize         = 18,
+    ylabelsize         = 18,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 12,
-    yticklabelsize     = 12,
+    xticklabelsize     = 15,
+    yticklabelsize     = 15,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -80,38 +70,23 @@ ax = Axis(
 )
 
 # Log colorscale surfaces peripheral mid-density clusters that would otherwise wash out
-hb = hexbin!(ax, x_coords, y_coords;
+hb = hexbin!(ax, df[!, LONGITUDE], df[!, LATITUDE];
     bins        = 50,
-    colormap    = ANYPLOT_SEQ,
+    colormap    = ANYPLOT_SEQ_FIELDS,
     colorscale  = log10,
     strokewidth = 0,
 )
 
-# Colorbar with log-scale ticks at interpretable landmark counts
+# Colorbar with log-scale ticks
 Colorbar(fig[1, 2], hb;
-    label          = "Point Count",
-    labelsize      = 14,
+    label          = "Point count (log scale)",
+    labelsize      = 18,
     labelcolor     = INK,
-    ticklabelsize  = 11,
+    ticklabelsize  = 15,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
-    ticks          = ([1, 5, 20, 80, 250], ["1", "5", "20", "80", "250"]),
+    ticks          = LogTicks(0:3),
     width          = 22,
-)
-
-# Focal annotation: ring + label calling out the city center peak-density cluster
-scatter!(ax, [0.0], [0.0];
-    marker      = :circle,
-    markersize  = 42,
-    color       = :transparent,
-    strokewidth = 2.2,
-    strokecolor = INK,
-)
-text!(ax, 0.5, 0.1;
-    text     = "City Center\n(peak density)",
-    color    = INK,
-    fontsize = 11,
-    align    = (:left, :center),
 )
 
 colsize!(fig.layout, 1, Relative(0.87))
