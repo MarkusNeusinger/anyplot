@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-05-30
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -38,12 +37,6 @@ heights_short <- rnorm(420, mean = 38, sd = 6)
 heights_tall  <- rnorm(180, mean = 72, sd = 9)
 df <- data.frame(height = c(heights_short, heights_tall))
 
-# Compute KDE to get annotation positions at the two cultivar peaks
-dens_curve <- density(df$height, bw = "sj")
-y_offset   <- max(dens_curve$y) * 0.06
-ann_x      <- c(38, 72)
-ann_y      <- approx(dens_curve$x, dens_curve$y, xout = ann_x)$y + y_offset
-
 # Plot
 p <- ggplot(df, aes(x = height)) +
     geom_density(
@@ -55,22 +48,12 @@ p <- ggplot(df, aes(x = height)) +
     ) +
     geom_rug(
         color     = BRAND,
-        alpha     = 0.12,
+        alpha     = 0.3,
         length    = unit(0.018, "npc"),
         linewidth = 0.4
     ) +
-    annotate("text",
-        x          = ann_x,
-        y          = ann_y,
-        label      = c("Short-growing\n(n = 420)", "Tall-growing\n(n = 180)"),
-        color      = INK_SOFT,
-        size       = 2.8,
-        hjust      = 0.5,
-        vjust      = 0,
-        lineheight = 0.9
-    ) +
     scale_x_continuous(expand = expansion(mult = c(0.02, 0.02))) +
-    scale_y_continuous(expand = expansion(mult = c(0.0, 0.18))) +
+    scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
     labs(
         x     = "Seedling Height (mm)",
         y     = "Density",
@@ -80,7 +63,7 @@ p <- ggplot(df, aes(x = height)) +
     theme(
         plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG, color = NA),
-        panel.grid.major.y = element_line(color = INK_SOFT, linewidth = 0.2),
+        panel.grid.major.y = element_line(color = alpha(INK, 0.15), linewidth = 0.3),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         panel.border       = element_blank(),
