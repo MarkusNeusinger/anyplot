@@ -1,16 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 box-basic: Basic Box Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-28
 """
 
-import io
 import os
 import sys
 import time
 from pathlib import Path
-
-from PIL import Image
 
 
 # Remove this script's own directory from sys.path so the installed
@@ -19,8 +16,9 @@ _own_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path = [p for p in sys.path if os.path.realpath(p or ".") != _own_dir]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, LabelSet, Whisker
+from bokeh.models import ColumnDataSource, Range1d, Whisker
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap
 from selenium import webdriver
@@ -35,47 +33,50 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — test scores across 4 classes with varying distributions
-np.random.seed(42)
-categories = ["Class A", "Class B", "Class C", "Class D"]
+# Columns: set these to your table's column names
+CLASS = "Class"  # role: category
+SCORE = "Test score (points)"  # role: value
 
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+np.random.seed(42)
 scores = {
     "Class A": np.random.normal(75, 10, 100),
     "Class B": np.concatenate([np.random.normal(85, 5, 90), np.array([65, 68, 70])]),
     "Class C": np.clip(np.random.normal(68, 14, 100), 30, None),
     "Class D": np.concatenate([np.random.normal(78, 8, 95), np.array([100, 102, 50, 52])]),
 }
+df = pd.DataFrame(
+    {CLASS: np.repeat(list(scores), [len(v) for v in scores.values()]), SCORE: np.concatenate(list(scores.values()))}
+)
 
-# Box plot statistics
-box_data = {"cat": [], "q1": [], "q2": [], "q3": [], "upper": [], "lower": [], "iqr": []}
+# Plot: reads only df and the constants above
+categories = list(df[CLASS].unique())
+
+# Box plot statistics: quartiles, whiskers at the most extreme values within 1.5 x IQR
+box_rows = []
 outlier_x = []
 outlier_y = []
-
 for cat in categories:
-    values = np.array(scores[cat])
-    q1 = np.percentile(values, 25)
-    q2 = np.percentile(values, 50)
-    q3 = np.percentile(values, 75)
+    values = df.loc[df[CLASS] == cat, SCORE].dropna().to_numpy()
+    q1, q2, q3 = np.percentile(values, [25, 50, 75])
     iqr = q3 - q1
-    upper_fence = q3 + 1.5 * iqr
     lower_fence = q1 - 1.5 * iqr
-    upper_whisker = values[values <= upper_fence].max()
-    lower_whisker = values[values >= lower_fence].min()
-
-    box_data["cat"].append(cat)
-    box_data["q1"].append(round(q1, 1))
-    box_data["q2"].append(round(q2, 1))
-    box_data["q3"].append(round(q3, 1))
-    box_data["upper"].append(round(upper_whisker, 1))
-    box_data["lower"].append(round(lower_whisker, 1))
-    box_data["iqr"].append(round(iqr, 1))
-
+    upper_fence = q3 + 1.5 * iqr
+    box_rows.append(
+        {
+            "cat": cat,
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "upper": values[values <= upper_fence].max(),
+            "lower": values[values >= lower_fence].min(),
+        }
+    )
     outliers = values[(values < lower_fence) | (values > upper_fence)]
-    for o in outliers:
-        outlier_x.append(cat)
-        outlier_y.append(round(o, 1))
+    outlier_x.extend([cat] * len(outliers))
+    outlier_y.extend(outliers)
 
-source = ColumnDataSource(data=box_data)
+source = ColumnDataSource(pd.DataFrame(box_rows))
 
 # Figure
 title = "box-basic · python · bokeh · anyplot.ai"
@@ -85,8 +86,8 @@ p = figure(
     width=W,
     height=H,
     title=title,
-    x_axis_label="Class",
-    y_axis_label="Test Score (points)",
+    x_axis_label=CLASS,
+    y_axis_label=SCORE,
     toolbar_location=None,
     tools="",
     min_border_bottom=160,
@@ -96,7 +97,7 @@ p = figure(
 )
 
 # Boxes (q1–q3)
-cmap = factor_cmap("cat", palette=IMPRINT_PALETTE[:4], factors=categories)
+cmap = factor_cmap("cat", palette=IMPRINT_PALETTE, factors=categories)
 box_width = 0.7
 
 p.vbar(
@@ -123,12 +124,11 @@ p.vbar(
 )
 
 # Median line
-median_source = ColumnDataSource(data={"x": box_data["cat"], "y": box_data["q2"]})
-p.rect(x="x", y="y", width=box_width, height=0.3, source=median_source, fill_color=INK, line_color=INK)
+p.rect(x="cat", y="q2", width=box_width, height=0.3, source=source, fill_color=INK, line_color=INK)
 
 # Whiskers
 whisker = Whisker(
-    base="cat", upper="upper", lower="lower", source=source, level="annotation", line_width=3, line_color=INK_SOFT
+    base="cat", upper="upper", lower="lower", source=source, level="underlay", line_width=3, line_color=INK_SOFT
 )
 whisker.upper_head.size = 40
 whisker.lower_head.size = 40
@@ -143,36 +143,13 @@ if outlier_x:
         x="x",
         y="y",
         source=outlier_source,
-        size=18,
+        size=24,
         fill_color=PAGE_BG,
         line_color=INK_SOFT,
         line_width=2.5,
         marker="circle",
         alpha=0.9,
     )
-
-# Annotations — highlight tightest and widest spread
-class_b_iqr = box_data["iqr"][1]
-class_c_iqr = box_data["iqr"][2]
-
-annotation_source = ColumnDataSource(
-    data={
-        "x": ["Class B", "Class C"],
-        "y": [box_data["upper"][1] + 6, box_data["upper"][2] + 6],
-        "text": [f"Tightest spread (IQR = {class_b_iqr})", f"Widest spread (IQR = {class_c_iqr})"],
-    }
-)
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="text",
-    text_color=INK_SOFT,
-    source=annotation_source,
-    text_font_size="30pt",
-    text_font_style="italic",
-    text_align="center",
-)
-p.add_layout(labels)
 
 # Styling
 p.title.text_font_size = "50pt"
@@ -194,6 +171,8 @@ p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
 p.x_range.range_padding = 0.12
+span = df[SCORE].max() - df[SCORE].min()
+p.y_range = Range1d(df[SCORE].min() - 0.05 * span, df[SCORE].max() + 0.05 * span)
 
 # Grid
 p.xgrid.grid_line_color = None
@@ -210,23 +189,26 @@ p.outline_line_color = None
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome — window is H+200 tall so bokeh canvas fills
-# exactly W×H; PIL crops to the target rect before saving.
+# Screenshot with headless Chrome; the viewport is pinned to W x H through CDP
 opts = Options()
 for arg in (
     "--headless=new",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
-    "--force-device-scale-factor=1",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H + 200)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
-raw = driver.get_screenshot_as_png()
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
