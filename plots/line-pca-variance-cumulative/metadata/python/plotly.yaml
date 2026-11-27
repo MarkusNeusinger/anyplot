@@ -2,121 +2,111 @@ library: plotly
 language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:47Z'
-updated: '2026-05-29T05:50:42Z'
+updated: '2026-11-27T18:45:37Z'
 generated_by: claude-sonnet
-workflow_run: 26620033570
+workflow_run: 46050920751
 issue: 4131
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented (cumulative line,
-    90%/95% threshold lines with annotations, elbow detection+annotation, vertical
-    drop lines, bar overlay)'
-  - 'Excellent theme adaptation: all chrome tokens (PAGE_BG, INK, INK_SOFT, GRID,
-    ELEVATED_BG) correctly applied for both light and dark renders with no dark-on-dark
-    failures'
-  - 'Strong data storytelling: annotated elbow point with arrow, vertical drop lines
-    from threshold crossings to x-axis, semi-transparent bar overlay creates clear
-    visual hierarchy and guides the viewer through the PCA component-selection decision'
-  - Real scientific dataset (sklearn wine) makes the visualization immediately understandable
-    and demonstrates authentic use case
-  - Clean, reproducible code with deterministic PCA on a fixed real dataset, all plotly-specific
-    APIs used correctly (add_hline, add_shape, add_annotation, dummy traces for legend
-    entries, spline-smoothed line)
+  - Real PCA on the standardized sklearn wine dataset, with threshold crossings and
+    the elbow computed from the data rather than placed
+  - Dotted drop lines from the 90% and 95% crossings to PC8 and PC10 read the component-selection
+    answer straight off the x axis
+  - Elbow marked by a hollow diamond on PC4's own marker with an arrowed callout on
+    an elevated-surface box
+  - Theme tokens threaded through every chrome element; categorical data colors identical
+    in both renders
+  - Legend placed in the empty band between the bars and the curve, clear of all data
+  - Per-trace hovertemplates give component-level readouts in the interactive HTML
   weaknesses:
-  - 'Minor visual crowding in the upper-left area: the elbow annotation box (arrow
-    offset ax=-65, ay=-55 placing it near PC2-3 at ~90-95% y-level) and the 95% threshold
-    label (annotation_position="top left" above the 95% dashed line) are in close
-    proximity — at very small display sizes this could create confusion; consider
-    shifting elbow annotation offset to ax=-80, ay=-80 or repositioning to annotation_position="top
-    right" for the 95% label to match the elbow annotation side'
-  - 'Individual variance bars in the dark render are very subtle (rgba(68,103,163,0.30)
-    on #1A1A17 background) — at smaller component heights (PC5-13) bars are barely
-    distinguishable from the background; consider increasing dark-mode fill opacity
-    to 0.45 when THEME=="dark"'
-  - 'Design excellence headroom: spines are absent by plotly defaults rather than
-    explicitly suppressed; adding explicit showline=False for top/right axes and a
-    dedicated x-axis-only grid=False would make the refinement intention more robust
-    across different plotly template changes'
+  - 'VQ-02 (both): the elbow callout box sits on top of the 90% and 95% dashed reference
+    lines between about PC2 and PC4, hiding a segment of both → place the callout
+    where it covers no line or mark, e.g. below-right of the curve in the empty area
+    above the bars. Likely cause: add_annotation ax=-65, ay=-55.'
+  - 'VQ-01 (light): the ''90%'' threshold label is drawn in amber #DDCC77 on the #FAF8F1
+    page at about 1.5:1 contrast and reads faint → draw the label text in INK_SOFT
+    (keep the amber line) or a darker text color. Likely cause: annotation_font color=AMBER
+    on the 90% add_hline.'
+  - 'Suggestion: a 99% reference line, which the Notes allow, would show the cost
+    of retaining nearly all variance.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "line-pca-variance-cumulative · python · plotly · anyplot.ai" centered in dark #1A1A17 ink, clearly readable. X-axis label "Principal Component" and y-axis label "Explained Variance (%)" both in dark ink, readable. Tick labels in soft #4A4A44 — clearly readable against the off-white surface. Legend box uses elevated #FFFDF6 fill with soft-ink border, all legend text readable. "95%" threshold annotation in matte-red at top-left, "90%" annotation in amber at top-right — both readable.
-      Data: Cumulative variance line in brand green #009E73 with circular markers (size 12) — vivid and prominent. Individual variance bars in semi-transparent blue rgba(68,103,163,0.30) — subtle secondary context, visible. Amber (#DDCC77) dashed 90% threshold line, matte-red (#AE3030) dashed 95% threshold line. Purple diamond marker and annotation box ("Elbow — PC4, 74% variance") at the elbow point. Vertical dotted drop lines in amber and red from threshold crossings.
-      Legibility verdict: PASS — all text readable; first data series is #009E73 ✓
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title 'line-pca-variance-cumulative · python · plotly · anyplot.ai' centered in dark ink; axis titles 'Principal Component' / 'Explained Variance (%)' in dark ink; ticks 1-13 and 0-100 in soft ink, all readable. Subtle y-only grid. Legend box (elevated fill, soft border) at right-middle, in the empty band between bars and curve. '95%' label in red at top-left, '90%' label in amber at top-right — the amber label reads faint on the light page.
+      Data: brand green #009E73 cumulative spline line with 13 circular markers rising from ~36% to 100%; translucent Imprint-blue bars for individual variance behind it; dashed amber 90% and red 95% lines with dotted drop lines at PC8 and PC10; hollow purple diamond on PC4 with an arrowed callout 'Elbow — PC4 / 74% variance' whose box covers a segment of both threshold lines.
+      Legibility verdict: PASS (amber 90% label faint but legible)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8 ink — clearly readable against dark surface. X- and y-axis labels in light ink, readable. Tick labels in soft #B8B7B0 — readable against near-black background; no dark-on-dark failure detected. Legend box uses elevated #242420 fill, all legend text in soft light ink, readable. Threshold annotations "95%" and "90%" retain their data colors (red, amber) and are readable.
-      Data: Cumulative variance line remains identical brand green #009E73 — correct, unchanged from light render. Individual variance bars now appear as dark navy semi-transparent shapes against the black background — visible at larger bar heights (PC1-PC4) but very subtle for smaller components (PC5-13). Diamond elbow marker and annotation box retain purple outline, visible. Threshold lines same amber/red as light render.
-      Legibility verdict: PASS — all chrome text readable; no dark-on-dark failure; data colors identical to light render ✓; minor note that bar visibility is reduced in dark mode due to low fill opacity
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles in light ink; ticks and legend text in soft light ink, all readable; no dark-on-dark text. Legend box in elevated #242420 with light border.
+      Data: green line, purple elbow, amber and red thresholds identical to the light render; bars drawn at higher alpha (0.45) and visible down to PC13; '90%' amber label reads well here.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 16px, axis labels 12px, ticks
-          10px, legend 10px. Readable in both themes. Proportions follow style guide.
-          Title fills ~75% of width as expected for the long mandated format.'
+        comment: All font sizes set explicitly (title 16, axis titles 12, ticks/legend
+          10, annotations 12-14) and readable in both themes; the amber '90%' threshold
+          label reads faint on the light page (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements. Elbow annotation box and 95% threshold label
-          are in proximity in upper-left but clearly separated in both renders. Legend
-          placed in lower-left where bar heights are low.
+        comment: Legend now sits in empty space clear of all data; the elbow callout
+          box covers a segment of the 90% and 95% dashed lines between PC2 and PC4
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green cumulative line with size-12 markers highly visible. Bars intentionally
-          semi-transparent as secondary context. Threshold lines with distinct dash
-          patterns visible in both themes.
+        comment: 13 sparse points with size-12 markers and a 4 px line; bars subordinate
+          but visible in both themes (dark alpha 0.45); legend glyphs match their
+          marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette used throughout. Threshold lines distinguished
-          by both color and position, not color alone.
+        comment: CVD-safe Imprint colors; thresholds separated by position, label
+          and legend, not by color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Margins t=80, b=60, l=80, r=40 appropriate for
-          plotly at scale=4. Plot fills canvas well with balanced whitespace.
+        comment: Canvas gate passed (3200x1800); plot area fills the canvas with t=60
+          margin; title ~50% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Principal Component'' (x), ''Explained Variance (%)'' with units
-          (y). Both descriptive with units.'
+        comment: '''Principal Component'' and ''Explained Variance (%)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary series (cumulative variance line) correctly uses brand green
-          #009E73. Bars use position-3 #4467A3. Threshold anchors: amber #DDCC77 (90%,
-          warning) and matte-red #AE3030 (95%, critical) — correct semantic usage.
-          Backgrounds #FAF8F1/#1A1A17 correct. All chrome theme-adaptive.'
+        comment: 'Primary series #009E73, bars Imprint #4467A3, elbow #C475FD, amber
+          and red semantic threshold anchors; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -124,26 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: spline-smoothed cumulative line, diamond
-          elbow marker with purple outline, semi-transparent bar overlay, vertical
-          drop lines from threshold crossings, annotated elbow with arrow. Strong
-          design thought.'
+        comment: Hollow diamond elbow marker on an elevated-surface callout with bold
+          lead word, page-colored marker outlines separating markers from the line
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid at 15% opacity, semi-transparent bars create layering,
-          border-framed legend, clean L-frame axes. Good refinement above library
-          defaults.
+        comment: Tuned bargap=0.4 with layered translucent bars behind the curve,
+          x-grid off, legend placed in the empty band between bars and curve
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy guides viewer: prominent green line tells primary
-          story, bars provide context, elbow annotation marks the key decision point,
-          drop lines connect thresholds to component counts. Good storytelling.'
+        comment: Dotted drop lines from each threshold crossing down to PC8 and PC10
+          read the component-selection answer straight off the x axis, beyond what
+          the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -153,30 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot showing cumulative PCA explained variance.
+        comment: Cumulative explained-variance line with markers and optional bar
+          overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: cumulative sum on y-axis (%), threshold lines
-          at 90% and 95%, elbow detection and annotation, discrete markers, optional
-          bar overlay.'
+        comment: C1 non-decreasing cumulative curve, C2 marker at all 13 counts with
+          integer ticks from 1, C3 dashed 90/95 lines labelled, C4 elbow on PC4's
+          own marker, C5 bars behind curve and named in legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis starts at 1 (first component), y-axis shows 0-100% range.
-          Correct data mapping.
+        comment: x starts at 1 with dtick 1; y from 0 (bar baseline) to 105 from the
+          data; spline shows no visible overshoot on this concave curve
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-pca-variance-cumulative · python · plotly · anyplot.ai''
-          — correct format. Legend labels: Individual variance, Cumulative variance,
-          90% threshold, 95% threshold — all clear.'
+        comment: Mandated title format; legend names bars, curve and both thresholds
     data_quality:
       score: 15
       max: 15
@@ -186,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: cumulative variance, individual component contributions,
-          threshold crossings, elbow point, diminishing returns pattern.'
+        comment: Steep rise, diminishing returns, both thresholds crossed, detectable
+          elbow
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real sklearn wine dataset (13 features, authentic PCA application).
-          Neutral scientific domain.
+        comment: Real PCA on the standardized sklearn wine dataset; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13 components with realistic variance distribution showing clear
-          elbow around PC4, reaching ~100% at PC13. Authentic PCA behavior.
+        comment: 'Checked off the axis: PC1 ~36%, PC7 ~89% (below 90), PC8 ~92% (first
+          >=90), PC10 ~96% (first >=95), PC13 100%; crossings computed with argmax,
+          not placed'
     code_quality:
       score: 10
       max: 10
@@ -211,37 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: Flat script in the six zones; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: PCA on fixed sklearn wine dataset with no random
-          elements.'
+        comment: Deterministic PCA on a fixed dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: sys (path), os (theme), numpy, plotly.graph_objects,
-          sklearn.datasets/decomposition/preprocessing.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate complexity for a multi-feature PCA visualization.
+        comment: np.cumsum and sklearn PCA used; nothing hand-rolled that a call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current plotly
-          API.
+        comment: plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -249,23 +231,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses plotly high-level APIs correctly: add_hline with annotation,
-          add_shape, add_annotation with arrow. Correct hovertemplate syntax. write_image
-          and write_html with proper parameters.'
+        comment: add_hline with annotation_position, add_shape, add_annotation with
+          arrow, graph objects throughout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: 'Uses plotly-specific techniques: dummy traces for threshold legend
-          entries, line.shape=''spline'' for smooth curves, interactive HTML export
-          alongside PNG, hovertemplate with custom formatting.'
+        comment: Custom hovertemplates per trace and line.shape='spline' in the interactive
+          HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T18:42:11Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
+  - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
@@ -277,3 +262,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
