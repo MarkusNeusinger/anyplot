@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-29
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import os
@@ -104,8 +104,8 @@ fig.add_annotation(
     arrowsize=1.2,
     arrowwidth=2,
     arrowcolor=INK_SOFT,
-    ax=110,
-    ay=60,
+    ax=160,
+    ay=-35,
     font={"size": 13, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
