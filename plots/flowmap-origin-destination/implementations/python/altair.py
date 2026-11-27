@@ -1,7 +1,7 @@
 """ anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -165,15 +165,17 @@ points = (
     .project(**proj)
 )
 
+# Each label is drawn twice: a page-colored halo underneath separates the letters from the arcs
 label_layers = [
     alt.Chart(group)
-    .mark_text(fontSize=12, fontWeight="bold", color=INK, dx=dx, dy=dy)
+    .mark_text(fontSize=12, fontWeight="bold", color=INK, dx=dx, dy=dy, **halo)
     .encode(
         longitude=alt.Longitude("lon", type="quantitative"),
         latitude=alt.Latitude("lat", type="quantitative"),
         text=alt.Text("city", type="nominal"),
     )
     .project(**proj)
+    for halo in ({"stroke": PAGE_BG, "strokeWidth": 4, "strokeJoin": "round"}, {})
     for (dx, dy), group in cities_df.groupby(["dx", "dy"])
 ]
 
