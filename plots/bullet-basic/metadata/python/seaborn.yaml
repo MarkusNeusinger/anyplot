@@ -2,132 +2,124 @@ library: seaborn
 language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:20:31Z'
-updated: '2026-05-29T15:42:23Z'
+updated: '2026-11-27T21:14:36Z'
 generated_by: claude-sonnet
-workflow_run: 26645251566
+workflow_run: 46068179806
 issue: 999
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - 'Correct semantic color exception: green/red for on-track/below-target with justified
-    Imprint palette usage'
-  - Efficiency label highlighted bold red — immediately draws attention to the worst
-    performer without extra annotation
-  - Grayscale bands per spec recommendation keep focus on the actual value bars
-  - 'Complete spec coverage: all four data dimensions (actual, target, bands, labels)
-    implemented correctly'
-  - Both themes properly adapt chrome; data colors unchanged across themes
+  - One Imprint-green measure bar per bullet, drawn narrower than the bands with sns.barplot
+    on the tidy df, exactly the basic variant's three layers
+  - Grayscale bands with their own stops per theme stay distinct from each other and
+    from the page in both renders
+  - Target markers in INK flip with the theme and contrast with both bar and bands
+  - Legend placed in one row below the axis keeps the plot area free of chrome
+  - Thresholds read from per-row limit columns, so every bullet's bands end at its
+    own thresholds on a common 0-100 scale
   weaknesses:
-  - 'Dark mode band contrast is low: BAND_POOR=#353532 and BAND_SATISFACTORY=#3D3D3B
-    differ by only ~8 lightness points — the poor/satisfactory boundary is barely
-    perceptible without the legend. Increase the contrast gap in dark mode (e.g.,
-    lighten BAND_SATISFACTORY to ~#4A4A48 and BAND_GOOD to ~#606060).'
-  - Legend box is fully framed with a visible border in both themes — consider reducing
-    to a hairline (linewidth=0.5) or removing the frame entirely (frameon=False) for
-    a cleaner minimal-chrome look consistent with the despined axes.
-  - Direct labeling of qualitative bands (Poor/Satisfactory/Good text inside the bands
-    on the first bullet row) would reduce reliance on the legend and improve at-a-glance
-    readability.
+  - 'Suggestion: the seaborn default white outline on the measure bars reads as a
+    bright rim on the dark render; edgecolor=''none'' would match the flat bands.'
+  - 'Suggestion: the x-axis spine runs past 100 to 105; a limit at 100 plus label
+    room would end the scale with the bands.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "bullet-basic · python · seaborn · anyplot.ai" in dark ink #1A1A17 at 12pt — fully readable. X-axis label "Performance (%)" at 10pt readable. Y-axis tick labels (Revenue, Customer Satisfaction, Efficiency, Quality Score) at 8pt readable; "Efficiency" bold red highlights worst performer. X-axis tick labels (0, 20, 40, 60, 80, 100) at 8pt readable. Legend in lower-right with all six items clearly labeled.
-      Data: Four horizontal bullet charts. Green (#009E73) bars for on-track (Quality Score 91%, Customer Satisfaction 85%); red (#AE3030) bars for below-target (Efficiency 35%, Revenue 78%). Three grayscale background bands per row (poor=darkest, satisfactory=mid, good=lightest). Target markers as thin black vertical lines. Bold percentage labels in matching status colors positioned just right of each bar.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'bullet-basic · python · seaborn · anyplot.ai' in dark ink, x-axis 'Performance (%)' with ticks 0-100 in soft ink, y labels Revenue, Customer Satisfaction, Efficiency, Quality Score at left; single-row framed legend below the axis (Poor range, Satisfactory range, Good range, Actual, Target). All readable.
+      Data: four stacked horizontal bullets; three grayscale bands per row (dark #888780 poor → light #CECDC7 good) ending at each metric's thresholds; narrow #009E73 measure bars (78, 85, 35, 91) with a thin white outline; black target markers at 90, 80, 75, 85 spanning the band height; bold ink value labels right of each bar.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light ink #F0EFE8 at 12pt — fully readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT for dark). No dark-on-dark issues detected. Legend box uses elevated dark bg #242420 with correct contrast. All text elements are clearly visible.
-      Data: Identical data colors to light render — green #009E73 and red #AE3030 unchanged. Target markers correctly flip to white (INK adapts). Background bands use dark gray variants (#353532, #3D3D3B, #525250) — distinguishable but with smaller perceptual gap than in light mode, particularly between BAND_POOR and BAND_SATISFACTORY.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis label, ticks and metric labels in light ink; legend on #242420 with light text; no dark-on-dark text.
+      Data: measure bars the same #009E73 as in light; bands use dark stops #3A3A37 / #53534F / #6E6E69, each distinct from its neighbors and from the page; targets in light ink; value labels light. Bars keep a white outline, which reads as a bright rim here.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All fonts correctly sized per guidelines (title 12pt, axis labels
-          10pt, tick/value labels 8pt). Both themes fully readable; minor deduction
-          for 8pt value labels at thumbnail scale.
+        comment: Title 12 pt, axis label 10 pt, tick, value and legend labels 8 pt,
+          all explicitly set; every text reads cleanly in both themes, value labels
+          in INK on the bands
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text collisions; the legend sits below the axis in one row, clear
+          of all bullets
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Bars, target markers, and bands all visible. Minor deduction: dark
-          mode band shades (#353532/#3D3D3B/#525250) have very low contrast at the
-          poor/satisfactory boundary.'
+        comment: 'Measure bars, target markers and all three band shades distinct
+          in both themes; dark bands #3A3A37/#53534F/#6E6E69 separate from each other
+          and from the page; legend swatches visible'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red semantic exception for pass/fail; redundant encoding via
-          bold percentage labels mitigates CVD risk.
+        comment: Single measure color plus grayscale bands and an ink target; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Proportions well-balanced, no overflow
-          or edge clipping.
+        comment: Canvas gate passed (3200x1800); the bullets fill the width, legend
+          and labels fit with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Performance (%) includes units; mandated title format correct.
+        comment: x-axis 'Performance (%)' with unit; mandated title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Semantic exception for red justified. Correct
-          theme backgrounds. Data colors theme-invariant.'
+        comment: 'Measure bar is Imprint position 1 #009E73; grayscale bands; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Intentional semantic color exception, grayscale bands per spec, bold
-          red Efficiency label for storytelling, status-colored value labels. Above
-          generic defaults.
+        comment: 'Style-guide baseline: theme tokens, Imprint green, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right/left spines removed, subtle x-grid, generous inter-row
-          whitespace. Legend box frame slightly adds visual noise on an otherwise
-          clean despined chart.
+        comment: 'Beyond the spine/grid rules: the legend is placed as a single row
+          below the axis, so the plot area holds only data, and the bands span the
+          full row height with even gaps'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bold red Efficiency label creates focal point. Status colors immediately
-          communicate KPI health. Could be stronger with direct band zone labeling
-          inside chart.
+        passed: false
+        comment: Data displayed without a chosen focal point beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +129,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bullet chart with qualitative bands, actual bar,
-          and target marker.
+        comment: Correct horizontal bullet chart with the basic variant's three layers
+          only; one measure color throughout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: actual bar, target marker, three qualitative bands,
-          metric labels, value labels, multiple stacked metrics on common scale.'
+        comment: Measure bar narrower than bands (C1), thin perpendicular target in
+          INK contrasting in both themes (C2), steady grayscale bands ending at thresholds
+          (C3), stacked bullets with labels on a common 0-100 scale (C4), value labels
+          and no extra layers (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis Performance (%), Y-axis KPI names, bands map to threshold
-          ranges.
+        comment: Bars from zero to the actual value; bands end at thresholds; targets
+          at their values; ticks at 20 % steps
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title. Legend covers band levels, status colors,
-          and target marker.
+        comment: Mandated title; legend entries 'Poor range', 'Satisfactory range',
+          'Good range', 'Actual', 'Target' match the marks
     data_quality:
       score: 15
       max: 15
@@ -169,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All four data dimensions demonstrated with diverse scenarios: overperforming,
-          on-target, seriously underperforming, below-target.'
+        comment: Four bullets showing below-target, above-target and poor-range measures
+          against differing thresholds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department KPI dashboard with neutral, real-world plausible metrics
-          and values.
+        comment: Neutral business KPI dashboard (Revenue, Customer Satisfaction, Efficiency,
+          Quality Score)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% scale with sensible threshold bands per metric.
+        comment: Percent values 0-100 with sensible thresholds and targets; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -193,65 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Flat top-to-bottom script: imports, tokens, constants, data, plot,
+          save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, matplotlib.patches, matplotlib.pyplot, seaborn)
-          are used.
+        comment: os, matplotlib.patches, matplotlib.pyplot, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean logic; n_patches_before zorder trick is a known seaborn/matplotlib
-          mixed-rendering pattern.
+        comment: Compact logic; bands loop over the threshold columns, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with no bbox_inches='tight'. seaborn 0.13.2
-          API correct.
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'; seaborn 0.13
+          API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: sns.set_theme() with comprehensive rc dict, sns.barplot() with native_scale=True
-          and hue for semantic coloring, sns.despine() for clean spine control.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Range bands and target lines implemented in pure matplotlib (necessary
-          given no native seaborn bullet API). Seaborn contribution concentrated in
-          actual-value bars and theme setup.
+        comment: sns.barplot on the tidy df with column constants, sns.set_theme rc
+          and sns.despine as the library prompt asks; nothing beyond
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Bands and targets are matplotlib; no distinctive seaborn feature
+          beyond the prompt's baseline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-27T21:11:06Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - annotations
   - custom-legend
-  - patches
+  - layer-composition
+  - annotations
   patterns:
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - edge-highlighting
   - grid-styling

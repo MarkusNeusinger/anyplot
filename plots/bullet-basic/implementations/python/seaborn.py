@@ -1,13 +1,14 @@
 """ anyplot.ai
 bullet-basic: Basic Bullet Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-29
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 
@@ -18,34 +19,13 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — semantic exception: green = on-track (pass), red = below-target (fail)
-ON_TRACK_COLOR = "#009E73"  # Imprint position 1 — green maps to success/pass
-BELOW_TARGET_COLOR = "#AE3030"  # Imprint position 5 — matte red for fail/loss
+# Imprint palette: position 1 is the single measure-bar color
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Grayscale range bands (theme-adaptive) — spec recommends grayscale to focus attention on bars
-if THEME == "light":
-    BAND_GOOD = "#CECDC7"
-    BAND_SATISFACTORY = "#AEADA6"
-    BAND_POOR = "#888780"
-else:
-    BAND_GOOD = "#525250"
-    BAND_SATISFACTORY = "#3D3D3B"
-    BAND_POOR = "#353532"  # lightened for better dark-mode band differentiation
+# Qualitative bands: grayscale, poor (darkest on light) to good (lightest on light), flipped on dark
+# so every band stays distinct from its neighbors and from the page
+BAND_COLORS = ["#888780", "#AEADA6", "#CECDC7"] if THEME == "light" else ["#3A3A37", "#53534F", "#6E6E69"]
 
-# Data — department KPI dashboard with varied performance scenarios
-metrics = ["Revenue", "Customer\nSatisfaction", "Efficiency", "Quality\nScore"]
-actuals = [78, 85, 35, 91]
-targets = [90, 80, 75, 85]
-ranges_list = [
-    [50, 75, 100],  # Revenue
-    [60, 80, 100],  # Customer Satisfaction
-    [40, 60, 100],  # Efficiency
-    [70, 85, 100],  # Quality Score
-]
-status = ["On Track" if a >= t else "Below Target" for a, t in zip(actuals, targets, strict=True)]
-status_palette = {"On Track": ON_TRACK_COLOR, "Below Target": BELOW_TARGET_COLOR}
-
-# Configure seaborn theme with theme-adaptive chrome
 sns.set_theme(
     style="ticks",
     rc={
@@ -63,89 +43,107 @@ sns.set_theme(
     },
 )
 
+# Constants
+BAND_LABELS = ["Poor", "Satisfactory", "Good"]  # qualitative ranges, lowest threshold first
+
+# Columns: set these to your table's column names
+METRIC = "Metric"  # role: label
+ACTUAL = "Performance (%)"  # role: actual
+TARGET = "Target (%)"  # role: target
+POOR_LIMIT = "Poor limit (%)"  # role: ranges
+SATISFACTORY_LIMIT = "Satisfactory limit (%)"  # role: extra
+GOOD_LIMIT = "Good limit (%)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("kpis.csv")
+df = pd.DataFrame(
+    {
+        METRIC: ["Revenue", "Customer\nSatisfaction", "Efficiency", "Quality\nScore"],
+        ACTUAL: [78, 85, 35, 91],
+        TARGET: [90, 80, 75, 85],
+        POOR_LIMIT: [50, 60, 40, 70],
+        SATISFACTORY_LIMIT: [75, 80, 60, 85],
+        GOOD_LIMIT: [100, 100, 100, 100],
+    }
+)
+
+# Plot: reads only df and the constants above
+n_metrics = len(df)
+band_height = 0.65
+limit_columns = [POOR_LIMIT, SATISFACTORY_LIMIT, GOOD_LIMIT]
+scale_max = float(df[limit_columns].astype(float).max().max())
+
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-n_metrics = len(metrics)
-range_height = 0.65
-band_colors = [BAND_POOR, BAND_SATISFACTORY, BAND_GOOD]
-
-# Qualitative range bands via ax.barh for reliable left-offset positioning
-for i, ranges in enumerate(ranges_list):
-    prev = 0
-    for end, color in zip(ranges, band_colors, strict=True):
-        ax.barh(i, end - prev, left=prev, height=range_height, color=color, edgecolor="none", zorder=1)
-        prev = end
-
-# Actual value bars — seaborn-native barplot, narrower than background bands
-n_patches_before = len(ax.patches)
-sns.barplot(
-    y=list(range(n_metrics)),
-    x=actuals,
-    hue=status,
-    palette=status_palette,
-    width=0.28,
-    orient="h",
-    ax=ax,
-    native_scale=True,
-    dodge=False,
-    errorbar=None,
-    saturation=1.0,
-    legend=False,
-)
-for patch in ax.patches[n_patches_before:]:
+# Measure bars: seaborn, narrower than the bands, one color throughout
+sns.barplot(data=df, x=ACTUAL, y=METRIC, orient="h", color=IMPRINT_PALETTE[0], width=0.28, saturation=1.0, ax=ax)
+for patch in ax.patches:
     patch.set_zorder(3)
-    patch.set_edgecolor(PAGE_BG)
-    patch.set_linewidth(0.8)
 
-# Target markers — thin vertical line spanning the full range-band height
-for i, target in enumerate(targets):
+# Qualitative bands behind the bars, each ending at its threshold
+for i, limits in enumerate(df[limit_columns].to_numpy(dtype=float)):
+    left = 0
+    for limit, color in zip(limits, BAND_COLORS, strict=False):
+        if pd.isna(limit):
+            continue
+        ax.barh(i, limit - left, left=left, height=band_height, color=color, edgecolor="none", zorder=1)
+        left = limit
+
+# Target markers: thin line across the band height
+for i, target in enumerate(df[TARGET]):
     ax.plot(
         [target, target],
-        [i - range_height / 2 + 0.01, i + range_height / 2 - 0.01],
+        [i - band_height / 2, i + band_height / 2],
         color=INK,
         linewidth=2.5,
         zorder=4,
         solid_capstyle="butt",
     )
 
-# Value labels — positioned just past the actual bar, colored by status
-for i, (actual, s) in enumerate(zip(actuals, status, strict=True)):
+# Value labels just past each bar
+for i, actual in enumerate(df[ACTUAL]):
     ax.text(
-        actual + 1.5, i, f"{actual}%", va="center", ha="left", fontsize=8, fontweight="bold", color=status_palette[s]
+        actual + scale_max * 0.015,
+        i,
+        f"{actual:g}%",
+        va="center",
+        ha="left",
+        fontsize=8,
+        fontweight="bold",
+        color=INK,
+        zorder=5,
     )
 
-# Axes — title length 44 chars, ratio=1.0, title_fontsize=12
-title = "bullet-basic · python · seaborn · anyplot.ai"
-ax.set_xlim(0, 115)
-ax.set_ylim(-0.55, n_metrics - 0.45)
-ax.set_xlabel("Performance (%)", fontsize=10, color=INK)
+# Style
+ax.set_xlim(0, scale_max * 1.05)
+ax.set_ylim(n_metrics - 0.45, -0.55)
+ax.set_xlabel(ACTUAL, fontsize=10, color=INK)
 ax.set_ylabel("")
-ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
-ax.set_yticks(range(n_metrics))
-yticklabels = ax.set_yticklabels(metrics, fontsize=8, color=INK_SOFT)
-for i, lbl in enumerate(yticklabels):
-    if i == 2:  # Efficiency — most dramatic underperformance (35% vs 75% target)
-        lbl.set_fontweight("bold")
-        lbl.set_color(BELOW_TARGET_COLOR)
-ax.tick_params(axis="y", length=0)
+ax.set_title("bullet-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.tick_params(axis="y", length=0, labelsize=8)
 ax.tick_params(axis="x", labelsize=8)
-
 sns.despine(left=True, top=True, right=True, ax=ax)
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK, zorder=2)
 ax.yaxis.grid(False)
 
-# Legend
 legend_elements = [
-    mpatches.Patch(facecolor=BAND_POOR, label="Poor", edgecolor="none"),
-    mpatches.Patch(facecolor=BAND_SATISFACTORY, label="Satisfactory", edgecolor="none"),
-    mpatches.Patch(facecolor=BAND_GOOD, label="Good", edgecolor="none"),
-    mpatches.Patch(facecolor=ON_TRACK_COLOR, label="On Track", edgecolor=PAGE_BG, linewidth=0.8),
-    mpatches.Patch(facecolor=BELOW_TARGET_COLOR, label="Below Target", edgecolor=PAGE_BG, linewidth=0.8),
+    mpatches.Patch(facecolor=color, label=f"{label} range", edgecolor="none")
+    for color, label in zip(BAND_COLORS, BAND_LABELS, strict=False)
+]
+legend_elements += [
+    mpatches.Patch(facecolor=IMPRINT_PALETTE[0], label="Actual", edgecolor="none"),
     plt.Line2D([0], [0], color=INK, linewidth=2.5, label="Target"),
 ]
 ax.legend(
-    handles=legend_elements, loc="lower right", fontsize=8, framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+    handles=legend_elements,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.17),
+    fontsize=8,
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    ncols=len(legend_elements),
 )
 
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
