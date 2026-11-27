@@ -1,26 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-30
 """
 
 import os
-import sys
 
-
-# Remove script dir from sys.path to avoid shadowing the plotnine package
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-for _p in [_script_dir, "", "."]:
-    while _p in sys.path:
-        sys.path.remove(_p)
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     after_stat,
-    annotate,
-    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
@@ -28,7 +18,6 @@ from plotnine import (  # noqa: E402
     geom_area,
     geom_line,
     geom_rug,
-    geom_vline,
     ggplot,
     labs,
     scale_x_continuous,
@@ -41,47 +30,38 @@ from plotnine import (  # noqa: E402
 # Theme tokens (Imprint palette — see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Imprint position 1 — always first series
 
-# Data — bimodal test score distribution (150 main + 50 high achievers)
+# Columns: set this to your table's column name
+SCORE = "Test Score (points)"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-test_scores = np.concatenate([np.random.normal(72, 10, 150), np.random.normal(88, 5, 50)])
-test_scores = np.clip(test_scores, 0, 100)
+scores = np.clip(np.concatenate([np.random.normal(72, 10, 150), np.random.normal(88, 5, 50)]), 0, 100)
+df = pd.DataFrame({SCORE: scores})
 
-df = pd.DataFrame({"score": test_scores})
-
-# Title with length-aware font sizing
+# Plot
 title = "density-basic · python · plotnine · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
-title_fs = max(8, round(12 * ratio))
+span = df[SCORE].max() - df[SCORE].min()
 
-# Plot — layered density with bimodal emphasis
 plot = (
-    ggplot(df, aes(x="score"))
+    ggplot(df, aes(x=SCORE))
     + geom_area(aes(y=after_stat("density")), stat="density", fill=BRAND, alpha=0.3, color="none")
     + geom_line(aes(y=after_stat("density")), stat="density", color=BRAND, size=1.8)
-    + geom_vline(xintercept=72, linetype="dashed", color=INK_SOFT, size=0.9, alpha=0.75)
-    + geom_vline(xintercept=88, linetype="dashed", color=INK_SOFT, size=0.9, alpha=0.75)
     + geom_rug(color=INK_MUTED, alpha=0.5, size=0.6)
-    + annotate("text", x=72, y=0.034, label="Main Group (μ ≈ 72)", size=3.5, color=INK)
-    + annotate("text", x=89, y=0.029, label="High Achievers (μ ≈ 88)", size=3.5, color=INK)
-    + labs(x="Test Score (points)", y="Probability Density", title=title)
-    + scale_x_continuous(breaks=range(45, 101, 10))
-    + scale_y_continuous(expand=(0, 0, 0.2, 0))
-    + coord_cartesian(xlim=(45, 102))
+    + labs(y="Probability Density", title=title)
+    + scale_y_continuous(expand=(0, 0, 0.1, 0))
+    + scale_x_continuous(limits=(df[SCORE].min() - 0.25 * span, df[SCORE].max() + 0.25 * span))
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
         text=element_text(size=7, color=INK_SOFT),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        plot_title=element_text(size=title_fs, color=INK),
-        legend_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_x=element_blank(),
