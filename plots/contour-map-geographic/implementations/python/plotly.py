@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-26
@@ -35,9 +35,9 @@ COAST_COLOR = "#888880" if THEME == "light" else "#666660"
 
 # Imprint sequential ramp for filled fields (colored cells fill the plot)
 SEQ_FIELDS = (
-    [[0.0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1.0, "#002850"]]
+    [[0.0, "#66E2B2"], [0.369, "#009E73"], [0.803, "#024582"], [1.0, "#351E45"]]
     if THEME == "light"
-    else [[0.0, "#00573D"], [0.467, "#009E73"], [1.0, "#CDD9FF"]]
+    else [[0.0, "#404C02"], [0.487, "#009E73"], [1.0, "#CDD9FF"]]
 )
 
 # Data - Simulated North Atlantic SST
@@ -52,6 +52,7 @@ variation = 2 * np.sin(lat_grid / 5) * np.cos(lon_grid / 8)
 temperature = base_temp + gulf_stream + variation
 
 T_MIN, T_MAX = 4, 24
+FILL_ALPHA = 0.6  # the spec asks for a basemap that stays legible beneath the bands
 levels = np.arange(T_MIN, T_MAX + 1, 2)
 
 
@@ -81,7 +82,7 @@ for i, segs in enumerate(cs_fill.allsegs):
                 lat=seg[:, 1].tolist(),
                 mode="lines",
                 fill="toself",
-                fillcolor=fill_color,
+                fillcolor=fill_color.replace("rgb(", "rgba(").replace(")", f", {FILL_ALPHA})"),
                 line=dict(width=0),
                 showlegend=False,
                 hoverinfo="skip",
@@ -99,7 +100,7 @@ for i, segs in enumerate(cs_line.allsegs):
                 lon=seg[:, 0].tolist(),
                 lat=seg[:, 1].tolist(),
                 mode="lines",
-                line=dict(width=1.5, color=INK_SOFT),
+                line=dict(width=1.5, color=INK),
                 showlegend=False,
                 hovertemplate=f"{level_val:.0f}°C<extra></extra>",
             )
@@ -120,12 +121,28 @@ for i, segs in enumerate(cs_line.allsegs):
                 lon=[float(seg[mid, 0])],
                 lat=[float(seg[mid, 1])],
                 mode="text",
+                textposition="top center",
                 text=[f"{level_val:.0f}°C"],
                 textfont=dict(size=12, color=INK),
                 showlegend=False,
                 hoverinfo="skip",
             )
         )
+
+# Place names at their own latitude and longitude
+fig.add_trace(
+    go.Scattergeo(
+        lon=[-56.0, -8.0, -28.0],
+        lat=[48.5, 53.2, 38.5],
+        mode="markers+text",
+        text=["Newfoundland", "Ireland", "Azores"],
+        textposition=["middle right", "top center", "top center"],
+        textfont=dict(size=12, color=INK),
+        marker=dict(size=9, color=ELEVATED_BG, line=dict(width=2, color=INK)),
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
 
 # Dummy trace for standalone colorbar
 fig.add_trace(
@@ -157,8 +174,8 @@ fig.add_trace(
 # Native Plotly geographic basemap with Natural Earth coastlines and borders
 fig.update_geos(
     projection_type="mercator",
-    lataxis_range=[27, 63],
-    lonaxis_range=[-64, 4],
+    lataxis_range=[29, 61],
+    lonaxis_range=[-68, 8],
     showcoastlines=True,
     coastlinecolor=COAST_COLOR,
     coastlinewidth=1.5,
@@ -187,42 +204,7 @@ fig.update_layout(
         xanchor="center",
     ),
     font=dict(color=INK),
-    margin=dict(l=70, r=120, t=60, b=40),
-    annotations=[
-        dict(
-            x=0.09,
-            y=0.72,
-            text="Newfoundland",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-        dict(
-            x=0.80,
-            y=0.62,
-            text="Ireland",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-        dict(
-            x=0.60,
-            y=0.20,
-            text="Azores",
-            showarrow=False,
-            font=dict(size=12, color=INK),
-            bgcolor=ELEVATED_BG,
-            borderpad=3,
-            xref="paper",
-            yref="paper",
-        ),
-    ],
+    margin=dict(l=20, r=110, t=50, b=20),
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
