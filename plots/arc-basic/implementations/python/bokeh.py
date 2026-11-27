@@ -1,7 +1,7 @@
 """ anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 88/100 | Updated: 2026-11-27
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -29,9 +29,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for marks (arcs are lines on the page), low -> high
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Constants
@@ -142,9 +142,7 @@ p.add_layout(
 legend_items = []
 for level, rows in arcs.groupby(WEIGHT):
     share = (level - w_min) / (w_max - w_min) if w_max > w_min else 0.0
-    # on dark, start the ramp at its brand-green stop so the lightest level stays visible on the page
-    t = share if THEME == "light" else stop_pos[1] + (1 - stop_pos[1]) * share
-    color = "#" + "".join(f"{round(np.interp(t, stop_pos, channel)):02X}" for channel in stop_rgb)
+    color = "#" + "".join(f"{round(np.interp(share, stop_pos, channel)):02X}" for channel in stop_rgb)
     renderer = p.bezier(
         x0="x0",
         y0="y0",
