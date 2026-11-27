@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: violin-basic
 created: '2026-05-29T11:29:21Z'
-updated: '2026-11-27T20:23:01Z'
+updated: '2026-11-27T20:28:57Z'
 generated_by: claude-sonnet
-workflow_run: 46062574236
+workflow_run: 46063365675
 issue: 722
 language_version: 4.6.1
 library_version: 4.0.3
@@ -12,39 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - geom_violin(quantiles = c(0.25, 0.5, 0.75), quantile.colour = INK) draws all three
-    quartile lines natively with the current ggplot2 4 API, in ink that flips per
-    theme so they read on every fill in both renders
-  - trim = TRUE ends every violin at its data range, and the automatic y-axis (40–100)
+    quartile lines natively with the ggplot2 4 API, in ink that flips per theme so
+    they read on every fill in both renders
+  - trim = TRUE ends every violin at its data range, and the automatic y-axis (40-100)
     is fitted to the data without forcing zero, so the four violins compare directly
     on one shared axis
-  - Four contrasting distribution shapes — symmetric (A), bimodal (B), compact high
-    (C), right-skewed (D) — exercise everything a violin plot shows
+  - Four contrasting distribution shapes - symmetric (Algebra I), bimodal (Biology),
+    compact high (Chemistry), right-skewed (World History) - exercise everything a
+    violin plot shows, under real course names
   - Imprint palette in canonical order at full opacity, identical in both renders;
     only chrome flips via the INK/INK_SOFT/PAGE_BG tokens
   - Column constants with !!CLASS_GROUP := and .data[[...]] keep the file adaptable,
     and labs() titles both axes from them
   weaknesses:
-  - 'DQ-02 (both): the four groups are labelled ''Class A''–''Class D'', abstract
-    letter codes that read as generic → descriptive class names (for example homeroom
-    or course names such as ''Algebra I'', ''Biology'', ''Chemistry'', ''World History'').
-    Likely cause: the label vector in the tibble''s CLASS_GROUP column.'
   - 'Suggestion: a thin violin outline in PAGE_BG instead of INK_SOFT would make the
     shapes read slightly cleaner on the dark render.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "violin-basic · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Class group" and "Test score" in INK; ticks 40/60/80/100 and Class A–D in INK_SOFT; subtle y-only grid; L-shaped axis lines. All readable.
-      Data: four trimmed violins — Class A #009E73 (symmetric, tail to ~42), Class B #C475FD (bimodal with a pinch at the median ~72), Class C #4467A3 (compact around 83), Class D #BD8233 (right-skewed, floor ~58, spire to 100). Three near-black quartile lines (Q1, median, Q3) inside each violin, clearly visible on every fill. Thin INK_SOFT outlines.
+      Chrome: title "violin-basic · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Class group" and "Test score" in INK; ticks 40/60/80/100 and Algebra I, Biology, Chemistry, World History in INK_SOFT; subtle y-only grid; L-shaped axis lines. All readable.
+      Data: four trimmed violins - Algebra I #009E73 (symmetric, tail to ~42), Biology #C475FD (bimodal, pinched at the median ~72), Chemistry #4467A3 (compact around 83), World History #BD8233 (right-skewed, floor ~58, spire to 100). Three near-black quartile lines (Q1, median, Q3) inside each violin, clearly visible on every fill; thin INK_SOFT outlines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
       Chrome: title and axis titles in light INK #F0EFE8, ticks in INK_SOFT #B8B7B0, subtle grid, light axis lines. No dark-on-dark text.
-      Data: the same four Imprint fills, identical to the light render; quartile lines flip to light ink and are clearly visible on the green, lavender, blue and ochre fills; light outlines.
+      Data: the same four Imprint fills, identical to the light render; quartile lines flip to light ink and read clearly on the green, lavender, blue and ochre fills; light outlines.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -57,25 +54,28 @@ review:
         max: 8
         passed: true
         comment: Title 12 pt, axis titles 10 pt, ticks 8 pt as the library prompt
-          sets; all readable in both themes
+          sets; all text readable in both themes, no dark-on-dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or data
+        comment: No text collides with text or data; course tick labels spaced well
+          apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins, outlines and quartile lines clearly visible in both themes
+        comment: Violins, thin outlines and quartile lines clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues distinct; categories also named on the x-axis
+        comment: Imprint hues distinct; categories also named on the x-axis, so color
+          is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -95,10 +95,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-4 at full opacity, identical in both themes;
-          backgrounds correct
+        comment: 'Imprint positions 1-4 (#009E73 first) at full opacity, identical
+          in both themes; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -113,17 +113,14 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond baseline: x-grid dropped for the categorical axis with y-only
-          grid, quartile lines weighted heavier (0.6) than the 0.3 outline so the
-          hierarchy line > outline reads'
+        comment: 'Beyond baseline: quartile lines weighted at 0.6 against a 0.3 outline
+          in a separate ink, so line > outline reads as a deliberate hierarchy'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: 'Data choice: four deliberately contrasted shapes (symmetric, bimodal,
-          compact, skewed) make the comparison the chart is for; no emphasis beyond
-          that'
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -133,30 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic violin, one colour per category, no additions
+        comment: Basic violin, one color per category (C5), no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quartile markers, median line and mirrored density all present (C1,
-          C3)
+        comment: Quartile markers, median line and mirrored density present in every
+          violin (C1, C3)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared y-axis 40-100 fitted to the data, not forced to zero; trimmed
-          tails end at the data range (C4)
+        comment: Shared y-axis 40-100 fitted to the data, not forced to zero; trim
+          = TRUE ends tails at the data range (C4)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend correctly suppressed (x-axis names the
-          categories)
+        comment: Correct title format; legend suppressed since the x-axis names each
+          category
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -164,21 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Symmetric, bimodal, compact and skewed distributions
+        comment: Symmetric, bimodal, compact and right-skewed distributions
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Test scores by class is plausible but labels Class A-D are generic
-          (defect line)
+        passed: true
+        comment: 'Test scores by course (Algebra I, Biology, Chemistry, World History):
+          plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: scores within ~42-100, Class D clamped to [50,100] in code,
-          n=120 per class; no check values in the spec'
+        comment: 'Checked: scores within ~42-100, World History clamped to [50,100]
+          in code, n=120 per class; the spec has no Check values'
     code_quality:
       score: 10
       max: 10
@@ -223,28 +220,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Tidy-eval column constants (!!CLASS_GROUP :=, .data[[...]]), geom_violin's
-          native quantile computation, scale_fill_manual(guide = 'none')
+        comment: 'Beyond the prompt: tidy-eval column constants (!!CLASS_GROUP :=,
+          .data[[...]]) and scale_fill_manual(guide = ''none'')'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
+        passed: true
         comment: ggplot2 4 quantile.colour / quantile.linewidth style the quartile
           lines separately from the violin outline
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
-  rendered_at: '2026-11-27T20:19:19Z'
+  rendered_at: '2026-11-27T20:26:16Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - tidy-eval-columns
   dataprep:
   - kde
-  - quantiles
   styling:
-  - theme-adaptive
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
