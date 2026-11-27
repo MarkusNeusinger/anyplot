@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -20,153 +20,155 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"  # INK at 15 %
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-# Modes: positions 1,2,3,4,6 — skip #AE3030 (pos 5), reserved for critical markers
-MODE_COLORS = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], IMPRINT_PALETTE[5]]
+# Modes take every palette position except #AE3030 (pos 5), reserved for critical markers
 CRIT_COLOR = IMPRINT_PALETTE[4]  # #AE3030 — semantic: danger/resonance risk
+MODE_COLORS = [c for c in IMPRINT_PALETTE if c != CRIT_COLOR]
 
-# Data
+# Constants
+ENGINE_ORDERS = [1, 2, 3]  # excitation orders drawn as 1x, 2x, 3x
+EO_LINESTYLES = ["dashed", "longdash", "dotdash"]
+RPM_PER_HZ = 60  # one revolution per second is 60 RPM
+
+# Columns: set these to your table's column names
+SPEED = "Rotational Speed (RPM)"  # role: speed
+MODES = ["1st Bending", "1st Torsional", "2nd Bending", "2nd Torsional", "Axial"]  # role: frequency_mode_
+ORDER = "Engine Order"  # role: engine_order
+CRITICAL = "Critical speed"  # role: critical_speeds
+MODE = "Natural Frequency"  # role: extra
+FREQUENCY = "Frequency (Hz)"  # role: extra
+LABEL = "Label"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("modes.csv")
 np.random.seed(42)
 speed_rpm = np.linspace(0, 6000, 80)
-max_freq = 120
-
-# Natural frequencies with pronounced speed-dependent variation (gyroscopic effects)
-modes = {
-    "1st Bending": 25 + 0.0035 * speed_rpm + np.random.normal(0, 0.15, 80),
-    "1st Torsional": 48 - 0.0030 * speed_rpm + np.random.normal(0, 0.12, 80),
-    "2nd Bending": 72 + 0.0045 * speed_rpm + np.random.normal(0, 0.18, 80),
-    "2nd Torsional": 88 + 0.0012 * speed_rpm + np.random.normal(0, 0.14, 80),
-    "Axial": 105 - 0.0025 * speed_rpm + np.random.normal(0, 0.10, 80),
-}
-mode_order = list(modes.keys())
-
-modes_df = pd.concat(
-    [pd.DataFrame({"Speed": speed_rpm, "Frequency": freq, "Mode": name}) for name, freq in modes.items()],
-    ignore_index=True,
+# Natural frequencies with speed-dependent variation (gyroscopic effects): base, slope, noise
+mode_curves = [(25, 0.0035, 0.15), (48, -0.0030, 0.12), (72, 0.0045, 0.18), (88, 0.0012, 0.14), (105, -0.0025, 0.10)]
+df = pd.DataFrame(
+    {SPEED: speed_rpm}
+    | {
+        name: base + slope * speed_rpm + np.random.normal(0, noise, len(speed_rpm))
+        for name, (base, slope, noise) in zip(MODES, mode_curves, strict=True)
+    }
 )
 
-# Engine order excitation lines (freq = order × RPM / 60)
-orders = [1, 2, 3]
-order_labels = ["1×", "2×", "3×"]
+# Plot
+long_df = df.melt(id_vars=SPEED, value_vars=MODES, var_name=MODE, value_name=FREQUENCY)
+speeds = df[SPEED].to_numpy()
+speed_max = df[SPEED].max()
+freq_top = long_df[FREQUENCY].max() * 1.15
+order_labels = [f"{o}×" for o in ENGINE_ORDERS]
 
+# Engine order lines (freq = order × RPM / 60), clipped where they leave the top of the plot
 eo_df = pd.concat(
     [
-        pd.DataFrame(
-            {
-                "Speed": np.linspace(0, min(6000, max_freq * 60 / o), 80),
-                "Frequency": o * np.linspace(0, min(6000, max_freq * 60 / o), 80) / 60,
-                "Order": lbl,
-            }
-        )
-        for o, lbl in zip(orders, order_labels)
+        pd.DataFrame({SPEED: s, FREQUENCY: o * s / RPM_PER_HZ, ORDER: lbl})
+        for o, lbl in zip(ENGINE_ORDERS, order_labels, strict=True)
+        for s in [np.linspace(0, min(speed_max, freq_top * RPM_PER_HZ / o), len(speeds))]
     ],
     ignore_index=True,
 )
 
-# Critical speeds: intersections of EO lines with mode curves
+# Critical speeds: intersections of engine order lines with mode curves
 critical_rows = []
-for order, olabel in zip(orders, order_labels):
-    eo_at = order * speed_rpm / 60
-    for mname, mfreq in modes.items():
-        diff = eo_at - mfreq
+for order, olabel in zip(ENGINE_ORDERS, order_labels, strict=True):
+    eo_at = order * speeds / RPM_PER_HZ
+    for mname in MODES:
+        diff = eo_at - df[mname].to_numpy()
         for idx in np.where(np.diff(np.sign(diff)))[0]:
             t = abs(diff[idx]) / (abs(diff[idx]) + abs(diff[idx + 1]))
-            cs = speed_rpm[idx] + t * (speed_rpm[idx + 1] - speed_rpm[idx])
-            cf = order * cs / 60
-            if cf <= max_freq:
-                critical_rows.append({"Speed": cs, "Frequency": cf, "Intersection": f"{mname} × {olabel}"})
-crit_df = pd.DataFrame(critical_rows)
+            cs = speeds[idx] + t * (speeds[idx + 1] - speeds[idx])
+            cf = order * cs / RPM_PER_HZ
+            if cf <= freq_top:
+                critical_rows.append({SPEED: cs, FREQUENCY: cf, CRITICAL: f"{mname} × {olabel}"})
+crit_df = pd.DataFrame(critical_rows, columns=[SPEED, FREQUENCY, CRITICAL]).astype({SPEED: float, FREQUENCY: float})
 
-# Resonance risk zones around critical speeds
+# Resonance risk zones around critical speeds: 2.5 % of each axis range either side
 zone_df = pd.DataFrame(
-    [
-        {"xmin": r["Speed"] - 150, "xmax": r["Speed"] + 150, "ymin": r["Frequency"] - 3, "ymax": r["Frequency"] + 3}
-        for _, r in crit_df.iterrows()
-    ]
+    {
+        "xmin": crit_df[SPEED] - 0.025 * speed_max,
+        "xmax": crit_df[SPEED] + 0.025 * speed_max,
+        "ymin": crit_df[FREQUENCY] - 0.025 * freq_top,
+        "ymax": crit_df[FREQUENCY] + 0.025 * freq_top,
+    }
 )
 
-# EO direct labels: positioned below mode curves (< 25 Hz) in low-RPM region
+# Engine order labels sit just above each line, below the lowest mode curve
+# (each higher order sits lower on its steeper line so neighbouring labels keep apart)
+label_freq = np.array([0.14 * freq_top * 0.5 ** max(0, o - 2) for o in ENGINE_ORDERS])
 eo_label_df = pd.DataFrame(
-    [
-        {"Speed": 1200, "Frequency": 1 * 1200 / 60 + 2, "Label": "1×"},
-        {"Speed": 500, "Frequency": 2 * 500 / 60 + 2, "Label": "2×"},
-        {"Speed": 250, "Frequency": 3 * 250 / 60 + 2, "Label": "3×"},
-    ]
+    {
+        SPEED: label_freq * RPM_PER_HZ / np.array(ENGINE_ORDERS),
+        FREQUENCY: label_freq + 0.03 * freq_top,
+        LABEL: order_labels,
+    }
 )
 
-# Annotation for the highest-frequency critical speed (resonance risk highlight)
-danger_idx = crit_df["Frequency"].idxmax()
-danger_row = crit_df.loc[danger_idx]
+# Annotation for the highest-frequency critical speed
+danger_df = crit_df.nlargest(1, FREQUENCY)
 annot_df = pd.DataFrame(
-    [
-        {
-            "Speed": danger_row["Speed"],
-            "Frequency": danger_row["Frequency"] + 10,
-            "Label": f"{danger_row['Intersection']}\n({int(danger_row['Speed'])} RPM)",
-        }
-    ]
+    {
+        SPEED: danger_df[SPEED],
+        FREQUENCY: danger_df[FREQUENCY] + 0.08 * freq_top,
+        LABEL: danger_df[CRITICAL] + "\n(" + danger_df[SPEED].astype(int).astype(str) + " RPM)",
+    }
 )
 
-# Plot
 plot = (
     ggplot()
     + geom_rect(
         data=zone_df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         fill=CRIT_COLOR,
-        alpha=0.08,
+        alpha=0.14,
         color="transparent",
     )
-    + geom_line(data=eo_df, mapping=aes(x="Speed", y="Frequency", linetype="Order"), color=INK_MUTED, size=0.9)
+    + geom_line(data=eo_df, mapping=aes(x=SPEED, y=FREQUENCY, linetype=ORDER), color=INK_MUTED, size=0.9)
     + geom_line(
-        data=modes_df,
-        mapping=aes(x="Speed", y="Frequency", color="Mode"),
+        data=long_df,
+        mapping=aes(x=SPEED, y=FREQUENCY, color=MODE),
         size=2.5,
         tooltips=layer_tooltips()
-        .line("@{Mode}")
-        .line("Speed|@{Speed} RPM")
-        .line("Freq|@{Frequency} Hz")
-        .format("Speed", ",.0f")
-        .format("Frequency", ".1f"),
+        .line(f"@{{{MODE}}}")
+        .line(f"Speed|@{{{SPEED}}} RPM")
+        .line(f"Freq|@{{{FREQUENCY}}} Hz"),
     )
     + geom_point(
         data=crit_df,
-        mapping=aes(x="Speed", y="Frequency"),
+        mapping=aes(x=SPEED, y=FREQUENCY),
         color=CRIT_COLOR,
         fill=CRIT_COLOR,
         size=8,
         shape=18,
         tooltips=layer_tooltips()
         .title("Critical Speed")
-        .line("@{Intersection}")
-        .line("Speed|@{Speed} RPM")
-        .line("Freq|@{Frequency} Hz")
-        .format("Speed", ",.0f")
-        .format("Frequency", ".1f"),
+        .line(f"@{{{CRITICAL}}}")
+        .line(f"Speed|@{{{SPEED}}} RPM")
+        .line(f"Freq|@{{{FREQUENCY}}} Hz"),
     )
     + geom_text(
-        data=eo_label_df, mapping=aes(x="Speed", y="Frequency", label="Label"), color=INK_MUTED, size=4, fontface="bold"
+        data=eo_label_df, mapping=aes(x=SPEED, y=FREQUENCY, label=LABEL), color=INK_MUTED, size=5, fontface="bold"
     )
     + geom_text(
         data=annot_df,
-        mapping=aes(x="Speed", y="Frequency", label="Label"),
+        mapping=aes(x=SPEED, y=FREQUENCY, label=LABEL),
         color=CRIT_COLOR,
-        size=4,
+        size=5,
         fontface="italic",
         hjust=0.5,
     )
-    + scale_color_manual(name="Natural Frequency", values=MODE_COLORS, limits=mode_order)
-    + scale_linetype_manual(name="Engine Order", values=["dashed", "longdash", "dotdash"], limits=order_labels)
-    + scale_y_continuous(limits=[0, max_freq], expand=[0.01, 0])
-    + scale_x_continuous(limits=[0, 6000], expand=[0.01, 0], format=",d")
+    + scale_color_manual(name=MODE, values=MODE_COLORS, limits=MODES)
+    + scale_linetype_manual(name=ORDER, values=EO_LINESTYLES, limits=order_labels)
+    + scale_y_continuous(limits=[0, freq_top], expand=[0.01, 0])
+    + scale_x_continuous(limits=[0, speed_max], expand=[0.01, 0], format=",d")
     + guides(linetype=guide_legend(override_aes={"color": INK_MUTED}))
     + labs(
         title="campbell-basic · python · letsplot · anyplot.ai",
         subtitle="Red diamonds mark critical speeds where engine order lines cross natural frequency modes",
-        x="Rotational Speed (RPM)",
-        y="Frequency (Hz)",
+        x=SPEED,
+        y=FREQUENCY,
         caption="Data: synthetic rotordynamic model | Shaded zones indicate resonance risk regions",
     )
     + theme(
@@ -189,6 +191,7 @@ plot = (
     )
     + ggsize(800, 450)
 )
+
 
 # Save
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
