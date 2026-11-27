@@ -927,6 +927,13 @@ _MARKER_TAIL = r"(?:\s*:.*|\s+[-–—].*)?\s*$"
 _DATA_MARKER_RE = re.compile(r" Data" + _MARKER_TAIL)
 _PLOT_MARKER_RE = re.compile(r" Plot" + _MARKER_TAIL)
 _ROLE_COMMENT_RE = re.compile(r"\s*role:\s*\S")
+# A column constant: a name bound at column 0 to a string, or to a list of strings for a variadic family
+# (core/adaptability.py, rule "columns").
+_COLUMN_CONSTANT: dict[str, re.Pattern[str]] = {
+    "javascript": re.compile(r"(?:export\s+)?const\s+[A-Za-z_$][\w$]*\s*=\s*[\"'`\[]"),
+    "r": re.compile(r"[A-Za-z.][\w.]*\s*(?:<-|=)\s*(?:[\"']|c\()"),
+    "julia": re.compile(r"(?:const\s+)?[A-Za-z_]\w*\s*=\s*[\"\[]"),
+}
 # The table the block ends in, at column 0: a TypeScript type may follow `const data` (`const data: Row[] = []`),
 # and a Julia type `df` (`df::DataFrame = ...`).
 _DATA_BINDING: dict[str, tuple[re.Pattern[str], str]] = {
@@ -964,7 +971,8 @@ def data_block_gaps(language: str, body: str, shape: str | None) -> list[str]:
     elif stop is None:
         gaps.append(f"no `{sign} Plot` marker line at column 0 below the `{sign} Data` line")
     if "constants" in needs and not any(
-        code.strip() and comment is not None and _ROLE_COMMENT_RE.match(comment) for code, comment in rows[:start]
+        comment is not None and _ROLE_COMMENT_RE.match(comment) and _COLUMN_CONSTANT[language].match(code)
+        for code, comment in rows[:start]
     ):
         where = "in the file" if start is None else f"above the `{sign} Data` line"
         gaps.append(f"no column constant with a trailing `{sign} role:` comment {where}")

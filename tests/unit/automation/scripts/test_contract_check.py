@@ -1309,6 +1309,24 @@ def test_the_data_block_reads_markers_and_roles_only_from_real_comments():
     assert "no `# Data` marker line at column 0" in _data_block(julia_block, "makie")
 
 
+def test_a_role_comment_counts_only_on_a_column_constant():
+    """The role comment must sit on a name bound to a string (or a list of strings), not on any code line."""
+    no_roles_js = "no column constant with a trailing `// role:` comment above the `// Data` line"
+    on_a_call = JS_TABLE.replace('const MONTH = "Month"; // role: month', "console.log(1); // role: month").replace(
+        'const TEMPERATURE = "Temperature (°C)"; // role: temperature', "plot(x); // role: temperature"
+    )
+    assert _data_block(on_a_call, "highcharts") == [no_roles_js]
+    no_roles = "no column constant with a trailing `# role:` comment above the `# Data` line"
+
+    def calls_only(source: str) -> str:
+        return "\n".join("f(x)  # role: value" if "# role:" in line else line for line in source.splitlines())
+
+    assert _data_block(R_TABLE, "ggplot2") == []
+    assert _data_block(calls_only(R_TABLE), "ggplot2") == [no_roles]
+    assert _data_block(JULIA_TABLE, "makie") == []
+    assert _data_block(calls_only(JULIA_TABLE), "makie") == [no_roles]
+
+
 def test_the_data_block_binds_its_table_at_column_0_under_the_prompts_name():
     """`const data`, `df <-` or `df =` at column 0 between the markers; another name or a nested binding is not
     the table the block ends in."""
