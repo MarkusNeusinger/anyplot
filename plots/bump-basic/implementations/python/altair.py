@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-27
@@ -98,7 +98,7 @@ chart = (
     .properties(
         width=800,
         height=450,
-        padding=10,
+        padding={"left": 10, "top": 10, "bottom": 10, "right": 30},
         autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(title, fontSize=18),
