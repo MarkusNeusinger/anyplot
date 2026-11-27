@@ -1,13 +1,13 @@
 """ anyplot.ai
 pie-basic: Basic Pie Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-28
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
+import pandas as pd
 
 
 # Theme tokens
@@ -16,28 +16,33 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# anyplot categorical palette — positions 1→5
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette — positions 1→8
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+EXPLODE_OFFSET = 0.08
+
+# Column names
+PROVIDER = "Cloud provider"  # role: category
+SHARE = "Market share (%)"  # role: value
 
 # Data — global cloud infrastructure market share (2024)
-companies = ["AWS", "Azure", "Google Cloud", "Alibaba Cloud", "Others"]
-market_share = [31, 25, 11, 4, 29]
-
-# Explode the largest slice (AWS) for emphasis
-explode = [0.08, 0, 0, 0, 0]
+df = pd.DataFrame({PROVIDER: ["AWS", "Azure", "Google Cloud", "Alibaba Cloud", "Others"], SHARE: [31, 25, 11, 4, 29]})
 
 # Plot — square canvas, appropriate for pie charts
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Pull the largest slice out slightly for emphasis
+explode = (df[SHARE] == df[SHARE].max()).astype(float) * EXPLODE_OFFSET
+
 wedges, texts, autotexts = ax.pie(
-    market_share,
-    labels=companies,
+    df[SHARE],
+    labels=df[PROVIDER],
     autopct="%1.1f%%",
     explode=explode,
-    colors=IMPRINT_PALETTE,
+    colors=IMPRINT_PALETTE[: len(df)],
     startangle=90,
     textprops={"fontsize": 10, "color": INK},
     wedgeprops={"linewidth": 2, "edgecolor": PAGE_BG},
@@ -51,23 +56,13 @@ for autotext in autotexts:
     autotext.set_fontweight("bold")
     autotext.set_color("white")
 
-# Center context medallion — matplotlib.patches overlay: adds data context
-# and showcases the library's direct primitive drawing capability
-center_fill = Circle((0, 0), 0.30, color=PAGE_BG, zorder=5)
-center_ring = Circle((0, 0), 0.30, fill=False, edgecolor=INK_MUTED, linewidth=0.8, zorder=6)
-ax.add_patch(center_fill)
-ax.add_patch(center_ring)
-ax.text(0, 0.07, "2024", ha="center", va="center", fontsize=9, fontweight="bold", color=INK, zorder=7)
-ax.text(0, -0.08, "Global Cloud", ha="center", va="center", fontsize=7, color=INK_MUTED, zorder=7)
-
-# Title — reduced pad to eliminate unused vertical whitespace
 ax.set_title("pie-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
 # Legend — category identification
 leg = ax.legend(
     wedges,
-    companies,
-    title="Cloud Providers",
+    df[PROVIDER],
+    title=PROVIDER,
     loc="lower center",
     bbox_to_anchor=(0.5, -0.08),
     fontsize=8,
