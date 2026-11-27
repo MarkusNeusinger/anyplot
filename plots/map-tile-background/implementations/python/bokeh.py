@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tile-background: Map with Tile Background
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -36,9 +36,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for colored marks on the page, as (position, hex) stops
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -252,6 +252,9 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
