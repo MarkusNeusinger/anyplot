@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: arc-basic
 created: '2025-12-23T08:49:26Z'
-updated: '2026-11-27T08:09:13Z'
+updated: '2026-11-27T15:56:30Z'
 generated_by: claude-sonnet
-workflow_run: 45962779341
+workflow_run: 46028502807
 issue: 991
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,13 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
   - Arcs are native p.bezier glyphs with both control points at a height proportional
     to node distance, so long-range links rise clearly above short ones
-  - Arc color follows the theme's imprint_seq marks stops, with the dark stops on
-    the dark render, reinforced by width and alpha
+  - Arc color follows the theme's current imprint_seq marks stops, reinforced by width
+    and alpha, with the dark stops on the dark render
   - All text sized for the 3200x1800 canvas (50pt title, 34pt labels and legend) and
     readable in both themes
   - 'Vectorized data flow: one DataFrame of arc geometry, one ColumnDataSource per
@@ -26,23 +26,29 @@ review:
   - HoverTool with line_policy='interp' shows each connection and its shared-scene
     count in the HTML
   weaknesses:
+  - 'VQ-03 (both): the weight-1 arcs (most visible in dark), the ramp''s low end,
+    are drawn at alpha 0.65, so on the dark page the olive #6F7E20 lines fade toward
+    about 2.4:1 against #1A1A17 and read dim beside the heavier arcs → let the opacity
+    fall from 1 at the low end to the translucent alpha at the high end, as the style
+    guide''s marks-ramp opacity rule asks. Likely cause: line_alpha=0.55 + 0.3 * level
+    / w_max rises with weight instead of falling.'
   - 'Suggestion: ordering nodes so the Mara hub sits mid-line would shorten the longest
     arcs and reduce crossings.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, no frame, no axes or grid
-      Chrome: bold near-black title 'arc-basic · python · bokeh · anyplot.ai' top-left, bold soft-ink subtitle 'Character interactions in The Harbour at Saltmere · Chapter 1', node labels Mara, Tobias, Ingrid, Jonas, Elsie, Corin, Wren, Silas, Odile, Peregrine, Hester in dark ink below the baseline, legend top-right titled 'Shared scenes' (italic) with 1/2/3 on an elevated surface; all readable
-      Data: 11 brand-green #009E73 nodes evenly spaced on one line; 15 bezier arcs above, height growing with distance; weight 1 in green, 2 in mid blue, 3 in dark navy, thicker and more opaque with weight; Mara-Hester (weight 2) is the tallest arc spanning the width, Mara-Silas (weight 3) the second
+      Chrome: bold near-black title 'arc-basic · python · bokeh · anyplot.ai' top-left, soft-ink subtitle 'Character interactions in The Harbour at Saltmere · Chapter 1', node labels Mara … Hester in dark ink below the baseline, legend top-right titled 'Shared scenes' (italic) with 1/2/3 on an elevated surface; all readable
+      Data: 11 brand-green #009E73 nodes evenly spaced on one line; 15 bezier arcs above, height growing with distance; weight 1 in green, 2 in deep teal-blue, 3 in dark violet, thicker and more opaque with weight; Mara-Hester (weight 2) is the tallest arc, Mara-Silas (weight 3) the second
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, no frame
       Chrome: title in light ink, subtitle in soft light ink, node labels light, legend on a dark elevated surface with light text; no dark-on-dark text
-      Data: identical geometry; nodes identical #009E73; arcs use the dark imprint_seq marks stops (weight 1 deep green, 2 teal, 3 pale blue), the continuous ramp flipping as intended; brand green visible
+      Data: identical geometry; nodes identical #009E73; arcs use the dark imprint_seq marks stops (weight 1 olive, 2 teal-green, 3 pale blue); the weight-1 olive arcs at alpha 0.65 read dim but traceable; brand green visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,55 +56,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 50pt, subtitle 30pt, node labels and legend 34pt, all set explicitly;
-          dark ink on light and light ink on dark, readable in both themes
+        comment: Title 50pt, subtitle 30pt, node labels and legend 34pt, all explicit;
+          dark ink on light, light ink on dark, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Node labels evenly spaced with clear gaps (Peregrine, the longest,
-          stays clear of Odile and Hester); legend sits in the empty top-right corner
-          clear of every arc; arc crossings are permitted (C6)
+        comment: Node labels evenly spaced with clear gaps; legend sits in the empty
+          top-right corner clear of every arc; arc crossings are permitted (C6)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Arcs 6.7-12 px wide with alpha 0.62-0.85, each traceable to both
-          end nodes; 44 px nodes; legend line samples visible and matching the arcs
-          in both themes
+        passed: false
+        comment: Weight-1 arcs drawn at alpha 0.65 lose contrast against the page,
+          most visibly in the dark render (defect line); heavier arcs and 44 px nodes
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Weight is encoded by color, width and alpha together, never by hue
-          alone; no red-green pairing
+        comment: Weight encoded by color, width and alpha together, never by hue alone;
+          no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nodes span the full width, the tallest arc rises close to the legend
+        comment: Nodes span the full width, tallest arc rises close to the legend
           band; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No value axes, correct for an arc diagram (C1); node labels and the
-          descriptive subtitle carry the context
+        comment: No value axes, correct for an arc diagram (C1); node labels and descriptive
+          subtitle carry the context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Arc colors sampled from the imprint_seq marks stops per theme (light
-          #009E73 to #002850, dark #009E73 to #CDD9FF), nodes #009E73, backgrounds
-          #FAF8F1 / #1A1A17'
+        comment: 'Arc colors sampled from the current imprint_seq marks stops per
+          theme (light #009E73 → #024582 → #351E45, dark #6F7E20 → #009E73 → #CDD9FF);
+          nodes #009E73; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,22 +112,22 @@ review:
         max: 8
         passed: false
         comment: 'Typographic hierarchy beyond the baseline: bold 50pt title over
-          a bold soft-ink subtitle added as a second Title layout, italic legend title
-          on an elevated surface'
+          a soft-ink subtitle added as a second Title layout, italic legend title
+          on the elevated surface'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Nodes outlined in the page color so arc ends tuck cleanly beneath
-          them; legend placed in the empty corner beside the tallest arc
+        comment: Nodes outlined in the page color so arc ends tuck beneath them cleanly;
+          legend placed in the empty corner beside the tallest arc
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Width, color and alpha rise together with weight, so the heaviest
-          ties read first over the faint single-scene arcs
+        comment: Data displayed with the weight encoding the Notes allow; no hierarchy
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -148,14 +153,14 @@ review:
         max: 3
         passed: true
         comment: Nodes at their order of first appearance on an integer sequence;
-          every arc joins the correct pair
+          every arc joins the correct pair; y range fitted to the bezier peak
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'arc-basic · python · bokeh · anyplot.ai' correct; legend titled
-          'Shared scenes' with levels 1-3 matching arc color and width
+        comment: Title 'arc-basic · python · bokeh · anyplot.ai' correct; legend 'Shared
+          scenes' with levels 1-3 matching arc color and width
     data_quality:
       score: 15
       max: 15
@@ -166,7 +171,7 @@ review:
         max: 6
         passed: true
         comment: Short- and long-range links, a hub at Mara, nesting and crossing
-          all shown across 11 nodes and 15 connections
+          across 11 nodes and 15 connections
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -202,16 +207,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy for np.interp, Title, LegendItem, Selenium
-          for the screenshot)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
         comment: Vectorized arc geometry in one DataFrame, one renderer per weight
-          level, LabelSet for labels; the ramp sampling follows the library prompt's
-          stops
+          level, LabelSet for labels
       - id: CQ-05
         name: Output & API
         score: 1
@@ -220,7 +223,7 @@ review:
         comment: Saves plot-{THEME}.html and plot-{THEME}.png via the library prompt's
           Selenium path; current Bokeh 3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,15 +235,15 @@ review:
           Legend built from LegendItems, Range1d fitted to the arc peak
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
         comment: Native p.bezier glyph for the arcs and HoverTool with line_policy='interp'
-          for per-arc connection tooltips in the HTML
+          for per-arc tooltips in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-5823bf4a9f
-  rendered_at: '2026-11-27T08:05:59Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-27T15:53:12Z'
 impl_tags:
   dependencies:
   - selenium
@@ -250,9 +253,11 @@ impl_tags:
   - html-export
   - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
   - columndatasource
-  dataprep: []
+  dataprep:
+  - network-layout
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
