@@ -12,169 +12,163 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 77
 review:
   strengths:
-  - 'Full Campbell diagram with all required elements: 5 natural frequency curves,
-    3 engine order excitation lines, and critical speed markers using mathematical
-    sign-change detection'
-  - 'Excellent semantic design: filled vs. outlined diamond markers encode in-range
-    vs. out-of-range danger, directly communicating safety implications to the viewer'
-  - Idiomatic Altair layer composition with detail='EO:N' channel for EO lines avoiding
-    legend clutter, while direct right-edge text labels keep orientation intuitive
-  - Complete theme-adaptive chrome — all axis, legend, title, and annotation colors
-    correctly flip between light (#FAF8F1) and dark (#1A1A17) surfaces with no dark-on-dark
-    failures
-  - Operating range shading (opacity=0.07) and selective key-intersection annotations
-    add clear data storytelling without overwhelming the plot
-  - 'Canvas gate compliance: inner view 620×320 at scale_factor=4.0 with PIL padding
-    to exact 3200×1800 target'
+  - Critical speeds found by a sign-change search, markers sit on the crossings
+  - alt.Detail groups the engine order lines without a legend entry
+  - Theme tokens threaded through all chrome; both renders read cleanly
+  - Tooltips on the critical-speed markers in the HTML output
   weaknesses:
-  - 'Moderate visual clutter around 3000–4500 RPM: multiple mode curves, dashed EO
-    lines, diamond markers, and text annotations overlap in a confined area — the
-    ''Axial / 3x'' annotation at ~3500 RPM sits close to both the Axial and 3rd Bending
-    curves, reducing readability in that band'
-  - The 'Operating Range' italic label is positioned at Hz=10 (bottom of chart area),
-    very close to the x-axis, making it feel squeezed — raising it to Hz=20–25 would
-    give more breathing room without obscuring data
+  - 'SC-01 (both): the basic variant gets unasked additions — an operating range band
+    (2500-4500 RPM) with its label, critical-speed markers split into filled and outlined
+    by an in-range flag, and three critical-speed callouts → remove the band, the
+    label, the split and the callouts; draw all critical speeds with one marker. Likely
+    cause: op_band, op_label, df_crit_in/df_crit_out and annot_chart layers.'
+  - 'VQ-02 (both): the ''Axial / 3x'' callout is drawn across the 3rd Bending curve
+    and under the 3rd Bending / 3x diamond, which hides its slash → no text over curves
+    or markers (removing the callout per the SC-01 line clears it). Likely cause:
+    annot_chart dy=-20.'
+  - 'VQ-02 (both): the ''3x'' order label is drawn on its own dashed line near 5,800
+    RPM → place it clear of the line at the line end. Likely cause: eo_labels capped
+    at Hz=283 with dx=4, dy=-8.'
+  - 'VQ-05 (both): a fixed 620x320 view padded to 3200x1800 with PIL leaves wide empty
+    margins, and the legend frame hugs its text → autosize fit with contains=''padding''
+    at width=800, height=450, and legend padding. Likely cause: width=620, height=320,
+    padding 0 and the PIL paste.'
+  - 'SC-04 (both): the critical-speed diamonds have no key or direct label, so the
+    reader is not told what they or their filled/outlined difference mean → one keyed
+    critical-speed marker in the legend. Likely cause: crit charts use alt.value color
+    with no legend.'
+  - 'CQ-04 (code): lines 41-51 build the mode and engine order tables row by row from
+    nested loops of dicts → one pd.DataFrame per series from the arrays. Likely cause:
+    the mode_rows/eo_rows loops.'
+  - 'Suggestion: the critical-speed red #AE3030 is also the 3rd Bending curve''s color;
+    markers on that curve separate only by their stroke.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white.
-      Chrome: Title "campbell-basic · python · altair · anyplot.ai" in dark ink at fontsize 16, clearly readable. Subtitle "Natural Frequencies vs Engine Order Excitations" in muted ink below. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" both readable in dark ink at 12pt. Tick labels at 10pt in INK_SOFT are clear. Grid lines are subtle (opacity 0.15) and non-intrusive.
-      Data: Five mode curves in Imprint palette order — 1st Bending green (#009E73), 2nd Bending lavender (#C475FD), 1st Torsional blue (#4467A3), Axial ochre (#BD8233), 3rd Bending matte red (#AE3030). Three dashed gray EO excitation lines (1x, 2x, 3x) labeled at right edge in INK_SOFT. Operating range shaded blue band (opacity 0.07). Critical speed diamond markers in matte red (#AE3030) — outlined for outside operating range, filled/larger for inside range. Three text annotations (1st Bending/3x, 2nd Bending/2x, Axial/3x) in matte red. Legend at bottom with 5 columns. First series is #009E73 (brand green).
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues detected.
+      Background: warm off-white #FAF8F1; the chart is a smaller block centred with wide empty margins left and right.
+      Chrome: title 'campbell-basic · python · altair · anyplot.ai' with subtitle 'Natural Frequencies vs Engine Order Excitations' in dark ink; axis titles 'Rotational Speed (RPM)' and 'Frequency (Hz)', ticks 0-6,000 and 0-300; subtle grid; bottom legend 'Natural Frequencies' in a tight elevated frame.
+      Data: five Imprint mode curves (1st Bending #009E73 first), three grey dashed engine order lines labeled 1x/2x/3x (the 3x label drawn on its line), 13 red diamonds at the crossings, filled inside a faint blue 2500-4500 RPM 'Operating Range' band and outlined outside, three red callouts; 'Axial / 3x' sits on the 3rd Bending curve under a diamond.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, no pure black.
-      Chrome: Title and subtitle flip to off-white (#F0EFE8) and muted light respectively, clearly readable against dark background. Axis labels and tick labels in B8B7B0 (INK_SOFT dark) — good contrast on near-black. Grid lines subtle (opacity 0.15 on dark). Legend background elevated to #242420 with soft border — readable.
-      Data: All five mode curves and critical speed markers retain identical Imprint palette colors as the light render — only chrome elements flip. The green #009E73 first series (1st Bending) reads well on the dark surface. Matte red (#AE3030) markers and annotation text are visible. Dashed EO lines in INK_MUTED (#A8A79F) are visible. "Operating Range" label in IMPRINT_PALETTE[2] blue remains readable.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all labels, ticks, title, and axis text are readable against the dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axes, ticks and legend flip to light ink on #242420 legend fill; no dark-on-dark text.
+      Data: mode and marker colors identical to the light render; EO lines in light muted grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels, legend all readable in both themes.
-          Minor deduction: ''Operating Range'' label is squeezed near Hz=10 at the
-          very bottom of the plot area.'
+        comment: Title 16, axis titles 12, ticks and legend 10 at the style-guide
+          sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: true
-        comment: Moderate clutter around 3000-4500 RPM where mode curves, EO lines,
-          diamond markers and annotation text converge. 'Axial / 3x' annotation sits
-          close to both Axial and 3rd Bending curves. Not severe but reduces clarity.
+        passed: false
+        comment: The 'Axial / 3x' callout sits on the 3rd Bending curve and under
+          the 3rd Bending / 3x diamond, and the '3x' order label is drawn on its own
+          dashed line (defect lines)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Mode curves clearly visible at strokeWidth=2.5. EO lines distinguishable
-          with dashed style at opacity=0.68. Markers appropriately sized. Operating
-          range band at opacity=0.07 is intentionally very subtle — borderline but
-          functional.
+        comment: Mode curves at 2.5 px, dashed engine order lines, diamonds with a
+          page-colored stroke; all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used — CVD-safe. EO lines in gray are distinct from
-          all palette colors. Red markers for critical speeds are semantically appropriate
-          and distinguishable.
+        comment: Imprint hues, CVD-safe; engine order lines in neutral grey
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Canvas gate passed (3200x1800). Title proportions good. Legend at
-          bottom with 5 columns fits without overflow. Minor deduction for crowded
-          intersection zone in the middle of the chart.
+        passed: false
+        comment: A fixed 620x320 view padded with PIL leaves wide empty margins (~170
+          px left, ~180 px right in the display) and the legend frame is tight around
+          its text (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Rotational Speed (RPM)'' and Y: ''Frequency (Hz)'' — descriptive
-          with correct units. Title matches required format exactly.'
+        comment: '''Rotational Speed (RPM)'' and ''Frequency (Hz)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (1st Bending) = #009E73. All 5 modes use Imprint palette
-          positions 1-5 in canonical order. Critical speed markers use #AE3030 (matte
-          red) — semantically correct for danger. Backgrounds #FAF8F1 (light) / #1A1A17
-          (dark) correct.'
+        comment: '1st Bending #009E73, modes in canonical Imprint order, backgrounds
+          correct in both themes'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Above default (4). Operating range shading, filled vs. outlined markers
-          encoding danger, direct EO labeling at right edge, subtitle context — multiple
-          deliberate design choices that elevate this beyond defaults.
+        comment: 'Style-guide baseline: explicit sizes, theme tokens, subtitle; nothing
+          beyond it that is not part of the excluded layers'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Above default (2). stroke=None removes chart border, gridOpacity=0.15/gridWidth=0.5
-          subtle grid, EO lines at opacity=0.68 create visual hierarchy, operating
-          band at opacity=0.07 is almost imperceptible (good). Legend has elevated
-          background.
+        comment: Engine order labels placed at the line ends outside the view, page-colored
+          stroke separating the filled diamonds from the lines they sit on
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Strong storytelling. Operating range zone clearly framed. In-range
-          vs. out-of-range critical speeds semantically encoded via marker fill/size.
-          Key intersections annotated. Subtitle reinforces narrative. Viewer guided
-          through rotordynamic analysis.
+        comment: The focal hierarchy comes from the operating range band and the filled/outlined
+          split, both additions the basic variant excludes; no credit
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: 'Correct Campbell diagram: natural frequency curves overlaid with
-          engine order excitation lines, critical speed intersections marked.'
+        passed: false
+        comment: 'Correct Campbell diagram, but with unasked additions: operating
+          range band and label, filled vs outlined markers driven by the in-range
+          flag, and three critical-speed callouts (defect line)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 natural frequency modes (within 4-5 spec range), 3 EO lines (1x/2x/3x),
-          critical speed markers (diamonds), operating range highlighted, mode labels,
-          EO labels, annotations on key intersections.
+        comment: 5 modes rising and falling, 1x/2x/3x lines from the origin, critical
+          speeds marked with diamonds, modes named, EO lines labeled, dashed EO style
+          distinct from the solid mode legend (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=RPM, Y=Hz. All 5 modes shown 0-6000 RPM. EO lines from origin with
-          correct slopes (order/60). Full data range visible.
+        comment: Crossings found on a 5000-point grid; markers sit on their crossings
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'campbell-basic · python · altair · anyplot.ai' matches required
-          format. Legend titled 'Natural Frequencies' with all 5 mode labels. EO lines
-          directly labeled on chart.
+        passed: false
+        comment: Title format correct; the critical-speed diamonds and their filled/outlined
+          split have no key or direct label explaining them (defect line)
     data_quality:
       score: 15
       max: 15
@@ -184,29 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Campbell diagram aspects covered: mode curves with realistic
-          gyroscopic behavior (some increasing, some decreasing with speed), diagonal
-          EO excitation lines from origin, mathematically-detected critical speed
-          intersections, operating range zone.'
+        comment: Rising and falling modes, three orders, 13 crossings shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Industrial machinery context (2500-4500 RPM operating range, 0-6000
-          RPM total) is realistic. Base frequencies 45-220 Hz plausible for rotating
-          machinery. Gyroscopic slope/curvature values produce realistic mode behavior.
-          Neutral, domain-appropriate data.
+        comment: Plausible rotor modes (bending, torsional, axial) at 45-220 Hz over
+          0-6000 RPM
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-6000 RPM range appropriate for industrial machinery. 0-310 Hz frequency
-          range accommodates all 5 modes. 80 speed points (within 50-100 spec). Dense
-          5000-point grid for accurate intersection detection.
+        comment: 'Checked: EO slopes order/60 (3x reaches 300 Hz at 6000 RPM, 2x 200,
+          1x 100) read off the axis; crossings fall out of the computation'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -214,37 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level script, no functions or classes. Linear structure from
-          data generation to chart composition to save.
+        comment: Top-level script, one data block, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic (linspace + polynomial
-          functions).
+        comment: Deterministic data (np.random.seed set though nothing is random)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, PIL (Image), os, sys.'
+        comment: altair, numpy, pandas, PIL, os, sys all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-named variables. Appropriate complexity for a multi-layer
-          Campbell diagram. No fake UI elements.
+        passed: false
+        comment: Lines 41-51 build the mode and EO tables row by row in nested loops
+          of dicts where one pd.DataFrame per series from the arrays does it (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with PIL padding to 3200x1800. Also saves
-          plot-{THEME}.html. Current Altair API used.
+        comment: Saves plot-{THEME}.png and .html with the current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -252,19 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper Altair grammar throughout: mark_line/mark_point/mark_rect/mark_text
-          with correct Q/N encoding types. configure_* methods for global theming.
-          alt.Scale, alt.Legend, alt.Title used correctly. Layer composition with
-          + operator.'
+        comment: Layered alt.layer composition, alt.Detail to group EO lines without
+          a legend, configure_* theming, alt.Title with subtitle
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses detail='EO:N' channel to group EO lines without adding them
-          to color legend — clever Altair-specific technique. mark_rect for operating
-          range band. Tooltip encoding on markers. HTML export alongside PNG.
+        comment: Tooltips on critical-speed markers in the HTML output; nothing else
+          distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  last_kept:
+    pr: 14769
+    code: regression
+    note: '#14769 was kept because the review found it worse than the live version
+      here: ''1st Bending / 3x'' callout now touches the outlined 2nd Bending / 3x
+      diamond at ~1760 RPM (it was clear of it before) (callout near 1,000-1,750 RPM,
+      80 Hz, both renders). Keep these as the live version has them.'
 impl_tags:
   dependencies:
   - pillow

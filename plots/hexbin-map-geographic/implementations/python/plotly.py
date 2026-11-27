@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -22,13 +22,13 @@ HEX_BORDER = "rgba(30,30,30,0.7)" if THEME == "light" else "rgba(220,220,220,0.5
 
 # Imprint sequential ramp for fields (filled cells on a map)
 SEQ_FIELDS = (
-    [[0.0, "#66E2B2"], [0.368, "#009E73"], [0.582, "#4467A3"], [1.0, "#002850"]]
+    [[0.0, "#66E2B2"], [0.369, "#009E73"], [0.803, "#024582"], [1.0, "#351E45"]]
     if THEME == "light"
-    else [[0.0, "#00573D"], [0.467, "#009E73"], [1.0, "#CDD9FF"]]
+    else [[0.0, "#404C02"], [0.487, "#009E73"], [1.0, "#CDD9FF"]]
 )
 
 # Constants
-HEX_SIZE = 0.007  # hexagon size in local-degree units (~0.5 km cells at NYC latitude)
+HEX_SIZE = 0.004  # hexagon size in local-degree units (~0.3 km cells at NYC latitude)
 
 # Columns: set these to your table's column names
 LAT = "lat"  # role: lat
@@ -38,20 +38,23 @@ FARE = "Fare"  # role: value
 # Data: replace this block with your own table, for example df = pd.read_csv("pickups.csv")
 rng = np.random.default_rng(42)
 n_points = 5000
-cluster_lats = 40.7580 + rng.uniform(-0.08, 0.08, 8)
-cluster_lons = -73.9855 + rng.uniform(-0.10, 0.10, 8)
+# Pickup hotspots on land: Midtown, Upper East Side, Upper West Side, Greenwich Village,
+# East Village, Williamsburg, Long Island City, Downtown Brooklyn
+cluster_lats = np.array([40.7549, 40.7745, 40.7870, 40.7336, 40.7265, 40.7140, 40.7440, 40.6920])
+cluster_lons = np.array([-73.9840, -73.9560, -73.9690, -73.9970, -73.9830, -73.9570, -73.9400, -73.9860])
 assignments = rng.choice(8, n_points, p=rng.dirichlet(np.ones(8)))
 cluster_fares = rng.uniform(12, 45, 8)  # typical fare level per pickup cluster
 df = pd.DataFrame(
     {
-        LAT: cluster_lats[assignments] + rng.normal(0, 0.015, n_points),
-        LON: cluster_lons[assignments] + rng.normal(0, 0.020, n_points),
+        LAT: cluster_lats[assignments] + rng.normal(0, 0.006, n_points),
+        LON: cluster_lons[assignments] + rng.normal(0, 0.008, n_points),
         FARE: cluster_fares[assignments] * rng.lognormal(0, 0.25, n_points),
     }
 )
 
 # Plot
 HEX_ID, COUNT, TOTAL, MEAN = "hex_id", "Trips", "Total fare ($)", "Mean fare ($)"  # derived column names
+df = df.dropna(subset=[LAT, LON])  # rows without a position cannot be binned
 lat0, lon0 = df[LAT].mean(), df[LON].mean()
 
 # Hexagonal binning: pointy-top hexagons using axial coordinate system
