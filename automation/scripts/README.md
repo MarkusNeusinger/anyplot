@@ -289,8 +289,8 @@ step "Stop on the render hash" acts on those outputs. See
 ### `contract_check.py`
 Checks the static contract of one implementation file (stdlib only): the
 mandated title tail, the theme read, the themed save target, no legacy brand
-colour, no named library colormap, and no hex outside the style guide's
-palette. It also checks the settings a library prompt states as mandatory,
+colour, no stop of a replaced continuous ramp, no named library colormap,
+and no hex outside the style guide's palette. It also checks the settings a library prompt states as mandatory,
 as a hard rule or as forbidden, where the source shows them (`MANDATES`): the
 bokeh page paint and toolbar, equal pygal tick sizes and both pygal guide
 colours, altair's `autosize` fit, no plotly `autosize=True`, the lets-plot

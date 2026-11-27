@@ -24,6 +24,7 @@ from automation.scripts.contract_check import (
     BASE_REASONS,
     MANDATES,
     PALETTE_HEXES,
+    RETIRED_RAMP_STOPS,
     RULES,
     build_record,
     check,
@@ -138,6 +139,11 @@ def test_a_compliant_file_breaks_no_rule(language):
         ("r", '"#009E73"', '"#ffd43b"', ["legacy-colour", "palette"]),
         ("javascript", '"#009E73", "#4467A3"', '"#9418DB", "#4467A3"', ["legacy-colour", "palette"]),
         ("python", '"#009E73"', '"#30699880"', ["legacy-colour"]),
+        # a stop of a replaced continuous ramp, in any case and with an alpha suffix; it is outside the palette too
+        ("python", '"#009E73"', '"#002850"', ["retired-ramp", "palette"]),
+        ("r", '"#009E73"', '"#00573d"', ["retired-ramp", "palette"]),
+        ("javascript", '"#009E73", "#4467A3"', '"#007755", "#4467A3"', ["retired-ramp", "palette"]),
+        ("python", '"#009E73"', '"#007755CC"', ["retired-ramp"]),
         # a named library colormap where a colormap goes: one case per pattern
         ("python", 'color="#009E73"', 'c=[1, 2], cmap="viridis"', ["colormap"]),
         ("python", 'color="#009E73"', 'c=[1, 2], cmap="terrain"', ["colormap"]),
@@ -999,6 +1005,21 @@ def test_the_selfcheck_names_what_to_fix_and_keeps_the_palette_advisory():
     assert (code, clean) == (0, ["contract: pass"])
     missing, code = selfcheck_lines(None, spec_id=SPEC, language="python", library="matplotlib")
     assert code == 2 and missing[-1].startswith("contract: not run")
+
+
+def test_the_selfcheck_makes_a_retired_ramp_stop_a_fix_beside_the_palette_line():
+    """The advisory palette line alone let a regeneration keep its predecessor's ramp."""
+    source = PYTHON.replace('color="#009E73"', 'color="#002850"')
+    lines, code = selfcheck_lines(source, spec_id=SPEC, language="python", library="matplotlib")
+    assert (code, lines[-1]) == (1, "contract: fix (retired-ramp)")
+    assert lines[0].startswith("retired-ramp: a stop of a continuous ramp the style guide has replaced")
+    assert lines[1].startswith("palette (advisory): #002850: ")
+
+
+def test_no_retired_ramp_stop_is_a_colour_of_the_style_guide():
+    retired = {f"#{stop}".upper() for stop in RETIRED_RAMP_STOPS}
+    assert not retired & PALETTE_HEXES
+    assert not retired & {stop.upper() for stop in palette.RAMP_STOPS}
 
 
 def test_the_selfcheck_command_prints_plain_lines_and_writes_no_summary(tmp_path):

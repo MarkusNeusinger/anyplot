@@ -372,6 +372,7 @@ Each rule is a text pattern over the code. It says what the code contains, not w
 | `theme` | The code never names `ANYPLOT_THEME`. In JavaScript, it names neither `ANYPLOT_THEME` nor `ANYPLOT_TOKENS`, the two globals of the render harness. |
 | `save` | The code builds no file name from `plot-` and a theme value, or it names a bare `plot.png`, `plot.html`, or `plot.svg`. JavaScript is exempt, because the render harness saves. |
 | `legacy-colour` | The code holds a brand hex of an earlier palette: Python blue `#306998` and yellow `#FFD43B`, or one of the variant-D hexes that `prompts/quality-criteria.md` lists under VQ-07. |
+| `retired-ramp` | The code holds a stop of a continuous ramp that the style guide has replaced: `#002850`, `#00573D` or `#007755`, the ends of the per-theme ramps before they turned in hue. A regeneration tends to copy its predecessor's ramp, and the advisory `palette` rule lets it keep one with any reason. |
 | `colormap` | A named library colormap, such as `viridis` or `Blues`, sits in a colormap position. Only the two Imprint colormaps are allowed. |
 | `palette` | The code holds a six-digit hex that is neither an Imprint colour, nor an anchor, nor a theme token of `prompts/default-style-guide.md`. |
 
