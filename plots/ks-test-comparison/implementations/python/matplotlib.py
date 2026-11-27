@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-29
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy import stats
 
 
@@ -19,21 +20,26 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic assignment: green = good, red = bad
-GOOD_COLOR = "#009E73"  # Imprint position 1 — brand green (good / pass)
-BAD_COLOR = "#AE3030"  # Imprint position 5 — matte red (bad / fail)
+# Semantic assignment: green = good, red = bad
 
-# Data
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+GOOD = "Good Customers"  # role: sample1
+BAD = "Bad Customers"  # role: sample2
+SCORE_LABEL = "Credit Score (0–100)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-good_customers = np.random.beta(5, 2, 500) * 100
-bad_customers = np.random.beta(2, 4, 500) * 100
+df = pd.DataFrame({GOOD: np.random.beta(5, 2, 500) * 100, BAD: np.random.beta(2, 4, 500) * 100})
 
-# K-S test
-ks_stat, p_value = stats.ks_2samp(good_customers, bad_customers)
+# Plot: reads only df and the constants above
+good_sorted = np.sort(df[GOOD].dropna().to_numpy())
+bad_sorted = np.sort(df[BAD].dropna().to_numpy())
+ks_stat, p_value = stats.ks_2samp(good_sorted, bad_sorted)
 
 # Compute ECDFs
-good_sorted = np.sort(good_customers)
-bad_sorted = np.sort(bad_customers)
 good_ecdf = np.arange(1, len(good_sorted) + 1) / len(good_sorted)
 bad_ecdf = np.arange(1, len(bad_sorted) + 1) / len(bad_sorted)
 
@@ -41,40 +47,40 @@ bad_ecdf = np.arange(1, len(bad_sorted) + 1) / len(bad_sorted)
 all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
 good_cdf_at_all = np.searchsorted(good_sorted, all_values, side="right") / len(good_sorted)
 bad_cdf_at_all = np.searchsorted(bad_sorted, all_values, side="right") / len(bad_sorted)
-differences = np.abs(good_cdf_at_all - bad_cdf_at_all)
-max_idx = np.argmax(differences)
+max_idx = np.argmax(np.abs(good_cdf_at_all - bad_cdf_at_all))
 max_x = all_values[max_idx]
 max_y_good = good_cdf_at_all[max_idx]
 max_y_bad = bad_cdf_at_all[max_idx]
 mid_y = (max_y_good + max_y_bad) / 2
+x_span = all_values[-1] - all_values[0]
 
-# Plot — landscape 3200×1800 px (figsize=(8, 4.5), dpi=400)
+# Landscape 3200×1800 px (figsize=(8, 4.5), dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # "Bad Customers" — matte red with white outline for visual separation from gridlines
 ax.step(bad_sorted, bad_ecdf, where="post", linewidth=3.5, color=PAGE_BG, zorder=3)
 ax.step(
-    bad_sorted, bad_ecdf, where="post", linewidth=2.2, color=BAD_COLOR, label="Bad Customers", linestyle="--", zorder=4
+    bad_sorted, bad_ecdf, where="post", linewidth=2.2, color=IMPRINT_PALETTE[4], label=BAD, linestyle="--", zorder=4
 )
 
 # "Good Customers" — brand green, solid line
 ax.step(
-    good_sorted,
-    good_ecdf,
-    where="post",
-    linewidth=2.2,
-    color=GOOD_COLOR,
-    label="Good Customers",
-    linestyle="-",
-    zorder=3,
+    good_sorted, good_ecdf, where="post", linewidth=2.2, color=IMPRINT_PALETTE[0], label=GOOD, linestyle="-", zorder=3
 )
 
 # Vertical reference line at maximum distance point — stronger visual anchor
 ax.axvline(max_x, color=INK_SOFT, linestyle="--", linewidth=0.9, alpha=0.45, zorder=2)
 
 # Shaded region at maximum distance — wider band and higher alpha for visibility
-ax.fill_betweenx([max_y_bad, max_y_good], max_x - 2.5, max_x + 2.5, color=GOOD_COLOR, alpha=0.20, zorder=1)
+ax.fill_betweenx(
+    [max_y_bad, max_y_good],
+    max_x - 0.025 * x_span,
+    max_x + 0.025 * x_span,
+    color=IMPRINT_PALETTE[0],
+    alpha=0.20,
+    zorder=1,
+)
 
 # K-S distance line with double-ended annotation arrows
 ax.annotate(
@@ -92,7 +98,7 @@ ax.scatter([max_x, max_x], [max_y_bad, max_y_good], color=INK, s=80, zorder=6, e
 ax.annotate(
     f"D = {ks_stat:.3f}",
     xy=(max_x, mid_y),
-    xytext=(max_x + 9, mid_y + 0.07),
+    xytext=(max_x + 0.09 * x_span, mid_y + 0.07),
     fontsize=9,
     fontweight="bold",
     color=INK,
@@ -103,10 +109,15 @@ ax.annotate(
 
 # Interpretation box — lower right
 p_label = "p-value < 0.001" if p_value < 0.001 else f"p-value = {p_value:.4f}"
+verdict = (
+    "Strong separation: distributions are\nsignificantly different"
+    if p_value < 0.05
+    else "No significant difference\nbetween the distributions"
+)
 ax.text(
     0.97,
     0.10,
-    f"Strong separation: distributions are\nsignificantly different\n{p_label}",
+    f"{verdict}\n{p_label}",
     transform=ax.transAxes,
     fontsize=8,
     ha="right",
@@ -120,7 +131,7 @@ ax.text(
 title = "ks-test-comparison · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
-ax.set_xlabel("Credit Score (0–100)", fontsize=10, color=INK)
+ax.set_xlabel(SCORE_LABEL, fontsize=10, color=INK)
 ax.set_ylabel("Cumulative Proportion", fontsize=10, color=INK)
 
 # Tick styling
