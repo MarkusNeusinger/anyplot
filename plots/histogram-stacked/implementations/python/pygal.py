@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-stacked: Stacked Histogram
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-09
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
@@ -51,6 +51,8 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=44,
@@ -64,12 +66,7 @@ custom_style = Style(
 )
 
 
-class ContiguousStackedBar(pygal.StackedBar):
-    # Histogram bins touch, as in pygal's own Histogram: no margin inside each bin slot
-    _series_margin = 0
-
-
-chart = ContiguousStackedBar(
+chart = pygal.StackedBar(
     width=3200,
     height=1800,
     style=custom_style,
@@ -82,11 +79,12 @@ chart = ContiguousStackedBar(
     legend_at_bottom_columns=observed[LIGHT_CONDITION].nunique(),
     legend_box_size=36,
     margin=60,
-    spacing=0,
+    spacing=40,
     truncate_legend=-1,
     range=(0, tallest_total * 1.1),
 )
 chart.x_labels = bin_labels
+chart._series_margin = 0  # histogram bins touch: no margin inside each bin slot
 
 # Segments: one per group, stacked in the data's group order in every bin
 for group, heights in observed.groupby(LIGHT_CONDITION, sort=False)[PLANT_HEIGHT]:
