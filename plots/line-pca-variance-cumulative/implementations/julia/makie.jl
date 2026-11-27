@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-05-29
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 87/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Colors
@@ -64,7 +64,7 @@ title_str = "line-pca-variance-cumulative · julia · makie · anyplot.ai"
 # Figure — landscape 3200×1800 (resolution=(1600,900) × px_per_unit=2)
 fig = Figure(
     size            = (1600, 900),
-    fontsize        = 13,
+    fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
 
@@ -77,11 +77,11 @@ ax1 = Axis(
     titlesize          = 20,
     titlecolor         = INK,
     ylabel             = "Cumulative Variance (%)",
-    ylabelsize         = 13,
+    ylabelsize         = 14,
     ylabelcolor        = INK,
     xticklabelsvisible = false,
     xticksvisible      = false,
-    yticklabelsize     = 11,
+    yticklabelsize     = 12,
     yticklabelcolor    = INK_SOFT,
     ytickcolor         = INK_SOFT,
     backgroundcolor    = PAGE_BG,
@@ -93,6 +93,7 @@ ax1 = Axis(
     ygridcolor         = ink_grid,
     yminorgridvisible  = false,
     xminorgridvisible  = false,
+    yticks             = 0:20:100,
     limits             = (0.5, n_comp + 0.5, 0.0, 108.0),
 )
 
@@ -109,31 +110,31 @@ vlines!(ax1, Float64.([idx_90, idx_95]);
 hspan!(ax1, 90.0, 95.0; color = RGBAf(ANYPLOT_AMBER.r, ANYPLOT_AMBER.g, ANYPLOT_AMBER.b, 0.10))
 
 text!(ax1, Float64(n_comp) - 0.3, 91.5;
-    text = "90%", color = INK_SOFT, fontsize = 13, align = (:right, :bottom))
+    text = "90%", color = INK_SOFT, fontsize = 15, align = (:right, :bottom))
 text!(ax1, Float64(n_comp) - 0.3, 96.5;
-    text = "95%", color = INK_SOFT, fontsize = 13, align = (:right, :bottom))
+    text = "95%", color = INK_SOFT, fontsize = 15, align = (:right, :bottom))
 
 scatter!(ax1, [Float64(elbow_idx)], [cumulative_pct[elbow_idx]];
     color = IMPRINT_PALETTE[3], markersize = 14, strokewidth = 0)
-text!(ax1, Float64(elbow_idx) + 0.4, cumulative_pct[elbow_idx];
-    text = "PC$(elbow_idx) (elbow)", color = INK, fontsize = 13,
-    align = (:left, :center))
+text!(ax1, Float64(elbow_idx) + 0.3, cumulative_pct[elbow_idx] - 3.0;
+    text = "PC$(elbow_idx) (elbow)", color = INK, fontsize = 15,
+    align = (:left, :top))
 
 # Bottom panel — individual explained variance bars
 ax2 = Axis(
     fig[2, 1];
     xlabel             = "Number of Components",
     ylabel             = "Individual (%)",
-    xlabelsize         = 13,
-    ylabelsize         = 13,
+    xlabelsize         = 14,
+    ylabelsize         = 14,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
-    xticklabelsize     = 11,
-    yticklabelsize     = 10,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,

@@ -12,139 +12,139 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 71
 review:
   strengths:
-  - Semantic ring fill colors (green=Adopt, amber=Trial, ochre=Assess, red=Hold) create
-    an intuitive urgency-to-risk visual narrative that reinforces the time-horizon
-    concept
-  - Iterative collision-avoidance algorithm for labels is a thoughtful addition that
-    reduces overlaps in the radial layout
-  - Size and opacity graduation from inner (large/opaque) to outer (small/transparent)
-    rings adds a second encoding channel for ring membership beyond color
-  - 270° arc with gap at the bottom cleverly creates space for ring labels without
-    cluttering the data area
-  - Full spec compliance — correct radar chart type, all 4 rings and 4 sectors, 26
-    innovations, ring boundaries, sector dividers, sector headers, and legend all
-    present
-  - Semantic Imprint color assignments (Sustainability=green, AI&ML=blue, Biotech=rose,
-    Infrastructure=ochre) match domain color expectations well
-  - Both light and dark renders are fully theme-correct — chrome flips properly, data
-    colors remain identical
-  - Clean code structure — no functions/classes, seeded RNG, all imports used
+  - Markers sit at their given angle inside their own ring and sector cells
+  - Near-term markers larger and opaque, outer ones faded, giving a focal hierarchy
+  - Idiomatic plotnine composition with geom_polygon/geom_path/geom_segment, scale_fill_identity
+    and scale_size_manual/scale_alpha_manual
+  - Correct theme chrome in both renders
   weaknesses:
-  - 'Label collision in upper-right: ''Atmospheric CO2 Tech'' label (Hold ring, Sustainability
-    sector) collides with the ''Sustainability'' sector header at radius 7.8 — the
-    collision avoidance algorithm only nudges vertically and does not account for
-    the sector header positions at radius 7.8, allowing outer-ring labels to drift
-    into them'
-  - Multiple label clusters in the AI & ML and Biotech/Infrastructure border zone
-    — 'AI Agent Frameworks', 'Causal AI Systems', and adjacent labels are too close;
-    the 1D vertical nudge is insufficient for a 2D radial layout
-  - Item label font (3.8mm ≈ 10.8pt) becomes very small at mobile-scaled width (~400px)
-    where 26 labels will be nearly illegible — consider reducing number of labels
-    shown or increasing minimum font size
-  - 'DE-02: Legend has a solid background box frame (legend_background with border)
-    which slightly clutters the minimal-chrome aesthetic — a frameless or very subtle
-    legend would be more refined'
+  - 'VQ-01 (both): item labels render at about 4 pt (geom_text size=3.8), sector headers
+    at about 4 pt and ring names at about 3.5 pt, below the 8 pt reference, and the
+    labels are drawn in sector colors on tinted ring fills, so blue ''Causal AI Systems''
+    on the brown Assess band and rose ''Organoid Platforms'' on the olive Trial band
+    read weakly in dark → labels in ink at about 8 pt (+4 pt). Likely cause: geom_text
+    size values and color=''sector'' on the label layers.'
+  - 'VQ-02 (both): ''Atmospheric CO2 Tech'' overlaps the ''Sustainability'' sector
+    header, and labels lie on markers: ''eBPF Observability'' on a Biotech marker,
+    ''AI Agent Frameworks'' on its marker, ''Lab-Grown Proteins'' on an Infrastructure
+    marker, ''Energy Analytics'' and ''Carbon Accounting SW'' on green markers → every
+    label clear of headers and markers. Likely cause: the vertical-only nudge ignores
+    sector headers and markers.'
+  - 'VQ-05 (both): the framed legend at legend_position (0.13, 0.10) sits on the Infrastructure
+    Assess and Hold rings and hides their lower ends, labels such as ''Photonic Computing''
+    float outside the arc, and a wide empty band separates the subtitle from the arc
+    → legend in the open part or below the chart, labels inside the arc. Likely cause:
+    legend_position=(0.13, 0.10) and fixed axis limits (-9.5, 9.5) / (-7.5, 8.5).'
+  - 'SC-02 (both): names are not beside their markers (C5): the nudge pushes ''Photonic
+    Computing'' to the upper left while its marker sits on the lower-left Hold ring,
+    and ''Organoid Platforms'', ''Synthetic Biology'' and ''mRNA Therapeutics'' land
+    in the Infrastructure sector or below the arc; the legend covers the rings instead
+    of using the open part (C1) → each name next to its own marker. Likely cause:
+    labels nudged up to several units vertically with no link back to the marker.'
+  - 'VQ-03 (dark): the Hold-ring markers at alpha 0.6 and size 3.5 fade into the dark
+    red Hold fill → alpha 0.85 or higher (+0.25). Likely cause: RING_ALPHA_PT[''Hold'']
+    = 0.6.'
+  - 'VQ-07 (both): the four ordered rings are filled with four unrelated hues (green,
+    amber #DDCC77, ochre, red) instead of ordered steps of one Imprint ramp → steps
+    of one Imprint ramp in ring order, green pole on Adopt and red pole on Hold. Likely
+    cause: the RING_FILL_COLOR dict.'
+  - 'Suggestion: a frameless legend would suit the minimal chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
-      Chrome: Bold title "radar-innovation-timeline · python · plotnine · anyplot.ai" at 12pt clearly readable in dark ink. Italic subtitle "Inner rings → near-term adoption · Outer rings → future exploration" visible in INK_SOFT. Sector headers "Biotech", "Sustainability", "AI & ML", "Infrastructure" rendered in INK along the outer arc edge. Ring labels "Adopt", "Trial", "Assess", "Hold" rendered in INK_SOFT at the bottom gap — all readable.
-      Data: 26 innovation points colored by sector: Sustainability=#009E73 (green), AI&ML=#4467A3 (blue), Biotech=#954477 (rose), Infrastructure=#BD8233 (ochre) — all from Imprint palette. Ring fills use semantic Imprint colors: green for Adopt, amber (#DDCC77) for Trial, ochre for Assess, matte-red for Hold. Point size and opacity decrease from inner (Adopt) to outer (Hold) rings. Item labels colored by sector, placed radially.
-      Legibility verdict: PASS — all text readable against light background. Minor label crowding in inner rings and near sector headers, but no dark-on-light failures.
-      Overlap note: Data label near "Sustainability" sector header ("Atmospheric CO2 Tech" end visible as "Co Tech") indicates sector-header/label collision in the upper-right zone. Multiple labels cluster tightly in the AI & ML and Biotech/Infrastructure border area.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold title and italic subtitle 'Inner rings → near-term adoption · Outer rings → future exploration' in dark ink; bold sector headers outside the arc; ring names Adopt/Trial/Assess/Hold in the open bottom gap; framed 'Category' legend at the lower left on top of the Infrastructure rings. Text readable, item labels small (about 4 pt).
+      Data: 270 degree arc with green, amber, ochre and red ring fills; 26 markers colored by sector (AI & ML blue, Biotech rose, Infrastructure ochre, Sustainability green), larger inside, faded outside. Labels in sector colors are pushed far from their markers (Photonic Computing upper left, mRNA Therapeutics below the arc); 'Atmospheric CO2 Tech' overlaps the 'Sustainability' header; several labels lie on markers.
+      Legibility verdict: PASS (small, detached labels)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
-      Chrome: Title, subtitle, sector headers, and ring labels all rendered in light INK (#F0EFE8) — readable against dark background. Legend background uses #242420 (ELEVATED_BG) with INK_SOFT border. No dark-on-dark failures observed.
-      Data: Data colors identical to light render — Sustainability green, AI&ML blue, Biotech rose, Infrastructure ochre. Ring fills are slightly stronger at alpha=0.28 (vs 0.18 light) giving slightly more visual weight, but data identity is preserved.
-      Legibility verdict: PASS — all chrome correctly flips to light text; no dark-on-dark failures. Sector and ring labels clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, headers and ring names in light ink; legend on #242420 with a soft frame; no dark-on-dark text.
+      Data: sector colors identical to the light render; sector-colored labels on the dark brown and olive bands have low contrast; faded Hold markers dim on the dark red band.
+      Legibility verdict: PASS (weak contrast for some colored labels)
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 18
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Title and chrome text clear in both themes. Item labels at 3.8mm
-          readable at full resolution but dense at mobile scale.
+        passed: false
+        comment: Item labels at about 4 pt and drawn in sector colors on tinted ring
+          fills; several (blue on brown, rose on olive in dark) have low contrast
+          (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Sector header/label collision in upper-right (Sustainability header
-          vs. Atmospheric CO2 Tech label). Clustered labels in AI&ML/Biotech border.
-          1D vertical nudge insufficient for radial layout.
+        comment: '''Atmospheric CO2 Tech'' overlaps the ''Sustainability'' header
+          and several labels lie on markers (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: true
-        comment: Points clearly visible with good size differentiation across rings.
-          Ring fills provide clear zone separation. Arcs and spokes subtle but present.
+        passed: false
+        comment: Markers prominent; the faded Hold-ring markers read dim on the dark
+          Hold fill (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. Semantic category assignments (green=nature,
-          blue=tech, rose=health, ochre=industrial) are CVD-safe.
+        comment: Four distinct Imprint hues (blue, green, rose, ochre) with legend
+          and per-sector position; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: 2400x2400 square canvas correct for symmetric radar. Canvas gate
-          passed. 270° arc layout well-proportioned. Minor density in label zones.
+        passed: false
+        comment: The framed legend sits on the lower-left rings and hides their ends;
+          labels float outside the arc; wide empty band above the arc (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Subtitle describes the radial structure.
-          Sector and ring labels serve as structural axis labels.
+        comment: 'N/A: no axes; the subtitle states the ring direction'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'PAGE_BG correct (#FAF8F1 light / #1A1A17 dark). All colors from
-          Imprint palette. Semantic exceptions (Sustainability=green, Biotech=rose)
-          are justified by domain conventions.'
+        passed: false
+        comment: Backgrounds correct, sector colors Imprint; ordered ring fills use
+          four unrelated hues instead of steps of one ramp (defect line)
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Sophisticated semantic ring fills (green/amber/ochre/red) encode
-          urgency. Size+opacity hierarchy across rings. Professional polar layout
-          with intentional gap for ring labels.
+        passed: false
+        comment: Style-guide baseline with a subtitle and semantic fills; the heavy
+          framed legend box weighs on the composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: All axis elements removed, no grid, subtle ring boundaries and spokes
-          at size=0.3. Legend box frame slightly clutters the otherwise refined aesthetic.
+        passed: false
+        comment: 'Baseline: labels detached from markers and a legend overlaying the
+          rings leave no refinement beyond the rules'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtitle explains direction of time horizons. Semantic ring colors
-          reinforce urgency narrative (green=ready, red=avoid). Size/opacity gradient
-          adds visual weight to actionable items.
+        passed: false
+        comment: 'Near-term markers larger and opaque, outer ones faded: a chosen
+          focal hierarchy'
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -152,30 +152,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radar/innovation timeline with 270° arc, concentric rings
-          for time horizons, angular sectors for categories.
+        comment: 'Correct innovation radar: 270 degree arc, concentric time-horizon
+          rings, four equal sectors'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Concentric rings with boundary arcs, sector spokes, sector header
-          labels, ring name labels, distinct marker colors, ring background fills,
-          legend — all present.
+        passed: false
+        comment: Names are not beside their markers (C5) and the legend sits over
+          the rings instead of the open part (C1) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 26 innovations (within 15-40 spec range) across 4 rings and 4 sectors
-          with correct polar placements.
+        comment: Markers at their given angle inside their own cells (small seeded
+          radial jitter inside the ring)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'radar-innovation-timeline · python · plotnine · anyplot.ai'
-          correct. Legend maps Category colors correctly.
+        comment: Title in the mandated format; legend 'Category' maps the four sectors
     data_quality:
       score: 15
       max: 15
@@ -185,22 +183,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: rings, sectors, labeled items, fills, spokes,
-          ring labels, sector headers. Full 270° arc utilized.'
+        comment: 26 items across 4 rings and 4 sectors, full and empty cells, all
+          rings populated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world technology innovations (RAG Pipelines, mRNA Therapeutics,
-          CRISPR, Carbon Accounting SW) across 4 legitimate domains. Neutral and plausible.
+        comment: Real, neutral technology names (RAG Pipelines, mRNA Therapeutics,
+          eBPF Observability) in plausible horizons
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ring radii well-proportioned for the canvas. 26 items fills the space
-          without overcrowding the data layer.
+        comment: 26 items within the 15-40 range, 4 rings and 4 sectors within 3-4
+          / 3-5; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -210,53 +208,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear procedural code with clear data preparation
-          sections.
+        comment: 'Top-to-bottom: imports, constants, data block, layout, plot, save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic jitter.
+        comment: np.random.seed(42) fixes the radial jitter
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No extraneous imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Collision avoidance algorithm is well-structured. Semantic color
-          dictionaries add maintainability. No fake UI.
+        comment: The vertical nudge loop is layout code no available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi, width, height parameters.
+        comment: Saves plot-{THEME}.png at 2400x2400 with the current plot.save API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Idiomatic plotnine grammar: ggplot() + geom layers + scales + coords
-          + labs + theme. scale_fill_identity for pre-computed fill colors is idiomatic.'
+        passed: false
+        comment: 'Idiomatic grammar composition: precomputed geometry through geom_polygon/geom_path/geom_segment,
+          scale_fill_identity for precomputed fills, coord_fixed'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses scale_size_manual and scale_alpha_manual for ring encoding,
-          guide_legend with override_aes, split geom_text layers for left/right label
-          alignment, coord_fixed for aspect ratio. Good grammar-of-graphics composition.
+        passed: false
+        comment: scale_size_manual/scale_alpha_manual for the ring channel with guides(size=False)
+          and guide_legend(override_aes)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  last_kept:
+    pr: 14889
+    code: regression
+    note: '#14889 was kept because the review found it worse than the live version
+      here: Markers no longer sit at their given ''Position in sector'': the placement
+      search moves RAG Pipelines from 0.10 to about 0.39 and Energy Analytics from
+      0.92 to about 0.57 of their sector (RAG Pipelines. Keep these as the live version
+      has them.'
 impl_tags:
   dependencies: []
   techniques:
