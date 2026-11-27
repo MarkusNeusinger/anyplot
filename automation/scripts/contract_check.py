@@ -23,6 +23,11 @@ rule says what the code contains, not what the render shows:
 - ``legacy-colour``: the code holds a brand hex of an earlier palette: Python
   blue and yellow of the pyplots.ai era, or the variant-D palette
   (``prompts/quality-criteria.md``, VQ-07, lists all but the yellow).
+- ``retired-ramp``: the code holds a stop of a continuous ramp the style
+  guide has since replaced. A regeneration tends to copy its predecessor's
+  ramp, and the advisory ``palette`` rule lets it keep one with any reason,
+  so this rule makes it take the stops of ``prompts/default-style-guide.md``,
+  "Continuous Data".
 - ``colormap``: a named library colormap sits in a colormap position
   (``prompts/default-style-guide.md``, "Continuous Data": only the two
   Imprint colormaps are allowed).
@@ -114,6 +119,7 @@ RULES = (
     "theme",
     "save",
     "legacy-colour",
+    "retired-ramp",
     "colormap",
     "palette",
     "bokeh-page-paint",
@@ -133,6 +139,11 @@ LANGUAGES = ("python", "r", "julia", "javascript")
 # Python blue and yellow, then the variant-D palette. An alpha suffix (#RRGGBBAA) counts too.
 LEGACY_HEXES = ("306998", "FFD43B", "9418DB", "B71D27", "16B8F3", "D359A7", "BA843E")
 LEGACY_RE = re.compile(r"#(?:" + "|".join(LEGACY_HEXES) + r")(?:[0-9A-Fa-f]{2})?\b", re.IGNORECASE)
+
+# The stops of the per-theme ramps before they turned in hue: the light top, the dark fields low end and the dark
+# marks low end. The two-stop ramp before those held only Imprint hues, which stay valid, so no hex marks it.
+RETIRED_RAMP_STOPS = ("002850", "00573D", "007755")
+RETIRED_RAMP_RE = re.compile(r"#(?:" + "|".join(RETIRED_RAMP_STOPS) + r")(?:[0-9A-Fa-f]{2})?\b", re.IGNORECASE)
 
 # prompts/default-style-guide.md: the eight Imprint hues, the amber anchor, the
 # stops of the continuous ramps, the ink and muted pairs, and the page,
@@ -234,6 +245,13 @@ BASE_REASONS: dict[str, tuple[str, str, str]] = {
         "a brand colour of an earlier palette is in the code",
         "prompts/quality-criteria.md",
         "legacy `#306998` (Python Blue)",
+    ),
+    "retired-ramp": (
+        "a stop of a continuous ramp the style guide has replaced is in the code; take every stop of that ramp, "
+        "with its positions, from the style guide's table",
+        _GENERATE,
+        "build `imprint_seq` (single-polarity) or `imprint_div` (diverging) from the `(position, hex)` stops in "
+        '`prompts/default-style-guide.md` "Continuous Data".',
     ),
     "colormap": (
         "a named library colormap stands where a colormap goes",
@@ -819,6 +837,8 @@ def check(source: str, *, spec_id: str, language: str, library: str) -> tuple[li
         found.append("save")
     if LEGACY_RE.search(code):
         found.append("legacy-colour")
+    if RETIRED_RAMP_RE.search(code):
+        found.append("retired-ramp")
     if any(pattern.search(code) for pattern in COLORMAP_RES[language]):
         found.append("colormap")
     hexes = custom_hexes(code)

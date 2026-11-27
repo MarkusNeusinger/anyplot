@@ -443,11 +443,13 @@ def test_every_literal_of_a_line_reaches_the_hint_once() -> None:
     assert norm.count("vmin=10") == 1 and "Normalize(vmin=10, vmax=90)" in norm
 
 
-@pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
 def test_the_seaborn_heatmap_names_its_color_scale_and_colorbar_place() -> None:
     """Live test round 8 of 2026-10-16: the adapter kept `vmin=0, vmax=100, center=50` and the colorbar ticks for
-    data of 32 to 93, and the top-left `cbar_pos` after it dropped the dendrogram; the scan named neither."""
-    path = next(path for path in CATALOGUE_FILES if path.parts[-4] == "heatmap-basic" and path.stem == "seaborn")
+    data of 32 to 93, and the top-left `cbar_pos` after it dropped the dendrogram; the scan named neither.
+
+    The file is the catalogue's heatmap-basic seaborn of that round (#7906), kept as a fixture: a regeneration
+    replaces the live one, and its successor may hold neither setting."""
+    path = Path(__file__).parent / "fixtures" / "heatmap_basic_seaborn_7906.py.txt"
     code = normalise(path.read_text(encoding="utf-8"), library="seaborn")
 
     result = scan(code, spec_id="heatmap-basic", library="seaborn", enabled_libraries=ENABLED)
