@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -7,23 +7,13 @@ Quality: 84/100 | Updated: 2026-11-26
 import math
 import os
 import re
-import sys
 
+import cairosvg
+import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
-# Fix module name conflict (this file is named pygal.py)
-_cwd = sys.path[0] if sys.path and sys.path[0] else None
-if _cwd:
-    sys.path.remove(_cwd)
-
-import cairosvg  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-if _cwd:
-    sys.path.insert(0, _cwd)
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -36,9 +26,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # imprint_seq, fields (hexagon cells fill the map): stops low -> high density
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -196,8 +186,11 @@ custom_style = Style(
 )
 
 
-def build_chart(xr, yr):
-    """Render the XY chart: the outline first, then one dot series per density class."""
+# The first pass measures the plot area; the second sets the axis ranges so one degree of
+# latitude and the same map distance in longitude span equal pixel lengths
+x_range, y_range = (lon_lo, lon_hi), (lat_lo, lat_hi)
+corners = [(hex_r * math.cos(math.radians(60 * k)), hex_r * math.sin(math.radians(60 * k))) for k in range(6)]
+for render_pass in range(2):
     chart = pygal.XY(
         width=2400,
         height=2400,
@@ -215,8 +208,8 @@ def build_chart(xr, yr):
         show_y_guides=False,
         explicit_size=True,
         print_values=False,
-        xrange=xr,
-        range=yr,
+        xrange=x_range,
+        range=y_range,
     )
     chart.add(None, CALIFORNIA_OUTLINE, stroke=True, show_dots=False, fill=False, stroke_width=5)
     for b in bin_ids:
@@ -232,45 +225,32 @@ def build_chart(xr, yr):
             for c in part.itertuples()
         ]
         chart.add(label, points)
-    return chart.render().decode("utf-8")
+    svg = chart.render().decode("utf-8")
 
-
-def fit_axes(svg_text):
-    """Fit pixel = offset + scale * data for both axes from the dots, in series order."""
-    dots = re.findall(r'<circle\b[^>]*\bcx="([^"]+)"[^>]*\bcy="([^"]+)"', svg_text)
+    # Fit pixel = offset + scale * data for both axes from the dot markers, in series order
+    dots = list(re.finditer(r"<circle\b[^>]*/>", svg))
     assert len(dots) == len(cells), f"{len(dots)} dots for {len(cells)} cells"
-    px = np.array([[float(a), float(b)] for a, b in dots])
+    px = np.array([[float(v) for v in re.findall(r'\b(?:cx|cy)="([^"]+)"', m.group(0))[:2]] for m in dots])
     sx, ox = np.polyfit(cells["lon"].to_numpy(), px[:, 0], 1)
     sy, oy = np.polyfit(cells["lat"].to_numpy(), px[:, 1], 1)
-    return sx, ox, sy, oy
+    if render_pass == 0:
+        width_px, height_px = abs(sx) * (lon_hi - lon_lo), abs(sy) * (lat_hi - lat_lo)
+        px_per_map_unit = min(width_px / ((lon_hi - lon_lo) * x_scale), height_px / (lat_hi - lat_lo))
+        lon_span, lat_span = width_px / (px_per_map_unit * x_scale), height_px / px_per_map_unit
+        lon_c, lat_c = (lon_lo + lon_hi) / 2, (lat_lo + lat_hi) / 2
+        x_range = (lon_c - lon_span / 2, lon_c + lon_span / 2)
+        y_range = (lat_c - lat_span / 2, lat_c + lat_span / 2)
 
-
-def circles_to_hexagons(svg_text, sx, ox, sy, oy):
-    """Replace each dot marker with the cell's true hexagon, drawn in data space and mapped to pixels."""
-    corners = [(hex_r * math.cos(math.radians(60 * k)), hex_r * math.sin(math.radians(60 * k))) for k in range(6)]
-    cell_iter = iter(cells.itertuples())
-
-    def replace_one(m):
-        c = next(cell_iter)
-        pts = " ".join(f"{ox + sx * (c.lon + dx / x_scale):.2f},{oy + sy * (c.lat + dy):.2f}" for dx, dy in corners)
-        tag = re.sub(r'\s(cx|cy|r)="[^"]*"', "", m.group(0))
-        return tag.replace(
-            "<circle", f'<polygon points="{pts}" stroke="{PAGE_BG}" stroke-width="3" style="fill-opacity:0.8"', 1
-        )
-
-    return re.sub(r"<circle\b[^>]*/>", replace_one, svg_text)
-
-
-# First pass measures the plot area; the second sets the axis ranges so one degree of
-# latitude and the same map distance in longitude span equal pixel lengths
-probe = build_chart((lon_lo, lon_hi), (lat_lo, lat_hi))
-sx, ox, sy, oy = fit_axes(probe)
-width_px, height_px = abs(sx) * (lon_hi - lon_lo), abs(sy) * (lat_hi - lat_lo)
-px_per_map_unit = min(width_px / ((lon_hi - lon_lo) * x_scale), height_px / (lat_hi - lat_lo))
-lon_span, lat_span = width_px / (px_per_map_unit * x_scale), height_px / px_per_map_unit
-lon_c, lat_c = (lon_lo + lon_hi) / 2, (lat_lo + lat_hi) / 2
-svg = build_chart((lon_c - lon_span / 2, lon_c + lon_span / 2), (lat_c - lat_span / 2, lat_c + lat_span / 2))
-svg = circles_to_hexagons(svg, *fit_axes(svg))
+# Replace each dot marker with the cell's true hexagon, drawn in data space and mapped to pixels
+pieces, last = [], 0
+for m, c in zip(dots, cells.itertuples(), strict=True):
+    pts = " ".join(f"{ox + sx * (c.lon + dx / x_scale):.2f},{oy + sy * (c.lat + dy):.2f}" for dx, dy in corners)
+    tag = re.sub(r'\s(cx|cy|r)="[^"]*"', "", m.group(0)).replace(
+        "<circle", f'<polygon points="{pts}" stroke="{PAGE_BG}" stroke-width="3" style="fill-opacity:0.8"', 1
+    )
+    pieces += [svg[last : m.start()], tag]
+    last = m.end()
+svg = "".join(pieces) + svg[last:]
 
 cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
