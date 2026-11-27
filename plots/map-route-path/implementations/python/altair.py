@@ -1,7 +1,7 @@
 """anyplot.ai
 map-route-path: Route Path Map
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
