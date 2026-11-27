@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-27
@@ -106,7 +106,7 @@ norm_share = (df[SHARE] - df[SHARE].min()) / (share_span if share_span > 0 else 
 fill_hex = [ramp_color(SEQ_FIELDS, t) for t in norm_share]
 fill_rgb = np.array([[int(h[i : i + 2], 16) for i in (1, 3, 5)] for h in fill_hex])
 fill_luminance = fill_rgb @ np.array([0.299, 0.587, 0.114])
-df["label_color"] = np.where(fill_luminance > 140, LABEL_DARK, LABEL_LIGHT)
+df["label_color"] = np.where(fill_luminance > 120, LABEL_DARK, LABEL_LIGHT)
 
 title = "Renewable Energy Share · map-tilegrid · python · letsplot · anyplot.ai"
 title_fontsize = round(16 * min(1.0, 67 / len(title)))
