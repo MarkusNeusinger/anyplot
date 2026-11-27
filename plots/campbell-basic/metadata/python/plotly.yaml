@@ -12,44 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 79
 review:
   strengths:
-  - 'Full spec compliance: 4 natural frequency modes, 3 engine order lines (1x/2x/3x),
-    critical speed markers, shaded zones, and annotations all implemented'
-  - 'Excellent Plotly feature usage: updatemenus toggle buttons, customdata for hover
-    labels, per-trace hovertemplate, add_vrect shading — genuinely idiomatic interactive
-    library usage'
-  - 'Perfect palette compliance: modes use Imprint palette in canonical order (green→lavender→blue→ochre),
-    critical speeds use semantic matte red #AE3030, EO lines use theme-adaptive INK_SOFT'
-  - 'Both themes fully correct: warm #FAF8F1 light and #1A1A17 dark backgrounds with
-    all chrome tokens properly applied — no dark-on-dark or light-on-light failures'
-  - 'Clean data storytelling: red diamond markers plus shaded vertical bands plus
-    annotated callouts create clear visual hierarchy for critical speeds'
-  - Zero-crossing interpolation for critical speed detection is algorithmically precise
-    and physically correct
+  - Critical speeds found by vectorised sign-change detection with linear interpolation,
+    so each diamond sits exactly on its EO/mode crossing
+  - Modes told apart by Imprint hue and by dash style (solid, dash, dot, dashdot);
+    EO lines kept in muted grey dashes as the reference layer
+  - Theme tokens threaded through every chrome element; both renders readable, data
+    colors identical across themes
+  - customdata-driven hovertemplate names the mode × order pair of each critical speed
+    in the HTML
+  - Shaded critical speed zones (the Notes' optional feature) drawn with add_vrect
+    below the traces
   weaknesses:
-  - Legend has 8 entries (4 modes + 3 EO lines + critical speeds) — EO lines all appear
-    identical in the legend (same grey dashed swatch) making it hard to distinguish
-    EO 1x/2x/3x from each other in the legend; the inline '1x'/'2x'/'3x' labels on
-    the diagonal lines compensate but the legend entries are redundant and could be
-    omitted or labeled with EO slope info
-  - Grid is shown on both X and Y axes; for a line-based chart the style guide prefers
-    Y-axis-only grid unless both axes are needed for reading intersections — Campbell
-    diagrams do benefit from both axes so this is borderline, but reducing grid opacity
-    slightly would improve visual cleanliness
+  - 'SC-01, VQ-02 (both): two callout annotations (''71 Hz / Axial × 3x'' and ''1st
+    critical / 489 RPM'') and the ''All Modes'' / ''Modes Only'' updatemenus buttons
+    are additions the basic variant excludes (C5: no further callouts); the ''1st
+    critical'' box also sits over the EO 2x/3x lines near the origin → remove both
+    callouts and the buttons. Likely cause: the add_annotation block after the critical
+    speed markers and layout updatemenus.'
+  - 'SC-02, VQ-02 (both): the ''3x'' engine order label is hidden behind the ''71
+    Hz'' callout box at about 1600 RPM / 80 Hz, so the 3x line carries no visible
+    order label → the label visible beside its line. Likely cause: the callout''s
+    ax=50, ay=-45 placing its box over the label drawn at 75 % of the 3x segment;
+    removing the callout clears it.'
+  - 'VQ-02 (both): the legend box in the upper left covers the Axial curve from 0
+    to about 1050 RPM (73–75 Hz) → legend clear of all data, e.g. in the empty upper-right
+    area or a horizontal legend below the plot. Likely cause: legend x=0.01, y=0.99,
+    xanchor=''left'', yanchor=''top''.'
+  - 'DQ-01 (both): 12 critical speed markers, above the spec''s 6–10 → 6–10 (−2 or
+    more). Likely cause: all four modes lie below 100 Hz, so every one of the three
+    orders crosses every mode inside 0–6000 RPM; place a mode (e.g. Axial) above the
+    1x line''s reach or below the crossings so some mode/order pairs do not intersect.'
+  - 'Suggestion: the active ''All Modes'' button keeps plotly''s pale-blue active
+    fill with near-white text in the dark theme; the buttons themselves are the SC-01
+    defect, removing them is the fix.'
+  - 'Suggestion: the three identical grey ''EO 1x/2x/3x'' legend entries could be
+    one ''Engine order'' entry, since the direct labels name the orders.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
-      Chrome: Title "campbell-basic · python · plotly · anyplot.ai" centered in dark #1A1A17 ink at size 16, fully readable. X-axis label "Rotational Speed (RPM)" and Y-axis label "Frequency (Hz)" in dark ink at size 12, clearly legible. Tick labels in INK_SOFT #4A4A44 at size 10, readable. Legend in upper-left with ELEVATED_BG #FFFDF6 fill and INK_SOFT border. Toggle buttons "All Modes" / "Modes Only" in upper-right, readable. All chrome passes legibility.
-      Data: 1st Bending (solid #009E73 green), 2nd Bending (dashed #C475FD lavender), 1st Torsional (dotted #4467A3 blue), Axial (dashdot #BD8233 ochre). Three EO lines in INK_SOFT dashed grey. Red diamond markers (#AE3030) at critical intersections. Subtle pink-tinted vertical shaded zones at top 3 critical RPM locations. Annotations "71 Hz / Axial × 3x" and "1st critical / 489 RPM" with red arrow callouts.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: warm off-white #FAF8F1 on paper and plot area.
+      Chrome: title 'campbell-basic · python · plotly · anyplot.ai' centered in dark ink; axis titles 'Rotational Speed (RPM)' and 'Frequency (Hz)' and ticks 0-6000 / 0-110 in dark/INK_SOFT; legend upper-left on elevated fill with border; 'All Modes' / 'Modes Only' buttons upper-right; the active 'All Modes' button has a pale-blue fill with dark text.
+      Data: 1st Bending solid #009E73 (rising 22→45 Hz), 2nd Bending dashed #C475FD (falling 49→29), 1st Torsional dotted #4467A3 (flat ~55-57), Axial dashdot #BD8233 (falling 75→50); EO 1x/2x/3x grey dashed lines from the origin with '1x' and '2x' direct labels on chips; 12 red #AE3030 diamonds with page-colored outline at the crossings; three faint red zones at ~1430, ~2060, ~3590 RPM; two red-bordered callouts ('71 Hz / Axial × 3x', '1st critical / 489 RPM'). The '3x' label is hidden behind the 71 Hz callout; the legend covers the start of the Axial curve.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
-      Chrome: Title in light #F0EFE8 ink, fully readable against dark background. Axis labels and tick labels in light-grey INK_SOFT #B8B7B0, readable. Legend has dark ELEVATED_BG #242420 fill with light-grey text — no dark-on-dark failure. Toggle buttons visible with ELEVATED_BG fill. Grid lines are subtle white-tinted at 15% opacity.
-      Data: All 4 mode curves use identical colors to light render (green, lavender, blue, ochre) — data colors correctly unchanged. EO lines now appear as white/light-grey dashed lines (INK_SOFT adapts to #B8B7B0 in dark), clearly distinguishable from the dark background. Red diamond critical speed markers identical to light render. Annotation callout boxes use ELEVATED_BG dark (#242420) fill with red (#AE3030) border and text — readable.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; legend and 'Modes Only' button on #242420 fill with light text; the active 'All Modes' button keeps a pale-blue fill with near-white text that is barely readable (an element of the excluded button control); grid subtle.
+      Data: mode colors, red diamonds and callout colors identical to the light render; EO lines switch to light grey INK_SOFT dashes and stay clearly visible; red zones read as faint dark-red bands.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,143 +69,133 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set (title 16, axis 12, ticks 10, legend 10).
-          Readable at full size in both themes. Minor: 8-item legend is dense but
-          readable.'
+        comment: Title 16, axis titles 12, ticks/legend 10 explicitly set; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Inherent line/mode overlaps are expected in a Campbell diagram. Annotations
-          and legend don't conflict with data. Minor density in legend area.
+        comment: Legend box covers the Axial curve's start; '71 Hz' callout hides
+          the 3x EO label; '1st critical' box sits over the EO lines near the origin
+          (defect lines)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 4 modes clearly visible with distinct linestyles. 3 EO lines
-          visible in grey dashed. Red diamond markers size 14 are prominent. Shaded
-          zones subtle but perceptible.
+        comment: Lines 3.5 px, diamonds size 14 with page-colored outline; visible
+          in both themes, legend glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. EO lines distinguished by color (grey) AND
-          linestyle from mode curves. Critical speeds use semantic red. CVD-safe.
+        comment: Modes differ by hue and dash style; EO lines grey dashed; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (gate passed). Margins l=80/r=40/t=80/b=60 correct.
-          Toggle buttons in upper-right fully rendered. Annotations within plot bounds.
+        comment: 3200x1800, drawing fills the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Rotational Speed (RPM)'', Y: ''Frequency (Hz)'' — descriptive
-          with units. Title format correct.'
+        comment: '''Rotational Speed (RPM)'', ''Frequency (Hz)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (brand green). Canonical order maintained.
-          Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
+        comment: 'Imprint in canonical order from #009E73; semantic red criticals;
+          correct backgrounds both themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Well above default: distinct line styles per mode, muted EO lines
-          vs colored modes, semantic red for critical speeds, shaded zones, annotated
-          callouts, and interactive toggle buttons all demonstrate intentional design
-          hierarchy.'
+        comment: 'Style-guide baseline: Imprint, theme tokens, explicit sizes; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Correct L-shaped spine (mirror=False), subtle gridlines at 15% opacity,
-          proper legend border, elevated callout boxes. Grid on both axes (appropriate
-          for Campbell diagram reading).
+        comment: Page-colored outlines on the diamonds and elevated-chip backgrounds
+          behind the EO order labels
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Red diamond markers + shaded vertical zones + annotated callouts
-          create clear hierarchy. Critical speeds are the clear focal point. EO inline
-          labels reduce legend noise.
+        passed: false
+        comment: Callouts are excluded additions and earn no credit; shading is the
+          Notes' optional feature
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Correct Campbell diagram: natural frequency curves vs RPM with diagonal
-          EO excitation lines from origin.'
+        comment: Correct Campbell diagram, but two callouts and the All Modes/Modes
+          Only buttons are additions the basic variant excludes (C5)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4 modes, 3 EO lines, critical speed markers (diamonds), mode labels,
-          EO labels (inline + legend), optional shaded zones included.
+        comment: Modes named, criticals marked, legend splits modes from EO lines;
+          the 3x order label is hidden (C2 missed)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 0-6000 RPM, Y: 0-110 Hz. All modes across full speed range. EO
-          lines from origin with correct slope = order/60.'
+        comment: Criticals interpolated at the true crossings; EO slopes order/60;
+          axes from 0 cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'campbell-basic · python · plotly · anyplot.ai' correct. Legend
-          distinguishes modes from EO lines and critical speeds.
+        comment: Title format correct; legend labels match traces, EO lines identified
+          by direct labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Gyroscopic effects modeled (some modes increase, some decrease with
-          speed). Zero-crossing interpolation for precise critical speed detection.
-          All three EO effects shown.
+        comment: Rising and falling modes, three orders; 12 critical markers exceed
+          the spec's 6-10 (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 0-6000 RPM realistic for rotating machinery. Frequencies 22-75 Hz
-          plausible for structural modes. Mode names (1st Bending, 2nd Bending, 1st
-          Torsional, Axial) standard in rotordynamics.
+        comment: Standard rotordynamic mode names, 0-6000 RPM, 22-75 Hz modes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80 speed points per mode (within 50-100 spec). 4 modes (within 4-5
-          spec). 3 EO lines. 8-10 critical speed markers (within 6-10 spec).
+        comment: 'Checked: EO 1x reaches 100 Hz at 6000 RPM (slope 1/60); 80 speed
+          points; 4 modes'
     code_quality:
       score: 10
       max: 10
@@ -203,54 +205,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Linear code flow with clear
-          sections.
+        comment: Top-to-bottom script, no functions; a sort-key lambda only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Loops for modes and EO lines. Zero-crossing detection is algorithmically
-          clean. Toggle buttons are real Plotly feature (not fake interactivity).
+        comment: Vectorised sign-change crossing detection with linear interpolation;
+          no redundant code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image f'plot-{THEME}.png' and write_html f'plot-{THEME}.html'
-          both correct.
+        comment: plot-{THEME}.png and .html via write_image/write_html
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: go.Figure with go.Scatter traces, add_vrect, add_annotation, update_layout
-          — all idiomatic Plotly patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: updatemenus with toggle buttons (trace visibility), customdata for
-          hover labels, per-trace hovertemplate, add_vrect for zone shading — genuine
-          distinctive Plotly interactive features.
+        comment: go.Scatter per trace, add_vrect with layer='below', hovertemplate
+          with customdata
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: customdata-driven hovertemplate naming each mode x order crossing;
+          add_vrect shading; updatemenus are excluded and earn nothing
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  last_kept:
+    pr: 14756
+    code: no_defect_improvement
+    note: '#14756 was kept because none of its visible changes fixed a defect the
+      review named or a property the spec asks for.'
 impl_tags:
   dependencies: []
   techniques:
