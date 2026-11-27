@@ -1,7 +1,7 @@
 """ anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 77/100 | Updated: 2026-11-26
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
@@ -22,6 +22,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_gradientn,
     scale_size,
     theme,
@@ -45,9 +46,9 @@ HUB_COLOR = INK
 
 # Imprint marks ramp for continuous flow volume, sampled at 256 even steps
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -79,36 +80,36 @@ hubs = {
 
 label_offsets = {
     "Los Angeles": (-5, 4),
-    "New York": (4, 2),
-    "London": (-26, 5),
+    "New York": (-4, -7),
+    "London": (-8, 9),
     "Rotterdam": (24, 7),
-    "Dubai": (4, 2),
+    "Dubai": (-14, -3),
     "Singapore": (4, -5),
-    "Shanghai": (-4, -7),
+    "Shanghai": (15, -8),
     "Tokyo": (6, 7),
     "Sydney": (4, -5),
     "Sao Paulo": (-14, -5),
 }
 
 flows = [
-    ("Shanghai", "Los Angeles", 85),
-    ("Shanghai", "Rotterdam", 72),
-    ("Singapore", "Rotterdam", 65),
-    ("Tokyo", "Los Angeles", 58),
-    ("Rotterdam", "New York", 52),
-    ("Dubai", "London", 48),
-    ("Shanghai", "Singapore", 45),
-    ("Los Angeles", "Tokyo", 42),
-    ("Singapore", "Sydney", 38),
-    ("Sao Paulo", "Rotterdam", 35),
-    ("New York", "London", 32),
-    ("Dubai", "Singapore", 30),
-    ("Shanghai", "Dubai", 28),
-    ("Rotterdam", "Dubai", 25),
-    ("London", "New York", 22),
-    ("Sydney", "Singapore", 20),
-    ("Tokyo", "Shanghai", 18),
-    ("Los Angeles", "Shanghai", 15),
+    ("Shanghai", "Los Angeles", 5.0),
+    ("Shanghai", "Rotterdam", 4.2),
+    ("Singapore", "Rotterdam", 3.8),
+    ("Tokyo", "Los Angeles", 3.4),
+    ("Rotterdam", "New York", 3.1),
+    ("Dubai", "London", 2.8),
+    ("Shanghai", "Singapore", 2.6),
+    ("Los Angeles", "Tokyo", 2.5),
+    ("Singapore", "Sydney", 2.2),
+    ("Sao Paulo", "Rotterdam", 2.1),
+    ("New York", "London", 1.9),
+    ("Dubai", "Singapore", 1.8),
+    ("Shanghai", "Dubai", 1.6),
+    ("Rotterdam", "Dubai", 1.5),
+    ("London", "New York", 1.3),
+    ("Sydney", "Singapore", 1.2),
+    ("Tokyo", "Shanghai", 1.1),
+    ("Los Angeles", "Shanghai", 0.9),
 ]
 
 flow_data = []
@@ -246,11 +247,15 @@ plot = (
         mapping=aes(x="origin_lon", y="origin_lat", xend="dest_lon", yend="dest_lat", size="flow", color="flow"),
         curvature=-0.3,
         alpha=0.6,
+        tooltips=layer_tooltips()
+        .title("@origin_name → @dest_name")
+        .line("Trade volume|@flow M TEU")
+        .format("flow", ".1f"),
     )
     + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=5, color=HUB_COLOR, fill=HUB_COLOR)
-    + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=8, color=INK_SOFT)
-    + scale_size(range=[1, 6], name="Trade Volume")
-    + scale_color_gradientn(colors=FLOW_COLORS, name="Trade Volume")
+    + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=4, color=INK_SOFT)
+    + scale_size(range=[1, 6], name="Trade Volume (M TEU)")
+    + scale_color_gradientn(colors=FLOW_COLORS, name="Trade Volume (M TEU)")
     + labs(title="flowmap-origin-destination · python · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme

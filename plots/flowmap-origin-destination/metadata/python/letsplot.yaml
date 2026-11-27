@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:06:07Z'
-updated: '2026-11-26T09:07:14Z'
+updated: '2026-11-27T16:28:32Z'
 generated_by: claude-sonnet
-workflow_run: 45788036614
+workflow_run: 46033087760
 issue: 3765
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,54 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-dark.html
-quality_score: 77
+quality_score: 82
 review:
   strengths:
-  - Continuous flow volume uses the Imprint SEQ_MARKS ramp with separate light and
-    dark stops, so thick corridors read dark navy on the light page and pale blue
-    on the dark page
-  - Arc width and color both encode volume, with a color bar and a width key, so the
-    Shanghai-Los Angeles and Shanghai-Rotterdam corridors stand out from the thin
-    flows
   - geom_curve with curvature=-0.3 and alpha=0.6 draws one translucent arc per flow
     whose ends sit exactly on the hub points
+  - Arc width and color both encode volume with the Imprint SEQ_MARKS stops per theme,
+    so the Shanghai-Los Angeles and Shanghai-Rotterdam corridors stand out
+  - layer_tooltips() on the arcs gives origin → destination titles and formatted volumes
+    in the HTML
   - Quiet continent fill and border tokens per theme keep the basemap behind the flows
   weaknesses:
-  - 'VQ-02 (both): the Dubai label sits under the Rotterdam-Dubai and Dubai-Singapore
-    arcs and the Shanghai label is crossed by the Los Angeles-Shanghai and Shanghai-Dubai
-    arcs, so both city names collide with data → place both labels clear of the arcs
-    (Dubai below-right of its point, Shanghai further below) or draw the labels above
-    the arcs on a page-colored backing. Likely cause: label_offsets for Dubai (4,
-    2) and Shanghai (-4, -7).'
-  - 'VQ-05 (both): city labels drawn with geom_text size=8 (mm, about 23 pt) are larger
-    than the 16 pt title and twice the 10 pt legend text → about size=4-5 (-3 to -4
-    mm), the library prompt''s annotation range. Likely cause: geom_text(size=8).'
-  - 'VQ-06 (both): the legend title ''Trade Volume'' gives no unit for the 15-85 values
-    → name the unit, e.g. ''Trade Volume (M TEU)''. Likely cause: scale_size/scale_color_gradientn
-    name.'
-  - 'SC-02 (code): the Notes ask interactive libraries for hover tooltips with exact
-    flow values and location names; the arcs carry only lets-plot''s default tooltip
-    without origin/destination names → add layer_tooltips() on geom_curve with origin_name,
-    dest_name and flow. Likely cause: geom_curve without tooltips=.'
-  - 'Suggestion: merge the color bar and the width key into one ''Trade Volume'' legend
-    so the two identical titles do not repeat.'
+  - 'VQ-02 (both): the thin Singapore→Sydney arc runs through the ''ga'' of the ''Singapore''
+    label and the thick Sydney→Singapore arc touches its ''re'' → place the label
+    clear of both arcs, e.g. left of the hub (about −10° lon, −3° lat). Likely cause:
+    label_offsets[''Singapore''] = (4, -5).'
+  - 'VQ-03 (dark): the width key''s line samples are drawn in a fixed dark grey (about
+    #4A4A4A) on the #242420 legend box and read faint → draw them in INK_SOFT so they
+    stand out like the arcs. Likely cause: the size legend''s glyph color is not set;
+    guides(size=guide_legend(override_aes={''color'': INK_SOFT})).'
+  - 'Suggestion: merge the color bar and the width key into one ''Trade Volume (M
+    TEU)'' legend so the identical titles do not repeat.'
   - 'Suggestion: the continent polygons are very coarse; a finer coastline outline
     would give more geographic context.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page and panel, thin dark panel frame.
-      Chrome: title "flowmap-origin-destination · python · letsplot · anyplot.ai" centered in dark ink; ten city labels in dark grey (INK_SOFT); two legends on the right on an elevated off-white box, both titled "Trade Volume": a color bar 20-80 and a width key 20-80. All text readable.
-      Data: 18 curved arcs over coarse light-grey continent polygons, colored with the Imprint sequential marks ramp (green #009E73 for low flows through blue to navy #002850 for high) and widened by flow; the thick Shanghai-Los Angeles and Shanghai-Rotterdam corridors are dark navy. Ten near-black hub points. Dubai and Shanghai labels are crossed by arcs.
+      Background: warm off-white #FAF8F1 page and panel with a thin dark frame.
+      Chrome: title "flowmap-origin-destination · python · letsplot · anyplot.ai" centered in dark ink (~56% width); ten city labels in INK_SOFT at ~11 pt; two right-hand legends on the elevated off-white box, both titled "Trade Volume (M TEU)": a color bar 1-5 and a width key 1-5. All text readable; the 'Singapore' label is crossed by the Singapore-Sydney arcs, the 'Dubai' label now sits left of its hub clear of the arcs.
+      Data: 18 curved translucent arcs over coarse light-grey continent polygons, colored with the Imprint marks ramp (#009E73 green for low flows through deep blue to dark violet for the Shanghai-Los Angeles corridor) and widened by flow; ten near-black hub points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page and panel, thin grey frame.
-      Chrome: title in light ink; city labels in light grey (#B8B7B0); legends on the #242420 elevated box with light text. No dark-on-dark text.
-      Data: same arcs and widths, the continuous ramp switched to its dark stops (dark green #007755 for low flows through #009E73 to pale blue #CDD9FF for high), as intended for a continuous ramp. Hub points flip to light ink. Dark-grey continents stay quieter than the arcs. Same Dubai/Shanghai label collisions.
+      Chrome: title in light ink, city labels in light grey #B8B7B0, legends on the #242420 box with light text; no dark-on-dark text. The width key's line samples are a faint dark grey on the legend box.
+      Data: same arcs, widths and hubs; the continuous ramp uses its dark stops (olive #6F7E20 for low flows through #009E73 to pale blue #CDD9FF for high); hub points flip to light ink; dark-grey land stays quieter than the arcs.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,50 +57,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, city labels and both legends set explicitly and readable in
-          both themes; no dark-on-dark text
+        comment: Title 16 pt, legend 12/10 pt, city labels geom_text size=4 (~11 pt);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: false
-        comment: Dubai and Shanghai city labels are crossed by arcs; London label
-          touches the Los Angeles-Rotterdam arc (defect line)
+        comment: The two Singapore-Sydney arcs run through the 'Singapore' label (defect
+          line); the Dubai label now sits clear in a gap between arcs
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Arcs 1-6 px wide all visible, thinnest arcs still read in both themes;
-          hub points prominent; legend glyphs visible
+        passed: false
+        comment: Arcs 1-6 px all visible, hubs prominent; the width key's line samples
+          are faint dark grey on the dark legend box (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential ramp runs light to dark (green to navy / dark
-          green to pale blue), CVD-safe, doubled by width
+        comment: Imprint sequential ramp doubled by width; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Map fills the canvas well, but city labels at geom_text size=8 (about
-          23 pt) are larger than the 16 pt title (defect line)
+        passed: true
+        comment: Map fills the landscape canvas with legends at the right; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No axes on a map (fine); the legend title 'Trade Volume' carries
-          no unit (defect line)
+        passed: true
+        comment: Map without axes; legend titles carry the unit 'Trade Volume (M TEU)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous flow uses the Imprint SEQ_MARKS ramp with the theme''s
-          own stops; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'Flow color uses the Imprint SEQ_MARKS stops per theme; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
       score: 8
       max: 20
@@ -119,25 +107,24 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: 'Style-guide baseline: theme tokens, quiet continent fill, Imprint
-          ramp; nothing decided beyond it'
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, quiet land fill; nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
-        passed: true
-        comment: theme_void baseline; the panel frame and two separate 'Trade Volume'
-          legends show no refinement beyond the defaults
+        passed: false
+        comment: theme_void with a frame; no refinement beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Width and color both encode flow, as the Notes suggest; no hierarchy
-          chosen beyond that
+        passed: false
+        comment: Width and color both follow the Notes; no hierarchy chosen beyond
+          them
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,28 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Origin-destination flow map with curved geom_curve arcs over a basemap
+        comment: 'Origin-destination flow map: curved arcs over a basemap'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Curved arcs (C1), width by flow with width key (C2), alpha 0.6 (C3),
-          color gradient with legend (C4), quiet basemap (C5) all present; the Notes'
-          hover tooltips with location names are missing (defect line)
+        passed: true
+        comment: Curved arcs (C1), width by flow with key (C2), alpha 0.6 (C3), color
+          gradient with legend (C4), quiet basemap (C5), hover tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: origin lon/lat to x/y, dest lon/lat to xend/yend; arc ends sit on
-          the hub points
+        comment: Arc ends sit exactly on the hub coordinates; lon/lat mapped to x/y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; color bar and width key both keyed to Trade Volume
+        comment: Mandated title; both legends titled with the unit and matching their
+          encodings
     data_quality:
       score: 15
       max: 15
@@ -176,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 18 flows, 10 hubs, dominant corridors beside thin arcs, bidirectional
-          pairs show imbalance
+        comment: 18 flows over 10 hubs show dominant corridors, hubs and directional
+          pairs (Shanghai-LA vs LA-Shanghai)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Container trade between real major ports, neutral
+        comment: Real container ports and plausible trade lanes; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hub coordinates checked against real city positions; volumes 15-85
-          plausible relative values; no Check values in the spec
+        comment: Lane volumes 0.9-5.0 M TEU, plausible beside Shanghai's ~47 M TEU
+          total; checked in the flows list and on the 1-5 legends
     code_quality:
       score: 10
       max: 10
@@ -200,13 +186,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; ramp_color is the helper the library prompt prescribes
+        comment: Imports -> tokens -> data -> plot -> save; ramp_color is a short
+          helper above its first use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, seed set
+        comment: Hard-coded data, seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -218,45 +205,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; no hand-written algorithm an available call replaces
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Grammar-of-graphics layering with geom_polygon, geom_curve, scale_size;
-          nothing beyond the prompt's patterns
+        passed: false
+        comment: Grammar layering of geom_polygon/geom_curve/geom_point/geom_text
+          with native geom_curve curvature and scale_size/scale_color_gradientn
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: true
-        comment: geom_curve curvature is ggplot-generic; no lets-plot-specific feature
-          such as layer_tooltips
+        passed: false
+        comment: lets-plot-specific layer_tooltips().title().line().format() chain
+          on the arcs
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T09:03:02Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
+  rendered_at: '2026-11-27T16:24:40Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - colorbar
   - annotations
-  - layer-composition
-  - bezier-curves
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
   - custom-colormap
+  - alpha-blending
