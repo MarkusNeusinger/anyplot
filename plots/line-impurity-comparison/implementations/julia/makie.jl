@@ -31,11 +31,8 @@ const IMPRINT_PALETTE = [
 # Data — probability range, Gini impurity, and normalized binary entropy
 p = range(0.0, 1.0; length = 100)
 
-gini_raw = 2 .* p .* (1 .- p)
-gini     = gini_raw ./ maximum(gini_raw)
-
-entropy_raw = [q <= 0.0 || q >= 1.0 ? 0.0 : -q * log2(q) - (1 - q) * log2(1 - q) for q in p]
-entropy     = entropy_raw ./ maximum(entropy_raw)
+gini    = 2 .* p .* (1 .- p)
+entropy = [q <= 0.0 || q >= 1.0 ? 0.0 : -q * log2(q) - (1 - q) * log2(1 - q) for q in p]
 
 # Plot
 title_str = "Gini vs Entropy · line-impurity-comparison · julia · makie · anyplot.ai"
@@ -54,7 +51,7 @@ ax = Axis(
     titlesize          = title_sz,
     titlecolor         = INK,
     xlabel             = "Probability p",
-    ylabel             = "Impurity (normalized to [0, 1])",
+    ylabel             = "Impurity",
     xlabelsize         = 14,
     ylabelsize         = 14,
     xticklabelsize     = 12,
@@ -83,7 +80,7 @@ band!(ax, collect(p), gini, entropy;
 lines!(ax, collect(p), gini;
     color     = IMPRINT_PALETTE[1],
     linewidth = 3.0,
-    label     = "Gini:  2p(1−p)  [normalized]")
+    label     = "Gini:  2p(1−p)")
 
 lines!(ax, collect(p), entropy;
     color     = IMPRINT_PALETTE[2],
@@ -92,16 +89,18 @@ lines!(ax, collect(p), entropy;
     label     = "Entropy:  −p log₂p − (1−p) log₂(1−p)")
 
 # Annotate maximum impurity point at p = 0.5 (spec requirement)
-vlines!(ax, [0.5];
+lines!(ax, [0.5, 0.5], [0.0, maximum(entropy)];
     color     = INK_MUTED,
     linewidth = 1.5,
     linestyle = :dot)
 
-text!(ax, 0.52, 0.82;
+ylims!(ax, 0, maximum(entropy) * 1.12)
+
+text!(ax, 0.5, maximum(entropy) * 1.02;
     text     = "max at p = 0.5",
     color    = INK_MUTED,
     fontsize = 13,
-    align    = (:left, :top))
+    align    = (:center, :bottom))
 
 Legend(fig[1, 2], ax;
     framecolor      = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.4f0),
