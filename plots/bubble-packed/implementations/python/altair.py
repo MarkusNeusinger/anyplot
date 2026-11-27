@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-29
@@ -7,7 +7,6 @@ Quality: 91/100 | Updated: 2026-05-29
 import os
 
 import altair as alt
-import circlify
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -20,122 +19,140 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — 8 hues, canonical order (hybrid-v3 sort)
+# Imprint palette — 8 hues, canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-np.random.seed(42)
+# Constants
+LABEL_SHARE = 0.25  # circles below this share of the radius range carry their name only
 
-# Data — department budget allocation by division ($K)
-labels = [
-    "Engineering",
-    "R&D",
-    "Data Science",
-    "QA",
-    "Marketing",
-    "Sales",
-    "Support",
-    "Finance",
-    "HR",
-    "Legal",
-    "Operations",
-    "IT",
-    "Security",
-    "Design",
-    "Product",
-]
-values = [850, 750, 460, 195, 420, 680, 210, 290, 180, 150, 320, 380, 170, 240, 550]
-groups = ["Technology"] * 4 + ["Revenue"] * 3 + ["Corporate"] * 3 + ["Operations"] * 3 + ["Product"] * 2
-n = len(labels)
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: label
+BUDGET = "Budget ($K)"  # role: value
+DIVISION = "Division"  # role: group
 
-# Circle packing layout via circlify (returns circles in ascending value order)
-circles = circlify.circlify(values, show_enclosure=False)
-idx_asc = np.argsort(values)
-scale = 300
-
-x_coords = np.zeros(n)
-y_coords = np.zeros(n)
-radii = np.zeros(n)
-for ci, oi in zip(circles, idx_asc, strict=True):
-    x_coords[oi] = ci.x * scale
-    y_coords[oi] = ci.y * scale
-    radii[oi] = ci.r * scale
-
-group_order = ["Technology", "Revenue", "Operations", "Corporate", "Product"]
-group_colors = IMPRINT_PALETTE[:5]
-
+# Data: replace this block with your own table, for example df = pd.read_csv("budgets.csv")
 df = pd.DataFrame(
     {
-        "label": labels,
-        "value": values,
-        "group": groups,
-        "x": x_coords,
-        "y": y_coords,
-        "radius": radii,
-        "budget": [f"${v}K" for v in values],
+        DEPARTMENT: [
+            "Engineering",
+            "R&D",
+            "Data Science",
+            "QA",
+            "Marketing",
+            "Sales",
+            "Support",
+            "Operations",
+            "IT",
+            "Security",
+            "Finance",
+            "HR",
+            "Legal",
+            "Design",
+            "Product",
+        ],
+        BUDGET: [850, 750, 460, 195, 420, 680, 210, 320, 380, 170, 290, 180, 150, 240, 550],
+        DIVISION: ["Technology"] * 4 + ["Revenue"] * 3 + ["Operations"] * 3 + ["Corporate"] * 3 + ["Product"] * 2,
     }
 )
 
-# Interactive legend selection — click a division to highlight it
-selection = alt.selection_point(fields=["group"], bind="legend")
+# Plot: reads only df and the constants above
+# Circle packing: the area of each circle is proportional to its value. Largest first, each circle goes
+# where it touches two placed circles, overlaps none, and sits closest to the centre of what is placed.
+radius = np.sqrt(df[BUDGET].to_numpy(dtype=float))
+centers = np.zeros((len(df), 2))
+placed = []
+for i in np.argsort(-radius, kind="stable"):
+    if not placed:
+        placed.append(i)
+        continue
+    if len(placed) == 1:
+        centers[i] = centers[placed[0]] + [radius[placed[0]] + radius[i], 0.0]
+        placed.append(i)
+        continue
+    weights = radius[placed] ** 2
+    middle = (centers[placed] * weights[:, None]).sum(axis=0) / weights.sum()
+    best, best_dist = None, np.inf
+    for a_pos, a in enumerate(placed):
+        for b in placed[a_pos + 1 :]:
+            d = np.linalg.norm(centers[b] - centers[a])
+            ra, rb = radius[a] + radius[i], radius[b] + radius[i]
+            if d > ra + rb or d < abs(ra - rb):
+                continue
+            along = (ra**2 - rb**2 + d**2) / (2 * d)
+            height = np.sqrt(max(ra**2 - along**2, 0.0))
+            unit = (centers[b] - centers[a]) / d
+            for sign in (1, -1):
+                spot = centers[a] + unit * along + sign * height * np.array([-unit[1], unit[0]])
+                gaps = np.linalg.norm(centers[placed] - spot, axis=1) - radius[placed] - radius[i]
+                if gaps.min() > -1e-9 and np.linalg.norm(spot - middle) < best_dist:
+                    best, best_dist = spot, np.linalg.norm(spot - middle)
+    centers[i] = best
+    placed.append(i)
 
-r_min, r_max = radii.min(), radii.max()
-radius_threshold = r_min + (r_max - r_min) * 0.25
+# Centre on the area-weighted middle and scale the enclosing circle to radius 1
+centers -= (centers * radius[:, None] ** 2).sum(axis=0) / (radius**2).sum()
+enclosing = (np.linalg.norm(centers, axis=1) + radius).max()
+df["x"], df["y"], df["r"] = centers[:, 0] / enclosing, centers[:, 1] / enclosing, radius / enclosing
+
+# The chart is fitted to 600 x 600, so the view is a little shorter than wide; one scale for both axes
+# keeps the packed circles round and touching (view size measured from the fitted chart)
+VIEW_W, VIEW_H = 580, 548
+px_per_unit = min(VIEW_W, VIEW_H) / 2.3
+half_w, half_h = VIEW_W / 2 / px_per_unit, VIEW_H / 2 / px_per_unit
+
+df["area_px"] = (2 * df["r"] * px_per_unit) ** 2  # Vega draws a circle with diameter sqrt(size)
+df["budget_text"] = "$" + df[BUDGET].astype(str) + "K"
+radius_cut = df["r"].min() + (df["r"].max() - df["r"].min()) * LABEL_SHARE
+df["caption"] = np.where(df["r"] >= radius_cut, df[DEPARTMENT] + "\n" + df["budget_text"], df[DEPARTMENT])
+
+divisions = df[DIVISION].unique()
+colors = dict(zip(divisions, IMPRINT_PALETTE, strict=False))
+
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+DEPARTMENT_F, BUDGET_F, DIVISION_F = (c.translate(ESCAPE) for c in (DEPARTMENT, BUDGET, DIVISION))
+
+# Interactive legend selection — click a division to highlight it
+selection = alt.selection_point(fields=[DIVISION_F], bind="legend")
+
+x_axis = alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-half_w, half_w], nice=False))
+y_axis = alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-half_h, half_h], nice=False))
 
 circles_layer = (
     alt.Chart(df)
     .mark_circle(stroke=PAGE_BG, strokeWidth=2.5)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(padding=r_max * 0.6)),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(padding=r_max * 0.6)),
-        size=alt.Size("radius:Q", scale=alt.Scale(range=[r_min**2 * 1.6, r_max**2 * 1.6]), legend=None),
+        x=x_axis,
+        y=y_axis,
+        size=alt.Size("area_px:Q", scale=None, legend=None),
         color=alt.Color(
-            "group:N",
-            scale=alt.Scale(domain=group_order, range=group_colors),
+            DIVISION_F,
+            type="nominal",
+            title=DIVISION,
+            sort=None,
+            scale=alt.Scale(domain=list(colors), range=list(colors.values())),
             legend=alt.Legend(
-                title="Division",
-                titleFontSize=11,
-                titleFontWeight="bold",
-                labelFontSize=10,
-                symbolSize=200,
-                orient="right",
+                titleFontSize=12, titleFontWeight="bold", labelFontSize=11, symbolSize=240, orient="top-left", padding=6
             ),
         ),
         opacity=alt.condition(selection, alt.value(0.9), alt.value(0.15)),
         tooltip=[
-            alt.Tooltip("label:N", title="Department"),
-            alt.Tooltip("budget:N", title="Budget"),
-            alt.Tooltip("group:N", title="Division"),
+            alt.Tooltip(DEPARTMENT_F, type="nominal", title=DEPARTMENT),
+            alt.Tooltip(BUDGET_F, type="quantitative", title=BUDGET),
+            alt.Tooltip(DIVISION_F, type="nominal", title=DIVISION),
         ],
     )
     .add_params(selection)
 )
 
-# Labels for large bubbles: two-line department name + budget
-df_large = df[df["radius"] >= radius_threshold].copy()
-df_large["display_text"] = df_large["label"] + "\n" + df_large["budget"]
-
-large_labels = (
-    alt.Chart(df_large)
-    .mark_text(fontWeight="bold", fontSize=16, lineBreak="\n")
+# Labels inside the circles: name + budget in the large ones, name only in the small ones
+captions = (
+    alt.Chart(df)
+    .mark_text(fontWeight="bold", lineBreak="\n")
     .encode(
-        x="x:Q",
-        y="y:Q",
-        text="display_text:N",
-        color=alt.value("#FFFFFF"),
-        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.1)),
-    )
-)
-
-# Labels for smaller bubbles: department name only
-df_small = df[df["radius"] < radius_threshold].copy()
-
-small_labels = (
-    alt.Chart(df_small)
-    .mark_text(fontWeight="bold", fontSize=12)
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        text="label:N",
+        x=x_axis,
+        y=y_axis,
+        text="caption:N",
+        size=alt.condition(alt.datum.r >= radius_cut, alt.value(16), alt.value(12)),
         color=alt.value("#FFFFFF"),
         opacity=alt.condition(selection, alt.value(1.0), alt.value(0.1)),
     )
@@ -143,20 +160,26 @@ small_labels = (
 
 # Title with length-scaled font size (67-char baseline → 16px default)
 title_str = "Department Budget Allocation · bubble-packed · python · altair · anyplot.ai"
-n_chars = len(title_str)
-title_fs = max(11, round(16 * 67 / n_chars)) if n_chars > 67 else 16
+title_fs = max(11, round(16 * 67 / len(title_str)))
 subtitle_fs = max(8, round(title_fs * 0.85))
+top_share = df.groupby(DIVISION, sort=False)[BUDGET].sum().max() / df[BUDGET].sum()
+top_division = df.groupby(DIVISION, sort=False)[BUDGET].sum().idxmax()
+top_department = df.loc[df[BUDGET].idxmax()]
 
 chart = (
-    alt.layer(circles_layer, large_labels, small_labels)
+    alt.layer(circles_layer, captions)
     .properties(
-        width=450,
-        height=460,
+        width=600,
+        height=600,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
-        padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
         title=alt.Title(
             title_str,
-            subtitle="Technology division leads at 39% of total budget — Engineering alone at $850K",
+            subtitle=(
+                f"{top_division} division leads at {top_share:.0%} of total budget — "
+                f"{top_department[DEPARTMENT]} alone at ${top_department[BUDGET]}K"
+            ),
             fontSize=title_fs,
             subtitleFontSize=subtitle_fs,
             subtitleColor=INK_SOFT,
@@ -171,18 +194,14 @@ chart = (
 
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Pad to exact 2400×2400 square canvas (Step 0 contract)
+# Centre on the exact 2400 × 2400 square canvas (never crop)
 TW, TH = 2400, 2400
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")
