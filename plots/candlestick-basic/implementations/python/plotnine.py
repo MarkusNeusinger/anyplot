@@ -1,28 +1,20 @@
 """ anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-30
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import os
-import sys
-
-
-# Prevent self-import: script filename matches the library name, so remove script dir from path
-if sys.path and sys.path[0] not in (None,):
-    del sys.path[0]
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     coord_cartesian,
     element_blank,
     element_line,
     element_rect,
     element_text,
-    geom_hline,
     geom_rect,
     geom_segment,
     ggplot,
@@ -42,18 +34,22 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic exception: green=bullish (gain/profit), red=bearish (loss/decline)
-BULL_COLOR = "#009E73"  # Imprint pos 1 — profit / gain / up
-BEAR_COLOR = "#AE3030"  # Imprint pos 5 — loss / decline (deferred semantic red anchor)
-palette = {"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR}
+# Imprint palette — semantic exception: green=bullish (gain), red=bearish (loss)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BULL_COLOR = IMPRINT_PALETTE[0]
+BEAR_COLOR = IMPRINT_PALETTE[4]
 
-# Data — 30 trading days, random walk starting at $150
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open ($)"  # role: open
+HIGH = "High ($)"  # role: high
+LOW = "Low ($)"  # role: low
+CLOSE = "Close ($)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 30
-dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
-
 price = 150.0
 opens, highs, lows, closes = [], [], [], []
 for _ in range(n_days):
@@ -68,36 +64,38 @@ for _ in range(n_days):
     closes.append(close_price)
     price = close_price + np.random.randn() * 0.5
 
-df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
-df["day"] = np.arange(len(df))
-df["direction"] = pd.Categorical(
-    np.where(df["close"] >= df["open"], "Bullish", "Bearish"), categories=["Bullish", "Bearish"]
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range(start="2024-01-02", periods=n_days, freq="B"),
+        OPEN: opens,
+        HIGH: highs,
+        LOW: lows,
+        CLOSE: closes,
+    }
 )
-df["body_top"] = df[["open", "close"]].max(axis=1)
-df["body_bottom"] = df[["open", "close"]].min(axis=1)
+
+# Plot: reads only df and the constants above
+candles = df.assign(
+    day=np.arange(len(df)),
+    body_top=df[[OPEN, CLOSE]].max(axis=1),
+    body_bottom=df[[OPEN, CLOSE]].min(axis=1),
+    direction=pd.Categorical(np.where(df[CLOSE] >= df[OPEN], "Bullish", "Bearish"), categories=["Bullish", "Bearish"]),
+)
+palette = {"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR}
 
 # X-axis tick labels (every 5th trading day)
-tick_indices = list(range(0, n_days, 5))
-tick_labels = [dates[i].strftime("%b %d") for i in tick_indices]
+tick_indices = list(range(0, len(df), 5))
+tick_labels = [df[DATE].iloc[i].strftime("%b %d") for i in tick_indices]
 
-# Reference prices for storytelling annotations
-open_first = df["open"].iloc[0]
-close_last = df["close"].iloc[-1]
-close_dir_color = BULL_COLOR if close_last >= open_first else BEAR_COLOR
-net_pct = (close_last - open_first) / open_first * 100
-
-# Title — 50 chars < 67 baseline, so default 12pt applies
+# Title size shrinks for long titles (12pt up to 67 characters)
 title = "candlestick-basic · python · plotnine · anyplot.ai"
 title_size = max(8, round(12 * 67 / len(title)))
 
-# Plot
 plot = (
-    ggplot(df)
-    # Reference line at period opening price
-    + geom_hline(yintercept=open_first, linetype="dashed", color=INK_SOFT, size=0.5)
-    # Wicks colored by direction for visual coherence
-    + geom_segment(aes(x="day", xend="day", y="low", yend="high", color="direction"), size=0.8)
-    # Candle bodies — fill by direction, static INK_SOFT edge for definition
+    ggplot(candles)
+    # Wicks colored by direction
+    + geom_segment(aes(x="day", xend="day", y=LOW, yend=HIGH, color="direction"), size=0.8)
+    # Candle bodies — fill by direction, INK_SOFT edge for definition
     + geom_rect(
         aes(xmin="day - 0.35", xmax="day + 0.35", ymin="body_bottom", ymax="body_top", fill="direction"),
         color=INK_SOFT,
@@ -105,23 +103,9 @@ plot = (
     )
     + scale_fill_manual(values=palette, name="Direction")
     + scale_color_manual(values=palette, guide=None)
-    # Annotate reference line label
-    + annotate(
-        "text", x=n_days - 0.5, y=open_first + 0.8, label=f"Open ${open_first:.0f}", size=3, color=INK_MUTED, ha="right"
-    )
-    # Annotate net change at bottom
-    + annotate(
-        "text",
-        x=n_days - 0.5,
-        y=df["low"].min() - 1.2,
-        label=f"Close ${close_last:.0f}  ({net_pct:+.1f}%)",
-        size=3,
-        color=close_dir_color,
-        ha="right",
-    )
     + scale_x_continuous(breaks=tick_indices, labels=tick_labels, expand=(0.02, 0.5))
     + scale_y_continuous(labels=lambda vals: [f"${v:,.0f}" for v in vals])
-    + coord_cartesian(ylim=(df["low"].min() - 2, df["high"].max() + 2))
+    + coord_cartesian(ylim=(df[LOW].min() - 2, df[HIGH].max() + 2))
     + labs(x="", y="Price ($)", title=title)
     + theme_minimal()
     + theme(
@@ -140,7 +124,8 @@ plot = (
         legend_position="top",
         legend_title=element_text(size=9, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
     )
 )
 
