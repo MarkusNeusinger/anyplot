@@ -2,130 +2,128 @@ library: makie
 language: julia
 specification_id: hexbin-basic
 created: '2026-05-29T09:38:57Z'
-updated: '2026-05-29T09:59:55Z'
+updated: '2026-11-27T19:59:20Z'
 generated_by: claude-sonnet
-workflow_run: 26629619110
+workflow_run: 46059685760
 issue: 859
-language_version: 1.11.9
-library_version: 0.22.10
+language_version: 1.13.4
+library_version: 0.24.16
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/julia/makie/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: hexbin plot with colorbar, perceptually uniform colormap,
-    and log colorscale all present'
-  - Theme-adaptive chrome correctly implemented — all INK/INK_SOFT/PAGE_BG tokens
-    applied to every axis and colorbar element, dark mode renders without any dark-on-dark
-    failures
-  - Realistic multi-cluster GPS dataset with named hotspot areas adds narrative context
-  - Log10 colorscale is the right call for data where density spans multiple orders
-    of magnitude
-  - 'Clean code structure: flat script, reproducible seed, no unnecessary complexity'
-  - colsize! and Relative() used correctly for proportional colorbar sizing
+  - Uses the theme's imprint_seq fields stops (ANYPLOT_SEQ_FIELDS), so the ramp runs
+    light→dark on the cream page and dark→bright on the dark page with every count
+    level distinguishable
+  - Native hexbin! with colorscale=log10 and a matching LogTicks colorbar labelled
+    'Point count (log scale)' makes all four cores and their fringes read at once
+  - Theme tokens threaded through every axis and colorbar element; no dark-on-dark
+    text in the dark render
+  - Flat, reproducible script (Random.seed!(42)) with only used imports and the native
+    binning recipe
   weaknesses:
-  - Colorbar tick labels show auto-generated linear values (~50, 100, 150, 200) instead
-    of the custom log-landmark ticks ([1, 5, 20, 80, 250] with string labels). The
-    custom ticks specification likely conflicts with colorscale=log10 — positions
-    need to be in log10-transformed space (e.g. [log10(1), log10(5), log10(20), log10(80),
-    log10(250)]) rather than raw count values
-  - City center annotation text at (0.5, 0.1) with color=INK has low contrast against
-    the green hexbin tiles in light mode; the annotation would benefit from a white
-    or ELEVATED_BG text halo/background to ensure readability in both themes
-  - Design Excellence limited by default styling choices — removing bottom/left spines
-    entirely for a cleaner hexbin look, and ensuring the annotation visually pops,
-    would elevate the plot further
+  - 'SC-02 (both): hexagons render as wide flat cells (about 55 × 22 px in the 2000-px
+    view, roughly 2.5:1) instead of regular hexagons, because bins=50 is applied to
+    x and y ranges of different length on a non-equal-aspect axis → regular hexagons
+    on screen (width:height near 2:√3). Likely cause: hexbin! bins=50 with no scalar
+    cellsize and the Axis without aspect = DataAspect().'
+  - 'Suggestion: a 1000-count tick is dropped because the data peaks near 250; ticks
+    at 1, 3, 10, 30, 100, 300 would give the log colorbar finer reading points.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "hexbin-basic · julia · makie · anyplot.ai" in bold dark #1A1A17 text — clearly readable. Axis labels "Longitude (relative km)" and "Latitude (relative km)" in dark ink — readable. Tick labels in #4A4A44 (INK_SOFT) — readable. Colorbar label "Point Count" and tick labels readable. Colorbar shows auto-generated linear tick values (~50, 100, 150, 200) instead of custom log-landmark ticks.
-      Data: Hexagonal bins coloured with Imprint sequential cmap (brand green #009E73 to blue #4467A3) via log10 colorscale. 4 density clusters visible: city center at (0,0) in deep blue (highest density), northern district at (-2, 2.2), eastern zone at (2.4, 0.6), southern hub at (0.4, -2.5) all in green/teal (lower density). Annotation circle at (0,0) and text "City Center (peak density)" at (0.5, 0.1) — present but with limited contrast against green hexbin tiles in light mode.
-      Legibility verdict: PASS — all structural chrome text fully readable; annotation text marginal but visible
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: bold title "hexbin-basic · julia · makie · anyplot.ai" centered at the top in dark ink; axis titles "Longitude (relative km)" and "Latitude (relative km)" in dark ink, tick labels (-2.5, 0.0, 2.5) in INK_SOFT; top and right spines removed, subtle grid. Colorbar on the right labelled "Point count (log scale)" with ticks 10^0, 10^1, 10^2. All readable.
+      Data: about 50-bin hexagons tiling four clusters (centre at 0,0 darkest violet, NW at -2,2.2, E at 2.4,0.6, S at 0.4,-2.5) colored on the light fields ramp mint #66E2B2 → green #009E73 → deep blue → dark violet; sparse fringe cells in pale mint still stand out from the page. Hexagons appear as wide flat cells rather than regular hexagons.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in light #F0EFE8 text — clearly readable against dark background. Axis labels and tick labels in light/soft tones (#F0EFE8 / #B8B7B0) — all readable. No dark-on-dark failures detected. Colorbar chrome correctly adapts with light-coloured labels.
-      Data: Hexbin data colours are visually identical to the light render — same green→blue Imprint sequential gradient, same 4 cluster pattern. Only surrounding chrome changes. Annotation text is more readable in dark mode since light INK (#F0EFE8) contrasts better over the dark hexbin area.
-      Legibility verdict: PASS — all text elements clearly readable against dark background
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles and colorbar label in light ink, ticks in light-soft grey; no dark-on-dark text. Same layout as light.
+      Data: same hexagon layout on the dark fields ramp olive #404C02 → green #009E73 → pale blue #CDD9FF, so dense cores glow bright and sparse fringes recede in olive while still visible against the page. The continuous ramp correctly uses the dark stops.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All structural chrome readable in both themes; city center annotation
-          text has reduced contrast overlaid on green hexbins in light render
+        comment: Explicit sizes (base 16, title 24, labels 18, ticks 15) above the
+          Makie references; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions
+        comment: No text collisions; hexagons tile without overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hexbins and colorbar clearly visible; annotation ring somewhat subtle
-          over dense hexbin area
+        comment: Hexagons clearly visible, sparsest cells stand out from the page
+          in both themes; colorbar clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential cmap is CVD-safe; adequate perceptual gradient
+        comment: Imprint sequential ramp changes in lightness and hue; CVD-safe, no
+          red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; colsize!/colgap! proportions good; no clipping
+        comment: Canvas gate passed; plot and colorbar fill the 3200x1800 canvas with
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: Descriptive axis titles with units; colorbar label names the log
+          scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly; backgrounds #FAF8F1/#1A1A17; full theme-adaptive
-          chrome'
+        comment: 'ANYPLOT_SEQ_FIELDS with the theme''s fields stops (light: mint→green→deep
+          blue→violet; dark: olive→green→pale blue); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom Imprint sequential cmap, log10 colorscale, focal annotation
-          callout, theme tokens — above default; stops short of exceptional polish
+        comment: Style-guide baseline typography and Imprint ramp; nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; grid at 0.12 opacity; thin colorbar width=22;
-          strokewidth=0 on hexbins
+        comment: strokewidth=0 gives a seamless density surface; colorbar width 22
+          and colgap 14 sized to sit tight against the axis
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Log scale exposes peripheral clusters; annotation callout adds narrative;
-          limited by marginal annotation visibility in light mode
+        passed: false
+        comment: Log scale (Notes-suggested) makes all four cores read; no further
+          hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -133,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexbin plot via CairoMakie native hexbin! recipe
+        comment: Correct hexbin plot, basic variant only (hexagons + colorbar)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Colorbar included; perceptually uniform colormap; log colorscale
-          applied
+        comment: 'Colorbar, perceptually uniform ramp, log scale and gridsize via
+          bins present; C2, C3, C5 met; C1 partly missed: hexagons are stretched into
+          wide flat cells instead of regular hexagons (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates mapped correctly; all 4 clusters visible; density
-          encoded via colour
+        comment: x/y mapped correctly, all data in view, marks at their bins; LogTicks
+          give readable 10^0..10^2 values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact format; colorbar label Point Count correct
+        comment: Title in mandated format; colorbar label 'Point count (log scale)'
     data_quality:
       score: 15
       max: 15
@@ -163,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12,000 points across 4 distinct hotspot clusters; demonstrates hexbin
-          density-compression strengths
+        comment: Four clusters of different size and spread show dense cores, gradients
+          and sparse fringes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated urban GPS coordinates with named districts; neutral and
-          plausible
+        comment: Simulated urban GPS hotspots; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in relative km range; cluster spreads (0.4-0.5 std dev) sensible
+        comment: 12,000 points within the spec range, relative-km coordinates sensible;
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -187,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat script Imports → Data → Plot → Save
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,19 +198,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All four imports (CairoMakie, Colors, ColorSchemes, Random) are used
+        comment: CairoMakie, Colors, DataFrames, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organised, no fake UI
+        comment: Native hexbin! binning, no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png; current CairoMakie API
+        comment: Saves plot-$(THEME).png with current API (size, px_per_unit)
     library_mastery:
       score: 6
       max: 10
@@ -221,25 +220,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: hexbin!, Colorbar, colsize!/colgap! layout controls, colorscale parameter
-          — all idiomatic Makie
+        comment: Native hexbin! recipe, Colorbar fed from the plot object, colsize!/colgap!
+          layout
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses Makie native hexbin recipe and colorscale=log10; layout system
-          leveraged; could further exploit Makie unique capabilities
+        comment: colorscale=log10 on the recipe with matching LogTicks on the Colorbar
+          (superscript exponents), a Makie-specific pairing
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d8fa00e2b0
+  rendered_at: '2026-11-27T19:55:16Z'
 impl_tags:
-  dependencies:
-  - colors
-  - colorschemes
+  dependencies: []
   techniques:
   - colorbar
-  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
