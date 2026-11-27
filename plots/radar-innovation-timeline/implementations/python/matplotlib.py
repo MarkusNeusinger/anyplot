@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-29
@@ -8,6 +8,9 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import to_rgb
+from matplotlib.lines import Line2D
 
 
 # Theme tokens (Imprint palette — prompts/default-style-guide.md)
@@ -21,126 +24,120 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — 8 hues, canonical order, first series always position 1
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
+# Constants
+RING_SIZE_RANGE = (110, 50)  # marker area for the innermost and outermost ring
+SPREAD_FROM = 2  # a cell with fewer items keeps its marker centred in the sector
+INSET_UP_TO = 2  # a cell with this many items or fewer keeps off the sector edges
 
-rings = ["Adopt", "Trial", "Assess", "Hold"]
-sectors = ["AI & ML", "Cloud & Infra", "Data Engineering", "Security"]
+# Columns: set these to your table's column names
+NAME = "Innovation"  # role: name
+RING = "Ring"  # role: ring
+SECTOR = "Sector"  # role: sector
+
+# Data: replace this block with your own table, for example df = pd.read_csv("radar.csv")
+df = pd.DataFrame(
+    [
+        ("LLM Agents", "Adopt", "AI & ML"),
+        ("RAG Pipelines", "Trial", "AI & ML"),
+        ("AI Code Assistants", "Trial", "AI & ML"),
+        ("Vision Transformers", "Assess", "AI & ML"),
+        ("Federated Learning", "Assess", "AI & ML"),
+        ("Neuromorphic Chips", "Hold", "AI & ML"),
+        ("Kubernetes", "Adopt", "Cloud & Infra"),
+        ("FinOps Tooling", "Trial", "Cloud & Infra"),
+        ("Edge Computing", "Assess", "Cloud & Infra"),
+        ("Platform Engineering", "Assess", "Cloud & Infra"),
+        ("Quantum Cloud APIs", "Hold", "Cloud & Infra"),
+        ("Serverless Containers", "Hold", "Cloud & Infra"),
+        ("Apache Iceberg", "Adopt", "Data Engineering"),
+        ("Real-time Lakehouse", "Trial", "Data Engineering"),
+        ("Data Contracts", "Trial", "Data Engineering"),
+        ("Streaming SQL", "Assess", "Data Engineering"),
+        ("Data Mesh", "Hold", "Data Engineering"),
+        ("Zero Trust Arch", "Adopt", "Security"),
+        ("SBOM Tooling", "Trial", "Security"),
+        ("AI Threat Detection", "Assess", "Security"),
+        ("Post-Quantum Crypto", "Assess", "Security"),
+        ("Confidential Computing", "Hold", "Security"),
+        ("Homomorphic Encryption", "Hold", "Security"),
+    ],
+    columns=[NAME, RING, SECTOR],
+)
+
+# Plot: reads only df and the constants above
+rings = list(df[RING].unique())  # inner to outer, in the data's order
+sectors = list(df[SECTOR].unique())
+n_rings = len(rings)
 n_sectors = len(sectors)
-
-innovations = [
-    ("LLM Agents", "Adopt", "AI & ML"),
-    ("RAG Pipelines", "Trial", "AI & ML"),
-    ("AI Code Assistants", "Trial", "AI & ML"),
-    ("Vision Transformers", "Assess", "AI & ML"),
-    ("Federated Learning", "Assess", "AI & ML"),
-    ("Neuromorphic Chips", "Hold", "AI & ML"),
-    ("Kubernetes", "Adopt", "Cloud & Infra"),
-    ("FinOps Tooling", "Trial", "Cloud & Infra"),
-    ("Edge Computing", "Assess", "Cloud & Infra"),
-    ("Platform Engineering", "Assess", "Cloud & Infra"),
-    ("Quantum Cloud APIs", "Hold", "Cloud & Infra"),
-    ("Serverless Containers", "Hold", "Cloud & Infra"),
-    ("Apache Iceberg", "Adopt", "Data Engineering"),
-    ("Real-time Lakehouse", "Trial", "Data Engineering"),
-    ("Data Contracts", "Trial", "Data Engineering"),
-    ("Streaming SQL", "Assess", "Data Engineering"),
-    ("Data Mesh", "Hold", "Data Engineering"),
-    ("Zero Trust Arch", "Adopt", "Security"),
-    ("SBOM Tooling", "Trial", "Security"),
-    ("AI Threat Detection", "Assess", "Security"),
-    ("Post-Quantum Crypto", "Assess", "Security"),
-    ("Confidential Computing", "Hold", "Security"),
-    ("Homomorphic Encryption", "Hold", "Security"),
-]
-
 ring_index = {name: i for i, name in enumerate(rings)}
 sector_index = {name: i for i, name in enumerate(sectors)}
 
-# Sector colors: Imprint palette positions 1–4 in canonical order
-sector_colors = {
-    "AI & ML": IMPRINT_PALETTE[0],
-    "Cloud & Infra": IMPRINT_PALETTE[1],
-    "Data Engineering": IMPRINT_PALETTE[2],
-    "Security": IMPRINT_PALETTE[3],
-}
-sector_markers = {"AI & ML": "o", "Cloud & Infra": "s", "Data Engineering": "D", "Security": "^"}
+# One color and marker shape per sector (Imprint positions in canonical order)
+sector_colors = {name: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, name in enumerate(sectors)}
+marker_shapes = ["o", "s", "D", "^", "v", "P", "X", "h"]
+sector_markers = {name: marker_shapes[i % len(marker_shapes)] for i, name in enumerate(sectors)}
 
-# Marker sizes by ring — visual hierarchy: near-term prominent, far-future subtle
-ring_marker_sizes = {"Adopt": 110, "Trial": 85, "Assess": 65, "Hold": 50}
+# Marker size by ring: near-term prominent, far-future subtle
+ring_marker_sizes = dict(zip(rings, np.linspace(*RING_SIZE_RANGE, n_rings), strict=True))
 
-# Layout: 300-degree arc (wider spread reduces inner-ring label crowding), 60-degree gap for ring labels
+# Layout: 300-degree arc, 60-degree gap for ring labels
 arc_span = 5 / 6 * 2 * np.pi
 arc_start = np.deg2rad(115)
 sector_width = arc_span / n_sectors
 
-# Ring band boundaries — inner ring starts at 1.5 (not 0.5) to push Adopt items
-# further from the center, providing ~52% more arc-space between adjacent items
-ring_boundaries = [1.5, 3.5, 5.5, 7.5, 9.5]
+# Ring band boundaries: the inner ring starts at 1.5 to give Adopt items arc-space
+ring_boundaries = 1.5 + 2.0 * np.arange(n_rings + 1)
 
-# Count items per ring-sector cell for spread calculation
-sector_ring_counts = {}
-for _, ring_name, sector_name in innovations:
-    key = (ring_name, sector_name)
-    sector_ring_counts[key] = sector_ring_counts.get(key, 0) + 1
+# Items per ring-sector cell, and each item's place within its cell
+cell = df.groupby([RING, SECTOR], sort=False)[NAME]
+df["placed"] = cell.cumcount()
+df["total"] = cell.transform("size")
 
-# Compute marker positions with wider angular spread to reduce label crowding
+rng = np.random.RandomState(42)
 positions = []
-sector_ring_placed = {}
-for name, ring_name, sector_name in innovations:
+for row in df.itertuples(index=False):
+    name, ring_name, sector_name, placed, total = row
     r_idx = ring_index[ring_name]
     s_idx = sector_index[sector_name]
-    key = (ring_name, sector_name)
-    placed = sector_ring_placed.get(key, 0)
-    total = sector_ring_counts[key]
-    sector_ring_placed[key] = placed + 1
 
     band_width = ring_boundaries[r_idx + 1] - ring_boundaries[r_idx]
     r_lo = ring_boundaries[r_idx] + band_width * 0.25
     r_hi = ring_boundaries[r_idx] + band_width * 0.75
-    if total == 1:
-        r = (r_lo + r_hi) / 2
-    elif total == 2:
-        r = r_lo + (r_hi - r_lo) * (0.25 + 0.50 * placed)
-    else:
-        r = r_lo + (r_hi - r_lo) * (placed + 0.5) / total
+    r = r_lo + (r_hi - r_lo) * (placed + 0.5) / total
 
-    # Wider angular spread within sector (8% margin instead of 10%) to reduce crowding
+    # Angular spread within the sector
     sector_start = arc_start + s_idx * sector_width
     margin = sector_width * 0.08
     a_lo = sector_start + margin
     a_hi = sector_start + sector_width - margin
-    if total == 1:
-        theta = (a_lo + a_hi) / 2
-    elif total == 2:
-        frac = 0.20 + 0.60 * placed
-        if r_idx % 2 == 1:
-            frac = 1.0 - frac
-        theta = a_lo + (a_hi - a_lo) * frac
+    if total < SPREAD_FROM:
+        frac = 0.5
     else:
-        frac = placed / (total - 1)
-        if r_idx % 2 == 1:
-            frac = 1.0 - frac
-        theta = a_lo + (a_hi - a_lo) * frac
+        inset = 0.2 if total <= INSET_UP_TO else 0.0
+        frac = inset + (1 - 2 * inset) * placed / (total - 1)
+    if r_idx % 2 == 1 and total >= SPREAD_FROM:
+        frac = 1.0 - frac
+    theta = a_lo + (a_hi - a_lo) * frac
 
-    # Minimal angular jitter; smaller radial jitter to stay within ring band
-    theta += np.random.uniform(-0.008, 0.008)
-    r += np.random.uniform(-0.01, 0.01)
+    # Minimal jitter, kept inside the cell
+    theta += rng.uniform(-0.008, 0.008)
+    r += rng.uniform(-0.01, 0.01)
 
     positions.append((name, theta, r, sector_name, ring_name, placed, total, r_idx))
 
-# Plot — square canvas 2400×2400 px (figsize=(6,6), dpi=400)
+# Figure — square canvas 2400×2400 px (figsize=(6,6), dpi=400)
 fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, polar=True)
 ax.set_facecolor(PAGE_BG)
 
 # Ring fills — Imprint-tinted pastels (light) / darks (dark) for ring separation
-if THEME == "light":
-    ring_fill_colors = ["#E0F5EE", "#F2E5FF", "#E4EAF4", "#F4EAD8"]
-else:
-    ring_fill_colors = ["#1E2E25", "#261A2E", "#1A2030", "#2E2018"]
+tint = 0.13 if THEME == "light" else 0.14
+ring_fill_colors = [
+    tuple((1 - tint) * np.array(to_rgb(PAGE_BG)) + tint * np.array(to_rgb(IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])))
+    for i in range(n_rings)
+]
 
-for i in range(len(rings)):
+for i in range(n_rings):
     theta_fill = np.linspace(arc_start, arc_start + arc_span, 300)
     ax.fill_between(
         theta_fill,
@@ -205,21 +202,19 @@ for name, theta, r, sector_name, ring_name, placed, _total, r_idx in positions:
 
     ax.scatter(theta, r, s=msize, color=color, marker=marker, edgecolors=PAGE_BG, linewidth=0.8, zorder=5, alpha=0.95)
 
-    # Alternate label radially above/below; inner rings prefer outward, outer prefer inward
-    # to keep labels away from both the ring boundary and the chart edge
+    # Alternate labels above/below their marker, offset in screen points so they clear the marker
     outward = placed % 2 == 0
     if r_idx >= 2:  # Assess / Hold: flip to avoid outer boundary crowding
         outward = not outward
-    # Inner rings: larger offset to push labels away from crowded center; smaller font
-    base_offset = 0.55 if r_idx <= 1 else 0.42
+    # Inner rings: smaller font
     label_fontsize = 7 if r_idx <= 1 else 8
-    label_offset = base_offset if outward else -base_offset
     va = "bottom" if outward else "top"
 
-    ax.text(
-        theta,
-        r + label_offset,
+    ax.annotate(
         name,
+        xy=(theta, r),
+        xytext=(0, 9 if outward else -9),
+        textcoords="offset points",
         fontsize=label_fontsize,
         ha="center",
         va=va,
@@ -227,11 +222,11 @@ for name, theta, r, sector_name, ring_name, placed, _total, r_idx in positions:
         fontweight="medium",
         bbox=label_bbox,
         zorder=6,
-        clip_on=False,
+        annotation_clip=False,
     )
 
 # Style — hide default polar decorations
-ax.set_ylim(0, ring_boundaries[-1] + 2.5)
+ax.set_ylim(0, ring_boundaries[-1] + 1.8)
 ax.set_yticklabels([])
 ax.set_xticklabels([])
 ax.set_xticks([])
@@ -248,8 +243,16 @@ ax.set_title(title, fontsize=title_fontsize, fontweight="medium", pad=20, color=
 
 # Legend — theme-adaptive frame and text
 legend_handles = [
-    plt.scatter(
-        [], [], s=80, color=sector_colors[s], marker=sector_markers[s], edgecolors=PAGE_BG, linewidth=0.8, label=s
+    Line2D(
+        [],
+        [],
+        marker=sector_markers[s],
+        linestyle="None",
+        markersize=8,
+        markerfacecolor=sector_colors[s],
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=0.8,
+        label=s,
     )
     for s in sectors
 ]
@@ -257,7 +260,7 @@ leg = fig.legend(
     handles=legend_handles,
     loc="lower right",
     fontsize=8,
-    title="Sectors",
+    title=SECTOR,
     title_fontsize=9,
     handletextpad=0.8,
     borderpad=0.8,
@@ -269,5 +272,5 @@ if leg:
     plt.setp(leg.get_texts(), color=INK_SOFT)
     leg.get_title().set_color(INK_SOFT)
 
-fig.subplots_adjust(left=0.05, right=0.90, top=0.92, bottom=0.08)
+fig.subplots_adjust(left=0.07, right=0.91, top=0.92, bottom=0.08)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
