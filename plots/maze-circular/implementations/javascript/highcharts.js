@@ -2,7 +2,7 @@
 // maze-circular: Circular Maze Puzzle
 // Library: Highcharts | Node
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
