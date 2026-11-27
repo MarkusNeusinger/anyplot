@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-density: Ternary Density Plot
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-26
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
