@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:25Z'
-updated: '2026-11-27T18:42:10Z'
+updated: '2026-11-27T18:49:36Z'
 generated_by: claude-sonnet
-workflow_run: 46050541546
+workflow_run: 46051581864
 issue: 4131
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
   - 'Real PCA of the scikit-learn wine dataset: deterministic, neutral and scientifically
@@ -28,19 +28,17 @@ review:
   - Theme tokens threaded through title, axes, legend frame and marker outlines; Imprint
     palette correct
   weaknesses:
-  - 'SC-03 (both): the area fill under the curve is anchored at 24 %, an arbitrary
-    floor (cumulative.min() - 12) rather than zero, so its filled height suggests
-    a magnitude the data does not have → anchor the area at 0 or drop it. Likely cause:
-    y2=alt.datum(float(y_scale.domain[0])) with y_scale.domain[0] = cumulative.min()
-    - 12.'
-  - 'Suggestion: the ''8 components'' label sits above the 95 % line, away from its
-    diamond at ~92 %; placing it just below the 95 % line would tie it more clearly
-    to the 90 % crossing.'
+  - 'Suggestion: the crossing diamonds and the elbow triangle use Vega-Lite''s default
+    point opacity, so the 95 % diamond blends with the green marker beneath into olive
+    rather than the ochre of its line and label; opacity=1 on those marks would match
+    them.'
+  - 'Suggestion: x_enc and x_axis (and y_enc / y_axis) repeat the same field, title
+    and scale; one encoding each with the axis settings would be shorter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, fills the 3200x1800 canvas
-      Chrome: title 'line-pca-variance-cumulative · python · altair · anyplot.ai' centered in dark ink; axis titles 'Number of components' and 'Cumulative explained variance (%)' in dark ink; soft-ink tick labels 1-13 and 30-100; solid subtle grid; no axis domain lines; 'Threshold' legend top right on the elevated background with dashed blue 90 % and ochre 95 % glyphs
-      Data: #009E73 monotone curve with outlined circle markers at all 13 components, faint green fill beneath; dashed blue 90 % and ochre 95 % lines; blue diamond at PC 8 labelled '8 components' and ochre diamond at PC 10 labelled '10 components'; red triangle on the PC 5 marker labelled 'Elbow (PC 5)' below-right of it
+      Background: warm off-white #FAF8F1 filling the 3200x1800 canvas
+      Chrome: centered title 'line-pca-variance-cumulative · python · altair · anyplot.ai' in dark ink; axis titles 'Number of components' and 'Cumulative explained variance (%)' in dark ink; soft-ink ticks 1-13 and 30-100; subtle grid, no axis domain lines; 'Threshold' legend at top right on the elevated background with dashed blue 90 % and ochre 95 % glyphs
+      Data: #009E73 monotone curve with outlined circle markers at all 13 components, no fill beneath; dashed blue 90 % and ochre 95 % reference lines; blue diamond at PC 8 labelled '8 components', ochre diamond at PC 10 labelled '10 components'; red triangle on the PC 5 marker labelled 'Elbow (PC 5)'
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -58,36 +56,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16, axis titles 13, ticks 11, legend 11-12, annotations 11-12,
-          all explicitly set and readable in both themes
+        comment: Title 16, axis titles 13, ticks 11, legend 11-12, annotations 11-12
+          px, all set explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No text collisions: elbow label sits below-right of the triangle
-          clear of the curve, crossing labels sit clear of both dashed lines'
+        comment: 'No text collisions: elbow label below-right of its triangle, crossing
+          labels clear of both dashed lines and the curve'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: 13 sparse points at size 130 with page-colored outline, 3 px line;
-          legend dash glyphs visible in both themes
+          dashed legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue/ochre thresholds plus diamond/triangle/circle shapes; no red-green
+        comment: Blue/ochre thresholds plus circle/diamond/triangle shapes; no red-green
           sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Fit autosize fills the 3200x1800 canvas; title, axes and legend balanced;
-          nothing cut off
+        comment: Fit autosize fills 3200x1800; title, axes and legend balanced; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,7 +98,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Curve #009E73; thresholds Imprint positions 3 and 4; elbow #AE3030;
+        comment: 'Curve #009E73, thresholds Imprint positions 3 and 4, elbow #AE3030;
           backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 12
@@ -112,24 +110,24 @@ review:
         max: 8
         passed: false
         comment: Deliberate mark hierarchy (green circles for data, threshold-colored
-          diamonds at crossings, red triangle at the elbow) with annotation text colored
-          to its threshold, beyond the baseline
+          diamonds at crossings, red triangle at the elbow) with annotation text in
+          the color of what it marks
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Axis domains dropped, view stroke removed, x-domain padded half a
-          component so end markers breathe, elevated legend box with dash glyphs
+        comment: Axis domains dropped, view stroke removed, x domain padded half a
+          component so end markers breathe, elevated legend box with dashed glyphs
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Crossing annotations ('8 components', '10 components') answer the
-          selection question directly, beyond the Notes' elbow mark
+        comment: Crossing call-outs ('8 components', '10 components') answer the selection
+          question directly, beyond the Notes' elbow mark
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative-variance line plot with markers
+        comment: Cumulative explained-variance line with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative sum, percent y axis, dashed 90/95 % lines, elbow marked
-          on its own marker, markers at each count, x starts at 1 with whole-number
-          ticks
+        comment: Cumulative sum, percent y axis, dashed 90/95 % lines, elbow on its
+          own marker, markers at each count, x starts at 1 with whole-number ticks
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Marks at their values, but the decorative area fill is anchored at
-          an arbitrary 24 % floor (defect line)
+        passed: true
+        comment: Marks at their values; x padded half a component, y follows the data
+          with room; readable round ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact; 'Threshold' legend names both dashed lines
+        comment: Title exact; 'Threshold' legend names both dashed lines; elbow and
+          crossings labelled directly
     data_quality:
       score: 15
       max: 15
@@ -168,7 +166,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Steep rise, diminishing returns, elbow and both crossings shown
+        comment: Steep rise, diminishing returns, detectable elbow and both threshold
+          crossings shown
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,8 +180,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked against the render: PC1 ~36 %, 90 % first reached at 8 components
-          (~92 %), 95 % at 10 (~96 %), 100 % at 13; all computed by cumsum/searchsorted'
+        comment: 'Checked in render and code: PC1 ~36 %, 90 % first reached at 8 components
+          (~92 %), 95 % at 10 (~96 %), 100 % at 13; all from cumsum/searchsorted'
     code_quality:
       score: 10
       max: 10
@@ -211,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Kneedle and searchsorted are short and appropriate; layer composition
+        comment: Kneedle (no available call) and searchsorted are short; layer composition
           clean
       - id: CQ-05
         name: Output & API
@@ -228,8 +227,8 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: Layer composition with +, shared alt.Scale objects, field escaping
-          with explicit type= and title=, alt.datum baseline, configure_* on the layer
+        comment: Layer composition with +, shared alt.Scale objects, escaped fields
+          with explicit type= and title=, configure_* on the layer
       - id: LM-02
         name: Distinctive Features
         score: 3
@@ -241,25 +240,18 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
-  rendered_at: '2026-11-27T18:38:14Z'
+  rendered_at: '2026-11-27T18:46:29Z'
 impl_tags:
   dependencies:
   - sklearn
-  - pillow
   techniques:
   - layer-composition
   - annotations
-  - reference-lines
   - hover-tooltips
-  - custom-legend
   patterns:
   - dataset-loading
-  - explicit-figure
   dataprep:
   - pca
   - cumulative-sum
-  - normalization
   styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
