@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-basic: Basic Box Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-28
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -17,39 +17,54 @@ import re
 
 import cairosvg
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
-categories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
-data = {
-    "Engineering": np.random.normal(85000, 15000, 100),
-    "Marketing": np.random.normal(72000, 12000, 100),
-    "Sales": np.random.normal(68000, 18000, 100),
-    "Operations": np.random.normal(62000, 10000, 100),
-    "HR": np.random.normal(58000, 8000, 100),
+# Columns: set these to your table's column names
+ZONE = "City zone"  # role: category
+PM25 = "PM2.5 (µg/m³)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("air_quality.csv")
+rng = np.random.default_rng(42)
+zones = {
+    "Industrial": (46, 0.30),
+    "Downtown": (34, 0.28),
+    "Residential": (26, 0.25),
+    "Suburban": (19, 0.24),
+    "Park": (12, 0.22),
 }
+readings = {zone: rng.lognormal(np.log(median), spread, 120) for zone, (median, spread) in zones.items()}
+# A few episodes: smog spikes next to the factories, a bonfire night in the park
+readings["Industrial"] = np.append(readings["Industrial"], [118, 126, 133])
+readings["Downtown"] = np.append(readings["Downtown"], [96, 104])
+readings["Park"] = np.append(readings["Park"], [41, 47])
+df = pd.DataFrame(
+    {
+        ZONE: np.repeat(list(readings), [len(v) for v in readings.values()]),
+        PM25: np.concatenate(list(readings.values())).round(1),
+    }
+)
 
-data["Engineering"] = np.append(data["Engineering"], [130000, 135000, 40000])
-data["Sales"] = np.append(data["Sales"], [120000, 25000])
-
-medians = {cat: float(np.median(data[cat])) for cat in categories}
-highest_dept = max(medians, key=medians.get)
-lowest_dept = min(medians, key=medians.get)
+# Plot: reads only df and the constants above
+table = {zone: group[PM25].tolist() for zone, group in df.groupby(ZONE, sort=False)}
+pad = (df[PM25].max() - df[PM25].min()) * 0.05
+y_min = max(0.0, float(np.floor((df[PM25].min() - pad) / 10) * 10))
+y_max = float(np.ceil((df[PM25].max() + pad) / 10) * 10)
 
 title = "box-basic · python · pygal · anyplot.ai"
-title_len = len(title)
-title_font_size = round(66 * 67 / title_len) if title_len > 67 else 66
+title_font_size = round(66 * 67 / len(title)) if len(title) > 67 else 66
 
 custom_style = Style(
     background=PAGE_BG,
@@ -57,9 +72,11 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT_PALETTE,
     title_font_size=title_font_size,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -67,17 +84,16 @@ custom_style = Style(
     opacity_hover=1.0,
 )
 
-# Plot
 chart = pygal.Box(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
-    x_title="Department",
-    y_title="Salary ($)",
+    x_title=ZONE,
+    y_title=PM25,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=len(table),
     legend_box_size=36,
     truncate_legend=-1,
     truncate_label=-1,
@@ -86,41 +102,30 @@ chart = pygal.Box(
     margin=80,
     spacing=40,
     box_mode="tukey",
-    range=(20000, 145000),
-    y_labels=[20000, 40000, 60000, 80000, 100000, 120000, 140000],
+    range=(y_min, y_max),
 )
 
-for category in categories:
-    chart.add(category, data[category].tolist())
+for zone, values in table.items():
+    chart.add(zone, values)
 
 svg_string = chart.render().decode("utf-8")
 
-# Increase box fill opacity (pygal hardcodes subtle-fill at 0.2)
-# Also add ink-colored border stroke to each box for publication-ready borders
+# Increase box fill opacity (pygal hardcodes subtle-fill at 0.2) and add an ink border to each box
 svg_string = svg_string.replace(
     ".subtle-fill{fill-opacity:.2}", f".subtle-fill{{fill-opacity:.7;stroke:{INK_SOFT};stroke-width:4}}"
 )
 
-# Thicken series lines (whiskers + median) and remove heavy chart border
-extra_css = ".series line{stroke-width:5}.background{stroke:none}"
-svg_string = svg_string.replace("</style>", extra_css + "</style>", 1)
+# Draw whiskers, caps and the median in ink so they stand out from the box fill (an inline style beats the
+# chart's id-scoped .reactive rule), and remove the chart border
+svg_string = re.sub(
+    r'<path stroke-width="[23]" (d="[^"]*" class="reactive tooltip-trigger")',
+    rf'<path style="stroke:{INK};stroke-width:6;stroke-opacity:1" \1',
+    svg_string,
+)
+svg_string = svg_string.replace("</style>", ".background{stroke:none}</style>", 1)
 
 # Enlarge outlier dots (pygal hardcodes r=3 for box outliers)
 svg_string = re.sub(r'(<circle[^>]*) r="3" (class="subtle-fill)', r'\1 r="20" \2', svg_string)
-
-# Format y-axis tick labels with comma separators (e.g. 80000 → 80,000)
-svg_string = re.sub(r">(\d{5,})<", lambda m: f">{int(m.group(1)):,}<", svg_string)
-
-# Add storytelling subtitle annotation
-annotation_svg = (
-    f'<text x="1600" y="185" text-anchor="middle" '
-    f'font-size="34" fill="{INK_MUTED}" font-family="sans-serif" font-style="italic">'
-    f"Highest median: {highest_dept} (${medians[highest_dept]:,.0f})"
-    f"  ·  Lowest median: {lowest_dept} (${medians[lowest_dept]:,.0f})"
-    f"  ·  Gap: ${medians[highest_dept] - medians[lowest_dept]:,.0f}"
-    f"</text>"
-)
-svg_string = svg_string.replace("</svg>", f"{annotation_svg}</svg>")
 
 # Save
 with open(f"plot-{THEME}.html", "w") as f:

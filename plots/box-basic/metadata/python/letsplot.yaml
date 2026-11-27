@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:36:22Z'
-updated: '2026-11-27T16:22:29Z'
+updated: '2026-11-27T16:29:41Z'
 generated_by: claude-sonnet
-workflow_run: 46031968455
+workflow_run: 46033238781
 issue: 689
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
   - 'Clean basic box plot: median line, 1.5*IQR whiskers, outliers as points and one
@@ -25,28 +25,23 @@ review:
   - Column constants and a self-contained Data block make the script easy to point
     at a real table
   weaknesses:
-  - 'VQ-03 (both): the outlier circles at outlier_size=2.5 (~60 px across at full
-    size) overlap so far that Sales'' two values near $130k merge into one mark and
-    Engineering''s lowest outlier sits on its whisker cap, hiding a value → about
-    1.5 (−1), or a translucent fill, so each outlier reads as its own point. Likely
-    cause: geom_boxplot outlier_size=2.5.'
-  - 'Suggestion: a slightly thinner box outline (size≈0.9) would let the fills carry
-    more of the color.'
+  - 'Suggestion: a slightly thinner box outline (size about 0.9) would let the fills
+    carry more of the color.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
       Chrome: bold dark title "box-basic · python · letsplot · anyplot.ai" top-left with a grey subtitle "Salary distributions by department, ordered by median"; axis titles "Department" and "Annual Salary (USD)" in dark ink; dollar-formatted y ticks $20,000-$140,000 and department ticks in soft dark grey; thin horizontal grid lines only; L-shaped axis lines. All readable.
-      Data: five boxes ordered by median left to right — HR ochre #BD8233, Marketing lavender #C475FD, Sales blue #4467A3, Finance red #AE3030, Engineering green #009E73 — with near-black outlines, whiskers and thick median lines; large filled outlier circles above and below the whiskers. Sales' two outliers near $130k overlap almost completely.
+      Data: five boxes ordered by median left to right - HR ochre #BD8233, Marketing lavender #C475FD, Sales blue #4467A3, Finance red #AE3030, Engineering green #009E73 - with near-black outlines, whiskers and thick median lines; moderately sized filled outlier circles above and below the whiskers, each readable as its own point (Sales' two values near $130k overlap partly but show two rims; Engineering's lowest outlier sits just above its whisker cap).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, subtitle, axis titles and ticks flip to light ink and are clearly readable; no dark-on-dark text anywhere; grid lines subtle grey.
-      Data: same five fill colors in the same order as the light render; outlines, whiskers and median lines flip to light ink #F0EFE8 and stand out against every fill; outlier circles keep their category fills with a light grey rim. Same outlier overlap at Sales.
+      Chrome: title, subtitle, axis titles and ticks flip to light ink and are clearly readable; no dark-on-dark text; grid lines subtle grey.
+      Data: same five fill colors in the same order as the light render; outlines, whiskers and median lines flip to light ink #F0EFE8 and stand out against every fill; outlier circles keep their category fills with a light grey rim.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,26 +59,27 @@ review:
         comment: No text collides with text or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Boxes, whiskers and median lines in INK stand out in both themes;
-          the large outlier circles of Sales (two near $130k) merge so one value is
-          hidden (defect line)
+          outliers at outlier_size=1.5 each read as their own point, including Sales'
+          two values near $130k (two rims visible) and Engineering's lowest outlier
+          clear of its whisker cap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five distinct Imprint hues; categories are also told apart by x position,
+        comment: Five distinct Imprint hues; categories also told apart by x position,
           so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, canvas gate passed; plot fills the canvas, balanced margins,
-          nothing clipped
+        comment: 3200x1800, canvas gate passed; plot fills the canvas with balanced
+          margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -95,7 +91,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-5 in canonical order, Engineering (first category)
+        comment: 'Imprint positions 1-5 in canonical order, first category (Engineering)
           #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-adaptive'
     design_excellence:
       score: 12
@@ -106,9 +102,8 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear title/subtitle hierarchy and a subtitle that states the ordering;
-          INK box outlines with fatten=1.5 medians give the boxes a crisp, deliberate
-          look
+        comment: Title/subtitle hierarchy with a subtitle that states the ordering;
+          INK outlines with fatten=1.5 medians give a crisp, deliberate look
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -121,8 +116,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Boxes ordered by median (an ordering the spec does not prescribe)
-          turn the chart into a readable salary ladder from HR to Engineering
+        comment: Boxes ordered by median (not prescribed by the spec) turn the chart
+          into a readable salary ladder from HR to Engineering
     spec_compliance:
       score: 15
       max: 15
@@ -132,8 +127,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic box plot, no additions (no strip points, mean lines, labels
-          or callouts)
+        comment: Basic box plot, no additions (no strip points, mean markers, reference
+          lines or callouts)
       - id: SC-02
         name: Required Features
         score: 4
@@ -147,7 +142,7 @@ review:
         max: 3
         passed: true
         comment: Category on x, salary on y; shared axis not forced to zero; all data
-          visible
+          visible, outliers at their values
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -164,21 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five groups with different spreads, high and low outliers, skewed
+        comment: Five groups with different spreads, high and low outliers, off-center
           medians
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salaries by department — neutral, plausible
+        comment: Salaries by department, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Medians ~$54k (HR) to ~$86k (Engineering), read off the axis; realistic.
-          No Check values in the spec
+        comment: Medians about $54k (HR) to $86k (Engineering), read off the axis;
+          realistic. No Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,7 +183,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → column constants → Data → Plot → Save, no functions
+        comment: Imports -> tokens -> column constants -> Data -> Plot -> Save, no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,9 +208,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: ggsave plot-{THEME}.png (scale=4) and plot-{THEME}.html
+        comment: ggsave plot-{THEME}.png (scale=4) and plot-{THEME}.html, current
+          API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,7 +223,7 @@ review:
           parameters, scale_y_continuous(format='${,.0f}')
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
         comment: as_discrete(order_by='..middle..') orders by a computed stat; layer_tooltips()
@@ -234,7 +231,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
-  rendered_at: '2026-11-27T16:18:24Z'
+  rendered_at: '2026-11-27T16:26:46Z'
 impl_tags:
   dependencies: []
   techniques:

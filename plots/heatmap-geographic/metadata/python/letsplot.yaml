@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:17:01Z'
-updated: '2026-11-26T09:13:42Z'
+updated: '2026-11-27T16:28:54Z'
 generated_by: claude-sonnet
-workflow_run: 45788880626
+workflow_run: 46032876886
 issue: 3638
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,58 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - Uses the Imprint sequential fields ramp with each theme's stops through the prescribed
-    ramp_color sampling for scale_fill_gradientn
+  - Uses the current Imprint sequential fields ramp with each theme's stops, sampled
+    with ramp_color for scale_fill_gradientn
   - geom_contourf on a gaussian_kde grid gives a smooth density layer whose two hot
     spots stay separate at bandwidth 0.15
   - Theme tokens threaded through every chrome element; both renders fully readable
-  - Formatted layer_tooltips (lat, lon, magnitude) add per-event inspection in the
-    HTML output
-  - 'Canvas fitted per the library prompt: one-panel gggrid at 600x600, scale 4, carrying
-    the page color'
+  - Formatted layer_tooltips (lat, lon, magnitude) and the ggtb toolbar add per-event
+    inspection and zoom in the HTML output
+  - 'Canvas fitted per the library prompt: one-panel gggrid at 600x600, scale 4, page
+    color, legends below the fixed-aspect panel'
   weaknesses:
-  - 'VQ-02 (both): the ''Los Angeles'' label at lat 35.3 sits over the top of the
-    LA cluster and touches several event markers → place it where no marker lies under
-    the text, for example above the density layer''s northern edge. Likely cause:
-    CITIES lat for Los Angeles = 35.3.'
-  - 'VQ-03 (both): 600 overlay markers with #AE3030 fill at alpha 0.5 pile up over
-    the SF and LA hot spots, so the peak density colors read as a reddish-purple blob
-    → lower the marker alpha (about 0.25) or shrink the size range so the field''s
-    peak stays visible. Likely cause: geom_point alpha=0.5, scale_size range=[1, 5].'
-  - 'VQ-05 (both): the fixed-aspect map leaves empty bands of about 12 % of the canvas
-    above the title and below the x-axis title → fill more of the square, e.g. trim
-    the 1-degree MAP_PAD in latitude only where no event lies so the map is closer
-    to square. Likely cause: MAP_PAD = 1.0 on all sides with a wider-than-tall data
-    extent.'
-  - 'SC-02 (code): the Notes ask interactive libraries to enable zoom, but the HTML
-    output has no zoom or pan → add lets-plot''s toolbar (ggtb()) to the plot. Likely
-    cause: no ggtb() layer.'
-  - 'DQ-03 (both): event magnitudes run to about 15 (size legend 5/10/15), beyond
-    any recorded earthquake (max about 9.5; California events mostly 1–7) → draw magnitudes
-    in a realistic range, e.g. 1.5–7. Likely cause: np.random.exponential(2.0–2.2)
-    + 1 without a cap.'
-  - 'Suggestion: the ''San Francisco'' label at lat 39.0 sits about 1.2 degrees north
-    of the city; anchoring it nearer 37.8 would locate the hot spot more directly.'
+  - 'VQ-03 (both): the Magnitude legend glyphs are drawn opaque (solid #AE3030 fill,
+    #4467A3 ring) while the map markers are at alpha 0.25, so the key does not match
+    the marks it explains → draw the legend glyphs at the marks'' alpha. Likely cause:
+    scale_size guide without guide_legend(override_aes={''alpha'': 0.25}).'
+  - 'VQ-05 (both): widening the latitude span to the longitude span leaves the panel
+    at about 72 % of the canvas width, with empty strips on both sides and an empty
+    band south of lat 32.5 → fill more of the square, e.g. a shorter MAP_PAD or one
+    combined horizontal legend row so the panel gets more height. Likely cause: span
+    = max(...) with MAP_PAD = 1.0 plus two stacked bottom legends.'
+  - 'SC-02 (both): the ''San Francisco'' label sits at lat 39.0 (city at 37.77, +1.2
+    degrees) and ''Los Angeles'' at lat 36.3 (city at 34.05, +2.25 degrees), so the
+    reference geography does not locate the hot spots → anchor each label at its city''s
+    latitude, offset to the offshore side where no events lie. Likely cause: CITIES
+    lat = [39.0, 36.3].'
   - 'Suggestion: a state border alongside the coastline would give the basemap more
     geographic context.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas
-      Chrome: bold title 'Seismic Activity Density · heatmap-geographic · python · letsplot · anyplot.ai' in dark ink at about 80 % of the width; Longitude/Latitude axis titles and ticks in dark ink; bold 'San Francisco' and 'Los Angeles' city labels; framed 'Event Density' color bar (0–0.25) and 'Magnitude' size legend (5/10/15). All readable.
-      Data: filled KDE contours in the Imprint sequential fields ramp (pale mint → brand green → blue → navy) at alpha 0.85, two separate hot spots (SF darkest, LA) joined by a diffuse central band; a dark-grey coastline polyline; 600 event markers with blue outline and red fill sized by magnitude, crowding the hot spots.
+      Chrome: bold title 'Seismic Activity Density · heatmap-geographic · python · letsplot · anyplot.ai' in dark ink at about 80 % of the width; Longitude/Latitude axis titles and ticks in dark ink; bold 'San Francisco' and 'Los Angeles' labels; 'Event Density' color bar (0-0.25) and 'Magnitude' size legend (2-7) stacked below the map in framed elevated boxes. All readable.
+      Data: filled KDE contours in the imprint_seq fields ramp (pale mint -> brand green -> deep blue -> dark violet) at alpha 0.85: SF hot spot darkest, LA second, joined by a diffuse Central Valley band; dark-grey coastline polyline; 600 event markers (#4467A3 ring, #AE3030 fill) at alpha 0.25 sized by magnitude; peak colors stay visible beneath them.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 across the whole canvas
-      Chrome: title, axis titles, ticks, city labels and legend text in light ink; legend frames on #242420; coastline in light grey. No dark-on-dark text.
-      Data: the density field uses the dark fields stops (deep green → brand green → pale blue), with the SF peak pale blue; marker colors (#4467A3 outline, #AE3030 fill) identical to the light render.
+      Chrome: title, axis titles, ticks, city labels and legend text in light ink; legend boxes on #242420; coastline in light grey. No dark-on-dark text.
+      Data: density field uses the dark fields stops (dark olive -> brand green -> pale blue), the SF peak pale blue; marker colors identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -71,51 +63,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis titles, ticks, city labels and both legends set explicitly
-          and readable in both themes
+        comment: Title 11 pt bold, axis titles 12 pt, ticks/legends 10 pt, city labels
+          bold; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '''Los Angeles'' label sits over the top of the LA cluster and touches
-          several event markers (defect line)'
+        comment: City labels sit clear of the event markers and the coastline; no
+          text collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 600 red-filled overlay markers crowd the SF and LA hot spots and
-          hide the peak density colors (defect line)
+        comment: Markers at alpha 0.25 let the peak density bands show through, but
+          the Magnitude legend glyphs are drawn opaque and do not match the marks
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-blue-navy ramp varies in lightness, CVD-safe; markers contrast
-          with the field
+        comment: Ramp varies strongly in lightness in both themes; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, nothing cut off, but the fixed-aspect map
-          leaves wide empty bands above the title and below the x-axis title (defect
-          line)
+        comment: Square canvas, nothing cut off, but the panel uses only about 72
+          % of the width with empty strips at both sides and an empty band south of
+          lat 32.5 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude / Longitude axis titles, descriptive title prefix
+        comment: Latitude / Longitude axis titles and a descriptive title prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq fields stops per theme (mint-green-blue-navy light,
-          deep green-green-pale blue dark); overlay markers in Imprint blue/red; backgrounds
-          #FAF8F1 / #1A1A17'
+        comment: 'Current imprint_seq fields stops per theme (mint-green-deep blue-violet
+          light; olive-green-pale blue dark) sampled with ramp_color; markers in Imprint
+          blue/red; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 9
       max: 20
@@ -138,8 +130,8 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: City labels name the two hot spots, giving the reader a focal reference
-          the Notes do not prescribe
+        comment: City labels name the two hot spots, a focal reference the Notes do
+          not prescribe
     spec_compliance:
       score: 14
       max: 15
@@ -149,22 +141,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic KDE heatmap with a point overlay of the value
-          column
+        comment: Geographic KDE heatmap (filled contours) with a point overlay of
+          the value column
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: KDE, sequential ramp with alpha 0.85, color bar, coastline basemap
-          and bandwidth present; the Notes' zoom for interactive libraries is not
-          enabled (defect line)
+        comment: KDE, sequential ramp at alpha 0.85, color bar, coastline basemap,
+          bandwidth and ggtb zoom present; the city labels sit 1.2 and 2.25 degrees
+          north of their cities (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on x, latitude on y, density as fill; axes cover all events
+        comment: Longitude on x, latitude on y, density as fill; axes cover all events;
+          readable color-bar ticks
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -173,7 +166,7 @@ review:
         comment: Title in the required format with a descriptive prefix; 'Event Density'
           color bar and 'Magnitude' size legend
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -191,11 +184,11 @@ review:
         comment: 'California seismic events: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Coordinates plausible for California, but magnitudes run to about
-          15 (legend 5/10/15), beyond any real earthquake (defect line)
+        comment: 'Checked: coordinates within California; magnitudes 1.2-7.5 (legend
+          2-7) are realistic'
     code_quality:
       score: 10
       max: 10
@@ -223,8 +216,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; gradientn sampling and gggrid wrapper are
-          the prescribed patterns
+        comment: Appropriate complexity; gradientn sampling and the gggrid wrapper
+          are the prescribed patterns
       - id: CQ-05
         name: Output & API
         score: 1
@@ -247,25 +240,27 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: layer_tooltips with per-line formatting is a lets-plot-specific feature
-          in the HTML output
+        comment: layer_tooltips with per-line number formatting is a lets-plot-specific
+          feature in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-b1ddd71c61
-  rendered_at: '2026-11-26T09:09:38Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
+  rendered_at: '2026-11-27T16:24:36Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
   - annotations
-  - html-export
-  - custom-colormap
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
   - kde
   styling:
+  - custom-colormap
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
