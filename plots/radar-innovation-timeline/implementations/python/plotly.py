@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -128,12 +128,28 @@ def overlap(a, b):
 
 
 marker_boxes = [(x - m, x + m, y - m, y + m) for x, y, m in zip(pos["x"], pos["y"], half, strict=True)]
-# Ring names sit in the open quadrant (12 px font); their boxes count as obstacles too
-ring_xy = [xy(edges[ri] + RING_W / 2, ARC_DEGREES + (360 - ARC_DEGREES) / 2) for ri in range(len(rings))]
-placed = []
+# Ring names stand left of the north divider in the open quadrant, one per ring, two lines each (12 px font)
+ring_xy = [(-0.12, edges[ri] + RING_W / 2) for ri in range(len(rings))]
+ring_boxes = []
 for ring, (rx, ry) in zip(rings, ring_xy, strict=True):
-    rw = CHAR_W * 1.15 * len(f"{ring} ({horizon_of[ring]})")
-    placed.append((rx - rw / 2, rx + rw / 2, ry - TEXT_H / 2, ry + TEXT_H / 2))
+    rw = CHAR_W * 1.4 * max(len(ring), len(f"({horizon_of[ring]})"))
+    ring_boxes.append((rx - rw, rx, ry - TEXT_H, ry + TEXT_H))
+placed = []
+
+
+def outside_cell(box, ri, si):
+    """Share of sample points of a text box that lie outside its item's ring and sector cell."""
+    gx = np.linspace(box[0], box[1], 7)
+    gy = np.linspace(box[2], box[3], 3)
+    px, py = np.meshgrid(gx, gy)
+    radius = np.hypot(px, py)
+    deg = np.degrees(np.arctan2(px, py)) % 360
+    inside = (
+        (radius >= edges[ri]) & (radius <= edges[ri + 1]) & (deg >= si * sector_span) & (deg <= (si + 1) * sector_span)
+    )
+    return 1 - inside.mean()
+
+
 textpos = []
 for i, row in pos.iterrows():
     w = CHAR_W * len(str(row["name"]))
@@ -141,8 +157,11 @@ for i, row in pos.iterrows():
     best = None
     for side in order + ["top center", "bottom center"]:
         box = sides[side](row["x"], row["y"], w, half[i])
-        cost = sum(overlap(box, b) for b in placed) + 2 * sum(
-            overlap(box, b) for j, b in enumerate(marker_boxes) if j != i
+        cost = (
+            sum(overlap(box, b) for b in placed)
+            + 6 * sum(overlap(box, b) for b in ring_boxes)
+            + 4 * sum(overlap(box, b) for j, b in enumerate(marker_boxes) if j != i)
+            + 0.15 * outside_cell(box, row["ri"], sectors.index(row["sector"]))
         )
         if best is None or cost < best[0] - 1e-9:
             best = (cost, side, box)
@@ -225,27 +244,33 @@ for si, sector in enumerate(sectors):
 annotations = []
 # Sector headers along the outer edge
 for si, sector in enumerate(sectors):
-    hx, hy = xy(R_MAX + 0.55, si * sector_span + sector_span / 2)
+    mid = si * sector_span + sector_span / 2
+    if np.sin(np.radians(mid)) < -0.3:  # west-side header moves to the sector's lower end, clear of the item labels
+        mid = si * sector_span + sector_span * 0.25
+    hx, hy = xy(R_MAX + 0.3, mid)
+    sx, sy = np.sin(np.radians(mid)), np.cos(np.radians(mid))
+    xanchor = "left" if sx > 0.3 else "right" if sx < -0.3 else "center"
+    yanchor = "bottom" if sy > 0.7 else "top" if sy < -0.7 else "middle"
     annotations.append(
         {
             "text": f"<b>{sector}</b>",
             "x": hx,
             "y": hy,
-            "xanchor": "center",
-            "yanchor": "middle",
+            "xanchor": xanchor,
+            "yanchor": yanchor,
             "showarrow": False,
             "font": {"size": 17, "color": IMPRINT_PALETTE[si % len(IMPRINT_PALETTE)]},
         }
     )
-# Ring names in the open quadrant, one per ring, on the diagonal of the gap
+# Ring names in the open quadrant, right-aligned against the north divider
 for ri, ring in enumerate(rings):
     lx, ly = ring_xy[ri]
     annotations.append(
         {
-            "text": f"<b>{ring}</b> ({horizon_of[ring]})",
+            "text": f"<b>{ring}</b><br>({horizon_of[ring]})",
             "x": lx,
             "y": ly,
-            "xanchor": "center",
+            "xanchor": "right",
             "yanchor": "middle",
             "showarrow": False,
             "font": {"size": 12, "color": INK_SOFT},
@@ -254,9 +279,11 @@ for ri, ring in enumerate(rings):
 
 title_text = "radar-innovation-timeline · python · plotly · anyplot.ai"
 title_fontsize = max(11, round(16 * 67 / len(title_text))) if len(title_text) > 67 else 16
-pad = 0.9
-unit_px = 36  # approximate pixels per radial unit; fixes the horizontal span so the circle sits left
-x_span = 740 / unit_px
+MARGIN = {"l": 30, "r": 30, "t": 40, "b": 10}
+y_lo, y_hi = -R_MAX - 0.85, R_MAX + 0.3
+unit_px = (450 - MARGIN["t"] - MARGIN["b"]) / (y_hi - y_lo)  # pixels per radial unit
+x_span = (800 - MARGIN["l"] - MARGIN["r"]) / unit_px
+x_lo = -x_span / 2
 
 fig.update_layout(
     autosize=False,
@@ -267,23 +294,23 @@ fig.update_layout(
         "xanchor": "center",
         "y": 0.97,
     },
-    xaxis={"visible": False, "range": [-R_MAX - pad - 3.2, -R_MAX - pad - 3.2 + x_span]},
-    yaxis={"visible": False, "range": [-R_MAX - pad, R_MAX + pad], "scaleanchor": "x", "scaleratio": 1},
+    xaxis={"visible": False, "range": [x_lo, x_lo + x_span]},
+    yaxis={"visible": False, "range": [y_lo, y_hi], "scaleanchor": "x", "scaleratio": 1},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
         "font": {"size": 13, "color": INK_SOFT},
-        "x": 0.83,
-        "y": 0.5,
+        "x": (-R_MAX - x_lo) / x_span,  # in the open quadrant, left of the ring names
+        "y": (0.15 - y_lo) / (y_hi - y_lo),
         "xanchor": "left",
-        "yanchor": "middle",
+        "yanchor": "bottom",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "title": {"text": f"<b>{SECTOR}</b>", "font": {"size": 14, "color": INK}},
     },
-    margin={"l": 30, "r": 30, "t": 45, "b": 10},
+    margin=MARGIN,
     annotations=annotations,
 )
 
