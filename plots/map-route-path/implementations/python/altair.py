@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -78,6 +78,8 @@ df = pd.DataFrame(
     }
 )
 df[ELEVATION] = df[ELEVATION] + np.random.normal(0, 45, len(df))
+# Smooth the noisy GPS track with a centered rolling mean (shrinking window at both ends)
+df[[LATITUDE, LONGITUDE]] = df[[LATITUDE, LONGITUDE]].rolling(7, center=True, min_periods=1).mean()
 
 # Plot
 ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
@@ -119,7 +121,7 @@ background = (
 
 route_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=3.5, color=IMPRINT_PALETTE[0], strokeCap="round")
+    .mark_line(strokeWidth=3.5, color=IMPRINT_PALETTE[0], strokeCap="round", strokeJoin="round")
     .encode(
         **geo,
         order=alt.Order(SEQ, type="quantitative"),
