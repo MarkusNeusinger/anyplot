@@ -2,49 +2,44 @@ library: matplotlib
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:02:34Z'
-updated: '2026-04-26T05:23:31Z'
-generated_by: claude-opus
-workflow_run: 24948891521
+updated: '2026-11-27T08:12:39Z'
+generated_by: claude-sonnet
+workflow_run: 45963185745
 issue: 789
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 82
 review:
   strengths:
   - fill_betweenx builds each trapezoid from two edge arrays, a compact matplotlib
     idiom for the funnel geometry
-  - Widths and percentages computed from values / values[0]; every label except Purchase
-    fits within its fill
-  - Theme tokens threaded through title, stage labels and segment gaps; both renders
-    theme-correct with identical Imprint data colors
+  - Every value and percentage label sits inside its own fill in both themes, including
+    the narrow Purchase segment
+  - Widths and percentages derive from df (values / values[0]), so the funnel adapts
+    to another table; canvas hits 3200x1800 exactly
   weaknesses:
-  - 'VQ-05 (both): canvas is 4770x2667 instead of the 3200x1800 target (+1570 × +867
-    px, too large). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''
-    cropping.'
-  - 'VQ-02 (both): the Purchase label straddles the narrow bottom segment''s edges,
-    half on red fill and half on page → fit the label within the segment width. Likely
-    cause: fontsize=18 bold two-part line wider than the 0.1 data-width segment.'
-  - 'Suggestion: the ''Stage 1''–''Stage 5'' column repeats the order the funnel already
-    shows; dropping it would free the left margin.'
+  - 'Suggestion: the stage-name column sits at the widest segment''s left edge, so
+    the lower names are far from their narrow segments; placing each name next to
+    its own segment would shorten the eye path.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, correct.
-      Chrome: title 'funnel-basic · matplotlib · anyplot.ai' in dark INK; 'Stage 1'–'Stage 5' in INK_SOFT on the left; no axes. Canvas 4770x2667.
-      Data: five centered trapezoids in Imprint order — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 (flat-bottomed Purchase). White bold labels inside the first four segments; dark INK Purchase label overflowing the narrow red segment but readable.
+      Background: warm off-white #FAF8F1, correct; canvas 3200x1800.
+      Chrome: title 'funnel-basic · python · matplotlib · anyplot.ai' in dark INK, centered; stage names Awareness–Purchase right-aligned in a dark-ink column left of the funnel; no axes. All readable.
+      Data: five centered segments in Imprint order #009E73, #C475FD, #4467A3, #BD8233, #AE3030 (flat-bottomed Purchase), separated by thin page-colored gaps; bold white value and percent labels (1,000/100% … 100/10%) inside every segment.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, correct.
-      Chrome: title light cream, stage labels light grey; no dark-on-dark.
-      Data: identical Imprint colors; white labels, light-cream Purchase label, all readable.
+      Chrome: title and stage names in light cream; no dark-on-dark text.
+      Data: segment colors identical to the light render; white labels readable on every fill.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -52,42 +47,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Title 24pt, segment labels 18pt bold, stage labels 14pt: all readable
-          in both themes; every label except Purchase fits within its fill.'
+        comment: 'Sizes set explicitly: title 12 pt, stage names 10 pt, bold value/percent
+          labels 9 pt; all readable in both themes, white labels sit inside every
+          fill including the narrow Purchase segment.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: The Purchase label straddles the narrow bottom segment's edges, half
-          on red fill, half on page (defect line).
+        passed: true
+        comment: No text collides with other text or with segment edges; every label
+          fits its fill.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Five segments large and clearly visible in both themes; no legend
-          needed.
+        comment: Five large solid segments separated by thin page-colored gaps; no
+          legend needed.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues with lightness differences; labels carry the
-          values, so color is not the sole signal.
+        comment: Imprint hues differ in lightness; stage names and values carry the
+          information, so color is not the sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas 4770x2667 drifts from the 3200x1800 target (defect line);
-          hard rule.
+        passed: true
+        comment: 3200x1800 canvas; label column plus funnel fill the width, nothing
+          cut off, title clear of the top segment.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes off is appropriate for a funnel (N/A); mandated title present.
+        comment: 'N/A: axes off is right for a funnel; mandated title present.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -103,23 +99,23 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Style-guide baseline (theme tokens, Imprint, bold in-segment labels);
-          nothing decided beyond it.
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint, bold in-segment labels;
+          nothing decided beyond it.'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Axes fully off and thin page-colored gaps between segments meet the
-          baseline; no further refinement.
+        comment: Axes off and page-colored segment gaps meet the baseline; no further
+          refinement.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: The funnel shape and labels display the data; no hierarchy chosen
-          beyond the Notes.
+        comment: The funnel and its labels display the data; no hierarchy chosen beyond
+          the Notes.
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +125,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct single funnel: trapezoids narrowing top to bottom, flat-bottomed
-          last segment, no extra layers.'
+        comment: Single centered funnel of trapezoids narrowing top to bottom, flat-bottomed
+          last segment, no extra layers (C4).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and C1–C4 met: distinct colors, value+percentage labels
-          readable in both themes, proportional widths.'
+        comment: 'Notes and C1-C3 met: distinct color per stage, stage name beside
+          each segment, value and percent on every segment, widths proportional to
+          the first stage.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Widths = value / first value, centered on x=0, ordered largest to
+        comment: Width = value / first value, centered on x=0, ordered largest to
           smallest.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'funnel-basic · matplotlib · anyplot.ai' matches the format;
-          no legend needed (stage names on segments).
+        comment: Title 'funnel-basic · python · matplotlib · anyplot.ai' matches the
+          format; no legend needed (stage names label the segments).
     data_quality:
       score: 15
       max: 15
@@ -161,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stage ordering, proportional widths, values and percentages;
-          all aspects of the type.
+        comment: Shows stage order, proportional narrowing, drops of different size,
+          values and percentages.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing conversion funnel (Awareness → Purchase) with plausible
-          drop-offs; neutral.
+        comment: Marketing conversion funnel Awareness → Purchase, neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,000 → 100 visitors; percentages 100/60/40/20/10 computed from values/values[0]
-          and match the labels.
+        comment: 'Checked: labels 100/60/40/20/10 % follow from values/values[0] (line
+          34, 59); no Check values in the spec.'
     code_quality:
       score: 10
       max: 10
@@ -186,7 +182,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Flat script in the adaptable zones: column constants, Data block
+          binding df, Plot reading only df.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,48 +195,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: os, plt, np, pd all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise geometry loop; nothing an available call would replace.
+        comment: Compact geometry loop; nothing an available call would replace.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with current API.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Standard fig/ax axes-method API, ax.axis('off'), ax.text with ha/va.
+        passed: false
+        comment: Standard fig/ax Axes-method API, ax.axis('off'), subplots_adjust;
+          the mandated baseline.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: fill_betweenx builds each trapezoid from two edge arrays instead
-          of Polygon patches.
+        comment: Nothing beyond what the library prompt mandates.
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
+  rendered_at: '2026-11-27T08:09:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - minimal-chrome
-  - edge-highlighting
