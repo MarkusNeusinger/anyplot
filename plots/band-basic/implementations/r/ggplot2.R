@@ -14,7 +14,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
+GRID        <- alpha(INK, 0.15)
 
 IMPRINT_PALETTE <- c(
     "#009E73",  # 1 — brand green
@@ -38,38 +38,23 @@ df <- data.frame(
     y_upper  = y_upper
 )
 
-# Annotation: sits above the band at the Year 4 winter trough (month 48)
-# where vertical space is available, pointing toward the widening right side
-ann_x <- 48
-ann_y <- df$y_upper[48] + 0.6
-
 p <- ggplot(df, aes(x = month)) +
     geom_ribbon(
         aes(ymin = y_lower, ymax = y_upper, fill = "95% CI"),
-        alpha = 0.35,
+        alpha = 0.4,
         color = NA
     ) +
     geom_line(
         aes(y = y_center, color = "Central Forecast"),
         linewidth = 1.2
     ) +
-    annotate(
-        "text",
-        x     = ann_x,
-        y     = ann_y,
-        label = "uncertainty widens →",
-        color = INK_MUTED,
-        size  = 2.6,
-        hjust = 0,
-        vjust = 0
-    ) +
     scale_fill_manual(
         values = c("95% CI" = IMPRINT_PALETTE[1]),
-        guide  = guide_legend(override.aes = list(alpha = 0.5))
+        guide  = guide_legend(order = 1, override.aes = list(alpha = 0.5))
     ) +
     scale_color_manual(
-        values = c("Central Forecast" = IMPRINT_PALETTE[3]),
-        guide  = guide_legend(override.aes = list(linewidth = 1.5))
+        values = c("Central Forecast" = IMPRINT_PALETTE[2]),
+        guide  = guide_legend(order = 2, override.aes = list(linewidth = 1.5))
     ) +
     scale_x_continuous(
         breaks = c(1, 13, 25, 37, 49),
@@ -87,7 +72,7 @@ p <- ggplot(df, aes(x = month)) +
     theme(
         plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background   = element_rect(fill = PAGE_BG, color = NA),
-        panel.grid.major.y = element_line(color = INK_SOFT, linewidth = 0.25),
+        panel.grid.major.y = element_line(color = GRID, linewidth = 0.3),
         panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         panel.border       = element_blank(),
