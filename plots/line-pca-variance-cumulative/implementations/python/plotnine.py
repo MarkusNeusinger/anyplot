@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-29
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -43,47 +43,56 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Imprint position 1 — ALWAYS first series
 IMPRINT_RED = "#AE3030"  # Imprint matte red — semantic anchor for elbow emphasis
 
-# Data — PCA on the Wine dataset (13 features)
-X_scaled = StandardScaler().fit_transform(load_wine().data)
-pca = PCA().fit(X_scaled)
+# Constants
+THRESHOLDS = (90.0, 95.0, 99.0)  # common variance targets (percent) for choosing the component count
 
-n_components = np.arange(1, len(pca.explained_variance_ratio_) + 1)
-cumulative_var = np.cumsum(pca.explained_variance_ratio_) * 100
-individual_var = pca.explained_variance_ratio_ * 100
+# Columns: set these to your table's column names
+N_COMPONENTS = "Number of Principal Components"  # role: n_components
+EXPLAINED_VARIANCE_RATIO = "Explained variance ratio"  # role: explained_variance_ratio
+CUMULATIVE = "Cumulative Explained Variance (%)"  # role: extra
+INDIVIDUAL = "Individual Explained Variance (%)"  # role: extra
+LABEL = "Label"  # role: extra
 
-df = pd.DataFrame({"component": n_components, "cumulative": cumulative_var, "individual": individual_var})
-
-# Elbow detection via maximum second-derivative change
-diffs = np.diff(cumulative_var)
-elbow_idx = int(np.argmax(np.abs(np.diff(diffs)))) + 1
-elbow_c = int(n_components[elbow_idx])
-elbow_v = cumulative_var[elbow_idx]
-elbow_df = pd.DataFrame(
-    {"component": [elbow_c], "cumulative": [elbow_v], "label": [f"Elbow: {elbow_c} components\n({elbow_v:.1f}%)"]}
+# Data: replace this block with your own table, for example df = pd.read_csv("pca_variance.csv")
+pca = PCA().fit(StandardScaler().fit_transform(load_wine().data))
+df = pd.DataFrame(
+    {
+        N_COMPONENTS: np.arange(1, len(pca.explained_variance_ratio_) + 1),
+        EXPLAINED_VARIANCE_RATIO: pca.explained_variance_ratio_,
+    }
 )
 
-# Threshold reference lines
-thresholds = pd.DataFrame({"y": [90.0, 95.0, 99.0], "label": ["90%", "95%", "99%"], "x": [12.5, 12.5, 12.5]})
-
-# Title fontsize — scaled by length per plot-generator.md formula
-title_str = "line-pca-variance-cumulative · python · plotnine · anyplot.ai"
-n = len(title_str)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = max(8, round(12 * ratio))
-
 # Plot
+df[CUMULATIVE] = df[EXPLAINED_VARIANCE_RATIO].cumsum() * 100
+df[INDIVIDUAL] = df[EXPLAINED_VARIANCE_RATIO] * 100
+first_component = df[N_COMPONENTS].min()
+
+# Elbow: the point where the curve bends most (largest second difference)
+bend = np.zeros(len(df))
+bend[1:-1] = np.abs(np.diff(df[CUMULATIVE].to_numpy(dtype=float), n=2))
+elbow_df = df.iloc[[int(np.nanargmax(bend))]].copy()
+elbow_df[LABEL] = [
+    f"Elbow: {int(c)} components\n({v:.1f}%)" for c, v in zip(elbow_df[N_COMPONENTS], elbow_df[CUMULATIVE], strict=True)
+]
+
+thresholds = pd.DataFrame(
+    {N_COMPONENTS: first_component - 0.3, CUMULATIVE: list(THRESHOLDS), LABEL: [f"{t:g}%" for t in THRESHOLDS]}
+)
+
+# Title fontsize: scaled by length per plot-generator.md formula
+title_str = "line-pca-variance-cumulative · python · plotnine · anyplot.ai"
+title_fontsize = max(8, round(12 * min(1.0, 67 / len(title_str))))
+
 plot = (
-    ggplot(df, aes(x="component", y="cumulative"))
+    ggplot(df, aes(x=N_COMPONENTS, y=CUMULATIVE))
     # Threshold dashed reference lines (structural chrome — INK_SOFT)
-    + geom_hline(yintercept=90.0, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.6)
-    + geom_hline(yintercept=95.0, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.6)
-    + geom_hline(yintercept=99.0, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.6)
+    + geom_hline(yintercept=list(THRESHOLDS), linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.6)
     # Individual variance as translucent bars — contextual background layer
-    + geom_col(aes(y="individual"), fill=BRAND, width=0.5, alpha=0.15, show_legend=False)
+    + geom_col(aes(y=INDIVIDUAL), fill=BRAND, width=0.5, alpha=0.15, show_legend=False)
     # Vertical drop-line from elbow to x-axis
     + geom_segment(
         data=elbow_df,
-        mapping=aes(x="component", xend="component", y=0, yend="cumulative"),
+        mapping=aes(x=N_COMPONENTS, xend=N_COMPONENTS, y=0, yend=CUMULATIVE),
         linetype="dotted",
         color=IMPRINT_RED,
         size=0.6,
@@ -96,7 +105,7 @@ plot = (
     # Highlighted elbow point
     + geom_point(
         data=elbow_df,
-        mapping=aes(x="component", y="cumulative"),
+        mapping=aes(x=N_COMPONENTS, y=CUMULATIVE),
         color=IMPRINT_RED,
         size=5.0,
         fill=IMPRINT_RED,
@@ -107,31 +116,33 @@ plot = (
     # Elbow annotation
     + geom_text(
         data=elbow_df,
-        mapping=aes(x="component", y="cumulative", label="label"),
+        mapping=aes(x=N_COMPONENTS, y=CUMULATIVE, label=LABEL),
         ha="left",
-        va="bottom",
-        size=3.0,
+        va="top",
+        size=6.0,
         color=IMPRINT_RED,
         fontweight="bold",
         nudge_x=0.4,
-        nudge_y=2.5,
+        nudge_y=-4.0,
     )
     # Threshold labels
     + geom_text(
         data=thresholds,
-        mapping=aes(x="x", y="y", label="label"),
-        ha="right",
+        mapping=aes(x=N_COMPONENTS, y=CUMULATIVE, label=LABEL),
+        ha="left",
         va="bottom",
-        size=2.5,
+        size=5.5,
         color=INK_MUTED,
         nudge_y=0.5,
     )
     # Scales
-    + scale_x_continuous(breaks=n_components, labels=[str(i) for i in n_components], expand=(0.02, 0.4))
-    + scale_y_continuous(
-        limits=(0, 102), breaks=[0, 20, 40, 60, 80, 100], labels=["0%", "20%", "40%", "60%", "80%", "100%"]
+    + scale_x_continuous(
+        breaks=df[N_COMPONENTS].tolist(), labels=df[N_COMPONENTS].astype(str).tolist(), expand=(0.02, 0.4)
     )
-    + labs(x="Number of Principal Components", y="Cumulative Explained Variance (%)", title=title_str)
+    + scale_y_continuous(
+        limits=(0, df[CUMULATIVE].max() * 1.02), breaks=range(0, 101, 20), labels=[f"{b}%" for b in range(0, 101, 20)]
+    )
+    + labs(x=N_COMPONENTS, y=CUMULATIVE, title=title_str)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -144,8 +155,7 @@ plot = (
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.12),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
-        axis_line_x=element_line(color=INK_SOFT, size=0.4),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
         axis_ticks_major_x=element_line(color=INK_SOFT, size=0.3),
         plot_margin=0.02,
     )
