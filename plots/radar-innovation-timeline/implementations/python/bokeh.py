@@ -1,15 +1,15 @@
 """ anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-29
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
 import time
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
 from bokeh.plotting import figure
@@ -28,56 +28,62 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Imprint categorical palette — 8 hues, canonical order, theme-independent
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Sector colors: first 4 Imprint positions (#009E73 is always first series)
-sector_colors = IMPRINT_PALETTE[:4]
+# Columns: set these to your table's column names
+NAME = "Technology"  # role: name
+RING = "Horizon"  # role: ring
+SECTOR = "Sector"  # role: sector
 
-# Data — Technology innovation radar
-np.random.seed(42)
+# Data: replace this block with your own table, for example df = pd.read_csv("radar.csv")
+# Rows are listed ring by ring within each sector, nearest horizon first.
+df = pd.DataFrame(
+    [
+        ("LLM Agents", "Adopt", "AI & ML"),
+        ("RAG Pipelines", "Adopt", "AI & ML"),
+        ("Vision Models", "Trial", "AI & ML"),
+        ("AI Code Review", "Trial", "AI & ML"),
+        ("Neuro-Symbolic AI", "Assess", "AI & ML"),
+        ("Quantum ML", "Hold", "AI & ML"),
+        ("Autonomous Research", "Hold", "AI & ML"),
+        ("K8s GitOps", "Adopt", "Cloud & Infra"),
+        ("Edge Computing", "Adopt", "Cloud & Infra"),
+        ("WebAssembly", "Trial", "Cloud & Infra"),
+        ("Serverless GPUs", "Trial", "Cloud & Infra"),
+        ("eBPF Networking", "Assess", "Cloud & Infra"),
+        ("Confidential Compute", "Assess", "Cloud & Infra"),
+        ("Satellite Internet", "Hold", "Cloud & Infra"),
+        ("Carbon Tracking", "Adopt", "Sustainability"),
+        ("Green Cloud", "Trial", "Sustainability"),
+        ("Circular Supply Chain", "Trial", "Sustainability"),
+        ("Smart Grid AI", "Assess", "Sustainability"),
+        ("Ocean Carbon Capture", "Hold", "Sustainability"),
+        ("Fusion Energy", "Hold", "Sustainability"),
+        ("mRNA Therapeutics", "Adopt", "Biotech"),
+        ("CRISPR Diagnostics", "Trial", "Biotech"),
+        ("Digital Twins (Health)", "Assess", "Biotech"),
+        ("Organ-on-Chip", "Assess", "Biotech"),
+        ("Synthetic Biology", "Hold", "Biotech"),
+        ("Brain-Computer Interface", "Hold", "Biotech"),
+    ],
+    columns=[NAME, RING, SECTOR],
+)
 
-sectors = ["AI & ML", "Cloud & Infra", "Sustainability", "Biotech"]
-rings = ["Adopt", "Trial", "Assess", "Hold"]
+# Plot: reads only df and the constants above
+sectors = list(df[SECTOR].unique())
+rings = list(df[RING].unique())
+n_sectors = len(sectors)
+n_rings = len(rings)
+sector_colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(n_sectors)]  # first sector takes #009E73
 
-ring_inner = [0, 105, 200, 295]
-ring_outer = [105, 200, 295, 390]
+# Ring geometry: a wider innermost ring holds the crowded nearest horizon
+R_MAX = 390
+core = 140
+ring_outer = [core + (R_MAX - core) / (n_rings - 1) * k for k in range(n_rings)]
+ring_inner = [0, *ring_outer[:-1]]
 ring_mid = [(i + o) / 2 for i, o in zip(ring_inner, ring_outer, strict=True)]
 
 # Visual hierarchy: near-term items are larger/bolder
-ring_marker_sizes = [28, 22, 18, 14]
-
-items = [
-    # AI & ML (sector 0) — Imprint green #009E73
-    ("LLM Agents", 0, 0),
-    ("RAG Pipelines", 0, 0),
-    ("Vision Models", 1, 0),
-    ("AI Code Review", 1, 0),
-    ("Neuro-Symbolic AI", 2, 0),
-    ("Quantum ML", 3, 0),
-    ("Autonomous Research", 3, 0),
-    # Cloud & Infra (sector 1) — Imprint lavender #C475FD
-    ("K8s GitOps", 0, 1),
-    ("Edge Computing", 0, 1),
-    ("WebAssembly", 1, 1),
-    ("Serverless GPUs", 1, 1),
-    ("eBPF Networking", 2, 1),
-    ("Confidential Compute", 2, 1),
-    ("Satellite Internet", 3, 1),
-    # Sustainability (sector 2) — Imprint blue #4467A3
-    ("Carbon Tracking", 0, 2),
-    ("Green Cloud", 1, 2),
-    ("Circular Supply Chain", 1, 2),
-    ("Smart Grid AI", 2, 2),
-    ("Ocean Carbon Capture", 3, 2),
-    ("Fusion Energy", 3, 2),
-    # Biotech (sector 3) — Imprint ochre #BD8233
-    ("mRNA Therapeutics", 0, 3),
-    ("CRISPR Diagnostics", 1, 3),
-    ("Digital Twins (Health)", 2, 3),
-    ("Organ-on-Chip", 2, 3),
-    ("Synthetic Biology", 3, 3),
-    ("Brain-Computer Interface", 3, 3),
-]
-
-n_sectors = len(sectors)
+ring_marker_sizes = np.linspace(28, 14, n_rings)
+label_offsets = np.linspace(26, 13, n_rings)
 
 # 270-degree layout; gap in upper-right holds ring labels and legend
 total_angle = 3 * np.pi / 2
@@ -93,8 +99,8 @@ p = figure(
     width=W,
     height=H,
     title="radar-innovation-timeline · python · bokeh · anyplot.ai",
-    x_range=(-470, 470),
-    y_range=(-460, 480),
+    x_range=(-R_MAX * 1.2, R_MAX * 1.2),
+    y_range=(-R_MAX * 1.18, R_MAX * 1.23),
     tools="",
     toolbar_location=None,  # omit toolbar so PNG height matches H exactly
     min_border_top=120,
@@ -114,7 +120,7 @@ p.title.align = "center"
 p.title.text_color = INK
 
 # Alternating ring background fills — subtle bands separate time horizons
-for ring_idx in range(len(rings)):
+for ring_idx in range(n_rings):
     r_out = ring_outer[ring_idx]
     r_in = ring_inner[ring_idx]
     theta = np.linspace(start_angle, start_angle + total_angle, 200)
@@ -213,17 +219,21 @@ for i, sector_name in enumerate(sectors):
         )
     )
 
-# Precompute item positions
-groups: dict = defaultdict(list)
-for idx, (_name, ring_idx, sector_idx) in enumerate(items):
-    groups[(ring_idx, sector_idx)].append(idx)
+# Item positions: spread inside each ring-sector cell
+np.random.seed(42)
+ring_index = {name: i for i, name in enumerate(rings)}
+sector_index = {name: i for i, name in enumerate(sectors)}
+cell = df.groupby([RING, SECTOR], sort=False)[NAME]
+pos_in_cell = cell.cumcount().to_numpy()
+cell_size = cell.transform("size").to_numpy()
 
-xs, ys, colors, sizes, names, ring_names, sector_names = [], [], [], [], [], [], []
+xs, ys = [], []
 
-for idx, (name, ring_idx, sector_idx) in enumerate(items):
-    group = groups[(ring_idx, sector_idx)]
-    pos_in_group = group.index(idx)
-    n_in_group = len(group)
+for idx, (name, ring_name, sector_name) in enumerate(df[[NAME, RING, SECTOR]].itertuples(index=False)):
+    ring_idx = ring_index[ring_name]
+    sector_idx = sector_index[sector_name]
+    pos_in_group = pos_in_cell[idx]
+    n_in_group = cell_size[idx]
 
     s_start = sector_starts[sector_idx]
     margin = sector_width * 0.15  # wider margin reduces crowding near sector edges
@@ -244,26 +254,18 @@ for idx, (name, ring_idx, sector_idx) in enumerate(items):
 
     xs.append(x)
     ys.append(y)
-    colors.append(sector_colors[sector_idx])
-    sizes.append(ring_marker_sizes[ring_idx])
-    names.append(name)
-    ring_names.append(rings[ring_idx])
-    sector_names.append(sectors[sector_idx])
 
     # Label placement: alternate inward/outward in crowded inner rings
-    base_offsets = [26, 20, 16, 13]
-    if ring_idx == 0 and n_in_group > 1:
-        direction = 1 if pos_in_group % 2 == 0 else -0.6
-        label_r_offset = base_offsets[ring_idx] * direction
-    else:
-        label_r_offset = base_offsets[ring_idx]
+    direction = -1 if ring_idx == 0 and n_in_group > 1 and pos_in_group % 2 else 1
+    label_r_offset = label_offsets[ring_idx] * direction
 
     lx = x + label_r_offset * np.cos(angle)
     ly = y + label_r_offset * np.sin(angle)
 
-    cos_val = np.cos(angle)
+    # Anchor the text away from the marker, on the side the label was pushed to
+    cos_val = direction * np.cos(angle)
     text_align = "center" if abs(cos_val) < 0.3 else ("left" if cos_val > 0 else "right")
-    sin_val = np.sin(angle)
+    sin_val = direction * np.sin(angle)
     text_baseline = "middle" if abs(sin_val) < 0.3 else ("bottom" if sin_val > 0 else "top")
 
     p.add_layout(
@@ -280,19 +282,14 @@ for idx, (name, ring_idx, sector_idx) in enumerate(items):
 
 # Scatter markers per sector (needed for per-sector legend items)
 legend_items_list = []
-for si, sector_name in enumerate(sectors):
-    indices = [i for i, (_, _, sec_idx) in enumerate(items) if sec_idx == si]
-    sector_source = ColumnDataSource(
-        data={
-            "x": [xs[i] for i in indices],
-            "y": [ys[i] for i in indices],
-            "color": [colors[i] for i in indices],
-            "size": [sizes[i] for i in indices],
-            "name": [names[i] for i in indices],
-            "ring": [ring_names[i] for i in indices],
-            "sector": [sector_names[i] for i in indices],
-        }
-    )
+placed = df.assign(
+    x=xs,
+    y=ys,
+    size=df[RING].map(dict(zip(rings, ring_marker_sizes, strict=True))),
+    color=df[SECTOR].map(dict(zip(sectors, sector_colors, strict=True))),
+)
+for sector_name in sectors:
+    sector_source = ColumnDataSource(placed[placed[SECTOR] == sector_name])
     renderer = p.scatter(
         "x",
         "y",
@@ -307,7 +304,7 @@ for si, sector_name in enumerate(sectors):
 
 # HoverTool — Bokeh's distinctive interactive feature
 hover = HoverTool(
-    tooltips=[("Technology", "@name"), ("Horizon", "@ring"), ("Sector", "@sector")], point_policy="snap_to_data"
+    tooltips=[(NAME, f"@{{{NAME}}}"), (RING, f"@{{{RING}}}"), (SECTOR, f"@{{{SECTOR}}}")], point_policy="snap_to_data"
 )
 p.add_tools(hover)
 
@@ -350,6 +347,9 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
