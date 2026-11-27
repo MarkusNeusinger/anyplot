@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -24,9 +24,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for marks (a line on the page), stops of the render's theme
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
@@ -69,8 +69,25 @@ line = ax.add_collection(lc)
 
 x_margin = (lon.max() - lon.min()) * 0.1
 y_margin = (lat.max() - lat.min()) * 0.1
-ax.set_xlim(lon.min() - x_margin, lon.max() + x_margin)
-ax.set_ylim(lat.min() - y_margin, lat.max() + y_margin)
+x0, x1 = lon.min() - x_margin, lon.max() + x_margin
+y0, y1 = lat.min() - y_margin, lat.max() + y_margin
+ax.set_xlim(x0, x1)
+ax.set_ylim(y0, y1)
+
+# Quiet basemap under the route: bay on the west edge, a park, and a street grid
+shore_y = np.linspace(y0, y1, 60)
+shore_x = lon.min() - 0.03 * (x1 - x0) + 0.004 * (x1 - x0) * np.sin(shore_y * 900)
+ax.fill_betweenx(shore_y, x0, shore_x, color=INK, alpha=0.07, linewidth=0, zorder=0)
+ax.plot(shore_x, shore_y, color=INK_SOFT, alpha=0.35, linewidth=0.8, zorder=0.5)
+park_cx, park_cy = x0 + 0.62 * (x1 - x0), y0 + 0.5 * (y1 - y0)
+park = plt.Rectangle(
+    (park_cx, park_cy), 0.16 * (x1 - x0), 0.07 * (y1 - y0), color=IMPRINT_PALETTE[0], alpha=0.10, linewidth=0, zorder=0
+)
+ax.add_patch(park)
+for gx in np.arange(shore_x.max() + 0.02 * (x1 - x0), x1, (x1 - x0) / 14):
+    ax.plot([gx, gx], [y0, y1], color=INK, alpha=0.09, linewidth=0.6, zorder=0.4)
+for gy in np.arange(y0, y1, (y1 - y0) / 24):
+    ax.plot([shore_x.max(), x1], [gy, gy], color=INK, alpha=0.09, linewidth=0.6, zorder=0.4)
 # Colorbar: hugs the aspect-locked axes
 ax.set_aspect(1 / np.cos(np.radians(lat.mean())), adjustable="box")
 ax.apply_aspect()
@@ -115,7 +132,6 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-ax.grid(True, alpha=0.12, linewidth=0.6, color=INK)
 
 leg = ax.legend(fontsize=8, loc="upper left")
 leg.get_frame().set_facecolor(ELEVATED_BG)
@@ -123,7 +139,7 @@ leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 
-ax.xaxis.set_major_locator(plt.MaxNLocator(4))
+ax.xaxis.set_major_locator(plt.MaxNLocator(3))
 
 # Save — no bbox_inches so figsize×dpi gives exact 2400×2400
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
