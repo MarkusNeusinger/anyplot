@@ -1,7 +1,7 @@
 """ anyplot.ai
 pie-basic: Basic Pie Chart
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -50,7 +50,7 @@ fig = go.Figure(
             sort=False,
             direction="clockwise",
             rotation=90,
-            domain={"x": [0.06, 0.66], "y": [0.1, 0.86]},
+            domain={"x": [0.03, 0.71], "y": [0.06, 0.9]},
         )
     ]
 )
@@ -58,7 +58,7 @@ fig = go.Figure(
 # Source note
 fig.add_annotation(
     text="Source: Industry estimates, 2024",
-    x=0.36,
+    x=0.37,
     y=0.02,
     xref="paper",
     yref="paper",
@@ -89,7 +89,7 @@ fig.update_layout(
         "yanchor": "middle",
         "y": 0.5,
         "xanchor": "left",
-        "x": 0.8,
+        "x": 0.82,
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
