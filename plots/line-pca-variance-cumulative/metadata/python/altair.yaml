@@ -2,61 +2,52 @@ library: altair
 language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:42:25Z'
-updated: '2026-05-29T05:50:37Z'
+updated: '2026-11-27T18:42:10Z'
 generated_by: claude-sonnet
-workflow_run: 26620170785
+workflow_run: 46050541546
 issue: 4131
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 88
 review:
   strengths:
-  - Real PCA data from sklearn wine dataset (13 features) — deterministic, scientifically
-    grounded, neutral context
-  - Elbow detection via kneedle algorithm (max orthogonal distance from diagonal)
-    automatically annotates the inflection point
-  - 'Threshold crossing markers: automatically finds and annotates which component
-    counts reach 90%/95% variance thresholds'
-  - Altair's distinctive interactive hover via selection_point(nearest=True, on='pointerover')
-    + transform_filter + alt.condition — not replicable in static libraries
-  - 'Perfect Imprint palette compliance: #009E73 primary line, #4467A3 for 90% threshold,
-    #BD8233 for 95% threshold, #AE3030 semantic elbow marker'
-  - 'Layered shape encoding: circle=data points, diamond=threshold crossings, triangle=elbow
-    — redundant encoding beyond color alone'
-  - Theme-adaptive chrome fully implemented through all elements (title, axis labels,
-    tick labels, legend, background, grid)
-  - Canvas padding approach correctly pads to exact 3200×1800 without cropping, following
-    library guide exactly
+  - 'Real PCA of the scikit-learn wine dataset: deterministic, neutral and scientifically
+    grounded'
+  - Elbow detected by the kneedle distance and marked with a red triangle on the curve's
+    own PC 5 marker
+  - Threshold crossings computed with searchsorted and called out as '8 components'
+    / '10 components' in the threshold's own color
+  - Altair-native nearest-point hover (selection_point + transform_filter rule + alt.condition
+    highlight) for the HTML view
+  - Fit autosize fills the 3200x1800 canvas with balanced title, axes and legend in
+    both themes
+  - Theme tokens threaded through title, axes, legend frame and marker outlines; Imprint
+    palette correct
   weaknesses:
-  - Grid uses dashed lines (gridDash=[3,3]) at 12% opacity — style guide recommends
-    solid thin lines at 15-25% opacity; switch to solid gridDash=[] at gridOpacity=0.15
-    for a cleaner result
-  - Area fill opacity 0.05 is nearly imperceptible — increase to 0.08-0.10 to provide
-    subtle but visible depth without cluttering the data layer
-  - 'DE-02: Altair''s axis domain lines are present on all four sides (no equivalent
-    top/right spine removal); using configure_axis(domain=False) for a cleaner L-frame
-    look would improve refinement'
-  - 'LM-02 partial: interactive selection reuses a standard Altair nearest-hover pattern;
-    more distinctive usage (e.g., layered tooltip with all data fields, or linked
-    brush) would demonstrate deeper Altair mastery'
+  - 'SC-03 (both): the area fill under the curve is anchored at 24 %, an arbitrary
+    floor (cumulative.min() - 12) rather than zero, so its filled height suggests
+    a magnitude the data does not have → anchor the area at 0 or drop it. Likely cause:
+    y2=alt.datum(float(y_scale.domain[0])) with y_scale.domain[0] = cumulative.min()
+    - 12.'
+  - 'Suggestion: the ''8 components'' label sits above the 95 % line, away from its
+    diamond at ~92 %; placing it just below the 95 % line would tie it more clearly
+    to the 90 % crossing.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "line-pca-variance-cumulative · python · altair · anyplot.ai" in dark ink at fontSize=16, centered, takes ~70% of plot width — expected for a 59-char title; axis labels "Number of Components" (x) and "Cumulative Explained Variance (%)" (y) both at titleFontSize=12 in dark ink, tick labels at 10px in soft ink
-      Data: Brand green #009E73 monotone line with circular markers (size=120); very subtle green area fill (opacity=0.05) under the curve; dashed blue (#4467A3) 90% threshold line and dashed ochre (#BD8233) 95% threshold line; diamond markers at crossing points (PC8 for 90%, PC10 for 95%) in matching threshold colors; red triangle-up (#AE3030) at PC5 marking the elbow; text annotations "8 components", "10 components", "Elbow (PC 5)" placed with dy/dx offsets
-      Legend: "Threshold" box in top-right with elevated background (#FFFDF6), soft-ink border, light labels; shows 90% (blue dashed) and 95% (ochre dashed) entries
-      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background; no light-on-light issues
+      Background: warm off-white #FAF8F1, fills the 3200x1800 canvas
+      Chrome: title 'line-pca-variance-cumulative · python · altair · anyplot.ai' centered in dark ink; axis titles 'Number of components' and 'Cumulative explained variance (%)' in dark ink; soft-ink tick labels 1-13 and 30-100; solid subtle grid; no axis domain lines; 'Threshold' legend top right on the elevated background with dashed blue 90 % and ochre 95 % glyphs
+      Data: #009E73 monotone curve with outlined circle markers at all 13 components, faint green fill beneath; dashed blue 90 % and ochre 95 % lines; blue diamond at PC 8 labelled '8 components' and ochre diamond at PC 10 labelled '10 components'; red triangle on the PC 5 marker labelled 'Elbow (PC 5)' below-right of it
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8), axis labels and tick labels in soft light ink (#B8B7B0) — all clearly readable against the dark background; no dark-on-dark text failures
-      Data: Line and circular markers remain #009E73 (identical to light render); threshold line colors (#4467A3 and #BD8233) identical; elbow marker #AE3030 identical; all data colors unchanged
-      Legend: Box uses elevated dark bg (#242420) with soft light border and light text — correctly theme-adapted
-      Legibility verdict: PASS — all text readable; data colors identical to light render; no dark-on-dark failures detected
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in soft light ink, legend on #242420 with light text; no dark-on-dark text
+      Data: curve, markers, threshold lines, diamonds and elbow triangle in the same colors as the light render; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,84 +58,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis title=12, tick=10,
-          legend=10, annotations=11-12); well-proportioned in both themes; 59-char
-          title at ~70% width is expected; no overflow or clipping
+        comment: Title 16, axis titles 13, ticks 11, legend 11-12, annotations 11-12,
+          all explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Elbow label offset with dx=42 clears the triangle marker; crossing
-          annotations at dy=-13 above respective markers; no text-on-text collisions
+        comment: 'No text collisions: elbow label sits below-right of the triangle
+          clear of the curve, crossing labels sit clear of both dashed lines'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 13 data points (sparse) with size=120 markers and strokeWidth=3 line
-          — well-adapted to data density; threshold markers size=180; elbow triangle
-          size=220
+        comment: 13 sparse points at size 130 with page-colored outline, 3 px line;
+          legend dash glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with good CVD separation; redundant shape encoding
-          (circle/diamond/triangle) supplements color for distinguishability
+        comment: Blue/ochre thresholds plus diamond/triangle/circle shapes; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; plot centered on 3200x1800 canvas with generous
-          padding; no content cut off; legend in top-right corner without floating
-          isolation
+        comment: Fit autosize fills the 3200x1800 canvas; title, axes and legend balanced;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Number of Components'' (descriptive); Y: ''Cumulative Explained
-          Variance (%)'' (descriptive with units); title format exact'
+        comment: '''Number of components'' and ''Cumulative explained variance (%)''
+          with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary series #009E73; thresholds use Imprint positions 3 (#4467A3)
-          and 4 (#BD8233); elbow uses semantic anchor #AE3030 appropriately; light
-          bg #FAF8F1 / dark bg #1A1A17; all chrome theme-adaptive in both renders'
+        comment: 'Curve #009E73; thresholds Imprint positions 3 and 4; elbow #AE3030;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: intentional color hierarchy (green primary > blue/ochre
-          thresholds > red elbow), shape differentiation, subtle area fill, clean
-          composition — clearly above defaults; not quite FiveThirtyEight-level'
+        passed: false
+        comment: Deliberate mark hierarchy (green circles for data, threshold-colored
+          diamonds at crossings, red triangle at the elbow) with annotation text colored
+          to its threshold, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: View strokeWidth=0 removes frame; grid at 12% opacity with dashes;
-          elevated legend bg; marker edge strokes for definition — good refinement
-          but dashed grid and axis domains on all sides leave room to polish further
+        passed: false
+        comment: Axis domains dropped, view stroke removed, x-domain padded half a
+          component so end markers breathe, elevated legend box with dash glyphs
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: 'Actively guides the viewer: elbow detection identifies the optimal
-          tradeoff point, crossing annotations tell ''you need 8 components for 90%'',
-          visual hierarchy ranks data > thresholds > annotations — strong storytelling'
+        passed: false
+        comment: Crossing annotations ('8 components', '10 components') answer the
+          selection question directly, beyond the Notes' elbow mark
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -152,31 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with cumulative variance on y-axis and component
-          count on x-axis
+        comment: Correct cumulative-variance line plot with markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative sum displayed, percentage y-axis, dashed reference lines
-          at 90% and 95%, elbow marked and annotated, markers at each component —
-          all required features present; optional bar overlay not included (spec says
-          optional)
+        comment: Cumulative sum, percent y axis, dashed 90/95 % lines, elbow marked
+          on its own marker, markers at each count, x starts at 1 with whole-number
+          ticks
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X-axis starts at 1 (not 0), shows 1-13 components; Y-axis shows cumulative
-          percentage; all 13 data points visible
+        passed: false
+        comment: Marks at their values, but the decorative area fill is anchored at
+          an arbitrary 24 % floor (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'line-pca-variance-cumulative · python · altair · anyplot.ai';
-          threshold legend with correct labels '90 %' and '95 %' and matching colors
+        comment: Title exact; 'Threshold' legend names both dashed lines
     data_quality:
       score: 15
       max: 15
@@ -186,24 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows elbow pattern, cumulative curve with diminishing returns, threshold
-          crossings, range from ~37% (PC1) to 100% (PC13) — covers all key plot-type
-          aspects
+        comment: Steep rise, diminishing returns, elbow and both crossings shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real sklearn wine dataset (13 wine chemical features); neutral scientific/data-science
-          context; no controversy
+        comment: Real PCA of the scikit-learn wine dataset (13 chemical features),
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Wine dataset PCA: PC1 explains ~37%, elbow at PC5 (~80%), 90% at
-          PC8, 95% at PC10, 100% at PC13 — factually correct and realistic for this
-          dataset'
+        comment: 'Checked against the render: PC1 ~36 %, 90 % first reached at 8 components
+          (~92 %), 95 % at 10 (~96 %), 100 % at 13; all computed by cumsum/searchsorted'
     code_quality:
       score: 10
       max: 10
@@ -213,58 +192,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data prep → chart layer construction → combine
-          → save; no functions or classes'
+        comment: Linear Imports -> constants -> Data -> Plot -> Save, no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: sklearn wine dataset is deterministic; PCA on fixed data produces
-          identical results every run
+        comment: Deterministic dataset and PCA
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair (via importlib), numpy, pandas, PIL.Image,
-          sklearn.datasets, sklearn.decomposition, sklearn.preprocessing'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair layer composition using + operator; canvas padding block
-          follows prescribed pattern exactly; no over-engineering
+        comment: Kneedle and searchsorted are short and appropriate; layer composition
+          clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Altair
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of Altair: encoding types (:Q, :N), layer composition
-          (+), alt.Scale/alt.Axis/alt.Legend, alt.condition, selection_point, transform_filter
-          — textbook idiomatic Altair'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses selection_point(nearest=True, on='pointerover') with transform_filter
-          for interactive hover highlighting + alt.condition for conditional opacity
-          — distinctively Altair/Vega-Lite; standard hover pattern rather than a more
-          advanced linked-view approach keeps this at 4/5
+        passed: false
+        comment: Layer composition with +, shared alt.Scale objects, field escaping
+          with explicit type= and title=, alt.datum baseline, configure_* on the layer
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: selection_point(nearest=True, on='pointerover') with transform_filter
+          guide rule and alt.condition highlight; symbolType='stroke' dashed legend
+          glyphs
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-27T18:38:14Z'
 impl_tags:
   dependencies:
   - sklearn
@@ -272,10 +249,12 @@ impl_tags:
   techniques:
   - layer-composition
   - annotations
+  - reference-lines
   - hover-tooltips
-  - html-export
+  - custom-legend
   patterns:
   - dataset-loading
+  - explicit-figure
   dataprep:
   - pca
   - cumulative-sum
@@ -283,3 +262,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
