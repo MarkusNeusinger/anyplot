@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: line-pca-variance-cumulative
 created: '2026-02-17T21:43:36Z'
-updated: '2026-11-27T18:51:38Z'
+updated: '2026-11-27T18:58:43Z'
 generated_by: claude-sonnet
-workflow_run: 46051642992
+workflow_run: 46052667418
 issue: 4131
 language_version: 3.14.10
 library_version: 0.13.2
@@ -12,82 +12,76 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
   - Cumulative line and per-component bars share seaborn's categorical positions,
-    so every hollow marker sits exactly at its component count and the amber spotlight
-    lands on the curve's own marker at 4 components
+    so every hollow marker sits at its component count and the amber spotlight lands
+    on the curve's own marker at 4 components
   - 'All five ''A good version shows'' properties met: monotonic cumulative curve,
     marker per count from 1 with whole-number ticks, labelled dashed 90/95% lines,
-    marked 95%/elbow crossing, subordinate bars named in the legend'
-  - One amber thread (95% line, label, spotlight, annotation box) builds a clear focal
-    point against the green curve
+    marked elbow, subordinate bars named in the legend'
+  - One amber thread (95% line, spotlight marker, arrow, box edge) builds a clear
+    focal point, with the label text in ink so it reads on both pages
   - Clean theme adaptation through a sns.set_theme rc dict; both renders theme-correct
     with identical data colors
-  - Marker styling passed directly to sns.lineplot; readable top-to-bottom script
-    with adaptable column constants
   weaknesses:
-  - 'VQ-01 (light): the bold ''95%'' threshold label and the ''4 components explain
-    98.6%'' annotation text are set in amber #DDCC77, about 1.5:1 against the #FAF8F1
-    page and the #FFFDF6 box, and read faint → set the text in INK (keep amber for
-    the box edge, arrow and line) or another color with at least 3:1 on the light
-    page. Likely cause: color=ANYPLOT_AMBER on the text of both ax.annotate calls.'
-  - 'Suggestion: a slightly heavier dash on the 90% line would let it read as firmly
-    as the 95% line in the dark render.'
+  - 'Suggestion: the near-invisible below-90% shading (alpha 0.04) adds little; dropping
+    it would simplify the plot area.'
+  - 'Suggestion: passing label= to sns.barplot and sns.lineplot would let ax.legend()
+    build the legend instead of the hand-built Line2D/Patch handles (lines 169-183).'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, with a faint muted band below 90%
-      Chrome: title 'line-pca-variance-cumulative · python · seaborn · anyplot.ai' at ~62% width, axis titles 'Number of Principal Components' and 'Explained Variance (%)' dark and balanced, ticks 1/5/10/15/20/25 and 0-100 readable; legend lower right in an elevated box
-      Data: #009E73 cumulative line with hollow page-filled markers at all 25 counts, rising 40 -> 66 -> 86 -> 98.6 then flat to 100; lavender #C475FD bars at alpha 0.35 behind for components 1-4; amber dashed 95% and grey dashed 90% lines labelled at the right edge; large amber marker on the curve at component 4 with curved arrow to the boxed annotation '4 components explain 98.6%'
-      Legibility verdict: PASS with one weakness - the amber '95%' label and annotation text read faint against the light page
+      Chrome: title 'line-pca-variance-cumulative · python · seaborn · anyplot.ai' at ~62% width, axis titles 'Number of Principal Components' and 'Explained Variance (%)' dark, ticks 1/5/10/15/20/25 and 0-100 readable; legend lower right in an elevated box; '95%' label in dark ink, '90%' in soft ink, annotation '4 components explain 98.6%' in dark ink in an amber-edged box
+      Data: #009E73 cumulative line with hollow page-filled markers at all 25 counts, rising 40 -> 66 -> 86 -> 98.6 then flat to 100; lavender #C475FD bars at alpha 0.35 for components 1-4; amber dashed 95% and grey dashed 90% lines; large amber marker at component 4 with curved amber arrow to the box
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
-      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; legend box elevated dark with light border
-      Data: identical #009E73 line, lavender bars, amber highlight and annotation as in light; hollow markers filled with the dark page color; amber text reads well here
+      Chrome: title, axis titles, ticks, threshold labels and annotation text in light ink, all readable; no dark-on-dark text; legend box elevated dark with light border
+      Data: identical #009E73 line, lavender bars (with thin grey edges), amber lines, spotlight and arrow as in light; markers filled with the dark page color
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: The amber '95%' label and the amber annotation text read faint on
-          the light page (defect line); all other text explicit-sized and readable
-          in both themes
+        comment: All sizes explicit (title 12, axis titles 10, ticks/legend/annotations
+          8); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotation box sits in empty space, threshold
-          labels sit between the lines at the right edge
+        comment: No collisions; annotation box in empty space, threshold labels sit
+          under their lines at the right edge
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 25 hollow markers at size 5 with 2.5 pt line clearly visible; bars
-          at alpha 0.35 subordinate; legend glyphs match marks in both themes
+        comment: 25 hollow markers on a 2.5 pt line clearly visible; bars at alpha
+          0.35 subordinate; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Green/lavender/amber CVD-distinct; thresholds also differ by dash
-          pattern
+          pattern and direct labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Axes fill the 3200x1800 canvas with balanced margins; legend near
-          the data
+        comment: Axes fill the 3200x1800 canvas with balanced margins; legend in the
+          empty lower right near the data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,8 +94,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series, #C475FD second, amber anchor for the 95% target,
-          #FAF8F1 / #1A1A17 surfaces, theme-correct chrome'
+        comment: 'Imprint #009E73 first, #C475FD second, amber anchor for the 95%
+          target; #FAF8F1 / #1A1A17 surfaces, theme-correct chrome'
     design_excellence:
       score: 13
       max: 20
@@ -112,23 +106,23 @@ review:
         max: 8
         passed: true
         comment: 'Beyond baseline: hollow page-filled markers, amber spotlight marker
-          with matched boxed annotation, bold threshold labels in their line colors'
+          with matched elevated annotation box, bold threshold labels in a deliberate
+          ink/soft-ink hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Threshold labels tucked at the right edge under their lines, sparse
-          whole-number x ticks chosen for 25 components, y-only grid, faint below-90%
-          band
+        comment: Threshold labels tucked at the right edge under their lines, distinct
+          dash patterns per threshold, sparse whole-number x ticks chosen for 25 components,
+          y-only grid
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Amber spotlight on the 95% crossing and the amber 95% line form one
-          focal color thread; the shaded below-90% zone separates insufficient from
-          sufficient
+        comment: One amber thread (95% line, spotlight, arrow, box) makes the 4-component
+          crossing the focal point against the green curve
     spec_compliance:
       score: 15
       max: 15
@@ -138,30 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Cumulative variance line with markers and optional per-component
+        comment: Cumulative variance line with markers plus the optional per-component
           bar overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: C1 cumulative monotonic curve; C2 marker at every count, axis starts
-          at 1; C3 dashed 90/95 lines labelled; C4 elbow/95% crossing marked on the
-          curve's own marker at 4; C5 bars behind, in legend
+        comment: C1 monotonic cumulative curve; C2 marker per count, x from 1 with
+          whole-number ticks; C3 dashed 90/95 lines labelled; C4 elbow at 4 marked
+          on its own marker; C5 subordinate bars in legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Line drawn on the same categorical positions as the bars, so each
-          marker sits at its own component count; y 0-107 includes 0
+        comment: Line on the same categorical positions as the bars, each marker at
+          its component count; y 0-107 with zero for the bars
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Mandated title; legend 'Cumulative variance' / 'Per-component variance'
-          matches marks
+          matches marks; thresholds directly labelled
     data_quality:
       score: 15
       max: 15
@@ -171,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Steep rise, elbow, long flat approach, threshold crossings, per-component
-          decay all shown
+        comment: Steep rise, elbow, long flat approach, both threshold crossings,
+          per-component decay
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Factor-model data on 25 macro indicators: a plausible PCA use case,
-          neutral'
+        comment: Four-factor model over 25 standardized macro indicators, a real PCA
+          use case, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: cumulative reaches 100% at 25, never falls, 4 components
-          = 98.6% computed from PCA, crosses 90% between 3 and 4'
+        comment: 'Checked: cumulative reaches 100% at 25 and never falls; 4 components
+          = 98.6% computed by sklearn PCA, consistent with 4 latent factors; 90% crossed
+          between 3 (86%) and 4'
     code_quality:
       score: 10
       max: 10
@@ -214,14 +209,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; sklearn PCA computes the ratios, np.cumsum
-          the curve
+        comment: sklearn PCA computes the ratios, np.cumsum the curve; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', subplots_adjust instead
+          of tight_layout as the prompt allows
     library_mastery:
       score: 5
       max: 10
@@ -231,8 +227,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme rc dict for chrome, sns.barplot + sns.lineplot on shared
-          categorical axis with marker styling passed as lineplot kwargs, sns.despine
+        comment: sns.barplot + sns.lineplot from tidy frames on a shared categorical
+          axis, marker styling passed as lineplot kwargs, sns.set_theme rc, sns.despine
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -242,22 +238,20 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
-  rendered_at: '2026-11-27T18:48:05Z'
+  rendered_at: '2026-11-27T18:55:35Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - custom-legend
   - manual-ticks
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - pca
   - cumulative-sum
-  - normalization
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
