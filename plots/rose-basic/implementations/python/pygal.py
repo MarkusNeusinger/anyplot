@@ -1,43 +1,46 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
 """
 
 import os
-import sys
 from math import pi
 
-
-# Pop script directory so local pygal.py doesn't shadow the installed package
-_script_dir = sys.path.pop(0)
-from pygal.graph.radar import Radar  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import pandas as pd
+from pygal.graph.radar import Radar
+from pygal.style import Style
 
 
-sys.path.insert(0, _script_dir)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-BRAND = "#009E73"  # Imprint palette position 1 — single series, always brand green
+# Imprint palette: all eight positions, first is the brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Monthly rainfall (mm) — Pacific Northwest seasonal pattern
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-rainfall = [145, 115, 95, 65, 45, 35, 20, 25, 50, 90, 135, 155]
-
+# Constants
 ARC_STEPS = 20  # points sampled along each wedge's outer arc for a smooth curve
+HEADROOM = 1.03  # share of the largest value kept free beyond the longest wedge
+
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: category
+RAINFALL = "Rainfall (mm)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("rainfall.csv")
+df = pd.DataFrame(
+    {
+        MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        RAINFALL: [145, 115, 95, 65, 45, 35, 20, 25, 50, 90, 135, 155],
+    }
+)
 
 
+# Plot
 class RoseChart(Radar):
-    """Radar subclass that draws true pie-slice wedge sectors instead of a
-    connected star polygon: each category becomes its own closed shape
-    (center -> radial edge -> curved outer arc -> radial edge -> center),
-    which is the defining visual signature of a rose/coxcomb chart. Reuses
-    Radar's polar grid, angular month labels, and 12-o'clock start position
-    unchanged (those already render correctly)."""
+    """Radar subclass: pie-slice wedges instead of a star polygon, value labels above the fill."""
 
     def _plot(self):
         delta = 2 * pi / self._len if self._len else 0
@@ -45,18 +48,17 @@ class RoseChart(Radar):
         for serie in self.series:
             serie_node = self.svg.serie(serie)
             for i, value in enumerate(serie.values):
-                theta_center = self._x_pos[i]
-                theta_start = theta_center - half
-                theta_end = theta_center + half
+                theta_start = self._x_pos[i] - half
                 wedge = [self.view((0, theta_start))] + [
-                    self.view((value, theta_start + (theta_end - theta_start) * k / ARC_STEPS))
-                    for k in range(ARC_STEPS + 1)
+                    self.view((value, theta_start + delta * k / ARC_STEPS)) for k in range(ARC_STEPS + 1)
                 ]
                 self.svg.line(serie_node["plot"], wedge, close=True, class_="line reactive")
-                if serie.show_dots:
-                    x, y = self.view((value, theta_center))
-                    dots = self.svg.node(serie_node["overlay"], class_="dots")
-                    self.svg.node(dots, "circle", cx=x, cy=y, r=serie.dots_size, class_="dot reactive tooltip-trigger")
+        labels = self.svg.node(self.nodes["plot"], class_="axis y web")
+        for axis in self.nodes["plot"].findall("g[@class='axis y web']"):
+            for guides in axis:
+                for text in guides.findall("text"):
+                    guides.remove(text)
+                    labels.append(text)
 
 
 custom_style = Style(
@@ -65,10 +67,12 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=IMPRINT_PALETTE,
     title_font_size=66,
     label_font_size=56,
-    major_label_font_size=44,
+    major_label_font_size=56,
     stroke_width=3,
     opacity=0.7,
     opacity_hover=0.88,
@@ -81,18 +85,17 @@ chart = RoseChart(
     title="rose-basic · python · pygal · anyplot.ai",
     fill=True,
     stroke=True,
-    show_dots=True,
-    dots_size=10,
+    show_dots=False,
     show_legend=False,
     show_x_guides=True,
     show_y_guides=True,
-    range=(0, 160),
+    range=(0, df[RAINFALL].max() * HEADROOM),
     margin=70,
     value_formatter=lambda v: f"{v:.0f} mm",
 )
 
-chart.x_labels = months
-chart.add("Monthly Rainfall", rainfall)
+chart.x_labels = df[MONTH].tolist()
+chart.add(RAINFALL, df[RAINFALL].tolist())
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
