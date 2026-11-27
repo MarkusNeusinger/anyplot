@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -47,73 +47,75 @@ if THEME == "light":
 else:
     band_colors = {"Poor": "#383838", "Satisfactory": "#555555", "Good": "#727272"}
 
-# Data — four business KPIs with mixed above/below-target performance
-metrics = [
-    {"label": "Revenue ($K)", "actual": 275, "target": 250, "ranges": [150, 225, 300]},
-    {"label": "Profit (%)", "actual": 22, "target": 26, "ranges": [15, 22.5, 30]},
-    {"label": "New Orders", "actual": 1050, "target": 1100, "ranges": [600, 900, 1200]},
-    {"label": "Satisfaction", "actual": 4.5, "target": 4.2, "ranges": [2.5, 3.5, 5.0]},
-]
+# Constants
+BAND_NAMES = ["Poor", "Satisfactory", "Good"]  # qualitative bands, worst to best
+RANGE_HEIGHT = 0.68  # band height in row units
+ACTUAL_HEIGHT = 0.28  # measure bar height in row units
 
-# Build dataframes — all values normalized to 0–100 scale for aligned x-axis
-tile_data = []
-actual_data = []
-target_data = []
+# Columns: set these to your table's column names
+LABEL = "Metric"  # role: label
+ACTUAL = "Actual"  # role: actual
+TARGET = "Target"  # role: target
+POOR_LIMIT = "Poor limit"  # role: ranges
+SATISFACTORY_LIMIT = "Satisfactory limit"  # role: ranges
+GOOD_LIMIT = "Good limit"  # role: ranges
 
-range_height = 0.68
-actual_height = 0.28
+# Data: replace this block with your own table, for example df = pd.read_csv("kpis.csv")
+# Four business KPIs with mixed above/below-target performance
+df = pd.DataFrame(
+    {
+        LABEL: ["Revenue ($K)", "Profit (%)", "New Orders", "Satisfaction"],
+        ACTUAL: [275, 22, 1050, 4.5],
+        TARGET: [250, 26, 1100, 4.2],
+        POOR_LIMIT: [150, 15, 600, 2.5],
+        SATISFACTORY_LIMIT: [225, 22.5, 900, 3.5],
+        GOOD_LIMIT: [300, 30, 1200, 5.0],
+    }
+)
 
-for i, m in enumerate(metrics):
-    y_pos = len(metrics) - 1 - i  # first metric at top
-    max_val = m["ranges"][-1]
+# Plot: reads only df and the constants above
+# Every metric is normalized to 0-100 (share of its top range) so one x-axis aligns all bullets
+n = len(df)
+limits = df[[POOR_LIMIT, SATISFACTORY_LIMIT, GOOD_LIMIT]]
+top = limits.iloc[:, -1]
+bounds = pd.concat([pd.Series(0.0, index=df.index), limits.div(top, axis=0) * 100], axis=1)
+bounds.columns = range(len(bounds.columns))
+y_pos = pd.Series(range(n - 1, -1, -1), index=df.index)  # first metric at the top
 
-    band_bounds = [0, (m["ranges"][0] / max_val) * 100, (m["ranges"][1] / max_val) * 100, 100]
-    band_names = ["Poor", "Satisfactory", "Good"]
-    for j, band in enumerate(band_names):
-        x_center = (band_bounds[j] + band_bounds[j + 1]) / 2
-        width = band_bounds[j + 1] - band_bounds[j]
-        tile_data.append({"y": y_pos, "x": x_center, "width": width, "band": band})
+df_tiles = pd.concat(
+    [
+        pd.DataFrame(
+            {"y": y_pos, "x": (bounds[j] + bounds[j + 1]) / 2, "width": bounds[j + 1] - bounds[j], "band": name}
+        )
+        for j, name in enumerate(BAND_NAMES)
+    ],
+    ignore_index=True,
+)
 
-    actual_pct = (m["actual"] / max_val) * 100
-    val = m["actual"]
-    val_str = str(int(val)) if val == int(val) else str(val)
-    actual_data.append(
-        {
-            "y": y_pos,
-            "xmin": 0,
-            "xmax": actual_pct,
-            "ymin": y_pos - actual_height / 2,
-            "ymax": y_pos + actual_height / 2,
-            "label": m["label"],
-            "actual": val_str,
-            "label_y": y_pos + range_height / 2 + 0.04,
-        }
-    )
+df_actual = pd.DataFrame(
+    {
+        "xmin": 0.0,
+        "xmax": df[ACTUAL] / top * 100,
+        "ymin": y_pos - ACTUAL_HEIGHT / 2,
+        "ymax": y_pos + ACTUAL_HEIGHT / 2,
+        "label_y": y_pos + RANGE_HEIGHT / 2 + 0.04,
+        "actual": df[ACTUAL].map(lambda v: f"{v:g}"),
+    }
+)
 
-    target_pct = (m["target"] / max_val) * 100
-    target_data.append(
-        {
-            "y": y_pos,
-            "target": target_pct,
-            "seg_ymin": y_pos - range_height / 2.2,
-            "seg_ymax": y_pos + range_height / 2.2,
-        }
-    )
+df_target = pd.DataFrame(
+    {"target": df[TARGET] / top * 100, "seg_ymin": y_pos - RANGE_HEIGHT / 2.2, "seg_ymax": y_pos + RANGE_HEIGHT / 2.2}
+)
 
-df_tiles = pd.DataFrame(tile_data)
-df_actual = pd.DataFrame(actual_data)
-df_target = pd.DataFrame(target_data)
-
-# Band label x positions: 3 of 4 metrics share 50%/75% band boundaries
-poor_mid = 25.0
-satis_mid = 62.5
-good_mid = 87.5
+# Zone labels sit below the bottom bullet, centered on the typical band
+zone_x = [(bounds[j].median() + bounds[j + 1].median()) / 2 for j in range(len(BAND_NAMES))]
+zone_y = y_pos.min() - 0.5
 
 plot = (
     ggplot()
     # Qualitative range bands
-    + geom_tile(df_tiles, aes(x="x", y="y", width="width", fill="band"), height=range_height, color="none")
-    + scale_fill_manual(values=band_colors, limits=["Good", "Satisfactory", "Poor"])
+    + geom_tile(df_tiles, aes(x="x", y="y", width="width", fill="band"), height=RANGE_HEIGHT, color="none")
+    + scale_fill_manual(values=band_colors, limits=BAND_NAMES[::-1])
     + guides(fill=False)
     # Actual value bar
     + geom_rect(df_actual, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=BRAND, color="none")
@@ -125,19 +127,15 @@ plot = (
         aes(x="xmax", y="label_y", label="actual"),
         ha="right",
         va="bottom",
-        size=3.5,
+        size=5.5,
         color=BRAND,
         fontweight="bold",
     )
     # Band zone labels below the bottom metric
-    + annotate("text", x=poor_mid, y=-0.5, label="Poor", size=3.4, color=INK_MUTED, va="top")
-    + annotate("text", x=satis_mid, y=-0.5, label="Satisfactory", size=3.4, color=INK_MUTED, va="top")
-    + annotate("text", x=good_mid, y=-0.5, label="Good", size=3.4, color=INK_MUTED, va="top")
+    + annotate("text", x=zone_x, y=zone_y, label=BAND_NAMES, size=6.5, color=INK_MUTED, va="top")
     # Scales
     + scale_x_continuous(limits=(0, 100), breaks=[0, 25, 50, 75, 100], expand=(0, 0.02))
-    + scale_y_continuous(
-        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.08, 0.08)
-    )
+    + scale_y_continuous(breaks=list(range(n)), labels=df[LABEL].tolist()[::-1], expand=(0.08, 0.08))
     + labs(title="bullet-basic · python · plotnine · anyplot.ai", x="Performance (%)", y="")
     + theme_minimal()
     + theme(
