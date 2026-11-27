@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-27
@@ -108,6 +108,13 @@ df["caption"] = np.where(df["r"] >= radius_cut, df[DEPARTMENT] + "\n" + df["budg
 divisions = df[DIVISION].unique()
 colors = dict(zip(divisions, IMPRINT_PALETTE, strict=False))
 
+# Label color follows the fill: dark ink on light fills (lavender), white on dark ones
+rgb = np.array([[int(colors[d][i : i + 2], 16) / 255 for i in (1, 3, 5)] for d in df[DIVISION]])
+linear = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
+luminance = linear @ np.array([0.2126, 0.7152, 0.0722])
+# WCAG contrast of white (1.05 / (L + 0.05)) against dark ink (L_ink ≈ 0.01)
+df["label_color"] = np.where(1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.06, "#FFFFFF", "#1A1A17")
+
 ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 DEPARTMENT_F, BUDGET_F, DIVISION_F = (c.translate(ESCAPE) for c in (DEPARTMENT, BUDGET, DIVISION))
 
@@ -153,7 +160,7 @@ captions = (
         y=y_axis,
         text="caption:N",
         size=alt.condition(alt.datum.r >= radius_cut, alt.value(16), alt.value(12)),
-        color=alt.value("#FFFFFF"),
+        color=alt.Color("label_color:N", scale=None, legend=None),
         opacity=alt.condition(selection, alt.value(1.0), alt.value(0.1)),
     )
 )
