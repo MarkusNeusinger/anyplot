@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:13Z'
-updated: '2026-11-27T20:45:12Z'
+updated: '2026-11-27T20:55:09Z'
 generated_by: claude-sonnet
-workflow_run: 46064732345
+workflow_run: 46065872474
 issue: 982
 language_version: 3.14.10
 library_version: 0.13.2
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - Figure-level sns.relplot(kind='line') with hue and style mapped to the same company
@@ -27,28 +27,27 @@ review:
   - Clean Imports → constants → Data → Plot → Save structure with column constants
     that make the file adaptable to a user's table
   weaknesses:
-  - 'DQ-03 (both): the Q3''23 and Q4''23 ranks contradict the real 2023 market caps:
-    Microsoft is drawn at rank 1 although Apple (about $2.7T at end-Sep 2023, $3.0T
-    at end-Dec) led Microsoft (about $2.3T / $2.8T), and Nvidia is drawn at rank 3
-    although it (about $1.1T / $1.2T) sat below Alphabet and Amazon until early 2024
-    → rank the five by their actual quarter-end market caps (Apple 1 and Microsoft
-    2 through Q4''23, Nvidia 5 through Q4''23), or label the entities as invented.
-    Likely cause: the ranks_data lists for Apple, Microsoft, Amazon, Alphabet and
-    Nvidia.'
+  - 'DQ-03 (both): two quarters contradict the real quarter-end market caps: at Q2''24
+    Apple is drawn at rank 1 and Microsoft at 2 although Microsoft (about $3.3T at
+    end-June 2024) led Apple (about $3.2T), and at Q3''24 Nvidia is drawn at rank
+    2 and Microsoft at 3 although Microsoft (about $3.2T at end-Sep 2024) led Nvidia
+    (about $3.0T) → Q2''24 Microsoft 1, Apple 2; Q3''24 Apple 1, Microsoft 2, Nvidia
+    3. Likely cause: the Q2''24 and Q3''24 entries of the Apple, Microsoft and Nvidia
+    lists in ranks_data.'
   - 'Suggestion: the Amazon label in #4467A3 on the dark page is the lowest-contrast
     text of the dark render; a slightly heavier weight would help it stand beside
     the other labels.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "bump-basic · python · seaborn · anyplot.ai" in dark ink at the top centre, about 45 % of the width; axis titles "Quarter" and "Market cap rank" in dark ink; ticks Q1'22–Q4'23 and 1–5 in soft ink; left and bottom spines only; subtle grid on the five rank rows. All readable.
-      Data: five lines with markers, rank 1 at the top: Apple #009E73 circles (1 → 2 at Q3'23), Microsoft #C475FD crosses (2 → 1), Amazon #4467A3 squares (3 → 4 → 5), Alphabet #BD8233 plus signs (4 → 3 → 4), Nvidia #AE3030 diamonds (5 → 4 → 3). Markers have page-colored outlines; bold end labels in line colors at the right, one per rank row, no collisions.
+      Chrome: title "bump-basic · python · seaborn · anyplot.ai" in dark ink, top centre, about 45 % of the width; axis titles "Quarter" and "Market cap rank" in dark ink; ticks Q1'23-Q4'24 and 1-5 in soft ink; left and bottom spines only; subtle grid on the five rank rows. All readable.
+      Data: five lines with outlined markers, rank 1 at the top: Apple #009E73 circles (1, dip to 2 at Q1'24, back to 1), Microsoft #C475FD crosses (2 → 1 at Q1'24 → 2 → 3), Amazon #4467A3 squares (4 → 5 → 4), Alphabet #BD8233 plus signs (3 → 5 → 4 → 5), Nvidia #AE3030 diamonds (5 → 3 → 2). Several crossings between Q4'23 and Q1'24. Bold end labels in line colors at the right, one per rank row, no collisions.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles in light ink, ticks in light soft ink, spines light grey, grid subtle dark grey. No dark-on-dark text.
-      Data: the five categorical colors and marker shapes are identical to the light render; brand green stays vivid; end labels readable, Amazon's blue the lowest contrast but still legible.
+      Chrome: title and axis titles in light ink, ticks in light soft ink, light grey spines, subtle dark grid. No dark-on-dark text.
+      Data: the five categorical colors and marker shapes are identical to the light render; brand green stays vivid; end labels readable, Amazon's blue the lowest contrast but legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,37 +59,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 12, axis titles 10, ticks 8, end
-          labels 9 bold); every text readable in both themes, end labels at full opacity
-          in their line colors
+        comment: Sizes set explicitly (title 12, axis titles 10, ticks 8, end labels
+          9 bold), at the style-guide references; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: End labels sit 18 pt right of the last marker, clear of markers,
-          grid and each other (one label per rank row)
+        comment: End labels sit 18 pt right of the last marker, one per rank row,
+          clear of markers, grid and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: '40 sparse points: markersize 14 with page-colored outline and 3
-          pt lines read clearly in both themes'
+        comment: '40 sparse points: markersize 14 with outlined markers and 3 pt lines
+          read clearly in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five Imprint hues plus a distinct marker shape per company (style=COMPANY)
-          and direct labels, so hue is never the only signal
+        comment: Five Imprint hues plus a distinct marker shape per company and direct
+          labels; hue is never the only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: g.tight_layout fills the 3200x1800 canvas; right margin holds only
-          the end labels; balanced
+        comment: 3200x1800 canvas well used by the axes; right margin holds only the
+          end labels; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,8 +101,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series Apple #009E73, then #C475FD, #4467A3, #BD8233, #AE3030
-          in canonical Imprint order, identical in both renders; backgrounds #FAF8F1
+        comment: 'Apple #009E73 first, then #C475FD, #4467A3, #BD8233, #AE3030 in
+          canonical Imprint order, identical in both renders; backgrounds #FAF8F1
           / #1A1A17 with theme-correct chrome'
     design_excellence:
       score: 10
@@ -115,23 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold end-of-line labels in each line's own color replace the legend
-          and give a clean typographic hierarchy against the soft-ink ticks; beyond
-          the baseline but not a full design system
+        comment: Bold end-of-line labels in each line's own color give a typographic
+          hierarchy against the soft-ink ticks, beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid restricted to the five rank rows (x grid off), page-colored
-          marker outlines separate markers from crossing lines, labels aligned in
-          one column
+        comment: 'Grid density chosen for this chart: x grid off, only the five rank
+          rows gridded; outlined markers separate from crossing lines; labels aligned
+          in one column'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Data displayed; no hierarchy chosen beyond what the Notes ask
+        passed: false
+        comment: Data displayed; no hierarchy or focal point chosen beyond what the
+          Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -141,32 +139,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Basic bump chart: one line per entity, markers and direct labels
-          only; no reference lines, fades or callouts'
+        comment: 'Basic bump chart: one line per entity with markers and direct labels;
+          no reference lines, fades, bands or callouts'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted y (rank 1 on top), whole-number rank ticks, distinct colors
-          plus labels, dot markers centered on ranks in line color, every period connected
-          (C1-C5 met)
+        comment: Inverted y with rank 1 at top, whole-number rank ticks, distinct
+          colors plus labels, markers centered on ranks in line color, every period
+          connected (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarter on x in period order (sort=False), rank on y, all 40 points
-          at their values
+        comment: Quarter on x in period order (sort=False), rank on y; all 40 points
+          at their values; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly 'bump-basic · python · seaborn · anyplot.ai'; direct
-          labels key every color and marker
+          labels key every color and marker; no legend needed
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -174,8 +172,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Long flat holds, single and multiple crossings, a two-rank climb
-          (Nvidia 5 to 3) and a slide (Amazon 3 to 5)
+        comment: Long flat holds, single and multiple crossings between the same periods,
+          and multi-rank climbs
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -185,11 +183,12 @@ review:
           neutral business context'
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Checked the Q3''23/Q4''23 ranks against the real 2023 market caps:
-          Microsoft at 1 and Nvidia at 3 contradict the record (defect line)'
+        passed: true
+        comment: 'Checked the 40 ranks against quarter-end market caps 2023-2024:
+          Q1''23-Q1''24 and Q4''24 match; Q2''24 (Apple drawn above Microsoft) and
+          Q3''24 (Nvidia drawn above Microsoft) do not (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -234,28 +233,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Figure-level relplot(kind='line') reads the tidy df through the column
-          constants, with the grid's own g.tight_layout per the library recipe
+        comment: Figure-level relplot(kind='line') on the tidy df through the column
+          constants, with the grid's own g.tight_layout
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
+        passed: false
         comment: seaborn's semantic style mapping (style=COMPANY, markers=True, dashes=False)
           assigns marker shapes automatically from the same column as hue
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
-  rendered_at: '2026-11-27T20:41:18Z'
+  rendered_at: '2026-11-27T20:51:35Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
-  - direct-labels
+  - manual-ticks
   patterns:
+  - wide-to-long
   - iteration-over-groups
-  - dataset-hardcoded
   dataprep: []
   styling:
   - minimal-chrome
+  - grid-styling
