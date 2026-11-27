@@ -12,93 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 80
 review:
   strengths:
-  - 'Perfect Visual Quality across both themes: explicit font sizing, correct Imprint
-    palette with theme-adaptive chrome, no overlap or clipping, correct 3200x1800
-    canvas'
-  - 'Complete spec compliance: both curves with formulas in legend, p=0.5 annotation,
-    edge-case handling, grid, and 200-point smooth curves'
-  - 'Expert letsplot API usage: layer_tooltips() with format chains, geom_ribbon,
-    arrow() parameter, shape=21 with stroke for open circles, interactive HTML output'
-  - 'Excellent educational storytelling: subtitle states the key insight, arrow+annotation
-    highlights the focal point, shaded ribbon visualizes metric difference, boundary
-    annotations explain edge behavior'
+  - 'Gini #009E73 and entropy #C475FD in canonical Imprint order with theme-adaptive
+    chrome in both renders'
+  - Entropy edge cases handled with np.errstate plus nan_to_num, so both curves reach
+    0 at p = 0 and p = 1
+  - Hollow page-filled shape=21 markers mark both maxima at p = 0.5
+  - layer_tooltips() with .format()/.line() chains gives formatted hover readouts
+    in the HTML
   weaknesses:
-  - 'DE-01 (5/8): Both lines at size=1.5 have equal visual weight — consider differentiated
-    line widths (e.g. entropy size=2.0, Gini size=1.5) to create clearer focal priority'
-  - 'DE-02 (4/6): Full bidirectional major grid adds visual noise — consider panel_grid_major_x=element_blank()
-    to keep only horizontal reference lines'
-  - 'DE-03 (4/6): Shaded ribbon fill (Imprint[2] blue at alpha=0.12) reads as near-gray
-    on light background — slightly higher alpha (0.15-0.18) would make the difference
-    region more legible'
+  - 'VQ-02 (both): the ''Maximum uncertainty at p = 0.5'' label (centred at y=0.97)
+    is drawn across the entropy curve directly under the peak marker → place it above
+    the maximum, clear of the curve (y above 1.05, with the axis limit raised). Likely
+    cause: main_label_df impurity=0.97 with scale_y limits [-0.06, 1.05].'
+  - 'SC-02 (both): the arrow runs from y=0.93 down to y=0.86, pointing into empty
+    ribbon below the entropy peak rather than at a maximum, and its label covers the
+    peak (C5) → point the arrow from the label down to the peak marker. Likely cause:
+    arrow_df y=0.93, yend=0.86.'
+  - 'SC-02 (both): the entropy legend entry reads ''Entropy (normalized)'' without
+    its formula, while the Notes ask for both formulas (C4) → e.g. ''Entropy: −p log₂p
+    − (1−p) log₂(1−p)''. Likely cause: the metric label string.'
+  - 'DE-02 (both): the major grid is drawn in solid INK_SOFT at size 0.2 and reads
+    heavy, above the style guide''s subtle grid → INK at 15 % (rgba(26,26,23,0.15)
+    / rgba(240,239,232,0.15)). Likely cause: panel_grid_major=element_line(color=INK_SOFT).'
+  - 'VQ-01 (both): the edge notes ''p → 0: both → 0'' / ''p → 1: both → 0'' are set
+    at geom_text size=3 (~8.5 pt) in INK_MUTED, under the 10 pt tick-label reference,
+    and read faint → about 10 pt (size≈3.5) in INK_SOFT. Likely cause: geom_text(data=boundary_df,
+    size=3, color=INK_MUTED).'
+  - 'Suggestion: differentiated line widths could give one curve focal priority.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "line-impurity-comparison · python · letsplot · anyplot.ai" in bold dark ink, clearly readable. Subtitle in muted italic. Axis labels "Probability of class 1 (p)" and "Impurity measure (normalized)" in dark ink. Tick labels in dark-soft ink at 0.0–1.0 scale. All text clearly readable.
-      Data: Gini curve in #009E73 (Imprint[0]) and Entropy curve in #C475FD (Imprint[1]). Shaded ribbon (Imprint[2] at alpha=0.12) fills between curves. Open circles mark maxima at p=0.5. Arrow annotation with "Maximum uncertainty at p = 0.5" label. Boundary annotations at left and right edges.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1; 3200x1800.
+      Chrome: bold mandated title, italic subtitle, axis titles and ticks in dark ink, all readable; major grid in solid INK_SOFT reads heavy across the panel.
+      Data: Gini arch #009E73 (max 0.5) and entropy arch #C475FD (max 1.0) reaching 0 at both ends; pale ribbon between them; hollow peak markers at p=0.5; dashed vertical line at p=0.5 over the full height; 'Maximum uncertainty at p = 0.5' bold-italic label drawn on the entropy curve just under the peak, with an arrow pointing down to y≈0.86 inside the ribbon; small italic edge notes near y≈0.06. Legend: 'Gini: 2p(1−p)', 'Entropy (normalized)'.
+      Legibility verdict: PASS (edge notes small)
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light ink (#F0EFE8/#B8B7B0) — clearly readable against dark background. Legend text in light ink. No dark-on-dark failure detected.
-      Data: Gini #009E73 and Entropy #C475FD colors pixel-identical to light render — only chrome flipped. Shaded ribbon still visible. Annotations readable in light ink.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17.
+      Chrome: all text in light ink, no dark-on-dark; grid light grey, prominent.
+      Data: identical curve colors; ribbon a dark navy wash; callout in light ink over the entropy curve.
+      Legibility verdict: PASS (edge notes small)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); geom_text sizes calibrated
-          (3-4mm); proportioned correctly in both renders
+        comment: Theme sizes explicit; edge notes at geom_text size=3 (~8.5 pt) in
+          INK_MUTED read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render
+        comment: '''Maximum uncertainty at p = 0.5'' label is drawn on the entropy
+          curve just under the peak marker (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines size=1.5, open circles size=6 stroke=2, ribbon visible; all
-          elements clear in both themes
+        comment: Lines and hollow peak markers clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple have good luminance contrast and are deuteranopia-distinguishable
+        comment: Green/purple CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) x scale=4 = correct 3200x1800 px; balanced margins;
-          canvas gate passed
+        comment: 3200x1800, balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Probability of class 1 (p); Y: Impurity measure (normalized)
-          — descriptive'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17;
-          chrome adapts correctly'
+        comment: Imprint order, correct backgrounds and chrome
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -106,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional design above defaults (annotations, open circles, ribbon)
-          but lacks typographic hierarchy between series
+        comment: 'Bold-italic callout, italic subtitle and region label: a type hierarchy
+          beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Spines removed, ticks removed, minor grid suppressed, very subtle
-          major grid (size=0.2), legend with custom background
+        passed: false
+        comment: Grid in solid INK_SOFT is heavier than the style guide's subtle grid
+          (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtitle states insight; arrow+annotation highlights focal point;
-          shaded ribbon shows metric difference; boundary annotations
+        passed: false
+        comment: Subtitle takeaway and shaded difference region; the misplaced arrow
+          weakens the focal point
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -131,27 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line comparison chart with two overlaid curves
+        comment: Correct two-curve comparison
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Both curves, distinct colors+markers, legend with formulas, p=0.5
-          annotated, edge cases handled, grid, 200 points
+        passed: false
+        comment: Entropy legend entry lacks its formula (C4); callout text covers
+          the peak and arrow points below it (C5) (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: p in [0,1]; Y: normalized impurity in [0,1]; all data visible'
+        comment: Marks at values over [0,1]
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels include formulas as
-          spec requests
+        comment: Mandated title; legend matches the curves
     data_quality:
       score: 15
       max: 15
@@ -161,22 +166,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both criteria, region between them, maxima at p=0.5, boundary behavior
-          — complete coverage
+        comment: Full coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational ML visualization of well-established mathematical concept;
-          neutral scientific context
+        comment: Neutral ML education
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gini peaks at 0.5, binary entropy peaks at 1 bit (naturally [0,1]);
-          formulas mathematically correct
+        comment: Checked Gini max 0.5, entropy max 1.0 at p=0.5, both 0 at the ends
     code_quality:
       score: 10
       max: 10
@@ -186,54 +188,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: theme tokens -> data -> DataFrames -> plot layers ->
-          save; no functions or classes'
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data via np.linspace; no random seed needed
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports used; no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; tooltips correctly suppressed on non-curve
-          layers with tooltips='none'
+        comment: Appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot 4.8.2
-          API
+        comment: png + html via ggsave
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert grammar-of-graphics composition with multi-layer ggplot(),
-          proper aes(), scale_color_manual(), ggsize(), ggsave(scale=4), shape=21
-          with fill+stroke, arrow() in geom_segment
+        comment: Layered ggplot, scale_color_manual, shape=21, arrow()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses layer_tooltips() with chained .format()/.line() (letsplot-specific
-          interactive tooltip API); HTML export alongside PNG
+        passed: false
+        comment: layer_tooltips() with .format()/.line() chains for the HTML hover
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
+  last_kept:
+    pr: 14824
+    code: criterion_below
+    note: '#14824 was kept because it scored below the live version''s re-score on
+      these criteria: LM-02 1 < 2: Default interactive HTML only; nothing beyond what
+      the library prompt mandates. Do not score lower than the live version on them.'
 impl_tags:
   dependencies: []
   techniques:
