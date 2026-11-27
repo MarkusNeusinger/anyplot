@@ -36,7 +36,7 @@ df = DataFrame(
 # Plot
 # Figure
 fig = Figure(
-    size            = (1600, 900),
+    size            = (1200, 1200),
     fontsize        = 16,
     backgroundcolor = PAGE_BG,
 )
@@ -65,13 +65,14 @@ ax = Axis(
     bottomspinecolor   = INK_SOFT,
     xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12f0),
+    aspect             = DataAspect(),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 
 # Log colorscale surfaces peripheral mid-density clusters that would otherwise wash out
 hb = hexbin!(ax, df[!, LONGITUDE], df[!, LATITUDE];
-    bins        = 50,
+    cellsize    = 0.22,
     colormap    = ANYPLOT_SEQ_FIELDS,
     colorscale  = log10,
     strokewidth = 0,
@@ -86,10 +87,9 @@ Colorbar(fig[1, 2], hb;
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
     ticks          = LogTicks(0:3),
-    width          = 22,
+    width          = 24,
 )
 
-colsize!(fig.layout, 1, Relative(0.87))
 colgap!(fig.layout, 14)
 
 # Save
