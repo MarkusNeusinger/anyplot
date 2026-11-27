@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-27
@@ -81,12 +81,12 @@ arrow_df = pd.DataFrame(
 arrow_df["y_mid"] = (arrow_df["y_upper"] + arrow_df["y_lower"]) / 2
 arrow_df["wavelength"] = HC_EV_NM / (arrow_df["y_upper"] - arrow_df["y_lower"])
 arrow_df["wl_label"] = arrow_df["wavelength"].round().astype(int).astype(str) + " nm"
-# Wavelength labels sit just right of their arrow; on a short arrow (on the symlog axis) they hang below its head
+# Wavelength labels sit just right of their arrow
 arrow_df["x_label"] = arrow_df["x"] + 0.22
 arrow_df["is_short"] = (arrow_df["y_upper"] - arrow_df["y_lower"]) < 0.5 * df[ENERGY].abs().max() / 4
 
 # Symlog scale spreads the converging upper levels and compresses the n=1 to n=2 gap
-y_scale = alt.Scale(type="symlog", constant=1, domain=[df[ENERGY].min() * 1.1, df[ENERGY].max() + 1])
+y_scale = alt.Scale(type="symlog", constant=1, domain=[df[ENERGY].min() * 1.1, df[ENERGY].max() + 0.3], nice=False)
 y_axis = alt.Axis(
     titleFontSize=14, labelFontSize=11, titlePadding=10, values=df[ENERGY].tolist(), format=".2f", gridOpacity=0.12
 )
@@ -130,7 +130,13 @@ arrow_shafts = (
             "series:N",
             scale=series_scale,
             legend=alt.Legend(
-                title="Spectral series", orient="top-left", offset=5, titleFontSize=11, labelFontSize=11, symbolSize=150
+                title="Spectral series",
+                orient="bottom-right",
+                offset=5,
+                padding=8,
+                titleFontSize=11,
+                labelFontSize=11,
+                symbolSize=150,
             ),
         ),
         tooltip=["transition:N", "series:N", alt.Tooltip("wl_label:N", title="Wavelength")],
@@ -144,21 +150,21 @@ arrowheads = (
     .encode(x="x:Q", y="y_lower:Q", color=alt.Color("series:N", scale=series_scale, legend=None))
 )
 
-# Layer 6: wavelength labels beside each arrow
+# Layer 6: wavelength labels; long arrows carry theirs just above the head, short ones (on the symlog axis) hang below it
 wl_style = {"fontSize": 10, "angle": 90, "color": INK_MUTED, "fontStyle": "italic"}
-wl_beside = (
+wl_above = (
     alt.Chart(arrow_df[~arrow_df["is_short"]])
-    .mark_text(**wl_style)
-    .encode(x="x_label:Q", y="y_mid:Q", text="wl_label:N")
+    .mark_text(align="right", dx=-12, dy=-1, **wl_style)
+    .encode(x="x_label:Q", y="y_lower:Q", text="wl_label:N")
 )
 wl_below = (
     alt.Chart(arrow_df[arrow_df["is_short"]])
-    .mark_text(align="left", dy=14, **wl_style)
-    .encode(x="x:Q", y="y_lower:Q", text="wl_label:N")
+    .mark_text(align="left", dx=12, dy=-1, **wl_style)
+    .encode(x="x_label:Q", y="y_lower:Q", text="wl_label:N")
 )
 
 chart = (
-    alt.layer(energy_lines, ion_line, level_labels, arrow_shafts, arrowheads, wl_beside, wl_below)
+    alt.layer(energy_lines, ion_line, level_labels, arrow_shafts, arrowheads, wl_above, wl_below)
     .properties(
         width=800,
         height=450,
