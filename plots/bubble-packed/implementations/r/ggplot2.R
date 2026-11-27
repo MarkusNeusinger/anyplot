@@ -34,8 +34,8 @@ segments <- tibble(
   label = c(
     "E-Commerce", "Digital Ads", "Social",     "Mobile",   "Streaming",
     "Cloud",      "Semicon.",    "IoT",        "5G",
-    "Enterprise", "AI / ML",    "Analytics",  "Cyber",    "Dev Tools", "SaaS",
-    "Payments",   "Fintech",    "InsurTech",
+    "ERP",        "AI / ML",    "Analytics",  "Cyber",    "Dev Tools", "SaaS",
+    "Payments",   "Lending",    "InsurTech",
     "AR / VR",    "EdTech",     "HealthTech"
   ),
   value = c(
@@ -60,6 +60,30 @@ segments <- tibble(
 
 n_segs <- nrow(segments)
 
+# One pass of pairwise overlap resolution: pushes each overlapping pair apart
+separate_pairs <- function(px, py, r, strength, jitter = FALSE) {
+  n <- length(r)
+  for (i in seq_len(n - 1)) {
+    for (j in (i + 1):n) {
+      dx   <- px[i] - px[j]
+      dy   <- py[i] - py[j]
+      d    <- sqrt(dx * dx + dy * dy)
+      dmin <- r[i] + r[j] + 2e-3
+      if (d >= dmin) next
+      if (d < 1e-9) {
+        if (jitter) px[j] <- px[j] + 1e-3 * runif(1, -1, 1)
+        next
+      }
+      push  <- (dmin - d) * strength
+      px[i] <- px[i] + push * dx / d
+      py[i] <- py[i] + push * dy / d
+      px[j] <- px[j] - push * dx / d
+      py[j] <- py[j] - push * dy / d
+    }
+  }
+  list(x = px, y = py)
+}
+
 # Force-directed circle packing with sector clustering
 pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
   n  <- length(r)
@@ -77,28 +101,9 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
 
   # Iterative overlap resolution with centroid + sector gravity
   for (it in seq_len(n_iter)) {
-    for (i in seq_len(n - 1)) {
-      for (j in (i + 1):n) {
-        dx   <- px[i] - px[j]
-        dy   <- py[i] - py[j]
-        d    <- sqrt(dx * dx + dy * dy)
-        dmin <- r[i] + r[j] + 2e-3
-
-        if (d < dmin) {
-          if (d < 1e-9) {
-            px[j] <- px[j] + 1e-3 * runif(1, -1, 1)
-            next
-          }
-          push   <- (dmin - d) * 0.51
-          ux     <- dx / d
-          uy     <- dy / d
-          px[i]  <- px[i] + push * ux
-          py[i]  <- py[i] + push * uy
-          px[j]  <- px[j] - push * ux
-          py[j]  <- py[j] - push * uy
-        }
-      }
-    }
+    res <- separate_pairs(px, py, r, 0.51, jitter = TRUE)
+    px  <- res$x
+    py  <- res$y
 
     # Global centroid gravity (tightens pack)
     g  <- 0.04
@@ -142,32 +147,16 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
       }
     }
     # Re-resolve any overlaps introduced by tightening
-    for (i in seq_len(n - 1)) {
-      for (j in (i + 1):n) {
-        dx   <- px[i] - px[j]; dy <- py[i] - py[j]
-        d    <- sqrt(dx^2 + dy^2); dmin <- r[i] + r[j] + 2e-3
-        if (d < dmin && d > 1e-9) {
-          push  <- (dmin - d) * 0.51; ux <- dx / d; uy <- dy / d
-          px[i] <- px[i] + push * ux; py[i] <- py[i] + push * uy
-          px[j] <- px[j] - push * ux; py[j] <- py[j] - push * uy
-        }
-      }
-    }
+    res <- separate_pairs(px, py, r, 0.51)
+    px  <- res$x
+    py  <- res$y
   }
 
   # Overlap-only passes so the final layout has no crossing circles
   for (pass in seq_len(300)) {
-    for (i in seq_len(n - 1)) {
-      for (j in (i + 1):n) {
-        dx <- px[i] - px[j]; dy <- py[i] - py[j]
-        d  <- sqrt(dx^2 + dy^2); dmin <- r[i] + r[j] + 2e-3
-        if (d < dmin && d > 1e-9) {
-          push  <- (dmin - d) * 0.55; ux <- dx / d; uy <- dy / d
-          px[i] <- px[i] + push * ux; py[i] <- py[i] + push * uy
-          px[j] <- px[j] - push * ux; py[j] <- py[j] - push * uy
-        }
-      }
-    }
+    res <- separate_pairs(px, py, r, 0.55)
+    px  <- res$x
+    py  <- res$y
   }
 
   list(x = px - mean(px), y = py - mean(py))
@@ -211,8 +200,7 @@ p <- ggplot() +
   geom_polygon(
     data      = circle_polys,
     aes(x = x, y = y, group = id, fill = sector),
-    alpha     = 0.85,
-    color     = PAGE_BG,
+    color    = PAGE_BG,
     linewidth = 0.35
   ) +
   geom_text(
