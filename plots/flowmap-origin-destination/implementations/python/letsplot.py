@@ -83,7 +83,7 @@ label_offsets = {
     "New York": (-4, -7),
     "London": (-8, 9),
     "Rotterdam": (24, 7),
-    "Dubai": (3, -13),
+    "Dubai": (-14, -3),
     "Singapore": (4, -5),
     "Shanghai": (15, -8),
     "Tokyo": (6, 7),
@@ -92,24 +92,24 @@ label_offsets = {
 }
 
 flows = [
-    ("Shanghai", "Los Angeles", 85),
-    ("Shanghai", "Rotterdam", 72),
-    ("Singapore", "Rotterdam", 65),
-    ("Tokyo", "Los Angeles", 58),
-    ("Rotterdam", "New York", 52),
-    ("Dubai", "London", 48),
-    ("Shanghai", "Singapore", 45),
-    ("Los Angeles", "Tokyo", 42),
-    ("Singapore", "Sydney", 38),
-    ("Sao Paulo", "Rotterdam", 35),
-    ("New York", "London", 32),
-    ("Dubai", "Singapore", 30),
-    ("Shanghai", "Dubai", 28),
-    ("Rotterdam", "Dubai", 25),
-    ("London", "New York", 22),
-    ("Sydney", "Singapore", 20),
-    ("Tokyo", "Shanghai", 18),
-    ("Los Angeles", "Shanghai", 15),
+    ("Shanghai", "Los Angeles", 5.0),
+    ("Shanghai", "Rotterdam", 4.2),
+    ("Singapore", "Rotterdam", 3.8),
+    ("Tokyo", "Los Angeles", 3.4),
+    ("Rotterdam", "New York", 3.1),
+    ("Dubai", "London", 2.8),
+    ("Shanghai", "Singapore", 2.6),
+    ("Los Angeles", "Tokyo", 2.5),
+    ("Singapore", "Sydney", 2.2),
+    ("Sao Paulo", "Rotterdam", 2.1),
+    ("New York", "London", 1.9),
+    ("Dubai", "Singapore", 1.8),
+    ("Shanghai", "Dubai", 1.6),
+    ("Rotterdam", "Dubai", 1.5),
+    ("London", "New York", 1.3),
+    ("Sydney", "Singapore", 1.2),
+    ("Tokyo", "Shanghai", 1.1),
+    ("Los Angeles", "Shanghai", 0.9),
 ]
 
 flow_data = []
@@ -250,7 +250,7 @@ plot = (
         tooltips=layer_tooltips()
         .title("@origin_name → @dest_name")
         .line("Trade volume|@flow M TEU")
-        .format("flow", ".0f"),
+        .format("flow", ".1f"),
     )
     + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=5, color=HUB_COLOR, fill=HUB_COLOR)
     + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=4, color=INK_SOFT)
