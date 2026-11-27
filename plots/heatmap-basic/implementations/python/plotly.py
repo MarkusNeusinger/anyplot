@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-28
@@ -7,6 +7,7 @@ Quality: 91/100 | Updated: 2026-05-28
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -22,7 +23,12 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 _mid = "#FAF8F1" if THEME == "light" else "#1A1A17"
 imprint_div = [[0.0, "#AE3030"], [0.5, _mid], [1.0, "#4467A3"]]
 
-# Data
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+PRODUCT_CATEGORY = "Product Category"  # role: y
+SALES_GROWTH = "Sales Growth (%)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("growth.csv")
 np.random.seed(42)
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -40,10 +46,20 @@ for i, cat in enumerate(categories):
     if cat == "Clothing":
         base[i, 3:5] += 10  # Spring fashion
         base[i, 8:10] += 10  # Back-to-school
-values = np.round(base, 1)
+df = pd.DataFrame(
+    {
+        MONTH: months * len(categories),
+        PRODUCT_CATEGORY: np.repeat(categories, len(months)),
+        SALES_GROWTH: np.round(base, 1).ravel(),
+    }
+)
+
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=PRODUCT_CATEGORY, columns=MONTH, values=SALES_GROWTH, sort=False)
+values = table.to_numpy()
 
 # Symmetric color range so zero is exactly the midpoint of the diverging scale
-abs_max = float(np.abs(values).max())
+abs_max = float(np.nanmax(np.abs(values)))
 
 font_family = "Palatino, Georgia, serif"
 
@@ -51,14 +67,14 @@ font_family = "Palatino, Georgia, serif"
 fig = go.Figure(
     data=go.Heatmap(
         z=values,
-        x=months,
-        y=categories,
+        x=table.columns,
+        y=table.index,
         colorscale=imprint_div,
         zmid=0,
         zmin=-abs_max,
         zmax=abs_max,
         colorbar={
-            "title": {"text": "Sales Growth (%)", "font": {"size": 12, "family": font_family, "color": INK}},
+            "title": {"text": SALES_GROWTH, "font": {"size": 12, "family": font_family, "color": INK}},
             "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
             "ticksuffix": "%",
             "thickness": 15,
@@ -70,7 +86,7 @@ fig = go.Figure(
         },
         text=values,
         texttemplate="%{text:+.1f}",
-        textfont={"size": 11, "family": font_family, "color": INK_SOFT},
+        textfont={"size": 11, "family": font_family},
         hovertemplate="<b>%{y}</b> · %{x}<br>Growth: %{z:+.1f}%<extra></extra>",
         xgap=2,
         ygap=2,
@@ -78,7 +94,7 @@ fig = go.Figure(
 )
 
 title_str = (
-    "Monthly Sales Growth · heatmap-basic · plotly · anyplot.ai"
+    "Monthly Sales Growth · heatmap-basic · python · plotly · anyplot.ai"
     f"<br><sup style='color:{INK_MUTED}; font-size:10px;'>"
     "Retail categories show clear seasonal surges — "
     "summer outdoor/leisure peaks and Q4 holiday gift spikes"
@@ -95,18 +111,18 @@ fig.update_layout(
         "font": {"size": 16, "family": font_family, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.98,
+        "y": 0.96,
         "yanchor": "top",
     },
     xaxis={
-        "title": {"text": "Month", "font": {"size": 12, "family": font_family, "color": INK}},
+        "title": {"text": MONTH, "font": {"size": 12, "family": font_family, "color": INK}},
         "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
         "side": "bottom",
         "showgrid": False,
         "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Product Category", "font": {"size": 12, "family": font_family, "color": INK}},
+        "title": {"text": PRODUCT_CATEGORY, "font": {"size": 12, "family": font_family, "color": INK}},
         "tickfont": {"size": 10, "family": font_family, "color": INK_SOFT},
         "autorange": "reversed",
         "showgrid": False,
@@ -114,7 +130,7 @@ fig.update_layout(
     },
     template="plotly_white",
     # Square canvas: 600×600 at scale=4 → 2400×2400 px (heatmap = symmetric content)
-    margin={"l": 130, "r": 80, "t": 100, "b": 60},
+    margin={"l": 130, "r": 80, "t": 70, "b": 60},
     width=600,
     height=600,
 )
