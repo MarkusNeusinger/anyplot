@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -48,9 +48,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint sequential ramp for fields (the colored cells fill the plot), as (position, hex) stops
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -159,7 +159,7 @@ plot = (
     + coord_fixed(ratio=1)
     + theme(
         plot_background=element_blank(),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid=element_blank(),
         panel_border=element_blank(),
         axis_title=element_blank(),
