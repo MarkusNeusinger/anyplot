@@ -12,13 +12,12 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OCEAN_COL   <- if (THEME == "light") "#C8DFF0" else "#1E2E3B"
 
 # Imprint sequential ramp for filled fields, sampled once per pressure band
 SEQ_FIELDS <- if (THEME == "light") {
-  list(colours = c("#66E2B2", "#009E73", "#4467A3", "#002850"), values = c(0, 0.368, 0.582, 1))
+  list(colours = c("#66E2B2", "#009E73", "#024582", "#351E45"), values = c(0, 0.369, 0.803, 1))
 } else {
-  list(colours = c("#00573D", "#009E73", "#CDD9FF"), values = c(0, 0.467, 1))
+  list(colours = c("#404C02", "#009E73", "#CDD9FF"), values = c(0, 0.487, 1))
 }
 
 # Synthetic atmospheric pressure field (North Atlantic / Europe)
@@ -98,13 +97,13 @@ p <- ggplot() +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
-    panel.background  = element_rect(fill = OCEAN_COL,   color = NA),
+    panel.background  = element_rect(fill = PAGE_BG,     color = NA),
     panel.grid.major  = element_line(color = INK_SOFT,   linewidth = 0.15, linetype = "dotted"),
     panel.grid.minor  = element_blank(),
     panel.border      = element_rect(color = INK_SOFT,   fill = NA, linewidth = 0.4),
     axis.title        = element_text(color = INK,        size = 10),
     axis.text         = element_text(color = INK_SOFT,   size = 8),
-    plot.title        = element_text(color = INK,        size = 11, face = "bold"),
+    plot.title        = element_text(color = INK,        size = 12, face = "bold"),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT,   size = 8),
     legend.title      = element_text(color = INK,        size = 9),
