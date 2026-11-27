@@ -1,7 +1,7 @@
 """ anyplot.ai
 band-basic: Basic Band Plot
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-27
 """
 
 import os
@@ -11,16 +11,12 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    arrow,
     element_blank,
     element_line,
     element_rect,
     element_text,
-    geom_hline,
     geom_line,
     geom_ribbon,
-    geom_segment,
-    geom_text,
     ggplot,
     ggsave,
     ggsize,
@@ -45,22 +41,32 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BAND_FILL = IMPRINT_PALETTE[0]  # brand green — Imprint position 1
 LINE_COLOR = IMPRINT_PALETTE[2]  # blue — Imprint position 3
+# A translucent green sinks into the dark page, so the dark theme takes a stronger fill (spec: alpha 0.2-0.4)
+BAND_ALPHA = 0.25 if THEME == "light" else 0.4
 
-# Data — battery capacity exponential decay over charge cycles (95% tolerance band)
+# Columns: set these to your table's column names
+CYCLES = "Charge cycles"  # role: x
+LOWER = "Lower bound (%)"  # role: y_lower
+UPPER = "Upper bound (%)"  # role: y_upper
+CENTER = "Capacity (%)"  # role: y_center
+
+# Data: replace this block with your own table, for example df = pd.read_csv("capacity.csv")
+# Battery capacity, exponential decay over charge cycles, with a widening 95% tolerance band
 cycles = np.linspace(0, 500, 100)
 capacity_mean = 100 * np.exp(-0.002 * cycles)
 tolerance = 2.5 + 0.008 * cycles
-capacity_lower = capacity_mean - 1.96 * tolerance
-capacity_upper = capacity_mean + 1.96 * tolerance
+df = pd.DataFrame(
+    {
+        CYCLES: cycles,
+        LOWER: capacity_mean - 1.96 * tolerance,
+        UPPER: capacity_mean + 1.96 * tolerance,
+        CENTER: capacity_mean,
+    }
+)
 
-df = pd.DataFrame({"cycles": cycles, "mean": capacity_mean, "lower": capacity_lower, "upper": capacity_upper})
-
-# Annotation — arrow pointing to widening lower band edge at cycle ~450
-idx_450 = np.argmin(np.abs(cycles - 450))
-annot_df = pd.DataFrame({"x": [285], "y": [18.5], "label": ["Widening tolerance band"]})
-arrow_df = pd.DataFrame({"x": [375], "y": [20.5], "xend": [450], "yend": [float(capacity_lower[idx_450]) + 0.5]})
-
-title = "band-basic · python · letsplot · anyplot.ai"
+# Plot
+x_pad = (df[CYCLES].max() - df[CYCLES].min()) * 0.02
+y_pad = (df[UPPER].max() - df[LOWER].min()) * 0.05
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -78,23 +84,12 @@ anyplot_theme = theme(
 )
 
 plot = (
-    ggplot(df, aes(x="cycles"))
-    + geom_hline(yintercept=80, color=INK_MUTED, size=0.8, linetype="dashed", tooltips="none")
-    + geom_text(x=512, y=83, label="80% capacity threshold", size=4.5, color=INK_MUTED, hjust=1, tooltips="none")
-    + geom_ribbon(aes(ymin="lower", ymax="upper"), fill=BAND_FILL, alpha=0.25, size=0)
-    + geom_line(aes(y="mean"), color=LINE_COLOR, size=1.5)
-    + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"),
-        data=arrow_df,
-        color=INK_SOFT,
-        size=0.7,
-        arrow=arrow(length=8, type="open"),
-        tooltips="none",
-    )
-    + geom_text(aes(x="x", y="y", label="label"), data=annot_df, size=6, color=INK_SOFT)
-    + labs(x="Charge Cycles", y="Capacity (%)", title=title)
-    + scale_x_continuous(limits=[-15, 520])
-    + scale_y_continuous(limits=[10, 110])
+    ggplot(df, aes(x=CYCLES))
+    + geom_ribbon(aes(ymin=LOWER, ymax=UPPER), fill=BAND_FILL, alpha=BAND_ALPHA, size=0)
+    + geom_line(aes(y=CENTER), color=LINE_COLOR, size=1.5)
+    + labs(x=CYCLES, y=CENTER, title="band-basic · python · letsplot · anyplot.ai")
+    + scale_x_continuous(limits=[df[CYCLES].min() - x_pad, df[CYCLES].max() + x_pad])
+    + scale_y_continuous(limits=[df[LOWER].min() - y_pad, df[UPPER].max() + y_pad])
     + theme_minimal()
     + anyplot_theme
     + ggsize(800, 450)
