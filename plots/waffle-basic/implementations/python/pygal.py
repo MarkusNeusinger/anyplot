@@ -1,12 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-27
 """
 
 import os
+import re
 import sys
 
+import cairosvg
 import pandas as pd
 
 
@@ -22,89 +24,25 @@ _cwd = sys.path[0] if sys.path[0] else "."
 if _cwd in sys.path:
     sys.path.remove(_cwd)
 
-from pygal.graph.graph import Graph  # noqa: E402
+import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
 sys.path.insert(0, _cwd)
 
+# Constants
+ROWS = 10
+COLS = 10
+LEGEND_ROOM = 70  # pixels kept free between the grid and the legend
+GAP_SHARE = 0.12  # gap between squares as a share of the pitch
 
-class Waffle(Graph):
-    _serie_margin = 0
+CATEGORY = "category"  # role: category
+VALUE = "value"  # role: value
 
-    def __init__(self, *args, **kwargs):
-        self.rows = kwargs.pop("rows", 10)
-        self.cols = kwargs.pop("cols", 10)
-        super().__init__(*args, **kwargs)
+# Data
+df = pd.DataFrame({CATEGORY: ["Operations", "Marketing", "R&D", "Admin"], VALUE: [42, 28, 18, 12]})
 
-    def _plot(self):
-        total = sum(sum(v for v in serie.values if v is not None) for serie in self.series)
-        if total == 0:
-            return
-
-        total_squares = self.rows * self.cols
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        square_size = min(plot_width / self.cols, plot_height / self.rows) * 0.85
-        gap = square_size * 0.12
-
-        grid_width = self.cols * (square_size + gap) - gap
-        grid_height = self.rows * (square_size + gap) - gap
-
-        x_start = self.view.x(0)
-        y_start = self.view.y(self.rows)
-
-        x_offset = x_start + (plot_width - grid_width) / 2
-        y_offset = y_start + (plot_height - grid_height) / 2
-
-        plot_node = self.nodes["plot"]
-        waffle_group = self.svg.node(plot_node, class_="waffle-chart")
-
-        square_index = 0
-        cumulative = 0
-        for serie_index, serie in enumerate(self.series):
-            cumulative += sum(v for v in serie.values if v is not None)
-            # Cumulative rounding: blocks stay whole squares and together fill the grid
-            num_squares = round(cumulative / total * total_squares) - square_index
-
-            color = self.style.colors[serie_index % len(self.style.colors)]
-
-            serie_group = self.svg.node(waffle_group, class_="series serie-%d color-%d" % (serie_index, serie_index))
-
-            for _ in range(num_squares):
-                if square_index >= total_squares:
-                    break
-
-                row = square_index // self.cols
-                col = square_index % self.cols
-
-                x = x_offset + col * (square_size + gap)
-                y = y_offset + row * (square_size + gap)
-
-                self.svg.node(
-                    serie_group,
-                    "rect",
-                    x=x,
-                    y=y,
-                    width=square_size,
-                    height=square_size,
-                    fill=color,
-                    rx=square_size * 0.1,
-                    ry=square_size * 0.1,
-                    class_="waffle-square reactive",
-                )
-
-                square_index += 1
-
-    def _compute(self):
-        self._box.xmin = 0
-        self._box.xmax = self.cols
-        self._box.ymin = 0
-        self._box.ymax = self.rows
-
-
+# Plot
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -124,33 +62,59 @@ custom_style = Style(
     stroke_width=2.5,
 )
 
-CATEGORY = "category"  # role: category
-VALUE = "value"  # role: value
-
-# Data
-df = pd.DataFrame({CATEGORY: ["Operations", "Marketing", "R&D", "Admin"], VALUE: [42, 28, 18, 12]})
-
-# Plot
-chart = Waffle(
+chart = pygal.XY(
     width=3200,
     height=1800,
-    rows=10,
-    cols=10,
     style=custom_style,
     title="Budget Allocation · waffle-basic · python · pygal · anyplot.ai",
     show_legend=True,
+    show_dots=False,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    margin=50,
-    margin_bottom=170,
+    legend_at_bottom_columns=2,
+    legend_box_size=40,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    margin=40,
+    margin_left=800,
+    margin_right=800,
 )
 
+# pygal draws the title, legend and page; one-point series give the legend its entries
+total = df[VALUE].sum()
 for category, value in zip(df[CATEGORY], df[VALUE], strict=True):
-    chart.add(f"{category} ({value / df[VALUE].sum() * 100:.0f}%)", [value])
+    chart.add(f"{category} ({value / total * 100:.0f}%)", [(0, 0)])
 
-chart.render_to_png(f"plot-{THEME}.png")
+svg = chart.render().decode("utf-8")
+plot_open = re.search(r'<g transform="translate\([^)]*\)" class="plot">', svg)
+plot_bg = re.search(
+    r'<rect x="0" y="0" width="([\d.]+)" height="([\d.]+)" class="background" />', svg[plot_open.end() :]
+)
+plot_w, plot_h = float(plot_bg.group(1)), float(plot_bg.group(2))
+insert_at = plot_open.end() + plot_bg.end()  # after the plot's own background, so the squares stay visible
 
-with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+# Grid of squares in the plot area, centered; cumulative rounding keeps blocks whole and fills the grid exactly
+pitch = min(plot_w / COLS, (plot_h - LEGEND_ROOM) / ROWS)
+side = pitch * (1 - GAP_SHARE)
+x0 = (plot_w - pitch * COLS) / 2 + (pitch - side) / 2
+y0 = (plot_h - LEGEND_ROOM - pitch * ROWS) / 2 + (pitch - side) / 2
+placed = 0
+cumulative = 0
+squares = []
+for color, value in zip(IMPRINT, df[VALUE], strict=False):
+    cumulative += value
+    count = round(cumulative / total * ROWS * COLS) - placed
+    for index in range(placed, placed + count):
+        row, col = divmod(index, COLS)
+        squares.append(
+            f'<rect x="{x0 + col * pitch:.2f}" y="{y0 + row * pitch:.2f}" width="{side:.2f}" height="{side:.2f}" '
+            f'rx="{side * 0.1:.2f}" fill="{color}"/>'
+        )
+    placed += count
+
+svg = svg[:insert_at] + "".join(squares) + svg[insert_at:]
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(svg)
