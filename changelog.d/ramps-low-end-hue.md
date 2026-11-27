@@ -18,4 +18,4 @@
   the new stops and the rule a render measures 3.2:1. `core/palette.py`, the style guide, the
   generator prompt, the library prompts, the JavaScript harness's tokens, the contract check's
   allowed colours and the palette page carry the new stops; the palette page also keeps a stop's
-  label clear of the end labels when the two sit close.
+  label clear of the end labels when the two sit close. (#14724)
