@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Created: 2026-11-27
@@ -78,11 +78,9 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-# Viewport: 2nd to 98th percentile plus padding trims the outlier tails
-x_lo = df[X].quantile(0.02) - 0.4
-x_hi = df[X].quantile(0.98) + 0.4
-y_lo = df[Y].quantile(0.02) - 0.4
-y_hi = df[Y].quantile(0.98) + 0.4
+# Viewport: starts at the data extent; the padding loop below widens it by one cell
+x_lo, x_hi = df[X].min(), df[X].max()
+y_lo, y_hi = df[Y].min(), df[Y].max()
 
 chart_args = {
     "width": 3200,
@@ -94,13 +92,7 @@ chart_args = {
     "stroke": False,
     "show_x_guides": False,
     "show_y_guides": False,
-    "xrange": (x_lo, x_hi),
-    "range": (y_lo, y_hi),
     "margin_right": 500,  # room for the color bar
-    "x_labels_major_count": 6,
-    "y_labels_major_count": 6,
-    "show_minor_x_labels": False,
-    "show_minor_y_labels": False,
     "value_formatter": lambda v: f"{v:g}",
     "x_value_formatter": lambda v: f"{v:g}",
 }
@@ -124,19 +116,37 @@ style_args = {
     "major_label_font_family": "sans-serif",
 }
 
-# Probe render: read the plot area in SVG pixels, so the hexagons can be regular on screen
-probe = pygal.XY(style=Style(colors=IMPRINT_PALETTE, **style_args), **chart_args)
-probe.add("probe", [(x_lo, y_lo), (x_hi, y_hi)])
-probe_svg = probe.render().decode("utf-8")
-px, py = (
-    float(v) for v in re.search(r'<g transform="translate\(([\d.]+),\s*([\d.]+)\)" class="plot"', probe_svg).groups()
-)
-plot_rect = re.search(r'<rect[^>]*class="background"[^>]*/>', probe_svg[probe_svg.index('class="plot"') :]).group(0)
-pw = float(re.search(r'width="([\d.]+)"', plot_rect).group(1))
-ph = float(re.search(r'height="([\d.]+)"', plot_rect).group(1))
+# Probe render: read the plot area in SVG pixels, so the hexagons can be regular on screen.
+# The viewport is padded by one cell on each side, so every occupied hexagon lies whole inside the axes.
+for _ in range(2):
+    x_ticks = [float(t) for t in np.arange(np.ceil(x_lo / 2) * 2, x_hi, 2)]
+    y_ticks = [float(t) for t in np.arange(np.ceil(y_lo), y_hi, 1)]
+    probe = pygal.XY(
+        style=Style(colors=IMPRINT_PALETTE, **style_args),
+        **chart_args,
+        xrange=(x_lo, x_hi),
+        range=(y_lo, y_hi),
+        x_labels=x_ticks,
+        y_labels=y_ticks,
+        x_labels_major=x_ticks,
+        y_labels_major=y_ticks,
+    )
+    probe.add("probe", [(x_lo, y_lo), (x_hi, y_hi)])
+    probe_svg = probe.render().decode("utf-8")
+    px, py = (
+        float(v)
+        for v in re.search(r'<g transform="translate\(([\d.]+),\s*([\d.]+)\)" class="plot"', probe_svg).groups()
+    )
+    plot_rect = re.search(r'<rect[^>]*class="background"[^>]*/>', probe_svg[probe_svg.index('class="plot"') :]).group(0)
+    pw = float(re.search(r'width="([\d.]+)"', plot_rect).group(1))
+    ph = float(re.search(r'height="([\d.]+)"', plot_rect).group(1))
+    R = pw / GRIDSIZE / math.sqrt(3)
+    if _ == 0:
+        x_pad = (x_hi - x_lo) * math.sqrt(3) * R / (pw - 2 * math.sqrt(3) * R)
+        y_pad = (y_hi - y_lo) * 2 * R / (ph - 4 * R)
+        x_lo, x_hi, y_lo, y_hi = x_lo - x_pad, x_hi + x_pad, y_lo - y_pad, y_hi + y_pad
 
 # Hexagonal binning in pixel space: pointy-top cells of circumradius R, nearest centre wins
-R = pw / GRIDSIZE / math.sqrt(3)
 valid = df[[X, Y]].dropna()  # a missing coordinate draws nothing
 u = (valid[X].to_numpy() - x_lo) / (x_hi - x_lo) * pw
 v = (valid[Y].to_numpy() - y_lo) / (y_hi - y_lo) * ph
@@ -157,7 +167,16 @@ tiers = np.minimum((position * N_TIERS).astype(int), N_TIERS - 1)
 used = sorted(set(tiers.tolist()))
 tier_colors = [ramp_color(SEQ_FIELDS, RAMP_START + (1 - RAMP_START) * (t + 0.5) / N_TIERS) for t in used]
 
-chart = pygal.XY(style=Style(colors=tier_colors, **style_args), **chart_args)
+chart = pygal.XY(
+    style=Style(colors=tier_colors, **style_args),
+    **chart_args,
+    xrange=(x_lo, x_hi),
+    range=(y_lo, y_hi),
+    x_labels=x_ticks,
+    y_labels=y_ticks,
+    x_labels_major=x_ticks,
+    y_labels_major=y_ticks,
+)
 for t in used:
     in_tier = tiers == t
     chart.add(
@@ -183,6 +202,7 @@ def circle_to_hex(match):
 
 
 svg = re.sub(r"<circle[^>]*/>", circle_to_hex, svg)
+svg = re.sub(r'<path[^>]*class="axis major line"[^>]*/>', "", svg)  # pygal's zero line, not part of the density field
 
 # Clip the series to the plot area so hexagons never reach the title or the margins
 svg = svg.replace(
