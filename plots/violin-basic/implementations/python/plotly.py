@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-basic: Basic Violin Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -7,6 +7,7 @@ Quality: 88/100 | Updated: 2026-05-29
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -18,28 +19,37 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint palette — 4 categorical colors (hybrid-v3 sort order)
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — 4 departments with distinct salary distribution shapes
-np.random.seed(42)
-data = {
-    "Engineering": np.concatenate([np.random.normal(92000, 8000, 120), np.random.normal(75000, 5000, 80)]),
-    "Marketing": np.random.normal(72000, 10000, 180),
-    "Sales": np.random.normal(78000, 18000, 220),
-    "Support": np.random.normal(55000, 8000, 190),
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: category
+SALARY = "Annual Salary ($)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("salaries.csv")
+rng = np.random.RandomState(42)
+samples = {
+    "Engineering": np.concatenate([rng.normal(92000, 8000, 120), rng.normal(75000, 5000, 80)]),
+    "Marketing": rng.normal(72000, 10000, 180),
+    "Sales": rng.normal(78000, 18000, 220),
+    "Support": rng.normal(55000, 8000, 190),
 }
+df = pd.DataFrame(
+    {
+        DEPARTMENT: np.repeat(list(samples), [len(v) for v in samples.values()]),
+        SALARY: np.concatenate(list(samples.values())),
+    }
+)
 
-# Plot
+# Plot: reads only df and the constants above
 fig = go.Figure()
-
-for i, (cat, values) in enumerate(data.items()):
+for i, (dept, rows) in enumerate(df.groupby(DEPARTMENT, sort=False)):
     fig.add_trace(
         go.Violin(
-            y=values,
-            name=cat,
-            line=dict(color=IMPRINT_PALETTE[i], width=2),
-            fillcolor=IMPRINT_PALETTE[i],
+            y=rows[SALARY],
+            name=str(dept),
+            line=dict(color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)], width=2),
+            fillcolor=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
             opacity=0.8,
             points=False,
             box=dict(visible=True, width=0.2, fillcolor=ELEVATED_BG, line=dict(color=INK, width=1.5)),
@@ -47,26 +57,10 @@ for i, (cat, values) in enumerate(data.items()):
             hoveron="violins+kde",
             hoverinfo="y+name",
             scalemode="width",
+            spanmode="hard",
+            width=0.7,
         )
     )
-
-fig.update_traces(width=0.7, spanmode="soft")
-
-# Annotate the bimodal Engineering distribution
-fig.add_annotation(
-    x="Engineering",
-    y=106000,
-    text="Bimodal: junior<br>vs senior tiers",
-    showarrow=True,
-    arrowhead=2,
-    arrowsize=1,
-    arrowwidth=1.5,
-    arrowcolor=INK_SOFT,
-    ax=55,
-    ay=-30,
-    font=dict(size=10, color=INK_SOFT),
-    align="left",
-)
 
 # Style
 title = "violin-basic · python · plotly · anyplot.ai"
@@ -75,7 +69,7 @@ fig.update_layout(
     margin=dict(l=110, r=80, t=80, b=60),
     title=dict(text=title, font=dict(size=16, color=INK, weight="bold"), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Department", font=dict(size=12, color=INK), standoff=12),
+        title=dict(text=DEPARTMENT, font=dict(size=12, color=INK), standoff=12),
         tickfont=dict(size=10, color=INK_SOFT),
         linecolor=INK_SOFT,
         showline=True,
@@ -83,7 +77,7 @@ fig.update_layout(
         showgrid=False,
     ),
     yaxis=dict(
-        title=dict(text="Annual Salary ($)", font=dict(size=12, color=INK), standoff=12),
+        title=dict(text=SALARY, font=dict(size=12, color=INK), standoff=12),
         tickfont=dict(size=10, color=INK_SOFT),
         tickformat=",.0f",
         tickprefix="$",
@@ -92,13 +86,11 @@ fig.update_layout(
         linecolor=INK_SOFT,
         showline=True,
         mirror=False,
-        zerolinecolor=INK_SOFT,
         zeroline=False,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font=dict(color=INK),
-    legend=dict(bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1, font=dict(color=INK_SOFT)),
     showlegend=False,
 )
 
