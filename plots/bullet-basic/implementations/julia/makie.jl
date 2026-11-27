@@ -77,11 +77,10 @@ for i in 1:n
     lines!(ax, [target, target], [y - band_h / 2 - 0.05, y + band_h / 2 + 0.05];
            color = INK, linewidth = 4.0)
 
-    exceeds = actuals[i] > targets[i]
     text!(ax, actual + 1.5, y;
           text    = "$(actuals[i])%",
-          color   = exceeds ? BRAND : INK_SOFT,
-          fontsize = exceeds ? 13 : 11,
+          color   = INK,
+          fontsize = 13,
           align   = (:left, :center))
 end
 
