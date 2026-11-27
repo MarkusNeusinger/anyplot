@@ -1327,9 +1327,13 @@ def test_the_data_block_binds_its_table_at_column_0_under_the_prompts_name():
         "no column-0 `df <-` between the `# Data` and `# Plot` lines"
     ]
     assert _data_block(JULIA_TABLE.replace("df = DataFrame", "const df = DataFrame"), "makie") == []
-    assert _data_block(JULIA_TABLE.replace("df = DataFrame", "df == DataFrame"), "makie") == [
-        "no column-0 `df =` between the `# Data` and `# Plot` lines"
-    ]
+    # A typed binding is a binding too.
+    assert _data_block(JULIA_TABLE.replace("df = DataFrame", "df::DataFrame = DataFrame"), "makie") == []
+    assert _data_block(JULIA_TABLE.replace("df = DataFrame", "const df::DataFrame = DataFrame"), "makie") == []
+    for not_bound in ("df == DataFrame", "df::DataFrame == DataFrame", "dfx = DataFrame"):
+        assert _data_block(JULIA_TABLE.replace("df = DataFrame", not_bound), "makie") == [
+            "no column-0 `df =` between the `# Data` and `# Plot` lines"
+        ], not_bound
 
 
 def test_the_data_block_rule_is_its_libraries_own():
@@ -1537,3 +1541,18 @@ def test_the_selfcheck_needs_the_sessions_regeneration_flag(tmp_path):
     )
     assert result.returncode == 2
     assert "--regeneration" in result.stderr
+
+
+@pytest.mark.parametrize(("value", "advisory"), [("True", True), ("TRUE", True), ("False", False), ("true", True)])
+def test_the_regeneration_flag_takes_any_case(tmp_path, monkeypatch, value, advisory):
+    """A session may write `True` for its IS_REGENERATION; only another word is refused."""
+    monkeypatch.chdir(tmp_path)
+    folder = tmp_path / "plots" / SPEC
+    folder.mkdir(parents=True)
+    (folder / "specification.md").write_text("## Data\n\n- `x` (numeric) - Values\n", encoding="utf-8")
+    (tmp_path / "plot.R").write_text(R.replace("p <- ggplot(df", R_NO_BLOCK + "p <- ggplot(df"), encoding="utf-8")
+    argv = ["selfcheck", "plot.R", "--spec-id", SPEC, "--language", "r", "--library", "ggplot2", "--regeneration"]
+    assert contract_check.main([*argv, value]) == (0 if advisory else 1)
+    with pytest.raises(SystemExit) as refused:
+        contract_check.main([*argv, "yes"])
+    assert refused.value.code == 2

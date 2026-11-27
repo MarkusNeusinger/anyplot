@@ -1783,6 +1783,12 @@ class TestGeneratorSelfChecks:
         )
         assert exception in step
         assert step.count("data-block") == 1
+        # The final check says the same, so it never asks a regeneration to convert its data code.
+        final_check = next(line for line in content.splitlines() if line.startswith("9. ✅"))
+        assert final_check.endswith(
+            "for every language, the file follows the zones of `prompts/adaptable-code.md`, except that a "
+            "regeneration in R, Julia and JavaScript keeps its working data code"
+        )
         for sentence in (
             "It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.",
             "**Fix every line that is not marked `(advisory)`,** then run the check again.",

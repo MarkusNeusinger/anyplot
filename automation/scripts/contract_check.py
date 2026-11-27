@@ -927,11 +927,12 @@ _MARKER_TAIL = r"(?:\s*:.*|\s+[-–—].*)?\s*$"
 _DATA_MARKER_RE = re.compile(r" Data" + _MARKER_TAIL)
 _PLOT_MARKER_RE = re.compile(r" Plot" + _MARKER_TAIL)
 _ROLE_COMMENT_RE = re.compile(r"\s*role:\s*\S")
-# The table the block ends in, at column 0: a TypeScript type may follow `const data` (`const data: Row[] = []`).
+# The table the block ends in, at column 0: a TypeScript type may follow `const data` (`const data: Row[] = []`),
+# and a Julia type `df` (`df::DataFrame = ...`).
 _DATA_BINDING: dict[str, tuple[re.Pattern[str], str]] = {
     "javascript": (re.compile(r"(?:export\s+)?const\s+data(?![\w$])"), "`const data`"),
     "r": (re.compile(r"df\s*(?:<<?-|=(?!=))"), "`df <-`"),
-    "julia": (re.compile(r"(?:const\s+)?df\s*=(?!=)"), "`df =`"),
+    "julia": (re.compile(r"(?:const\s+)?df\s*(?:::[^=\n]+)?=(?!=)"), "`df =`"),
 }
 
 
@@ -1262,6 +1263,7 @@ def main(argv: list[str] | None = None) -> int:
     self_parser.add_argument(
         "--regeneration",
         required=True,
+        type=str.lower,  # a session may write `True` for its IS_REGENERATION
         choices=("true", "false"),
         help="the session's IS_REGENERATION: on a regeneration, data-block is advisory",
     )
