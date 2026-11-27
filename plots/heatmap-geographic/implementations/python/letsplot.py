@@ -114,7 +114,7 @@ df = pd.DataFrame(
     {
         LATITUDE: np.concatenate([la_lat, sf_lat, cv_lat]),
         LONGITUDE: np.concatenate([la_lon, sf_lon, cv_lon]),
-        MAGNITUDE: np.concatenate([la_magnitude, sf_magnitude, cv_magnitude]),
+        MAGNITUDE: np.minimum(np.concatenate([la_magnitude, sf_magnitude, cv_magnitude]), 7.5),  # realistic cap
     }
 )
 
