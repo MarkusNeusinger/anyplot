@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-29
@@ -14,6 +14,7 @@ _self_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _self_dir]
 del _self_dir
 
+import pandas as pd
 import pygal
 from pygal.etree import etree
 from pygal.style import Style
@@ -27,51 +28,60 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint categorical palette — positions 1–4 mapped to the four groups
-IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
-GROUP_COLORS = {
-    "Technology": "#009E73",  # brand green — position 1
-    "Marketing": "#C475FD",  # lavender — position 2
-    "Operations": "#4467A3",  # blue — position 3
-    "Sales": "#BD8233",  # ochre — position 4
-}
-# In-bubble text: fixed per group fill (bubble fill is theme-independent)
-GROUP_TEXT_COLOR = {
-    "Technology": "white",
-    "Marketing": "#1A1A17",  # lavender is too light for white text
-    "Operations": "white",
-    "Sales": "white",
-}
-GROUP_NAMES = ["Technology", "Marketing", "Operations", "Sales"]
+# Imprint palette: all eight positions, one per group in order of first appearance
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Constants
 WIDTH = 3200
 HEIGHT = 1800
 PADDING = 10  # gap between packed circles in pixels
 FONT_FAMILY = "'Trebuchet MS', 'Lucida Grande', sans-serif"
+TITLE = "bubble-packed · python · pygal · anyplot.ai"
 
-# Department budget allocation ($K) — varied group sizes to show chart flexibility
+# Columns: set these to your table's column names
+ITEM = "Department"  # role: label
+BUDGET = "Budget ($K)"  # role: value
+DIVISION = "Division"  # role: group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+df = pd.DataFrame(
+    [
+        ("Software Dev", 480, "Technology"),
+        ("Cloud Infra", 290, "Technology"),
+        ("Data Analytics", 185, "Technology"),
+        ("Cybersecurity", 140, "Technology"),
+        ("AI Research", 95, "Technology"),
+        ("Digital Marketing", 360, "Marketing"),
+        ("Brand & Creative", 210, "Marketing"),
+        ("Events", 130, "Marketing"),
+        ("Facilities", 270, "Operations"),
+        ("HR & Recruiting", 195, "Operations"),
+        ("Legal", 155, "Operations"),
+        ("Admin", 105, "Operations"),
+        ("Enterprise", 390, "Sales"),
+        ("SMB", 240, "Sales"),
+        ("Partnerships", 175, "Sales"),
+    ],
+    columns=[ITEM, BUDGET, DIVISION],
+)
+
+# Plot: everything below is derived from df
+df = df.dropna(subset=[ITEM, BUDGET, DIVISION])
+group_names = df[DIVISION].drop_duplicates().tolist()
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_names)}
+
+
+def text_color_on(fill):
+    """White text on dark fills, near-black on light fills (perceived luminance)."""
+    r, g, b = (int(fill[i : i + 2], 16) for i in (1, 3, 5))
+    return "#1A1A17" if 0.299 * r + 0.587 * g + 0.114 * b > 150 else "white"
+
+
+group_text_color = {g: text_color_on(c) for g, c in group_colors.items()}
+group_totals = df.groupby(DIVISION, sort=False)[BUDGET].sum().to_dict()
 data = [
-    {"label": "Software Dev", "value": 480, "group": "Technology"},
-    {"label": "Cloud Infra", "value": 290, "group": "Technology"},
-    {"label": "Data Analytics", "value": 185, "group": "Technology"},
-    {"label": "Cybersecurity", "value": 140, "group": "Technology"},
-    {"label": "AI Research", "value": 95, "group": "Technology"},
-    {"label": "Digital Marketing", "value": 360, "group": "Marketing"},
-    {"label": "Brand & Creative", "value": 210, "group": "Marketing"},
-    {"label": "Events", "value": 130, "group": "Marketing"},
-    {"label": "Facilities", "value": 270, "group": "Operations"},
-    {"label": "HR & Recruiting", "value": 195, "group": "Operations"},
-    {"label": "Legal", "value": 155, "group": "Operations"},
-    {"label": "Admin", "value": 105, "group": "Operations"},
-    {"label": "Enterprise", "value": 390, "group": "Sales"},
-    {"label": "SMB", "value": 240, "group": "Sales"},
-    {"label": "Partnerships", "value": 175, "group": "Sales"},
+    {"label": lbl, "value": val, "group": grp} for lbl, val, grp in zip(df[ITEM], df[BUDGET], df[DIVISION], strict=True)
 ]
-
-# Compute group totals for legend labels and sort order
-group_totals = {}
-for item in data:
-    group_totals[item["group"]] = group_totals.get(item["group"], 0) + item["value"]
 
 # Scale values to radii (sqrt ensures area-based visual perception)
 max_val = max(item["value"] for item in data)
@@ -83,7 +93,7 @@ for item in data:
     circles.append({"r": r, "item": item, "x": 0.0, "y": 0.0})
 
 # Sort: largest-total group first, then descending radius within each group
-sorted_groups = sorted(GROUP_NAMES, key=lambda g: -group_totals[g])
+sorted_groups = sorted(group_names, key=lambda g: -group_totals[g])
 group_order = {g: i for i, g in enumerate(sorted_groups)}
 circles.sort(key=lambda c: (group_order[c["item"]["group"]], -c["r"]))
 
@@ -164,10 +174,8 @@ for c in placed:
 
 packed = [(c["x"], c["y"], c["r"], c["item"]) for c in placed]
 
-# Title length check for font scaling (no shrink needed for 43-char title)
-title_str = "bubble-packed · python · pygal · anyplot.ai"
-n_chars = len(title_str)
-title_fs = round(66 * 67 / n_chars) if n_chars > 67 else 66
+# Title font shrinks only when the title exceeds 67 characters
+title_fs = round(66 * 67 / len(TITLE)) if len(TITLE) > 67 else 66
 
 custom_style = Style(
     background=PAGE_BG,
@@ -178,7 +186,7 @@ custom_style = Style(
     colors=IMPRINT_PALETTE,
     font_family=FONT_FAMILY,
     title_font_size=title_fs,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -189,10 +197,10 @@ chart = pygal.Pie(
     width=WIDTH,
     height=HEIGHT,
     style=custom_style,
-    title=title_str,
+    title=TITLE,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=len(group_names),
     legend_box_size=28,
     inner_radius=0,
     margin=80,
@@ -202,27 +210,28 @@ chart = pygal.Pie(
     truncate_legend=-1,
 )
 
-for group in GROUP_NAMES:
+for group in group_names:
     chart.add(f"{group}: ${group_totals[group]:,}K", [])
 
 
-def add_packed_bubbles(root):
-    def _text(parent, x, y, label, size, color, bold=False):
-        t = etree.SubElement(parent, "text")
-        t.set("x", f"{x:.0f}")
-        t.set("y", f"{y:.0f}")
-        t.set("text-anchor", "middle")
-        t.set("dominant-baseline", "middle")
-        t.set("fill", color)
-        t.set("font-size", f"{size}")
-        t.set("font-family", FONT_FAMILY)
-        if bold:
-            t.set("font-weight", "bold")
-        t.text = label
+def add_text(parent, x, y, label, size, color, bold=False):
+    t = etree.SubElement(parent, "text")
+    t.set("x", f"{x:.0f}")
+    t.set("y", f"{y:.0f}")
+    t.set("text-anchor", "middle")
+    t.set("dominant-baseline", "middle")
+    t.set("fill", color)
+    t.set("font-size", f"{size}")
+    t.set("font-family", FONT_FAMILY)
+    if bold:
+        t.set("font-weight", "bold")
+    t.text = label
 
+
+def add_packed_bubbles(root):
     # Radial gradients for polished 3D bubble appearance
     defs = etree.SubElement(root, "defs")
-    for gname, color in GROUP_COLORS.items():
+    for gname, color in group_colors.items():
         grad = etree.SubElement(defs, "radialGradient")
         grad.set("id", f"grad-{gname.lower()}")
         grad.set("cx", "35%")
@@ -256,9 +265,9 @@ def add_packed_bubbles(root):
         bg_circ.set("cx", f"{gcx:.0f}")
         bg_circ.set("cy", f"{gcy:.0f}")
         bg_circ.set("r", f"{extent + 18:.0f}")
-        bg_circ.set("fill", GROUP_COLORS[gname])
+        bg_circ.set("fill", group_colors[gname])
         bg_circ.set("fill-opacity", "0.05")
-        bg_circ.set("stroke", GROUP_COLORS[gname])
+        bg_circ.set("stroke", group_colors[gname])
         bg_circ.set("stroke-opacity", "0.18")
         bg_circ.set("stroke-width", "2")
         bg_circ.set("stroke-dasharray", "12,8")
@@ -283,22 +292,22 @@ def add_packed_bubbles(root):
     ring.set("cy", f"{top[1]:.1f}")
     ring.set("r", f"{top[2] + 7:.1f}")
     ring.set("fill", "none")
-    ring.set("stroke", GROUP_COLORS[top[3]["group"]])
+    ring.set("stroke", group_colors[top[3]["group"]])
     ring.set("stroke-width", "3")
     ring.set("stroke-opacity", "0.45")
     ring.set("stroke-dasharray", "8,5")
 
     # Circle labels: first-word name + value for larger bubbles, value-only for smaller
     for x, y, r, item in packed:
-        text_color = GROUP_TEXT_COLOR[item["group"]]
+        text_color = group_text_color[item["group"]]
         if r > 110:
             fs = max(int(r * 0.22), 26)
             name = item["label"].split()[0]
-            _text(g, x, y - fs * 0.55, name, fs, text_color, bold=True)
-            _text(g, x, y + fs * 0.65, f"${item['value']}K", int(fs * 0.82), text_color)
+            add_text(g, x, y - fs * 0.55, name, fs, text_color, bold=True)
+            add_text(g, x, y + fs * 0.65, f"${item['value']}K", int(fs * 0.82), text_color)
         else:
-            fs = max(int(r * 0.28), 24)
-            _text(g, x, y, f"${item['value']}K", fs, text_color, bold=True)
+            fs = max(int(r * 0.28), 30)
+            add_text(g, x, y, f"${item['value']}K", fs, text_color, bold=True)
 
     # Group labels: placed above or below each cluster with generous clearance
     for gname, gdata in group_info.items():
@@ -312,11 +321,22 @@ def add_packed_bubbles(root):
             label_y = max(y + r for y, r in zip(gdata["ys"], gdata["rs"], strict=True)) + 90
             label_y = min(label_y, avail_bottom - 30)
 
+        # Slide the label sideways until its box clears every bubble
+        half_w = 0.30 * 38 * len(f"{gname}: ${group_totals[gname]:,}K") + 10
+        for shift in (0, 80, -80, 160, -160, 240, -240, 320, -320):
+            lx = gcx + shift
+            if all(
+                math.hypot(max(abs(x - lx) - half_w, 0), max(abs(y - label_y) - 24, 0)) >= r + 8
+                for x, y, r, _ in packed
+            ):
+                gcx = lx
+                break
+
         lbl = etree.SubElement(g, "text")
         lbl.set("x", f"{gcx:.0f}")
         lbl.set("y", f"{label_y:.0f}")
         lbl.set("text-anchor", "middle")
-        lbl.set("fill", GROUP_COLORS[gname])
+        lbl.set("fill", group_colors[gname])
         lbl.set("font-size", "38")
         lbl.set("font-family", FONT_FAMILY)
         lbl.set("font-weight", "bold")
