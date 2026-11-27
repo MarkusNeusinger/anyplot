@@ -2,52 +2,50 @@ library: plotnine
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:24Z'
-updated: '2026-05-29T13:31:03Z'
+updated: '2026-11-27T20:37:20Z'
 generated_by: claude-sonnet
-workflow_run: 26639385169
+workflow_run: 46064022072
 issue: 982
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - Protagonist/supporting visual hierarchy with different line weights (size=2 vs
-    0.9) and alpha (0.95 vs 0.4) creates a clear focal point
-  - Crossover halo at Q4 24 elegantly marks the WavePlay→StreamVue overtake moment
-  - End labels instead of a box legend is a professional bump-chart convention, cleanly
-    executed
-  - 'Full Imprint palette in canonical order, first series brand green #009E73, both
-    renders theme-correct'
-  - Clean KISS structure with hardcoded deterministic data and idiomatic plotnine
-    layered grammar
-  - scale_y_reverse() + horizontal-only grid is the correct minimal-chrome treatment
-    for a ranking chart
+  - 'Clean basic bump chart: six lines at equal weight, every one passing through
+    its rank at all eight quarters with a centered dot marker in its line''s color'
+  - scale_y_reverse with breaks taken from the data's rank range puts rank 1 on top
+    with ticks only at whole ranks
+  - Direct end labels via a per-layer data= subset on geom_text identify every entity
+    without a legend box; labels sit on distinct ranks and never collide
+  - 'scale_color_manual with limits taken from df keeps the data order, so StreamVue
+    gets #009E73 and the Imprint palette runs in canonical order, identical in both
+    themes'
+  - Theme tokens threaded through title, axis titles, ticks, grid and labels; both
+    renders pass legibility
+  - Column constants and a self-contained Data block ending in df make the file adaptable
+    to a user's own table
   weaknesses:
-  - End labels for supporting cast (3.0 mm ≈ 8.5 pt) are small enough to be borderline
-    at mobile width (~400 px); consider nudging to 3.3–3.5 mm for the italic labels
-    as well
-  - There is notable empty vertical space between rank 5 and rank 6 due to EchoTV
-    being locked at the bottom — no structural fix needed but worth noting if proportions
-    feel loose
-  - Crossover halo (alpha=0.12) is nearly invisible in the dark render against the
-    dark background; raising halo alpha slightly to 0.18 would make it consistently
-    visible across both themes
+  - 'VQ-01 (both): the direct end labels (WavePlay … EchoTV) render at about 6 pt,
+    below the 8 pt tick-label reference, and read small beside the 8 pt tick labels
+    although they are the only entity key → 8 pt (+2). Likely cause: geom_text(size=6).'
+  - 'Suggestion: tightening the right x-limit slightly would trim the empty band to
+    the right of the end labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, no pure white.
-      Chrome: Title "bump-basic · python · plotnine · anyplot.ai" is bold, dark ink, spans ~80% of canvas width — expected and fine. Y-axis label "Market Share Ranking" and X-axis label "Quarter" clearly readable in dark ink. Tick labels (Q1'24–Q4'25 and 1–6) readable in INK_SOFT. End labels on the right (bold for WavePlay/StreamVue, italic for supporting cast) small but readable at desktop resolution.
-      Data: StreamVue = #009E73 (brand green, starts rank 1 and declines to rank 4). WavePlay = #C475FD (lavender, rises to rank 1). CloudCast = #4467A3 (blue). PixelFlix = #BD8233 (ochre). SonicNet = #AE3030 (matte red). EchoTV = #2ABCCD (cyan). Protagonist lines bold/saturated, supporting lines thin/muted. Crossover halo visible at Q4'24 as a semi-transparent circle. Y-axis inverted (1 at top).
-      Legibility verdict: PASS — all text readable against the warm off-white background.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "bump-basic · python · plotnine · anyplot.ai" centered at ~50% width; y-axis title "Market share rank", x-axis title "Quarter" in dark ink; tick labels 1–6 (inverted, 1 at top) and Q1'24–Q4'25 in INK_SOFT; subtle horizontal grid only. Direct end labels in dark ink right of the Q4'25 markers, one per rank, no collisions.
+      Data: six equal-weight lines with dot markers at every quarter — StreamVue #009E73 (1→4), WavePlay #C475FD (2→1), CloudCast #4467A3, PixelFlix #BD8233, SonicNet #AE3030, EchoTV #2ABCCD (flat at 6). Crossings at Q3→Q4'24, Q1→Q2'25, Q3→Q4'25 clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, no pure black.
-      Chrome: Title, axis labels, and tick labels all render in light ink (F0EFE8/B8B7B0 range) — clearly readable. End labels visible; protagonist labels in INK (light), supporting labels in INK_MUTED (#A8A79F in dark mode) — still readable. No dark-on-dark failures observed.
-      Data: Colors identical to light render — all six Imprint palette series unchanged across themes. Only chrome (background, text, grid) flipped. Protagonist/supporting alpha hierarchy preserved. Crossover halo is very faint at alpha=0.12 on the dark surface.
-      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark issues.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and ticks in light ink; end labels in light ink; grid subtle but visible. No dark-on-dark text.
+      Data: the six categorical colors are identical to the light render; all lines and markers stand out clearly, brand green visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,75 +56,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; title/axes/ticks well-proportioned. Supporting
-          end labels (3.0mm) are borderline at mobile scale.
+        comment: All sizes set and readable in both themes; end labels at ~6 pt read
+          small against the 8 pt reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; end labels well-separated by rank position.
+        comment: No text collisions; end labels on separate ranks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Protagonist lines thick and saturated; supporting lines appropriately
-          muted. Hierarchy clear.
+        comment: 48 sparse points with prominent markers and 1.4 lines, visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 6 Imprint palette colors, all CVD-safe, redundant end labels provide
-          non-color encoding.
+        comment: Imprint colors plus direct labels, so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; plot fills the landscape canvas well; balanced
-          margins.
+        comment: Drawing fills the 3200x1800 canvas with room for end labels; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Market Share Ranking'', X: ''Quarter'' — descriptive and appropriate.'
+        comment: '''Market share rank'' and ''Quarter'' are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'StreamVue (first series) = #009E73; full Imprint palette in canonical
-          order; light #FAF8F1 / dark #1A1A17 backgrounds; all chrome theme-adaptive.'
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above configured default: intentional protagonist/supporting hierarchy,
-          crossover halo, end labels over legend. Not quite FiveThirtyEight-level
-          but clearly thoughtful design.'
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, no legend box, theme_minimal base with further
-          customization. Good refinement.
+        comment: Legend box replaced by rank-aligned direct end labels with reserved
+          right margin
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Visual hierarchy (bold vs muted lines, crossover halo) clearly guides
-          viewer to the WavePlay/StreamVue rivalry. Above the 'data display only'
-          default.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bump chart: rank positions connected by lines, Y-axis inverted.'
+        comment: Basic bump chart with no unasked additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors per entity, dot markers at each
-          period, lines connecting same entity.
+        comment: Inverted y, distinct colors + labels, dot markers, lines across all
+          periods (C1–C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters (time), Y=rank (inverted), all 6 entities and 8 periods
-          shown.
+        comment: Marks at their ranks; whole-number ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; end labels correctly identify each
-          series.
+        comment: Correct title; direct labels key every line
     data_quality:
       score: 15
       max: 15
@@ -167,22 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows crossovers, stable positions (EchoTV flat at 6), gradual decline
-          (StreamVue 1→4), rise to dominance (WavePlay 2→1).
+        comment: Overtakes, a decline 1→4, a rise to 1, a late surge, a stable entity
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Streaming platform market share rankings — neutral, realistic, comprehensible
-          business scenario.
+        comment: Fictional streaming platforms, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6 platforms ranked 1-6 over 8 quarters with no ties; movement patterns
-          are realistic (gradual, not erratic).
+        comment: 6 entities ranked 1–6 without ties per quarter, 8 quarters (spec
+          range)
     code_quality:
       score: 10
       max: 10
@@ -192,61 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: Imports → tokens → Data → Plot → Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data — no random seed needed.
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; layered geom approach is intentional and justified.
-          No fake UI elements.
+        comment: Compact, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi/dimensions. Current plotnine
-          API.
+        comment: plot-{THEME}.png at 3200x1800, current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot grammar: layered geoms, scale_y_reverse, scale_x_continuous
-          with custom labels, scale_color_manual — all idiomatic plotnine.'
+        comment: Grammar layering with scale_y_reverse, mapped period positions relabelled
+          via scale_x_continuous, per-layer data= for labels
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses data= argument on individual geom layers for visual hierarchy
-          — a distinctly ggplot/plotnine pattern. scale_y_reverse() is the idiomatic
-          inversion approach.
+        comment: Per-layer data= subset on geom_text for end labels, a grammar-of-graphics
+          idiom
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  rendered_at: '2026-11-27T20:33:49Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - publication-ready
