@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: campbell-basic
 created: '2026-02-15T21:08:00Z'
-updated: '2026-11-27T16:38:14Z'
+updated: '2026-11-27T16:45:59Z'
 generated_by: claude-sonnet
-workflow_run: 46034257184
+workflow_run: 46035433602
 issue: 4241
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,53 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 85
 review:
   strengths:
   - End-of-line mode labels in each curve's own Imprint color identify all five mode
-    shapes directly
-  - Engine order labels rotated to the angle of their line, on elevated chips that
-    keep them legible over the dashes
-  - Critical speeds computed by linear interpolation at the true crossings, so every
-    marker sits on its line and curve
-  - 'Fully theme-adaptive chrome: both renders pass the readability check with identical
-    mode colors'
+    shapes directly, de-collided vertically
+  - Engine order labels rotated in data space with transform_rotates_text and rotation_mode='anchor',
+    on elevated chips over their dashes
+  - Critical speeds computed by linear interpolation at the true crossings, so all
+    10 diamonds sit on their line and curve
+  - Legend placed below the axes, so no curve or marker is covered; fully theme-adaptive
+    chrome passes in both renders
   weaknesses:
-  - 'SC-01 (both): unasked layers the basic variant excludes — an operating-range
-    band with dotted boundary lines and ''Operating Range'' text, amber-vs-gray marker
-    split by that range, and mode-name callout boxes with arrows on four critical
-    speeds → drop the band, the in/out split and the callouts; one marker style for
-    all critical speeds. Likely cause: the axvspan/axvline block, the in_op split
-    and the annotate loop.'
-  - 'VQ-02, SC-02 (both): the upper-left legend covers the 3x and 2x lines and the
-    3rd Bending curve between ~1,800 and 2,600 RPM and hides the 3x × 3rd Bending
-    critical speed marker at ~2,010 RPM / 100 Hz → no data under the legend (for example
-    place it outside the axes or in the empty lower-right region). Likely cause: ax.legend(loc="upper
-    left").'
-  - 'DQ-03 (both): 14 critical speed crossings are marked against the spec''s 6–10
-    → 6–10 (−4 or more). Likely cause: five modes all crossing all three orders inside
-    0–6,000 RPM; lower the higher modes'' base frequency or narrow the speed range.'
-  - 'CQ-04 (code): lines 123–138 rebuild the engine order label angle from hard-coded
-    axes fractions (ax_w_frac=0.75 while subplots_adjust gives 0.77) → annotate(...,
-    rotation=np.degrees(np.arctan(eo/60)), transform_rotates_text=True) lets matplotlib
-    rotate in data space. Likely cause: manual display-slope arithmetic.'
-  - 'Suggestion: a single critical-speed marker style in red or amber with a thin
-    ink outline would read as one distinct class in both themes.'
+  - 'DQ-03 (code): 200 speed points per mode against the spec''s 50-100 → 50-100 points
+    (-100 or more). Likely cause: np.linspace(0, 4000, 200).'
+  - 'Suggestion: centering the legend row on the figure rather than on the axes would
+    balance its left and right margins.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white
-      Chrome: title 'campbell-basic · python · matplotlib · anyplot.ai' in dark ink; axis titles 'Rotational Speed (RPM)' / 'Frequency (Hz)'; comma-formatted ticks in soft ink; two-column legend upper left on an elevated frame; all readable
-      Data: five mode curves (1st Bending #009E73, 2nd Bending #C475FD, 1st Torsional #4467A3, Axial #BD8233, 3rd Bending #AE3030) with 8 pt bold colored end labels; dashed gray 1x/2x/3x lines from the origin with rotated labels; gray circles for out-of-range critical speeds, amber diamonds with mode-name callouts in a gray 2,500–4,500 RPM operating band. The legend covers the 3x × 3rd Bending crossing near 2,010 RPM / 100 Hz
+      Chrome: title 'campbell-basic · python · matplotlib · anyplot.ai' in dark ink; axis titles 'Rotational Speed (RPM)' / 'Frequency (Hz)'; comma-formatted 0-4,000 RPM and 0-200 Hz ticks in soft ink; subtle horizontal grid; one-row legend below the axes on an elevated frame; all readable
+      Data: five mode curves (1st Bending #009E73 rising, 2nd Bending #C475FD falling, 1st Torsional #4467A3 near-flat, Axial #BD8233 falling, 3rd Bending #AE3030 rising) with bold colored end labels; dashed gray 1x/2x/3x lines from the origin with rotated labels on chips; 10 amber diamonds with dark outline at the crossings; nothing covers the data
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black
-      Chrome: title, axis titles in light cream, ticks in soft warm gray, legend on #242420; no dark-on-dark text
-      Data: mode colors identical to the light render; amber diamonds and gray circles visible; callout boxes on the dark elevated fill with light text
+      Chrome: title and axis titles in light cream, ticks and legend text in soft warm gray, legend on #242420; no dark-on-dark text
+      Data: mode colors and amber markers identical to the light render; diamond outlines flip to light ink; EO lines lighter gray and clearly visible
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,38 +50,37 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text at or above the style guide's sizes (title 12 pt, axis titles
-          10 pt, ticks, legend, end labels and callouts 8 pt) and readable in both
+        comment: All text at the style guide's sizes (title 12 pt, axis titles 10
+          pt, ticks, legend and end labels 8 pt, EO labels 9 pt) and readable in both
           themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: The upper-left legend covers the 3x and 2x lines and the 3rd Bending
-          curve around 1,800–2,600 RPM and hides the 3x × 3rd Bending critical speed
-          marker near 2,010 RPM / 100 Hz (defect line)
+        comment: No text collides with text or data; the legend sits below the axes
+          clear of every curve and marker
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Mode curves at 2.5 lw, dashed engine order lines at 1.5 lw, critical
-          markers s=80–110; legend glyphs match the marks in both themes
+        comment: Mode curves 2.5 lw, dashed EO lines 1.5 lw, 10 diamond markers at
+          s=100 with an ink outline; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; engine order lines separated by dash
-          style, critical speeds by marker shape
+        comment: Imprint palette is CVD-safe; EO lines separated by dash style, critical
+          speeds by marker shape, modes also direct-labelled
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas used well; right margin carries the end-of-line
-          mode labels; nothing cut off
+        comment: 3200x1800 canvas used well; right margin carries the end labels,
+          legend row below the axes; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,9 +92,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Modes in Imprint positions 1–5 starting with #009E73, amber #DDCC77
-          as the warning anchor, correct #FAF8F1 / #1A1A17 backgrounds and theme-adaptive
-          chrome'
+        comment: 'Modes in Imprint positions 1-5 starting with #009E73, amber #DDCC77
+          semantic anchor for the critical speeds, correct #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
       score: 10
       max: 20
@@ -121,59 +103,54 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised above default: end-of-line mode labels in each curve''s own
-          color and engine order labels rotated to their line''s angle on elevated
-          chips give a deliberate typographic hierarchy'
+        comment: 'Raised by one: bold end-of-line mode labels in each curve''s own
+          color and EO labels rotated onto their lines on elevated chips give a deliberate
+          typographic hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised by one: direct labels at the line ends and comma-formatted
-          RPM ticks; the legend placement over data holds it back'
+        comment: 'Raised by one: direct labels with vertical de-collision, comma-formatted
+          RPM ticks, legend moved out of the data area'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: the focal hierarchy comes from the operating-range band
-          and its callouts, an addition the basic variant excludes, which earns no
-          credit'
+        comment: 'Default: data displayed as the Notes ask; no hierarchy chosen beyond
+          them'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct Campbell diagram, but with unasked additions the basic variant
-          excludes: an operating-range band with boundary lines, a derived in/out-of-range
-          marker encoding, and mode-name callouts on four critical speeds (defect
-          line)'
+        comment: Standard Campbell diagram with no layers the basic variant excludes
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Modes rise and fall, EO lines from the origin labelled 1x–3x, mode
-          names, clean legend; C3 missed for one marker, the 3x × 3rd Bending critical
-          speed hidden behind the legend (defect line)
+        comment: Rising and falling modes (C1), EO lines from the origin labelled
+          1x-3x (C2), distinct diamonds at every crossing (C3), mode-shape names and
+          a legend separating modes from EO lines (C4), nothing extra (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X 0–6,000 RPM, Y 0–120 Hz; markers sit at the interpolated crossings;
-          EO slope = order/60
+        comment: X 0-4,000 RPM, Y 0-200 Hz; markers at interpolated crossings; 3x
+          reaches 200 Hz and 1x 66.7 Hz at 4,000 RPM, i.e. slope order/60
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend separates mode curves, engine
-          order lines and critical markers
+        comment: Mandated title format; legend entries readable and matching the marks
     data_quality:
       score: 14
       max: 15
@@ -183,25 +160,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Rising and falling modes, three orders, many crossings: all aspects
-          shown'
+        comment: Rising, falling and near-flat modes, three orders, crossings with
+          every order
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Rotor modes with real mode-shape names (1st/2nd/3rd Bending, 1st
-          Torsional, Axial), neutral engineering context
+        comment: Rotor with real mode-shape names, neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
-        passed: true
-        comment: Values plausible (18–110 Hz, 0–6,000 RPM), but 14 critical speed
-          crossings against the spec's 6–10 (defect line); checked EO slope eo/60
-          in code and 1x reaching 100 Hz at 6,000 RPM on the axis
+        passed: false
+        comment: 'Checked: 10 critical speeds (spec 6-10), slope eo/60 in code and
+          on the axis, plausible 40-190 Hz; but 200 speed points per mode against
+          the spec''s 50-100 (defect line)'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -209,13 +185,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → constants → data → plot → save, no functions
+        comment: Imports -> theme -> constants -> data -> plot -> save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytic data
+        comment: Deterministic analytic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -224,18 +200,16 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Engine order label angles computed by hand from hard-coded axes fractions
-          (lines 123–138), which annotate(transform_rotates_text=True) computes (defect
-          line)
+        comment: Appropriate complexity; label rotation delegated to transform_rotates_text
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400, current API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches, current API
     library_mastery:
       score: 6
       max: 10
@@ -245,29 +219,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised by one: annotate with offset points and arrowprops, FuncFormatter,
-          custom Line2D/Patch legend handles, axvspan'
+        comment: 'Raised by one: Axes API throughout, annotate with offset points,
+          FuncFormatter, custom Line2D legend handles, legend anchored below via bbox_to_anchor'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: 'Raised by one: blended get_xaxis_transform for the axis-anchored
-          text; the callout layer is an excluded addition and earns nothing'
+        passed: true
+        comment: 'Raised by one: transform_rotates_text with rotation_mode=''anchor''
+          rotates the EO labels in data space'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
-  rendered_at: '2026-11-27T16:34:41Z'
+  rendered_at: '2026-11-27T16:42:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - interpolation
   styling:
