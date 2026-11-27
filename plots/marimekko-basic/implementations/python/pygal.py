@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 95/100 | Updated: 2026-07-24
@@ -7,6 +7,8 @@ Quality: 95/100 | Updated: 2026-07-24
 import os
 import sys
 
+import pandas as pd
+
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -14,9 +16,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-GRID_COLOR = "#C8C6BC" if THEME == "light" else "#2E2E2A"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette, all eight positions in canonical order
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Temporarily remove current directory from path to avoid name collision with pygal module
 _cwd = sys.path[0] if sys.path[0] else "."
@@ -40,7 +42,7 @@ class Marimekko(Graph):
         self.gap = kwargs.pop("gap", 0.015)
         self.ink = kwargs.pop("ink", INK)
         self.ink_muted = kwargs.pop("ink_muted", INK_MUTED)
-        self.grid_color = kwargs.pop("grid_color", GRID_COLOR)
+        self.grid_color = kwargs.pop("grid_color", INK_MUTED)
         super().__init__(*args, **kwargs)
 
     def _compute_x_labels(self):
@@ -239,7 +241,7 @@ class Marimekko(Graph):
                 y=y_bottom + 150,
                 fill=self.ink,
                 **{"text-anchor": "middle", "font-size": "38", "font-weight": "bold"},
-            ).text = "Region"
+            ).text = REGION
 
         # Legend: drawn by hand (show_legend=False) rather than relying on pygal's
         # built-in bottom legend, which places itself immediately under the bars and
@@ -315,29 +317,40 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT,
     title_font_size=66,
     font_family="sans-serif",
 )
 
-# Data - Market share by region and product line (revenue in millions USD)
-regions = ["North America", "Europe", "Asia Pacific", "Latin America", "MEA"]
+REGION = "Region"  # role: x_category
+PRODUCT = "Product line"  # role: y_category
+REVENUE = "Revenue (USD M)"  # role: value
 
-products = {
+# Data
+regions = ["North America", "Europe", "Asia Pacific", "Latin America", "MEA"]
+revenue = {
     "Enterprise": [180, 140, 200, 60, 40],
     "Consumer": [120, 130, 180, 70, 45],
     "SMB": [90, 70, 90, 35, 25],
     "Government": [60, 40, 50, 15, 10],
 }
+df = pd.DataFrame(
+    [(region, product, v) for product, vals in revenue.items() for region, v in zip(regions, vals, strict=True)],
+    columns=[REGION, PRODUCT, REVENUE],
+)
 
-# Chart
+# Plot
+table = df.pivot_table(index=REGION, columns=PRODUCT, values=REVENUE, sort=False, aggfunc="sum")
+
 chart = Marimekko(
     width=3200,
     height=1800,
     gap=0.015,
     ink=INK,
     ink_muted=INK_MUTED,
-    grid_color=GRID_COLOR,
+    grid_color=INK_MUTED,
     style=custom_style,
     title="marimekko-basic · python · pygal · anyplot.ai",
     show_legend=False,
@@ -350,10 +363,9 @@ chart = Marimekko(
     show_y_labels=False,
 )
 
-chart.x_labels = regions
-
-for product_name, values in products.items():
-    chart.add(product_name, values)
+chart.x_labels = table.index.tolist()
+for product in table.columns:
+    chart.add(str(product), table[product].tolist())
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
