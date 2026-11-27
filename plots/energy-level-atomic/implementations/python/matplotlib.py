@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-27
@@ -80,12 +80,11 @@ for rank, row in levels.iterrows():
     lw = 3.5 if rank == 0 else 2.5  # bolder ground state anchors the diagram
     ax.plot([left, right], [row["y"], row["y"]], color=LEVEL_COLOR, linewidth=lw, solid_capstyle="round", zorder=3)
     ax.text(
-        right + 0.02, row["y"], row["level"], fontsize=8, va="center", ha="left", color=LEVEL_COLOR, fontweight="medium"
+        right + 0.02, row["y"], row["level"], fontsize=8, va="center", ha="left", color=INK_SOFT, fontweight="medium"
     )
-    # Upper levels crowd together: smaller font + stagger the second-highest level for separation
-    label_fs = 8 if rank < 3 else 7
+    # Upper levels crowd together: stagger the second-highest level's value for separation
     label_x = (left - 0.05) if rank == n_levels - 2 else (left - 0.02)
-    ax.text(label_x, row["y"], f"{row['energy']:.2f} eV", fontsize=label_fs, va="center", ha="right", color=INK_MUTED)
+    ax.text(label_x, row["y"], f"{row['energy']:.2f} eV", fontsize=8, va="center", ha="right", color=INK_MUTED)
 
 # Ionization limit (dashed, theme-adaptive)
 ax.plot([left, right], [ion_y, ion_y], color=INK_SOFT, linewidth=1.5, linestyle="--", zorder=2)
