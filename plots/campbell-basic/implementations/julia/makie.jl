@@ -77,7 +77,7 @@ ax = Axis(
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
     xgridvisible       = false,
-    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     yminorgridvisible  = false,
     xminorgridvisible  = false,
 )
