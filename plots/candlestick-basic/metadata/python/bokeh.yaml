@@ -2,134 +2,123 @@ library: bokeh
 language: python
 specification_id: candlestick-basic
 created: '2025-12-23T09:59:54Z'
-updated: '2026-05-30T05:56:02Z'
+updated: '2026-11-27T23:25:02Z'
 generated_by: claude-sonnet
-workflow_run: 26675647571
+workflow_run: 46081662350
 issue: 812
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - 'CVD-safe design: solid bullish vs. hollow bearish provides redundant encoding
-    beyond color alone — a thoughtful and correct choice for finance charts'
-  - 'Semantic color exception correctly applied: #009E73 (gain/up) and #AE3030 (loss/down)
-    from the Imprint palette'
-  - Trend Reversal dashed Span annotation creates a clear storytelling focal point
-    with visible narrative arc in the data
-  - 'All theme-adaptive chrome correctly implemented: backgrounds, text, grid, and
-    legend all flip cleanly between light and dark'
-  - 'Excellent spec coverage: all four OHLC fields represented, wicks visibly thinner
-    than bodies, date-formatted time axis, subtle grid'
-  - ColumnDataSource split into bullish/bearish data is the idiomatic Bokeh approach
-    for rendering-level multi-group control
+  - 'Bullish solid #009E73 vs bearish hollow #AE3030 bodies give a redundant, CVD-safe
+    up/down encoding in both themes'
+  - Wicks at 3 px stay clearly thinner than the 0.75-period bodies, and every candle
+    stays distinct
+  - Candle width and x padding derive from the data's median period instead of a hard-coded
+    day
+  - Bokeh HoverTool (vline mode, datetime and currency formatters) gives full OHLC
+    inspection in the HTML
+  - 'Theme chrome flips cleanly: backgrounds, ink, y-only subtle grid and elevated
+    legend frame'
   weaknesses:
-  - Legend text at 28pt is below the recommended 34pt for a 3200x1800 canvas — increase
-    p.legend.label_text_font_size to 34pt to match tick label sizing
-  - 'DE-02 improvement: removing axis lines (p.xaxis.axis_line_color=None, p.yaxis.axis_line_color=None)
-    while keeping grid lines would give a cleaner publication-ready look'
-  - 'DE-01 headroom: tighter typographic hierarchy (slightly bolder title weight or
-    a subtitle annotation) could elevate aesthetic sophistication to 8/8'
+  - 'DQ-02 (both): the instrument is labelled ''ACME Corp Stock'', the stock placeholder
+    name, which reads as generic → a plausible fictional ticker and company name (e.g.
+    ''Northwind Logistics (NWLG)''). Likely cause: the title prefix string.'
+  - 'Suggestion: a vectorised OHLC build (open = close.shift() with the start price)
+    would shorten the data loop.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai" at ~65-70% plot width, clearly readable dark ink. Axis labels "Date" (x) and "Price (USD)" (y) in dark ink, both readable. Tick labels (Jan 01/08/15/22, Feb 01/08 on x; $130-$165 on y) in INK_SOFT, readable. Legend in top-left with "Bullish" and "Bearish" labels readable.
-      Data: Bullish candles are solid green (#009E73); bearish candles are hollow with red (#AE3030) outline — CVD-safe solid/hollow redundant encoding. Wicks are thinner than candle bodies. "Trend Reversal" dashed vertical line at Jan 22 with text annotation in INK_SOFT. Y-axis-only grid at alpha=0.15, subtle.
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1, page-painted to the canvas edge
+      Chrome: title 'ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai' in dark ink at ~67% width; 'Price (USD)' and 'Date' axis titles in dark ink; $130-$165 and Jan 01 2024 / Jan 08 / Jan 15 / Jan 22 / Feb 01 / Feb 08 ticks in INK_SOFT; legend top-left on elevated frame with 40 px keys and 34pt 'Bullish' / 'Bearish'; y-only grid at low alpha
+      Data: 30 business-day candles with weekend gaps; bullish solid #009E73, bearish hollow with #AE3030 outline; thin wicks through the body centres; rise to ~$160, drop through Jan 22-29 to ~$131, flat base near $135
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title in light (#F0EFE8) color, clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0), all readable. Legend box has dark elevated background (#242420) with light text. "Trend Reversal" annotation text readable against dark background. No dark-on-dark failures detected.
-      Data: Colors identical to light render — green (#009E73) solid bullish and red (#AE3030) hollow bearish. The contrast of both colors against the dark background is excellent.
-      Legibility verdict: PASS — all text clearly readable against dark background; data colors maintain identity across themes.
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks and legend labels in light INK_SOFT, legend frame #242420; grid subtle; no dark-on-dark text
+      Data: identical green #009E73 solid and red #AE3030 hollow candles, same positions; hollow bodies filled with the dark page colour
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set (50pt title, 42pt axis labels, 34pt ticks).
-          Legend text at 28pt is below recommended 34pt — visibly smaller than tick
-          labels but still readable.
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element collisions. Trend Reversal annotation positioned
-          cleanly above data.
+        comment: No text collisions; legend sits in empty top-left space clear of
+          candles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 candles clearly visible. Wicks perceptibly thinner than bodies.
-          Hollow bearish distinct from solid bullish.
+        comment: 30 candles clearly visible; 3 px wicks thinner than bodies; 40 px
+          legend keys match the solid and hollow bodies
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Solid-fill vs hollow encoding adds redundant CVD-safe signal. Green/red
-          pair with hollow differentiation is robust.
+        comment: Green/red pair plus solid vs hollow body gives a non-color signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills frame well with generous min_border
-          margins. No clipping.
+        comment: Canvas gate passed (3200x1800); plot fills the canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Price (USD) with units. X-axis: Date. Title with descriptive
-          prefix.'
+        comment: Date and Price (USD) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bullish #009E73 (Imprint slot 1), bearish #AE3030 (Imprint slot
-          5, semantic finance exception). Backgrounds #FAF8F1/#1A1A17. Both themes
-          correct.'
+        comment: 'Bullish #009E73, bearish #AE3030 (finance semantic exception); backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: semantic color exception, CVD-safe hollow/solid
-          encoding, theme-adaptive chrome, storytelling annotation. Not quite FiveThirtyEight-level
-          but genuinely thoughtful.'
+        comment: Solid-bullish / hollow-bearish body convention chosen as a redundant
+          CVD-safe encoding, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: outline_line_color=None, tick marks removed, y-only grid at alpha=0.15,
-          L-shaped axis frame. Good but axis lines could be removed for a cleaner
-          look.
+        comment: 'Grid density chosen for this chart: horizontal price-level grid
+          only, no x grid, tick marks removed'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Trend Reversal dashed Span creates clear focal point. Narrative
-          arc: rise, sharp decline at Jan 22, recovery. Color coding guides viewer.
-          Visual hierarchy evident.'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes (appropriate
+          for -basic)
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +128,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct candlestick chart: vbar bodies + segment wicks.'
+        comment: Candlestick with vbar bodies and segment wicks; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Green/red color scheme, wicks thinner than bodies, date formatting,
-          subtle grid — all present.
+        comment: Green/red up/down, wicks thinner than bodies, weekly date ticks,
+          subtle grid; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, Price (USD) on y-axis, all 30 data points visible.
+        comment: Candles at their dates and values; price axis spans lows and highs,
+          not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai
-          (correct with descriptive prefix). Legend: Bullish/Bearish.'
+        comment: Title ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai;
+          legend Bullish/Bearish
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -169,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish AND bearish candles in meaningful quantities. Varied
-          body sizes. Clear trend. Small and large candles present.
+        comment: Rising, falling and doji-like candles, long and short wicks, a clear
+          rise-fall-base sequence
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ACME Corp Stock daily OHLC, Jan-Feb 2024, $128-$165 range. Neutral
-          business scenario.
+        comment: Daily stock OHLC is plausible, but 'ACME Corp' is the stock placeholder
+          name (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting at $150 with ~1.8% daily volatility. Correct OHLC relationships
-          (high > max(open,close), low < min(open,close)).
+        comment: $128-$165 with ~1.8% daily moves; checked in code that high >= max(open,
+          close) and low <= min(open, close), open = previous close
     code_quality:
       score: 10
       max: 10
@@ -194,68 +184,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> figure -> glyphs -> annotations -> styling
-          -> save. sys.path fix is necessary due to filename conflict.'
+        comment: Imports, data, plot, save top to bottom; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, time, Path, numpy, pandas, bokeh.io,
-          bokeh.models (6 symbols), bokeh.plotting, selenium.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. HoverTool is legitimate interactive bokeh
-          feature. Appropriately complex.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png for both themes. Current
-          Bokeh 3.x API.
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium; Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource split bullish/bearish, HoverTool vline mode, Span+Label
-          layout annotations, Range1d, NumeralTickFormatter — all idiomatic Bokeh.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with multi-field tooltips, Span vertical annotation, Label
-          layout text, dual ColumnDataSource, HTML-export-then-screenshot pattern.
-          Falls just short of 5/5 as pattern is somewhat template-like.
+        comment: Split ColumnDataSources per direction, vbar/segment glyphs with column
+          names, NumeralTickFormatter, Range1d derived from the data step
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool in vline mode with a datetime formatter and currency-formatted
+          OHLC fields in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-27T23:21:39Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
