@@ -2,107 +2,101 @@ library: plotnine
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:15:48Z'
-updated: '2026-05-27T13:45:26Z'
+updated: '2026-11-27T16:00:27Z'
 generated_by: claude-sonnet
-workflow_run: 26513631488
+workflow_run: 46028776904
 issue: 3767
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Correct imprint_seq gradient (#009E73→#4467A3) with sqrt transform for right-skewed
-    density distribution
-  - Theme-adaptive water and land colors with geographic polygon context
-  - All font sizes explicitly set with proper hierarchy (title 12pt, axis 10pt, ticks
-    8pt, legend 8pt)
-  - Hotspot labels (Downtown, Midtown, JFK Airport) provide geographic context
-  - coord_fixed preserves geographic proportions accurately
-  - 'Spec-compliant: hexagonal binning, color legend, base map context, alpha transparency,
-    count aggregation'
+  - Imprint sequential field ramp with the theme's own stops, sqrt-transformed so
+    the skewed counts spread across it
+  - coord_fixed(ratio=1/cos(mid-latitude)) and binning in stretched x keep the hexagons
+    regular on screen over a proportional map
+  - 'Theme-specific base-map tokens: the state is lighter than the surrounding terrain
+    in light mode and lifted from it in dark mode, and the outline shows through the
+    alpha-0.88 cells'
+  - 'Clean Data block and column constants: the binning reads only df and HEX_COLUMNS,
+    so the hex size is one constant'
   weaknesses:
-  - Hotspot labels (size=3 geom_label) are very small — barely readable at canvas
-    scale; increase to size=4-4.5 for better legibility
-  - 'DE-01 moderate (5/8): design is thoughtful but not publication-level; could benefit
-    from a more distinctive color treatment for the land/water contrast'
-  - 'LM-02 partial (3/5): manual hexbin polygon construction could leverage plotnine
-    trans and grammar features more distinctively; no native geom_hex exploration'
+  - 'Suggestion: the colorbar labels only 100 and 200; explicit breaks (e.g. 10, 50,
+    100, 200) would let the pale low end be read off too'
+  - 'Suggestion: the city labels cover one or two cells each; placing them beside
+    their clusters would keep every cell visible'
+  - 'Suggestion: IMPRINT_PALETTE (line 41) is defined but never used and can go'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
-      Panel: Light blue water color (#C5D9EF) fills the geographic panel area; a gray-beige land polygon outlines the NYC coastline.
-      Data: Hexagonal bins cover the NYC area with colors from #009E73 (green, low density) through teal to #4467A3 (blue, high density). Dense clusters clearly visible around downtown and midtown coordinates. JFK airport cluster visible in lower-right.
-      Chrome: Title "hexbin-map-geographic · python · plotnine · anyplot.ai" rendered in dark #1A1A17, clearly visible. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink, tick labels in INK_SOFT (#4A4A44). Legend box "Pickups" with elevated background, gradient bar, values 200–800.
-      Labels: "Downtown", "Midtown", "JFK Airport" geom_label annotations present but quite small (size=3 mm).
-      Legibility verdict: PASS — all primary text elements readable; hotspot labels small but visible.
+      Background: warm off-white #FAF8F1 page; panel filled with the slightly darker terrain tone #E4E1D8, Texas drawn in #F4F1E8 with a grey #8A8980 outline.
+      Chrome: title 'hexbin-map-geographic · python · plotnine · anyplot.ai' in dark ink, axis titles Longitude (°) / Latitude (°), ticks -104/-100/-96 and 25.0–37.5, colorbar 'Strikes' with 100 and 200 — all readable.
+      Data: ~600 regular pointy-top hexagons over Texas, mint (#66E2B2) for few strikes through #009E73 and blue to dark purple (#351E45) at the Houston and Dallas–Fort Worth cores; Panhandle cluster green; gaps where no strikes fall; white labels Panhandle, Dallas–Fort Worth, Houston.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
-      Panel: Dark navy water color (#1A2535); dark charcoal land polygon (#2C2C27) with edge visible.
-      Data: Hexagonal bins maintain IDENTICAL colors to light render — same #009E73→#4467A3 gradient, same density pattern. Data color identity preserved across themes. ✓
-      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels and tick labels in light INK/INK_SOFT tokens — no dark-on-dark issues. Legend box uses #242420 elevated background with light text. Panel border visible in INK_SOFT.
-      Labels: "Downtown", "Midtown", "JFK Airport" labels visible with elevated dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome adapts correctly to dark theme.
+      Background: warm near-black #1A1A17 page; panel #222220, Texas lifted to #34342F with a lighter outline.
+      Chrome: title, axis titles and ticks in light ink; legend on #242420 with light text; labels on dark elevated boxes with light text — no dark-on-dark.
+      Data: same cells, on the dark field stops: olive #404C02 for few strikes through #009E73 to pale lavender #CDD9FF at the cores — the continuous ramp flips as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis_title 10pt, axis_text
-          8pt, legend 8pt). Title ~75% width — expected. Hotspot labels (size=3 mm)
-          slightly small.
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, explicit;
+          city labels readable; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements.
+        comment: No text collides with other text; city labels sit on their clusters
+          but leave the cells around them readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexagonal bins clearly visible with strong color gradient showing
-          density variation.
+        comment: Hexagons sized for ~10k points, thin page-colored edges separate
+          cells; colorbar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe with luminance variation. Good
-          contrast between hexbin fills and background.
+        comment: Ramp runs in lightness (mint→purple light, olive→lavender dark),
+          CVD-safe, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map well-centered, legend on right, canvas utilized well. coord_fixed
-          preserves geographic proportions.
+        comment: Square canvas holds the Texas map, legend and title with balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) — descriptive with units.
+        comment: Longitude (°) / Latitude (°) with units; legend titled Strikes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') = imprint_seq
-          compliant. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive in
-          both renders.'
+        comment: 'imprint_seq field stops per theme (light #66E2B2→#351E45, dark #404C02→#CDD9FF);
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -110,24 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful geographic design: theme-adaptive water/land colors,
-          sqrt transform for density, hotspot labels. Above configured default but
-          not publication-level.'
+        comment: Theme-specific base-map tokens (neighbouring terrain darker than
+          the state, its own edge color) above the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, panel border retained appropriately for map frame,
-          theme-adaptive backgrounds for land/water. Some refinement visible.
+        comment: Hex edges drawn in the page color so the grid reads as a mosaic;
+          axis frame kept to the L-shape
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear hotspots at Downtown/Midtown/JFK with labels and density gradient.
-          sqrt transform improves discrimination. Visual hierarchy guides reader to
-          key areas.
+        comment: sqrt-scaled ramp brings out the Houston and DFW cores; three direct
+          city labels name the focal hotspots
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning map with discrete cells.
+        comment: Hexagonal binning map over a geographic outline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hexagonal grid, color encoding for count, sequential colormap, legend,
-          base geographic context (coastline polygon), alpha transparency, count aggregation.
+        comment: Configurable hex size (HEX_COLUMNS), count aggregation, sequential
+          ramp with colorbar, Texas base map, alpha 0.88 lets the border show through;
+          C1–C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y, count drives fill color. coord_fixed
-          for geographic accuracy.
+        comment: Lon on x, lat on y, coord_fixed(1/cos(lat)) keeps the map proportional;
+          hexagons regular on screen and centred over their points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''hexbin-map-geographic · python · plotnine · anyplot.ai''.
-          Legend labeled ''Pickups'' with correct gradient.'
+        comment: Title matches the mandated format; colorbar titled Strikes (count)
     data_quality:
       score: 15
       max: 15
@@ -168,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple clusters (downtown, midtown, JFK, Brooklyn, scattered),
-          full density gradient utilized, spatial distribution across NYC area.
+        comment: 'Six storm corridors give dense cores, pale fringes and gaps: full
+          range of the aggregation shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NYC taxi pickup data — classic hexbin use case, neutral and realistic.
+        comment: 'Lightning strikes over Texas: plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NYC lat/lon coordinates factually correct. Trip duration values (11-38
-          min) realistic for city vs. airport trips.
+        comment: 'Checked city positions: Houston (-95.2, 29.8), DFW (-97.0, 32.8),
+          Panhandle (-101.8, 35.2) match their real coordinates; up to ~260 strikes
+          per cell plausible'
     code_quality:
       score: 10
       max: 10
@@ -192,35 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → hex construction → plot → save. No
-          functions/classes.'
+        comment: Imports → tokens → constants → Data block → Plot → Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All plotnine imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual hexagonal binning is appropriately complex for plotnine's
-          lack of native geom_hex; well-structured.
+        comment: Vectorised cube-rounding binning in ~10 lines; no available call
+          bins into hexagons for plotnine
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5.
+        comment: Saves plot-{THEME}.png at 2400x2400, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -228,27 +220,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper ggplot grammar: layer composition, coord_fixed, scale transformations,
-          theme() with element_* API. Good plotnine patterns.'
+        comment: 'Layered grammar: two geom_polygon layers, geom_label, coord_fixed
+          with a latitude-corrected ratio, theme_minimal + theme()'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses trans='sqrt' in scale_fill_gradient (ggplot2 grammar feature),
-          coord_fixed for geographic mapping, and geom_polygon layer composition.
-          Distinctive but manual hexbin limits the score.
+        comment: Scale transformation trans='sqrt' on scale_fill_gradientn with stop
+          positions
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  rendered_at: '2026-11-27T15:55:59Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - colorbar
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
-  - custom-colormap
+  - edge-highlighting
