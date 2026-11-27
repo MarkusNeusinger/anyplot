@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
 Library: altair 6.3.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
