@@ -12,110 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green (#009E73) as primary cumulative area,
-    lavender/blue/ochre for secondary series in canonical order'
-  - 'Sophisticated visual hierarchy: thick filled primary curve (stroke-width=10)
-    vs thin threshold lines (width=3) clearly directs viewer attention'
-  - 'Per-point formatters used for decision-point annotations (Elbow, 90%: n=7, 95%:
-    n=9) — unique pygal mechanism, well-executed'
-  - Secondary Y-axis for individual variance adds analytical depth without cluttering
-    the primary story
-  - Semi-transparent fill (opacity=0.38) preserves readability of tick labels below
-    the curve
-  - Custom major grid lines at 90%/95% with distinct dash arrays reinforce decision
-    thresholds visually
-  - Deterministic data (hardcoded Wine-like eigenvalues) ensures reproducibility
-  - Both theme renders pass — background, chrome and data colors all correct across
-    light and dark
+  - 'Imprint palette in canonical order with #009E73 first; correct #FAF8F1 / #1A1A17
+    backgrounds'
+  - 'Clear hierarchy: thick filled green cumulative area versus thin dashed thresholds
+    and a subordinate ochre secondary series'
+  - Per-point formatter dicts annotate the elbow and the 90%/95% crossings on the
+    curve's markers, with the decision components promoted to major x labels
+  - Elbow and crossings computed from the data; deterministic Wine-like eigenvalues;
+    tooltip_fancy_mode for the HTML view
   weaknesses:
-  - Y-axis tick labels (0, 20, 40, 60, 80, 90, 95, 100) are rendered inside the semi-transparent
-    green fill area, reducing their contrast against the colored surface — using INK_SOFT
-    is correct but the overlap with the fill still makes them less prominent than
-    ideal
-  - 'DE-01: Design is above defaults but not publication-ready — the pygal default
-    all-sides border frame is visible; removing or softening the top/right border
-    would increase polish'
-  - 'DE-02: Top and right chart borders still visible (pygal default frame kept);
-    removing or thinning these would improve visual refinement'
-  - 'LM-02: Secondary axis and per-point formatters are good pygal-specific usage,
-    but the HTML interactivity is not fully showcased — the chart could leverage pygal''s
-    tooltip_fancy_mode more distinctively'
+  - 'SC-03 (both): neither y axis shows any tick value, so the cumulative curve and
+    the individual-variance series cannot be read off an axis and the 90/95% lines
+    are only identified through the legend → numeric tick labels on both axes. Likely
+    cause: value_formatter=lambda x: '''' also blanks the axis labels.'
+  - 'VQ-01 (dark): the value and annotation labels (''36.7%'', ''Elbow (75%)'', ''90%:
+    n=7'') render near-black on the dark green fill and the #1A1A17 page → light text
+    from the INK token. Likely cause: Style without value_colors, so pygal''s default
+    dark value color is kept.'
+  - 'VQ-02 (both): the ochre individual-variance line passes through its own ''11.3%''
+    value label at PC3 → label clear of the line. Likely cause: print_values_position=''top''
+    with the cubic-interpolated line descending through the label box.'
+  - 'Suggestion: the individual variance could be drawn as subordinate bars behind
+    the curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white visible.
-      Chrome: Title "line-pca-variance-cumulative · python · pygal · anyplot.ai" at top — dark text, clearly readable. Y-axis title "Cumulative Explained Variance (%)" rotated vertically on left — readable. X-axis title "Number of Components" at bottom — readable. Tick labels 1–13 on x-axis clearly visible. Y-axis tick labels (0, 20, 40, 60, 80, 90, 95, 100) configured; at 90/95 they sit above the green fill and are discernible. Legend at bottom shows 4 entries in text that is dark and legible.
-      Data: Large filled area in brand green (#009E73) with 0.38 opacity covering cumulative variance curve from ~36% at PC1 to ~99% at PC13. Ochre (#BD8233) line with dots shows individual variance per component, decreasing from 36.7% to near 0. Lavender dashed line (90% threshold, #C475FD) and blue dotted line (95% threshold, #4467A3) run horizontally near the top of the data area. Annotations "Elbow (75%)" at PC4, "90%: n=7" at PC7, "95%: n=9" at PC9 are clearly visible. Individual variance percentage labels (36.7%, 19.5%, 11.3%, 7.1%, 6.6%, 5.0%, 4.3%) appear on the ochre series points.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: warm off-white #FAF8F1.
+      Chrome: mandated title in dark ink; y title 'Cumulative Explained Variance (%)' and x title 'Number of Components'; x ticks 1-13; no tick values on either y axis (only dotted guides); bottom legend with four entries. All present text readable.
+      Data: #009E73 cumulative curve with a strong green fill and markers at all 13 components; lavender dashed 90% and blue dashed 95% lines; ochre individual-variance line with value labels 36.7% … 4.3%; annotations 'Elbow (75%)', '90%: n=7', '95%: n=9' in black. The ochre line crosses the '11.3%' label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title at top in light/cream text — clearly readable against dark background. Axis titles and tick labels all appear in light cream/off-white — no dark-on-dark issues found. Legend at bottom with light text — readable.
-      Data: Same brand green (#009E73) filled cumulative variance area — color identical to light render. Ochre individual variance line (#BD8233) unchanged. Lavender and blue threshold lines unchanged. Annotations at decision points visible with light-colored text on dark background. No "dark-on-dark" failure observed.
-      Legibility verdict: PASS — all text readable against near-black background; data colors identical to light render; only chrome (background, text color) flips between themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, x ticks and legend in light ink; no y tick values.
+      Data: same series colors as the light render. The value labels and annotations stay black on the dark green fill, low contrast (theme ink not applied).
+      Legibility verdict: PASS with reduced contrast on the value labels
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: 'All fonts explicitly set (title=66, label=56, major_label=44, legend=44).
-          Readable in both themes. Minor: y-axis tick labels rendered inside semi-transparent
-          green fill reduce their saliency slightly.'
+        passed: false
+        comment: Value and annotation labels stay black in the dark render (theme
+          ink not threaded through value_colors), low contrast on the dark green fill
+          (defect line)
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: false
+        comment: The ochre individual-variance line runs through its own '11.3%' value
+          label at PC3 in both renders (defect line)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Decision-point annotations (Elbow,
-          90%, 95%) and individual variance labels are well-spaced.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Primary filled curve and ochre line clearly visible. Minor: individual
-          variance dots in lower-right area (PC10–13) are very small at low values
-          but still discernible.'
+        comment: Markers at every component, thick primary stroke, thin dashed thresholds;
+          legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4-series chart uses Imprint palette with CVD-safe hue selection.
-          Threshold lines use distinct dash patterns for redundant encoding beyond
-          color.
+        comment: Green/lavender/blue/ochre are CVD-distinguishable; threshold lines
+          also differ by dash pattern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas fully utilized. Generous and balanced margins (left=220,
-          right=220, bottom=90, top=40). Legend at bottom with 4 columns fits cleanly.
-          No clipping.
+        comment: 3200x1800 canvas well used, balanced margins, bottom legend in four
+          columns, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Cumulative Explained Variance (%)'' — descriptive with
-          units. X-axis: ''Number of Components'' — descriptive.'
+        comment: '''Number of Components'' and ''Cumulative Explained Variance (%)''
+          are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Subsequent series use Imprint
-          palette positions 2–4 in canonical order. Backgrounds #FAF8F1 (light) /
-          #1A1A17 (dark). Chrome adapts correctly in both renders.'
+        comment: 'First series #009E73, then Imprint positions 2-4 in canonical order;
+          #FAF8F1 / #1A1A17 backgrounds; chrome flips per theme'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -123,28 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: intentional visual hierarchy via stroke widths (10
-          for primary, 3 for thresholds), semi-transparent fill for depth, custom
-          dash arrays. Imprint palette applied correctly. Not yet publication-ready
-          due to visible default border frame.'
+        comment: 'Deliberate hierarchy beyond the baseline: 10 px primary stroke with
+          translucent fill versus 3 px dashed thresholds and a subordinate ochre series'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Custom guide stroke colors and dash arrays, generous margins, legend
-          positioned at bottom. Top/right chart border from pygal default still visible
-          — removing or thinning would improve refinement.
+        comment: Long-gap guide dashes that recede, decision components promoted to
+          major x labels; default top/right frame kept
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear focal point: elbow annotation + threshold crossings annotated.
-          Filled area dominates attention appropriately. Secondary series (individual
-          variance) adds supporting analytical context without competing.'
+        comment: 'Threshold crossing labels (''90%: n=7'', ''95%: n=9'') beside the
+          elbow annotation give the reader the component decision directly'
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -152,31 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: pygal.Line() with filled area for cumulative variance,
-          threshold reference lines, markers at each component.'
+        comment: Correct line plot of cumulative variance with markers and threshold
+          lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative sum on y-axis ✓, percentage scale ✓, 90%/95% reference
-          lines ✓ (99% optional — correctly omitted), elbow annotated ✓, individual
-          variance overlay ✓.
+        comment: Cumulative sum, percentage scale, dashed 90/95 lines, elbow annotated
+          on its marker, optional individual-variance overlay (drawn as a line on
+          its own axis, named in the legend)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'X-axis: component number 1–13 ✓. Y-axis: cumulative variance 0–100%
-          ✓. Secondary Y-axis: individual variance 0–55% ✓.'
+        passed: false
+        comment: 'No tick values on either y axis: value_formatter returns '''' so
+          neither the cumulative axis nor the secondary axis can be read (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-pca-variance-cumulative · python · pygal · anyplot.ai''
-          — exact format ✓. Legend labels: Cumulative Variance, 90% Threshold, 95%
-          Threshold, Individual Variance (%) — accurate ✓.'
+        comment: Title in the mandated format; legend entries Cumulative Variance,
+          90% Threshold, 95% Threshold, Individual Variance (%) match the series
     data_quality:
       score: 15
       max: 15
@@ -186,24 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows elbow shape, threshold crossings, diminishing returns, individual
-          per-component variance. All characteristic features of a PCA variance plot
-          covered.
+        comment: Steep rise then flattening, elbow, both threshold crossings and per-component
+          decay all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Based on Wine-like 13-feature dataset with realistic eigenvalue magnitudes
-          (4.73 → 0.08). Neutral scientific context.
+        comment: 'Wine-like 13-feature PCA eigenvalues: plausible, neutral scientific
+          context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Eigenvalues realistic for Wine dataset. Cumulative reaches ~99.7%
-          at PC13 (correct — sums to 100%). Elbow at PC4, 90% at PC7, 95% at PC9 —
-          all plausible for this data.
+        comment: 'Checked: cumulative 90.4% at n=7 and 95.4% at n=9 from the eigenvalues,
+          matching the annotations; reaches 100% at n=13'
     code_quality:
       score: 10
       max: 10
@@ -213,58 +196,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → tokens → data → style → chart config
-          → series → save. No functions or classes.'
+        comment: Flat top-to-bottom script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded eigenvalues, no random generation
-          needed.
+        comment: Deterministic hardcoded eigenvalues
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style — all four are used.
+        comment: os, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Per-point formatter via dict of lambdas is creative
-          and appropriate. No over-engineering.
+        comment: No hand-rolled algorithm; cumsum/diff/argmax used directly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via render_to_png() and plot-{THEME}.html
-          via render() — correct for pygal (interactive library).
+        comment: render_to_png('plot-{THEME}.png') and render() to plot-{THEME}.html,
+          current pygal API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert idiomatic use: Style object for all theme tokens, x_labels_major/y_labels_major
-          for decision-threshold highlights, per-point formatters for annotations,
-          fill=True for area chart, secondary=True for dual-axis, stroke_style per
-          series.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Per-point formatters as annotation mechanism is distinctly pygal.
-          Secondary axis with separate range. HTML interactive output alongside PNG.
-          Good use of library-specific capabilities but tooltip_fancy_mode could be
-          more distinctively leveraged.
+        comment: Style object carrying all theme tokens, x_labels_major/y_labels_major,
+          secondary=True axis, per-series stroke_style
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point formatter dicts as the annotation mechanism and tooltip_fancy_mode
+          in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  last_kept:
+    pr: 14883
+    code: regression
+    note: '#14883 was kept because the review found it worse than the live version
+      here: The right axis now shows tick labels, but at the wrong heights: 0-52.5
+      in even 7.5 steps placed on the left axis'' uneven tick positions, so a reader
+      reads the individual-variance dots wrong (PC1''s 36.. Keep these as the live
+      version has them.'
 impl_tags:
   dependencies: []
   techniques:
