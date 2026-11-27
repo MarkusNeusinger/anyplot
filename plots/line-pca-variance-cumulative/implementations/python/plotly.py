@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-29
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import sys
@@ -12,6 +12,7 @@ sys.path = sys.path[1:]  # prevent this file from shadowing the installed plotly
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from sklearn.datasets import load_wine
 from sklearn.decomposition import PCA
@@ -33,39 +34,49 @@ ELBOW_COLOR = "#C475FD"  # position 2 — elbow marker accent
 AMBER = "#DDCC77"  # semantic anchor — 90% warning threshold
 RED = "#AE3030"  # position 5 — 95% critical threshold
 
-# Data — PCA on Wine dataset
+# Constants
+THRESHOLDS = (90, 95)  # percent of variance to retain, the reference lines of the spec
+
+# Columns: set these to your table's column names
+N_COMPONENTS = "Principal Component"  # role: n_components
+VARIANCE_RATIO = "Explained variance ratio"  # role: explained_variance_ratio
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pca.csv")
 wine = load_wine()
-X_scaled = StandardScaler().fit_transform(wine.data)
-pca = PCA().fit(X_scaled)
+pca = PCA().fit(StandardScaler().fit_transform(wine.data))
+df = pd.DataFrame(
+    {N_COMPONENTS: np.arange(1, len(pca.explained_variance_ratio_) + 1), VARIANCE_RATIO: pca.explained_variance_ratio_}
+)
 
-explained_variance = pca.explained_variance_ratio_
-cumulative_variance = np.cumsum(explained_variance) * 100
-n_components = np.arange(1, len(explained_variance) + 1)
+# Plot: reads only df and the constants above
+n_components = df[N_COMPONENTS].to_numpy()
+individual_pct = df[VARIANCE_RATIO].to_numpy() * 100
+cumulative_variance = np.cumsum(individual_pct)
 
-# Threshold crossings
-threshold_90_idx = int(np.argmax(cumulative_variance >= 90))
-threshold_95_idx = int(np.argmax(cumulative_variance >= 95))
-threshold_90_comp = threshold_90_idx + 1
-threshold_95_comp = threshold_95_idx + 1
+# Threshold crossings: first component count that reaches each threshold
+low_threshold, high_threshold = THRESHOLDS
+threshold_90_comp = int(n_components[np.argmax(cumulative_variance >= low_threshold)])
+threshold_95_comp = int(n_components[np.argmax(cumulative_variance >= high_threshold)])
 
 # Elbow: first component where marginal gain drops below mean gain
-individual_pct = explained_variance * 100
 elbow_idx = int(np.argmax(individual_pct < individual_pct.mean()))
-elbow_comp = elbow_idx + 1
+elbow_comp = int(n_components[elbow_idx])
 elbow_var = float(cumulative_variance[elbow_idx])
 
 title = "line-pca-variance-cumulative · python · plotly · anyplot.ai"
 
-# Plot
+# Bar fill is a little stronger on the dark page so the small components stay visible
+bar_alpha = 0.30 if THEME == "light" else 0.45
+bar_fill = f"rgba(68,103,163,{bar_alpha})"
+bar_edge = "rgba(68,103,163,0.55)"
+
 fig = go.Figure()
 
 # Individual variance bars (secondary context)
-bar_fill = "rgba(68,103,163,0.30)"
-bar_edge = "rgba(68,103,163,0.55)"
 fig.add_trace(
     go.Bar(
         x=n_components,
-        y=explained_variance * 100,
+        y=individual_pct,
         marker={"color": bar_fill, "line": {"width": 1, "color": bar_edge}},
         name="Individual variance",
         hovertemplate="PC%{x}<br>Individual: %{y:.1f}%<extra></extra>",
@@ -88,31 +99,39 @@ fig.add_trace(
 # Dummy traces so threshold lines appear in the legend
 fig.add_trace(
     go.Scatter(
-        x=[None], y=[None], mode="lines", line={"color": AMBER, "width": 2.5, "dash": "dash"}, name="90% threshold"
+        x=[None],
+        y=[None],
+        mode="lines",
+        line={"color": AMBER, "width": 2.5, "dash": "dash"},
+        name=f"{low_threshold}% threshold",
     )
 )
 fig.add_trace(
     go.Scatter(
-        x=[None], y=[None], mode="lines", line={"color": RED, "width": 2.5, "dash": "dash"}, name="95% threshold"
+        x=[None],
+        y=[None],
+        mode="lines",
+        line={"color": RED, "width": 2.5, "dash": "dash"},
+        name=f"{high_threshold}% threshold",
     )
 )
 
 # Horizontal threshold lines — placed on opposite sides to avoid label crowding
 fig.add_hline(
-    y=90,
+    y=low_threshold,
     line_dash="dash",
     line_color=AMBER,
     line_width=2.5,
-    annotation_text="90%",
+    annotation_text=f"{low_threshold}%",
     annotation_position="top right",
     annotation_font={"size": 14, "color": AMBER},
 )
 fig.add_hline(
-    y=95,
+    y=high_threshold,
     line_dash="dash",
     line_color=RED,
     line_width=2.5,
-    annotation_text="95%",
+    annotation_text=f"{high_threshold}%",
     annotation_position="top left",
     annotation_font={"size": 14, "color": RED},
 )
@@ -123,7 +142,7 @@ fig.add_shape(
     x0=threshold_90_comp,
     x1=threshold_90_comp,
     y0=0,
-    y1=90,
+    y1=low_threshold,
     line={"color": AMBER, "width": 1.5, "dash": "dot"},
 )
 fig.add_shape(
@@ -131,7 +150,7 @@ fig.add_shape(
     x0=threshold_95_comp,
     x1=threshold_95_comp,
     y0=0,
-    y1=95,
+    y1=high_threshold,
     line={"color": RED, "width": 1.5, "dash": "dot"},
 )
 
@@ -173,10 +192,10 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Principal Component", "font": {"size": 12, "color": INK}},
+        "title": {"text": N_COMPONENTS, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "tickmode": "linear",
-        "tick0": 1,
+        "tick0": n_components[0],
         "dtick": 1,
         "showgrid": False,
         "zeroline": False,
@@ -187,7 +206,7 @@ fig.update_layout(
     yaxis={
         "title": {"text": "Explained Variance (%)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "range": [0, 105],
+        "range": [0, cumulative_variance.max() * 1.05],
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
@@ -201,11 +220,13 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.02,
-        "y": 0.40,
+        "x": 0.98,
+        "xanchor": "right",
+        "y": 0.55,
+        "yanchor": "middle",
     },
     font={"color": INK},
-    margin={"t": 80, "b": 60, "l": 80, "r": 40},
+    margin={"t": 60, "b": 60, "l": 80, "r": 40},
     bargap=0.4,
 )
 
