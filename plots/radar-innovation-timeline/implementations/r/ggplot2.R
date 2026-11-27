@@ -1,12 +1,10 @@
 #' anyplot.ai
 #' radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 79/100 | Updated: 2026-11-27
+#' Quality: 84/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
-
-set.seed(42)
 
 # Theme tokens — Imprint palette
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
@@ -28,61 +26,49 @@ ring_labels_v <- c("Now", "Near-term", "Mid-term", "Future")
 color_map     <- setNames(IMPRINT_PALETTE, sector_names)
 sector_starts <- setNames(c(0, 67.5, 135, 202.5), sector_names)
 
-# 16 technology items: one per (sector × ring) cell
+# Ring geometry: four equal-width horizons around a small open centre
+ring_edges  <- c(0.2, 1.45, 2.45, 3.4, 4.3)
+ring_mid    <- (ring_edges[1:4] + ring_edges[2:5]) / 2
+ring_mid[1] <- 0.6  # the innermost band is narrow in pixels, so its markers sit closer to the centre
+SWEEP       <- 270  # three-quarter layout, the last quadrant stays open
+
+# 16 technology items: one per (sector x ring) cell, short names so each fits its cell
 items <- tibble::tibble(
   name = c(
-    "LLM Deployment", "Agentic AI", "Foundation Models", "Neuromorphic Chips",
-    "Kubernetes Automation", "FinOps Tooling", "Edge ML Platforms", "Quantum Cloud",
-    "Zero-Trust Network", "AI-Powered SIEM", "Homomorphic Encryption", "Post-Quantum Crypto",
-    "AI Code Assistance", "Platform Engineering", "WebAssembly", "Autonomous Testing"
+    "LLM\nServing", "Agentic AI", "Foundation\nModels", "Spiking\nChips",
+    "GitOps", "FinOps", "Edge ML", "Quantum\nCloud",
+    "Zero\nTrust", "AI-Powered\nSIEM", "Homomorphic\nEncryption", "Post-Quantum\nCrypto",
+    "Copilot", "Platform\nEng.", "Wasm", "Auto\nTesting"
   ),
   sector = rep(sector_names, each = 4),
   ring_r = rep(1:4, times = 4),
-  # Angles inside each 67.5-degree sector, chosen so labels in a sector sit at distinct heights
-  angle_offset = c(57, 58, 35, 38, 56, 21, 54, 57, 38, 44, 48, 38, 58, 8, 48, 58)
+  # Angle inside the 67.5-degree sector and the side the label runs to, chosen so each label stays in its cell
+  angle_offset = c(30, 4, 26, 4,  50, 62, 62, 62,  45, 26, 34, 34,  60, 4, 56, 4),
+  right_side   = c(TRUE, TRUE, FALSE, TRUE,  TRUE, TRUE, TRUE, TRUE,  TRUE, FALSE, FALSE, FALSE,  FALSE, FALSE, TRUE, FALSE)
 )
 
-items$angle      <- sector_starts[items$sector] + items$angle_offset
-items$color      <- color_map[items$sector]
-# Labels run away from the centre; the Dev Tools outer item's runs inward so they stay on the canvas
-items$right_side <- (sin(items$angle * pi / 180) > 0) != (items$sector == "Dev Tools" & items$ring_r == 4)
+items$angle <- sector_starts[items$sector] + items$angle_offset
+items$y     <- ring_mid[items$ring_r]
+items$label <- ifelse(
+  items$right_side,
+  gsub("(^|\n)", "\\1   ", items$name),
+  gsub("($|\n)", "   \\1", items$name)
+)
 # Larger points for more-immediate rings to convey urgency/immediacy
 items$point_size <- c(6.5, 5.5, 4.5, 3.5)[items$ring_r]
 
-# Rings 1 and 3 get a subtle tinted fill (alternating)
-RING_FILL    <- if (THEME == "light") "#E6E3DB" else "#232320"
-theta_full   <- seq(0, 360, length.out = 301)
-ring_band_df <- do.call(rbind, lapply(list(c(0.5, 1.5), c(2.5, 3.5)), function(b) {
-  data.frame(
-    angle = c(theta_full, rev(theta_full)),
-    r     = rep(c(b[2], b[1]), each = length(theta_full)),
-    grp   = as.character(b[1])
-  )
-}))
+RING_FILL <- if (THEME == "light") "#E6E3DB" else "#232320"
+edge_df   <- tibble::tibble(y = ring_edges)
+band_df   <- tibble::tibble(ymin = ring_edges[c(1, 3)], ymax = ring_edges[c(2, 4)])
+spoke_df  <- tibble::tibble(angle = c(sector_starts, SWEEP))
 
-# Ring boundary circles
-n_circ     <- 301
-angles_seq <- seq(0, 360, length.out = n_circ)
-circle_df  <- do.call(rbind, lapply(c(0.5, 1.5, 2.5, 3.5, 4.5), function(r) {
-  data.frame(angle = angles_seq, r = r, grp = as.character(r))
-}))
-
-# Sector divider spokes: three-quarter layout, the 270-360 quadrant stays open
-spoke_df <- do.call(rbind, lapply(c(0, 67.5, 135, 202.5, 270), function(a) {
-  data.frame(angle = c(a, a), r = c(0.5, 4.5), grp = as.character(a))
-}))
-
-# Ring annotation labels — centred in each ring band, inside the open quadrant
-ring_ann_df <- tibble::tibble(
-  angle = 315,
-  r     = 1:4,
-  label = ring_labels_v
-)
+# Ring names sit in the open quadrant, one per band
+ring_ann_df <- tibble::tibble(angle = 350, y = ring_mid, label = ring_labels_v)
 
 # Sector headers outside the outermost ring boundary
 sector_hdr_df <- tibble::tibble(
   angle = sector_starts + 33.75,
-  r     = 4.85,
+  y     = ring_edges[5] + 0.22,
   label = sector_names
 )
 
@@ -91,53 +77,52 @@ title_sz  <- max(8L, round(12 * 67 / nchar(title_str)))
 
 p <- ggplot() +
   # Alternating ring fills (rings 1 and 3)
-  geom_polygon(
-    data = ring_band_df,
-    aes(x = angle, y = r, group = grp),
+  geom_rect(
+    data = band_df,
+    aes(xmin = 0, xmax = SWEEP, ymin = ymin, ymax = ymax),
     fill = RING_FILL, color = NA, alpha = 0.75
   ) +
-  # Ring boundary circles
-  geom_path(
-    data = circle_df,
-    aes(x = angle, y = r, group = grp),
+  # Ring boundary arcs
+  geom_segment(
+    data = edge_df,
+    aes(x = 0, xend = SWEEP, y = y, yend = y),
     color = INK_SOFT, linewidth = 0.25, alpha = 0.5
   ) +
   # Sector divider spokes
-  geom_path(
+  geom_segment(
     data = spoke_df,
-    aes(x = angle, y = r, group = grp),
+    aes(x = angle, xend = angle, y = ring_edges[1], yend = ring_edges[5]),
     color = INK_SOFT, linewidth = 0.45, alpha = 0.6
   ) +
   # Sector header labels
   geom_text(
     data = sector_hdr_df,
-    aes(x = angle, y = r, label = label),
+    aes(x = angle, y = y, label = label),
     size = 3.6, fontface = "bold", color = INK, hjust = 0.5
   ) +
-  # Ring annotation labels (ring names near the 0-degree spoke)
+  # Ring names in the open quadrant
   geom_text(
     data = ring_ann_df,
-    aes(x = angle, y = r, label = label),
-    size = 3.4, color = INK_SOFT, fontface = "bold", hjust = 0.5
+    aes(x = angle, y = y, label = label),
+    size = 3.4, color = INK_SOFT, fontface = "bold", hjust = 1
   ) +
-  # Technology item points — larger for more-immediate rings
+  # Technology item points, larger for more-immediate rings
   geom_point(
     data = items,
-    aes(x = angle, y = ring_r, color = sector, size = point_size),
+    aes(x = angle, y = y, color = sector, size = point_size),
     alpha = 0.95
   ) +
   scale_size_identity(guide = "none") +
-  # Technology item labels (offset outward from each point)
+  # Technology item labels beside each marker
   geom_text(
     data = items,
-    aes(x = angle, y = ring_r, label = ifelse(right_side, paste0("   ", name), paste0(name, "   ")),
-        hjust = ifelse(right_side, 0, 1), color = sector),
-    size = 2.9, vjust = 0.5, show.legend = FALSE
+    aes(x = angle, y = y, label = label, hjust = ifelse(right_side, 0, 1), color = sector),
+    size = 2.7, vjust = 0.5, lineheight = 0.85, show.legend = FALSE
   ) +
   coord_polar(theta = "x", start = 0) +
   scale_x_continuous(limits = c(0, 360), breaks = NULL, expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 5.1), breaks = NULL) +
-  scale_color_manual(values = color_map) +
+  scale_y_continuous(limits = c(0, 4.7), breaks = NULL) +
+  scale_color_manual(values = color_map, guide = guide_legend(override.aes = list(size = 5))) +
   labs(title = title_str, color = "Sector") +
   theme_void(base_size = 8) +
   theme(
@@ -156,7 +141,9 @@ p <- ggplot() +
     ),
     legend.text     = element_text(color = INK_SOFT, size = 10),
     legend.title    = element_text(color = INK, size = 11),
-    legend.key.size = unit(0.45, "cm"),
+    legend.key       = element_blank(),
+    legend.margin    = margin(8, 10, 8, 8),
+    legend.key.size = unit(0.55, "cm"),
     plot.margin     = margin(10, 10, 10, 10)
   )
 
