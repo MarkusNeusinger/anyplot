@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: map-route-path
 created: '2026-05-21T05:47:37Z'
-updated: '2026-11-26T13:04:45Z'
+updated: '2026-11-27T17:15:27Z'
 generated_by: claude-sonnet
-workflow_run: 45824631564
+workflow_run: 46039608013
 issue: 3768
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,42 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 83
 review:
   strengths:
   - Route-fitted Albers projection (center, rotation, parallels and scale computed
     from the route extent) with a clipped state basemap that stays quieter than the
     route in both themes
-  - Imprint sequential ramp for marks with per-theme stops encodes elevation on sampled
-    dots, explained by a gradient legend titled 'Elevation (m)'
-  - Start (green circle) and end (purple square) told apart by shape and color, opaque
+  - Noisy GPS track smoothed with a centered pandas rolling mean and drawn with round
+    joins, so the route reads as one clean continuous band
+  - Start (green circle) and end (purple square) differ by shape and color, opaque
     with page-colored halos
   - Layered Altair geo charts sharing one projection, alt.Order by sequence and native
     HTML tooltips for waypoint inspection
   weaknesses:
-  - 'VQ-03 (both): the route line shows sharp spikes at its zigzag joins (e.g. south
-    of Springfield, near the Oklahoma border, at the Texas panhandle) that read as
-    stray arrowheads pointing sideways → round joins so the 3.5 px line stays a clean
-    band. Likely cause: mark_line without strokeJoin=''round'' (default miter) on
-    jittered waypoints.'
-  - 'SC-02 (both): the Notes ask to apply line smoothing or simplification for noisy
-    GPS data, but the track is drawn raw with visible back-and-forth zigzags from
-    the 0.07° jitter → smooth the waypoints (e.g. a rolling mean over lat/lon, or
-    a transform_window mean in Altair) before drawing. Likely cause: df drawn directly
-    with no smoothing step.'
-  - 'Suggestion: the ''▲ Highest point 2188 m'' label sits about 90 px above and right
-    of the dot it names; tying it closer to that dot would make the reference clear.'
+  - 'VQ-07 (both): the elevation ramp uses hand-set stops (light #009E73 → #4467A3
+    at 0.338 → #002850; dark #007755 → #009E73 at 0.32 → #CDD9FF) instead of the style
+    guide''s imprint_seq marks stops → light (0, #009E73), (0.687, #024582), (1, #351E45);
+    dark (0, #6F7E20), (0.21, #009E73), (1, #CDD9FF). Likely cause: SEQ_MARKS values.'
+  - 'SC-04 (both): the start circle and end square are labelled only ''Chicago'' and
+    ''Los Angeles'', so nothing tells the reader which end the journey began at →
+    direct labels ''Start: Chicago'' / ''End: Los Angeles'' (the label column already
+    holds them). Likely cause: start_label/end_label encode text=PLACE instead of
+    the ''label'' column.'
+  - 'SC-02 (code): the Notes ask interactive libraries to enable zoom and pan, but
+    the HTML has no zoom/pan → bind the projection scale/translate to wheel/drag params
+    (Vega-Lite geo charts do not take .interactive()). Likely cause: no zoom/pan params
+    on the layered chart.'
+  - 'Suggestion: the ''▲ Highest point 2188 m'' label floats about 140 px above and
+    right of the dot it names; a smaller dy would tie it to that dot.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1; route-fitted Albers basemap of US states in #DEDAD4 with soft grey borders, filling the view from California to Michigan/Ohio
+      Background: warm off-white #FAF8F1; route-fitted Albers basemap of US states in #DEDAD4 with soft grey borders, filling the view from California to Ohio
       Chrome: left-anchored title "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai" in dark ink; bold labels "Chicago", "Los Angeles" and "▲ Highest point 2188 m"; elevation legend bottom-left on an elevated panel — all readable
-      Data: continuous #009E73 route Chicago → St. Louis → Oklahoma → Albuquerque → Flagstaff → Los Angeles, clearly visible; small elevation dots every 4th waypoint in the marks ramp (green low → navy high) with page-colored halos; large green start circle at Chicago, purple #C475FD end square at Los Angeles; jittered track shows zigzags and miter spikes at some joins
+      Data: smooth continuous #009E73 route Chicago → St. Louis → Oklahoma → Albuquerque → Flagstaff → Los Angeles with round joins, no spikes; elevation dots every 4th waypoint green low → navy high with page-colored halos; large green start circle at Chicago, purple #C475FD end square at Los Angeles
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17; basemap #2C2C28 with subtle borders
       Chrome: title, place labels and peak label in light ink; legend text light grey on a dark panel — all readable, no dark-on-dark
-      Data: route line, start and end markers identical to light; elevation ramp uses the dark stops (deep green → #009E73 → pale blue #CDD9FF) as a continuous ramp should
+      Data: route line, start and end markers identical to light; elevation dots use the dark ramp (deep green → #009E73 → pale blue)
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,21 +62,21 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16, city labels 13 bold, legend 12/13 — all readable in both
-          themes
+        comment: 'Title 16, place labels 13 bold, legend 12/13: all readable in both
+          themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend clear of the route and labels
+        comment: No text collisions; legend sits in a free corner clear of the route
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Route line now reads through the smaller, sparser dots, but miter
-          spikes at sharp zigzag joins look like stray arrowheads (defect line)
+        passed: true
+        comment: Smoothed 3.5 px route with round joins reads as a clean band; sampled
+          elevation dots and large start/end markers visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -85,20 +88,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Map fills the 3200x1800 canvas; nothing cut off
+        comment: Route-fitted map fills the 3200x1800 canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title prefix; legend 'Elevation (m)' with unit
+        comment: Descriptive title prefix; legend 'Elevation (m)' with unit; no axes
+          on a map
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Route #009E73, end #C475FD, SEQ_MARKS ramp with per-theme stops,
-          correct backgrounds in both renders'
+        passed: false
+        comment: 'Route #009E73, end #C475FD and backgrounds correct, but the elevation
+          ramp uses hand-set stops instead of the style guide''s marks stops (defect
+          line)'
     design_excellence:
       score: 10
       max: 20
@@ -107,16 +112,16 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Page-colored halo strokes on dots and start/end markers separate
-          them from line and basemap; bold place labels over a quiet basemap
+        passed: true
+        comment: Page-colored halo strokes separate dots and start/end markers from
+          line and basemap; bold place labels over a quiet basemap
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Elevation dots sampled sparsely along the line; legend on an elevated
-          panel in a free corner
+        passed: true
+        comment: Elevation dots sampled every 4th waypoint so the line stays visible;
+          legend on an elevated panel in a free corner
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -124,7 +129,7 @@ review:
         passed: false
         comment: Peak annotation is not a spec feature and earns no credit; default
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -132,27 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Route path map with a sequential line over a basemap
+        comment: 'Route path map: sequential line over a geographic basemap'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: false
-        comment: Notes bullet 'apply line smoothing or simplification for noisy GPS
-          data' not followed — the jittered track is drawn raw (defect line); basemap
-          fitted to the route (C5 met)
+        comment: Smoothing (rolling mean), start/end markers, elevation gradient with
+          legend and route-fitted basemap present (C1, C2, C3, C5); the Notes bullet
+          'enable zoom and pan' for interactive libraries is not followed (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon on geo channels, order by sequence, elevation to color
+        comment: lat/lon on geo channels, alt.Order by sequence, elevation to color
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; color legend names the variable with unit
+        passed: false
+        comment: Title format correct and color legend named with unit, but the start
+          circle and end square have no key or direct label saying which is start
+          (defect line)
     data_quality:
       score: 15
       max: 15
@@ -162,20 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Path, start/end markers, elevation gradient, basemap all shown
+        comment: Path, start/end markers, elevation gradient and basemap all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Route 66 Chicago to Los Angeles with real cities
+        comment: Route 66 Chicago to Los Angeles through real cities
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: city elevations plausible (Flagstaff 2100 m, LA 95 m, Chicago
-          180 m); peak label 2188 m computed from the data via idxmax'
+        comment: Checked city elevations (Chicago 180 m, Amarillo 1100 m, Flagstaff
+          2100 m, LA 95 m) plausible; 2188 m peak label computed via idxmax; ~161
+          waypoints inside the 50-1000 range
     code_quality:
       score: 10
       max: 10
@@ -185,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-to-bottom script
+        comment: Top-to-bottom script; loop only in the Data block
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,13 +212,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Smoothing via pandas rolling mean; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png/html, fit autosize, current API
+        comment: plot-{THEME}.png/html, fit autosize, mandated canvas block
     library_mastery:
       score: 6
       max: 10
@@ -218,30 +227,35 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Layered geo charts with a shared projection, alt.Order by sequence,
-          configure_* chrome, escaped field names
+        passed: true
+        comment: Layered geo charts sharing one projection, alt.Order by sequence,
+          configure_* chrome, escaped fields
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: topo_feature basemap with Vega projection and native HTML tooltips
+        comment: topo_feature basemap with a route-fitted Vega Albers projection and
+          native HTML tooltips
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-7008ecd1e0
-  rendered_at: '2026-11-26T13:01:16Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-27T17:11:44Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
+  - colorbar
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - rolling-window
+  - interpolation
   styling:
   - alpha-blending
   - edge-highlighting
