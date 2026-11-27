@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -14,6 +14,7 @@ from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
 from bokeh.plotting import figure
 from PIL import Image
+from scipy.stats import gaussian_kde
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -53,8 +54,7 @@ bandwidth = 0.9 * min(np.std(values), iqr / 1.34) * n ** (-0.2)
 
 # Grid ends three bandwidths past the data so the curve falls back to zero at both ends
 x_grid = np.linspace(values.min() - 3 * bandwidth, values.max() + 3 * bandwidth, 500)
-density = np.exp(-0.5 * ((x_grid[:, None] - values[None, :]) / bandwidth) ** 2).sum(axis=1)
-density /= n * bandwidth * np.sqrt(2 * np.pi)
+density = gaussian_kde(values, bw_method=bandwidth / values.std(ddof=1))(x_grid)
 
 top = density.max()
 source = ColumnDataSource(data={"x": x_grid, "density": density, "base": np.zeros_like(x_grid)})
