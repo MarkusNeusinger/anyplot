@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 82/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
@@ -74,16 +74,18 @@ p <- ggplot(df, aes(x = component)) +
             color = IMPRINT_PALETTE[1], linewidth = 1.2) +
   geom_point(aes(y = cumulative_pct),
              color = IMPRINT_PALETTE[1], size = 2.8) +
-  annotate("text", x = 1.2, y = 91.8,
-           label = "90%", color = INK_MUTED, size = 3.3, hjust = 0) +
-  annotate("text", x = 1.2, y = 96.8,
-           label = "95%", color = INK_MUTED, size = 3.3, hjust = 0) +
+  annotate("text", x = 1.2, y = 90.7,
+           label = "90%", color = INK_MUTED, size = 3.8, hjust = 0, vjust = 0) +
+  annotate("text", x = 1.2, y = 95.7,
+           label = "95%", color = INK_MUTED, size = 3.8, hjust = 0, vjust = 0) +
   annotate("text", x = thr90 + 0.3, y = 85,
            label = sprintf("PC%d\n90%%", thr90),
-           color = INK_MUTED, size = 3.0, hjust = 0, lineheight = 0.9) +
+           color = INK_MUTED, size = 3.8, hjust = 0, lineheight = 0.9) +
   annotate("text", x = elbow_pc + 0.35, y = 5,
            label = sprintf("PC%d\nelbow", elbow_pc),
-           color = IMPRINT_PALETTE[1], size = 3.3, hjust = 0, lineheight = 0.9) +
+           color = IMPRINT_PALETTE[1], size = 3.8, hjust = 0, lineheight = 0.9) +
+  annotate("text", x = 10, y = 9, label = "Bars: individual variance per component",
+           color = INK_SOFT, size = 3.8, hjust = 0.5) +
   scale_x_continuous(breaks = seq_len(n_features)) +
   scale_y_continuous(
     limits = c(0, 105),
