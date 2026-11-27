@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:53:20Z'
-updated: '2026-11-26T12:42:46Z'
+updated: '2026-11-27T17:24:41Z'
 generated_by: claude-sonnet
-workflow_run: 45821359062
+workflow_run: 46040865991
 issue: 3768
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,45 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 81
 review:
   strengths:
   - Per-segment LineCollection with set_array/Normalize gives a smooth progression
     gradient along the route, explained by a colorbar naming 'Trail progress (waypoint)'
-  - 'Imprint sequential marks ramp with each theme''s stops: brand green → blue →
-    navy on light, dark green → brand green → pale blue on dark; every leg reads against
-    its page'
+  - Imprint sequential marks ramp with each theme's stops (brand green → blue → deep
+    violet on light, olive → brand green → pale blue on dark); every leg reads against
+    its page
   - Start (green circle) and End (purple square) differ by shape and color, legend
     in an elevated themed frame
-  - 'Full theme threading: INK/INK_SOFT on title, labels, ticks, colorbar outline
-    and legend text; arrows flip to light ink on dark'
-  - Five sparse direction arrows placed along the path point in the direction of travel
-    without hiding the line
+  - 'Full theme threading: INK/INK_SOFT on title, labels, ticks, colorbar outline,
+    legend text and basemap tints; arrows flip to light ink on dark'
+  - Five sparse direction arrows along the path point in the direction of travel without
+    hiding the line
   - Geographically proportioned axes via ax.set_aspect(1/cos(mean latitude)), with
-    the colorbar positioned from the aspect-applied axes box
+    the colorbar placed from the aspect-applied axes box
   weaknesses:
-  - 'SC-02 (both): no geographic basemap — the route sits on a blank page with only
-    a lat/lon grid, while the Notes and C5 ask for streets, terrain or satellite context
-    → draw a quiet basemap under the route fitted to its extent (e.g. cartopy features
-    such as coastline/land/roads, muted below the line). Likely cause: no basemap
-    layer at all.'
-  - 'Suggestion: the x axis shows only two longitude ticks (-122.395, -122.380); a
-    third tick would make longitudes easier to read off.'
+  - 'SC-02 (both): the basemap gives little geographic context (C5): the bay is a
+    ~2 % sliver at the west edge, the park rectangle at alpha 0.10 is near invisible,
+    and the 14×24 street lines read as a dense coordinate grid → water, green space
+    and streets large and opaque enough to read as map features while staying quieter
+    than the route. Likely cause: shore_x placed just west of lon.min(), park alpha=0.10,
+    a uniform street grid of 14×24 lines.'
+  - 'VQ-03 (both): the gradient route shows a light notch at nearly every segment
+    join, so the line reads as dashed rather than continuous → seamless joins. Likely
+    cause: LineCollection with the default butt capstyle and alpha=0.95; set capstyle=''round''
+    (and joinstyle) and alpha=1.'
+  - 'VQ-05 (both): the aspect-locked map is anchored west after a 27 % left margin
+    and spans only about a third of the canvas width, leaving wide empty bands left
+    of the y axis and right of the colorbar → let the map and colorbar use the width
+    (smaller left margin, centred anchor, a wider longitude view around the route).
+    Likely cause: subplots_adjust(left=0.27), set_anchor(''W'') and x-limits at 10
+    % of the route''s narrow longitude span.'
+  - 'Suggestion: a third longitude tick would make longitudes easier to read off.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white (2400x2400 square canvas)
-      Chrome: title 'map-route-path · python · matplotlib · anyplot.ai' in dark ink at the top; 'Longitude (°)' / 'Latitude (°)' axis titles in ink, ticks (-122.395, -122.380; 37.72–37.78) in soft ink; colorbar 'Trail progress (waypoint)' 0–140 right of the aspect-locked axes; Start/End legend in an elevated frame top-left — all readable
-      Data: 150-waypoint looping route drawn geographically proportioned (tall and narrow): western lobes near the start, a northern loop and a southern loop crossing near 37.752; colored brand green at the start through blue to navy at the end; green circle start, purple #C475FD square end; five dark arrows along the path; no basemap
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas
+      Chrome: title 'map-route-path · python · matplotlib · anyplot.ai' in dark ink at top; 'Longitude (°)' / 'Latitude (°)' in ink, ticks (-122.395, -122.380; 37.72–37.78) in soft ink; colorbar 'Trail progress (waypoint)' 0–140 right of the tall, narrow aspect-locked axes; Start/End legend in an elevated frame top-left — all readable
+      Data: 150-waypoint looping route with two crossings, colored brand green at the start through teal/blue to deep violet at the end; green circle start, purple #C475FD square end; five dark arrows; hand-drawn basemap: a thin grey water band at the west edge, a faint green park rectangle near the centre, and a dense faint street grid. Light notches at the segment joins make the line look slightly dashed. Map occupies only about a third of the canvas width
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black
+      Background: warm near-black #1A1A17
       Chrome: title, axis titles, ticks, colorbar label/ticks and legend text in light ink — no dark-on-dark text
-      Data: same geometry; route ramp uses the dark marks stops (dark green → brand green → pale blue), all legs visible; Start #009E73 and End #C475FD identical to light; arrows in light ink
+      Data: same geometry; route uses the dark marks stops (olive → brand green → pale blue); Start #009E73 and End #C475FD identical to light; arrows in light ink; basemap water band, park and street grid as faint light tints
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,15 +75,17 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; route self-crossings are data permitted by C6;
-          arrows sit on the line by design
+        comment: No text collisions; route self-crossings are permitted by C6; arrows
+          sit on the line by design
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Line width 2.5 visible in both themes; s=150 start/end markers prominent;
-          five sparse arrows visible
+        passed: false
+        comment: Line width 2.5 and s=150 start/end markers visible; five sparse arrows
+          visible. Visible light notches at nearly every segment join of the gradient
+          route in both renders (LineCollection butt caps at alpha 0.95) break the
+          line into dashes (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -82,12 +94,13 @@ review:
         comment: Start/End differ by shape and color; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Square canvas (gate passed); the aspect-locked axes span nearly the
-          full height, so the narrow width is set by the route's geographic shape
-          (C6 permits an irregular fill); colorbar hugs the axes, nothing clipped
+        passed: false
+        comment: Square canvas is right for the aspect-locked map, but the axes are
+          anchored west after a 27 % left margin and the drawing spans only about
+          a third of the canvas width, leaving wide empty bands left and right (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,7 +113,8 @@ review:
         max: 2
         passed: true
         comment: 'Start #009E73, End #C475FD (Imprint 1, 2); route uses imprint_seq
-          marks stops of each theme; backgrounds #FAF8F1 / #1A1A17'
+          marks stops of each theme; backgrounds #FAF8F1 / #1A1A17; basemap tinted
+          with INK and a faint #009E73 park'
     design_excellence:
       score: 8
       max: 20
@@ -117,7 +131,8 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: Spines and grid per the style guide; nothing beyond
+        comment: Spine rules met; the basemap is the layer C5 asks for, not refinement
+          beyond it; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -141,22 +156,24 @@ review:
         score: 3
         max: 4
         passed: false
-        comment: Sequence-ordered path (C1), start/end markers (C2), gradient with
-          colorbar (C3), sparse arrows (C4); missing the geographic basemap the Notes
-          ask for (C5) — defect line
+        comment: 'C1–C4 met; C5 only partly: a hand-drawn basemap (water band, park,
+          street grid) is quieter than the route and fitted to it, but the bay is
+          a ~2 % sliver at the west edge, the park at alpha 0.10 is near invisible,
+          and the 14×24 street lines read as a dense coordinate grid, so little geographic
+          context comes across (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: x = longitude, y = latitude, all data in view, marks at their values;
-          aspect set to 1/cos(mean latitude) so the route is geographically proportioned
+          aspect 1/cos(mean latitude)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; Start/End legend matches markers; colorbar names
+        comment: Mandated title; Start/End legend matches the markers; colorbar names
           the variable
     data_quality:
       score: 15
@@ -167,14 +184,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Looping route with crossings, out-and-back legs, start/end and progression;
-          basemap gap scored in SC-02
+        comment: Looping route with crossings, out-and-back legs, start/end and progression
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Hiking GPS track around San Francisco coordinates: neutral and plausible'
+        comment: 'Simulated hiking GPS track around San Francisco coordinates: neutral
+          and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -209,8 +226,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: LineCollection segments and a short arrow loop; nothing an available
-          call replaces
+        comment: LineCollection segments and a short arrow loop, short basemap block;
+          nothing an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,7 +244,7 @@ review:
         max: 5
         passed: false
         comment: 'Raised: LineCollection with set_array + Normalize, ax.add_collection,
-          fig.colorbar on the collection, annotate with arrowprops, plus apply_aspect/get_position
+          fig.colorbar on the collection, annotate with arrowprops, apply_aspect/get_position
           to place the colorbar against the aspect-locked axes'
       - id: LM-02
         name: Distinctive Features
@@ -238,16 +255,21 @@ review:
           technique for a gradient path'
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
-  rendered_at: '2026-11-26T12:39:33Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T17:21:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - line-collection
+  - patches
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
   styling:
+  - custom-colormap
   - alpha-blending
+  - edge-highlighting
