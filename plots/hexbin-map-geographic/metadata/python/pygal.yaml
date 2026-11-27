@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:17:05Z'
-updated: '2026-11-26T15:49:46Z'
+updated: '2026-11-27T16:54:04Z'
 generated_by: claude-sonnet
-workflow_run: 45850884210
+workflow_run: 46036705347
 issue: 3767
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,39 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - 'True data-space hexagons: pygal''s circle markers are replaced by flat-top hexagons
     computed from the bin geometry, tiling a regular grid with shared edges'
-  - Equal-distance aspect correction (cos of mean latitude) keeps both California's
-    shape and the hexagons undistorted
-  - imprint_seq fields stops per theme, sampled with ramp_color, with page-colored
+  - Equal-distance aspect correction (cos of mean latitude) keeps California's shape
+    and the hexagons undistorted
+  - imprint_seq fields stops per theme sampled with ramp_color, with page-colored
     cell borders; the outline shows through the 0.8-opacity cells
   - Legend names the statistic and the observed count range of each class
   - Tooltips carry count, FRP sum, FRP mean and coordinates per cell in the HTML output
   - Realistic wildfire-hotspot scenario around five real California fire regions
   weaknesses:
-  - 'CQ-01 (code): three helper functions besides the mandated ramp_color — build_chart
-    (lines 199–235, called twice at 266 and 272), fit_axes (238) and circles_to_hexagons
-    (248) — plus a probe render to measure the plot area break the flat Imports →
-    Data → Plot → Save flow → inline the chart build once and the SVG rewrite as top-level
-    statements. Likely cause: the two-pass equal-aspect fit wrapped in functions.'
-  - 'Suggestion: a faint outline of the neighbouring states or the Pacific coast beyond
-    California would give the cells that spill past the border more geographic context.'
-  - 'Suggestion: the legend sits close to the bottom edge; a little more bottom margin
-    would let it breathe.'
+  - 'Suggestion: a faint outline of the neighbouring states or the Pacific coastline
+    beyond California would give the cells that spill past the border more geographic
+    context.'
+  - 'Suggestion: the legend row sits close to the bottom edge; a little more bottom
+    margin would let it breathe.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400 canvas
-      Chrome: title 'hexbin-map-geographic · python · pygal · anyplot.ai' in dark ink at top; y-axis 'Latitude (°)' ticks 33–42, x-axis 'Longitude (°)' ticks -126 to -113; legend at bottom 'count 1–2', 'count 3–9', 'count 11–32', 'count 38–122', 'count 130–496'; all readable
-      Data: a thin grey California outline (coast, Oregon and Nevada borders, Colorado River, Mexico border) with about 75 flat-top hexagons in three groups (north coast/Klamath, Butte–Mendocino, Southern Sierra to LA mountains); fills run pale mint → brand green → blue → navy; cells separated by page-colored borders; the outline shows faintly through cells near LA
+      Chrome: title 'hexbin-map-geographic · python · pygal · anyplot.ai' in dark ink at the top; y-axis 'Latitude (°)' ticks 33–42, x-axis 'Longitude (°)' ticks -126 to -113; legend row at the bottom 'count 1–2', 'count 3–9', 'count 11–32', 'count 38–122', 'count 130–496'; all readable
+      Data: thin grey California outline (coast, Oregon and Nevada borders, Colorado River, Mexico border) with about 75 flat-top hexagons in three groups (Klamath, Butte–Mendocino, Southern Sierra to the LA mountains); fills run pale mint → brand green → deep blue → dark violet for the densest cores; page-colored cell borders; the outline shows through the cells near LA
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
       Chrome: title, ticks, axis titles and legend in light ink, all readable; no dark-on-dark text
-      Data: same grid and outline (light grey); the continuous ramp uses the dark fields stops (deep green → brand green → pale blue), so the densest cells are pale blue and the sparse ones recede into the page, as intended for a ramp
+      Data: same grid and light-grey outline; the ramp uses the dark fields stops (dark olive → brand green → pale blue), so the densest cells are pale blue and the sparsest dark olive cells recede toward the page as a fields ramp should
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,35 +52,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set explicitly (title 66, labels/ticks/legend 44);
-          title, ticks, axis titles and legend read cleanly in both themes
+        comment: Font sizes set explicitly (title 66, ticks/labels/legend 44); title,
+          ticks, axis titles and legend read cleanly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; hexagons tile with shared edges and do not overlap
+        comment: No text collisions; hexagons tile with shared edges and never overlap
           each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible at every class in both themes; legend swatches
-          match the cell fills
+        comment: Every class is visible in both themes; legend swatches match the
+          cell fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Ordered lightness ramp (pale mint to navy / deep green to pale blue)
-          separates the five classes without relying on hue
+        comment: Five classes separated by a monotonic lightness ramp, not by hue
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, equal-distance aspect keeps California's
+        comment: Square 2400x2400 canvas; equal-distance aspect keeps California's
           shape; map, axes and legend fit with nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
@@ -97,8 +93,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq with the fields stops per theme (SEQ_FIELDS) sampled
-          via ramp_color; outline in INK_MUTED; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'imprint_seq fields stops of the current style guide per theme (SEQ_FIELDS)
+          sampled with ramp_color; outline INK_MUTED; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 9
       max: 20
@@ -115,16 +111,15 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: Page-colored 3 px hexagon borders separate cells cleanly and gridlines
-          dropped in favour of the map outline; equal-distance aspect correction for
-          cos(lat)
+        comment: Page-colored 3 px cell borders separate the cells, value guides dropped
+          in favour of the map outline, cos(lat) equal-distance aspect
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Data displayed; the dark cores emerge from the ramp, no further hierarchy
-          chosen
+        comment: Data displayed; the dense cores emerge from the ramp, no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -142,22 +137,22 @@ review:
         max: 4
         passed: true
         comment: Configurable hex size (GRID_COLUMNS), count/sum/mean per cell in
-          tooltips, sequential ramp with legend naming count, base map outline, translucent
-          cells (outline shows through), hover tooltips; C1-C4 all met
+          tooltips, sequential ramp with a legend naming count, California outline
+          base map, 0.8-opacity cells with the outline showing through; C1-C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = longitude, y = latitude; cells centred at their bin centres;
+        comment: x = longitude, y = latitude; cells centred on their bin centres;
           axes fitted to the state with a small margin
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend entries 'count 1–2' … 'count
-          130–496' name the statistic and the observed ranges
+        comment: Mandated title; legend entries 'count 1–2' … 'count 130–496' name
+          the statistic and each class range
     data_quality:
       score: 15
       max: 15
@@ -167,8 +162,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Dense cores, pale fringes, gaps between regions: all aspects of
-          a hexbin map shown'
+        comment: Dense cores, pale fringes, empty gaps between regions
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,21 +175,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: region centres (Butte/Plumas 39.8°N 121.4°W, Klamath 41.3°N
-          122.9°W, Southern Sierra 36.0°N 118.6°W, LA mountains 34.35°N 118.6°W) lie
-          in those regions; FRP exponential means 15–35 MW plausible per detection;
-          6000 detections in spec range'
+        comment: Checked region centres (Butte/Plumas 39.8N 121.4W, Klamath 41.3N
+          122.9W, Southern Sierra 36.0N 118.6W, LA mountains 34.35N 118.6W) against
+          the render; FRP means 15–35 MW; 6000 detections in the spec range; no Check
+          values in the Notes
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Three helper functions besides the mandated ramp_color (build_chart,
-          fit_axes, circles_to_hexagons) and a two-pass probe render (defect line)
+        comment: Top to bottom; the two-pass equal-aspect fit is a top-level loop
+          with the chart build written out in its body; only the mandated ramp_color
+          helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,15 +202,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (math, os, re, sys, cairosvg, numpy, pandas, pygal,
-          Style)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Hex binning written out with cube rounding, but no available call
-          bins into hexagons (matplotlib hexbin is a plotting call); no dead code
+        comment: Hex binning written out with cube rounding, but no available non-matplotlib
+          call bins into hexagons; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
@@ -233,24 +227,26 @@ review:
         passed: true
         comment: pygal.XY with a Style object, per-point dict values with label for
           rich tooltips, a None-titled series kept out of the legend, xrange/range
+          for the equal aspect
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Post-processes pygal's native SVG output (circle markers to true
-          data-space hexagons) — leverages pygal's SVG-first rendering
+        comment: Rewrites pygal's native SVG output (circle markers to data-space
+          hexagons) while keeping its tooltips — uses pygal's SVG-first rendering
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-ef876c8336
-  rendered_at: '2026-11-26T15:44:41Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-27T16:50:32Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - custom-legend
+  - patches
   - hover-tooltips
   - html-export
-  - layer-composition
-  - patches
   patterns:
   - data-generation
   - groupby-aggregation
@@ -258,6 +254,7 @@ impl_tags:
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
+  - minimal-chrome

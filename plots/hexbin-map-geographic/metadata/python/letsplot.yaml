@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:14:00Z'
-updated: '2026-11-27T16:43:33Z'
+updated: '2026-11-27T16:56:09Z'
 generated_by: claude-sonnet
-workflow_run: 46035027476
+workflow_run: 46036773211
 issue: 3767
 language_version: 3.14.10
 library_version: 4.11.0
@@ -16,23 +16,23 @@ quality_score: 84
 review:
   strengths:
   - 'geom_hex computes the hexagonal binning natively (bins=[40, 40]): equal hexagons
-    with shared edges, a size that shows each cluster''s shape'
-  - imprint_seq fields ramp with the theme's current stops sampled by ramp_color for
-    scale_fill_gradientn, with a log10 transform and a 'Pickup Count' colour bar
-  - Square canvas with a map window computed from the basemap extent, so the boroughs
+    with shared edges at a size that shows each cluster''s shape'
+  - imprint_seq fields ramp with the theme's stops sampled by ramp_color for scale_fill_gradientn,
+    with a log10 transform and a 'Pickup Count' colour bar
+  - Square canvas with a map window computed from the basemap extent, so boroughs
     and clusters fill the canvas
-  - Manhattan cluster follows the island's NNE axis; translucent hexes over borough
-    polygons whose outlines show through
+  - Manhattan cluster follows the island's NNE axis inside the outline; translucent
+    hexes let the borough outlines show through
   - layer_tooltips hover counts in the HTML export; seeded flat script with only used
     imports
   weaknesses:
-  - 'DQ-02 (both): the Manhattan band''s south-west cells (about lat 40.68–40.70,
-    lon −74.03 to −74.01) lie south and west of the drawn Manhattan outline over the
-    harbour, and the LGA cluster''s top rows (above lat ~40.79) lie north of the Queens
-    outline over the water, so pickups read as off-shore → centre the Manhattan cluster
-    about +0.008° lon east and cut its lat spread (sd 0.025 → about 0.02), and move
-    the LGA centre about −0.008° lat south. Likely cause: manhattan_lon offset −73.987
-    with lat sd 0.025, lga_lat centre 40.773.'
+  - 'DQ-02 (both): a few pale fringe cells still sit over water beyond the drawn outlines
+    — the LGA cluster''s top cells (about lat 40.79–40.80, lon −73.88) lie north of
+    the Queens edge (~40.785), and two Manhattan cells near lon −74.01, lat 40.69
+    lie in the harbour below the island''s tip → keep every cell on land: move the
+    LGA centre about −0.004° lat south (40.765 → 40.761) and trim the Manhattan lat
+    sd 0.018 → about 0.016. Likely cause: lga_lat centre 40.765, manhattan_lat sd
+    0.018.'
   - 'Suggestion: the tooltip could add cell coordinates next to the count, as the
     Notes list.'
   - 'Suggestion: coord_map() (or ratio ≈ 1.32) would show the boroughs with their
@@ -40,14 +40,14 @@ review:
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 over the whole 2400x2400 square canvas.
-      Chrome: title 'NYC Taxi Pickups · hexbin-map-geographic · python · letsplot · anyplot.ai' in dark ink at top-left (~74 % of width), axis titles 'Longitude (°)' / 'Latitude (°)', dark-grey ticks (-74 … -73.7, 40.55 … 40.9), subtle muted grid, full panel frame; horizontal 'Pickup Count' colour bar (log ticks 1, 10, 100) in a cream box under the map. All readable, no collisions.
-      Data: three hex clusters — a narrow NNE band along Manhattan with dark-violet cores, a round LGA cluster and an oval JFK cluster — on the imprint_seq light fields ramp (pale mint fringe → brand green #009E73 → deep blue → dark violet), over translucent light-grey Manhattan, Brooklyn and Queens polygons whose outlines show through the hexes. Some Manhattan cells spill south-west of the outline, LGA's top rows sit north of Queens.
+      Chrome: title 'NYC Taxi Pickups · hexbin-map-geographic · python · letsplot · anyplot.ai' in dark ink top-left (~74 % of width), axis titles 'Longitude (°)' / 'Latitude (°)', dark-grey ticks (-74 … -73.7, 40.55 … 40.9), subtle grid, panel frame; horizontal 'Pickup Count' colour bar (log ticks 1, 10, 100) in a cream box under the map. All readable, no collisions.
+      Data: three hex clusters on the imprint_seq light fields ramp (pale mint → #009E73 → deep blue → dark violet): a narrow NNE band now lying along the Manhattan outline with dark-violet cores, a round LGA cluster on Queens' north shore and an oval JFK cluster in south-east Queens, over translucent light-grey Manhattan/Brooklyn/Queens polygons whose outlines show through. Only a few pale fringe cells sit beyond the outlines (LGA's top, Manhattan's south tip).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 over the whole canvas.
       Chrome: light title and axis titles, light-grey ticks, subtle grid, colour bar in a dark elevated box with light text. No dark-on-dark text.
-      Data: identical cell geometry; the continuous ramp uses the dark fields stops (dark olive fringe → brand green → pale blue cores), so high counts stand out. Borough polygons dark grey with mid-grey outlines, visible.
+      Data: identical cell geometry; the continuous ramp uses the dark fields stops (dark olive fringe → brand green → pale blue cores), high counts stand out. Borough polygons dark grey with mid-grey outlines, visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,14 +59,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title ~12 pt, axis titles 12, ticks 10, legend 10/11);
+        comment: Explicit sizes (title 12, axis titles 12, ticks 10, legend 10/11);
           all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; corner ticks of the fitted window sit apart
+        comment: No text collisions; translucent hexes over outlines are the intended
+          layering
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -85,8 +86,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas with a square map window fitted to the basemap;
-          the map fills the canvas, legend below
+        comment: Square 2400x2400 canvas; map window fitted to the basemap fills it,
+          colour bar below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,7 +101,7 @@ review:
         max: 2
         passed: true
         comment: 'imprint_seq fields stops of each theme sampled at 256 steps with
-          ramp_color; page backgrounds #FAF8F1 / #1A1A17'
+          ramp_color; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -109,24 +110,24 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: 'Style-guide baseline: theme tokens, explicit sizes, Imprint ramp;
           nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Map window computed from the basemap extent with padding and squared,
-          so the borough geometry is centred with even margins; horizontal colour
-          bar placed under the map
+        passed: false
+        comment: Map window computed from the basemap extent, padded and squared so
+          the geometry sits centred with even margins; horizontal colour bar in an
+          elevated box under the map
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: log10 colour transform chosen so the pale fringe and the dark cores
-          of each cluster both read, making the Manhattan spine the focal point
+        passed: false
+        comment: log10 colour transform chosen so both the pale fringes and the dense
+          cores read, making the Manhattan spine the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -136,21 +137,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexagonal binning map over a basemap
+        comment: Hexagonal binning map over a borough basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Configurable N_BINS, count aggregation, sequential ramp with legend,
-          translucent hexes over borough basemap, hover tooltips; all characteristic
-          bullets C1-C4 present
+          translucent hexes over the basemap, hover tooltips; C1-C4 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: geom_hex bins at the true lon/lat; window shows all cells
+        comment: geom_hex bins at the true lon/lat; window shows all cells; log colour
+          bar ticks 1/10/100 readable
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -167,23 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clusters of different density and shape, sparse fringes and dense
-          cores, gaps between clusters
+        comment: Clusters of different density and shape, sparse fringes, dense cores,
+          gaps between clusters
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
-        passed: true
-        comment: NYC taxi pickups is plausible and neutral, but the Manhattan band's
-          south-west cells and LGA's north rows sit over water beyond the drawn outlines
-          (defect line)
+        passed: false
+        comment: NYC taxi pickups is plausible and neutral; a few pale fringe cells
+          still sit over water beyond the drawn outlines (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15,000 points, counts 1 to a few hundred per cell; NYC coordinates
-          correct (Midtown ~40.75, JFK ~40.64, LGA ~40.77)
+        comment: '15,000 points, counts 1 to a few hundred per cell; NYC coordinates
+          checked: Midtown ~40.75, JFK ~40.64/-73.78, LGA ~40.77/-73.87'
     code_quality:
       score: 10
       max: 10
@@ -227,7 +227,7 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
+        passed: false
         comment: Native geom_hex stat with bins=[N, N], scale_fill_gradientn with
           trans='log10', coord_fixed with limits
       - id: LM-02
@@ -240,13 +240,13 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
-  rendered_at: '2026-11-27T16:39:52Z'
+  rendered_at: '2026-11-27T16:52:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -255,3 +255,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - minimal-chrome
