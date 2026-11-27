@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: pending | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import importlib.util
