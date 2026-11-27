@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-27
@@ -33,8 +33,8 @@ ARC_SPAN = 270  # degrees covered by the sectors; the rest stays open for the ri
 OPENING_CENTER = -90  # direction of the open part (straight down)
 HOLE = 0.5  # radius of the empty center
 PLOT_ASPECT = 1.18  # plot-area width / height, so that circles stay circles
-PPU = 185  # pixels per radius unit on the 2400 px canvas
-LABEL_PX = 36  # font size of every label
+PPU = 158  # pixels per radius unit on the 2400 px canvas
+LABEL_PX = 44  # font size of every label
 
 # Columns: set these to your table's column names
 NAME = "Innovation"  # role: name
@@ -77,7 +77,7 @@ sectors = list(df[SECTOR].unique())
 span = ARC_SPAN / len(sectors)
 start = OPENING_CENTER + 180 - ARC_SPAN / 2 + ARC_SPAN  # first sector begins here and runs clockwise
 outer = HOLE + len(RINGS)
-y_lo, y_hi = -(outer + 0.2), outer + 1.0
+y_lo, y_hi = -(outer + 0.8), outer + 2.2
 half_x = (y_hi - y_lo) / 2 * PLOT_ASPECT
 
 
@@ -121,7 +121,7 @@ def text_box(left, center_y, text):
     return (left, center_y - 0.6 * LABEL_PX, left + CHAR_W * len(text), center_y + 0.6 * LABEL_PX)
 
 
-def clash(box, others, pad=6):
+def clash(box, others, pad=14):
     """True when box comes within pad pixels of any box in others."""
     return any(
         box[0] < o[2] + pad and o[0] < box[2] + pad and box[1] < o[3] + pad and o[1] < box[3] + pad for o in others
@@ -138,8 +138,15 @@ for i, ring in enumerate(RINGS):
     texts.append((left, cy, ring))
     taken.append(text_box(left, cy, ring))
 for sector in sectors:
-    cx, cy = (v * PPU for v in polar(outer + 0.45, sum(sector_angles[sector]) / 2))
-    left = cx - CHAR_W * len(sector) / 2
+    mid = sum(sector_angles[sector]) / 2
+    radius = outer + 0.2
+    while True:  # move out until the whole header box lies beyond the outer ring
+        cx, cy = (v * PPU for v in polar(radius, mid))
+        left = cx - CHAR_W * len(sector) / 2
+        box = text_box(left, cy, sector)
+        if min(math.hypot(x, y) for x in (box[0], box[2]) for y in (box[1], box[3])) > outer * PPU + 12:
+            break
+        radius += 0.02
     texts.append((left, cy, sector.upper()))
     taken.append(text_box(left, cy, sector.upper()))
 
@@ -174,9 +181,11 @@ for sector in sectors:
                 for x, y in ((box[0], box[1]), (box[0], box[3]), (box[2], box[1]), (box[2], box[3]))
             )
             fits = abs(box[0]) < limit and abs(box[2]) < limit
+            reach = [math.hypot(x, y) / PPU for x in (box[0], box[2]) for y in (box[1], (box[1] + box[3]) / 2, box[3])]
+            crosses = any(min(reach) < HOLE + j + 0.03 and max(reach) > HOLE + j - 0.03 for j in range(1, len(RINGS)))
             blocked = clash(box, taken) or clash(marker, taken, 2)
-            options.append((blocked or not fits, not inside, cost, mx, my, left, box, marker))
-        *_, mx, my, left, box, marker = min(options, key=lambda o: o[0:3])
+            options.append((blocked or not fits, not inside, crosses, cost, mx, my, left, box, marker))
+        *_, mx, my, left, box, marker = min(options, key=lambda o: o[0:4])
         taken += [box, marker]
         texts.append((left, my, row[NAME]))
         points.append((mx / PPU, my / PPU))
