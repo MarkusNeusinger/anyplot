@@ -2,53 +2,50 @@ library: ggplot2
 language: r
 specification_id: ks-test-comparison
 created: '2026-05-29T03:30:56Z'
-updated: '2026-05-29T03:38:03Z'
+updated: '2026-11-27T18:16:04Z'
 generated_by: claude-sonnet
-workflow_run: 26616091053
+workflow_run: 46047384139
 issue: 4130
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Correct ECDF step-function implementation using stat_ecdf with redundant color+linetype
-    encoding
-  - 'Complete K-S statistics: dotdash vertical line at maximum divergence + annotation
-    box showing D and p-value'
-  - 'Full theme-adaptive chrome: backgrounds, text, grid, legend all correctly flip
-    between light (#FAF8F1) and dark (#1A1A17)'
-  - 'Idiomatic ggplot2: stat_ecdf, scale_color_manual+scale_linetype_manual, annotate("label")
-    with custom padding and rounding'
-  - Clear data storytelling focal point at the K-S statistic location
-  - Correct canvas dimensions (3200x1800) and both renders fully readable with no
-    edge clipping
+  - Idiomatic stat_ecdf(geom = 'step', pad = FALSE) draws both ECDFs as true step
+    functions at the sample values
+  - Redundant color + line-type encoding (solid green vs longdash matte red), merged
+    into one legend by matching scale names
+  - 'Semantic Imprint mapping: Good Customers in brand green, Bad Customers in matte
+    red #AE3030'
+  - K-S segment spans exactly the widest gap at score ~613; D and p from ks.test placed
+    in empty space clear of both curves
+  - All chrome theme-adaptive; both renders fully readable
   weaknesses:
-  - 'Semantic palette violation: Bad Customers should use #AE3030 (matte red — semantic
-    anchor for bad/loss/error) instead of #C475FD (lavender); the green/red pairing
-    for Good/Bad customers is the expected real-world convention per the style guide
-    semantic exception rule'
-  - dplyr is imported but no dplyr functions are called — all data manipulation uses
-    base R (data.frame, factor, rep, sort, unique, etc.); remove the unused library()
-    call
+  - 'DE-02 (both): the major grid is drawn in INK_SOFT at full opacity on both axes
+    and reads as a high-contrast grid competing with the step lines → the style guide''s
+    grid tone, INK at 15 % (alpha(INK, 0.15)) at linewidth 0.3. Likely cause: panel.grid.major
+    = element_line(color = INK_SOFT, linewidth = 0.2).'
+  - 'Suggestion: drop the legend box frame (the style guide''s decoration checklist)
+    for a lighter bottom legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "ks-test-comparison · r · ggplot2 · anyplot.ai" in bold dark ink at size 12 — fully readable. X-axis label "Credit Score" and Y-axis label "Cumulative Proportion" both in dark ink at size 10. Y-axis tick labels (0%, 25%, 50%, 75%, 100%) and X-axis tick labels (300–800) in INK_SOFT at size 8. Legend at bottom with "Good Customers" and "Bad Customers" entries, bordered box on elevated bg. Annotation label showing "D = 0.536 / p = 8.23e-63" positioned to the right of the K-S dotdash line.
-      Data: Two ECDF step functions — Good Customers in brand green (#009E73, solid) and Bad Customers in lavender (#C475FD, longdash). Dotdash vertical line in INK color marks the K-S statistic location (~620). The two curves show clear separation: Bad Customers ECDF is left-shifted (lower mean scores), Good Customers ECDF is right-shifted (higher mean scores). KS distance D=0.536 is clearly visible.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light failures.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title 'ks-test-comparison · r · ggplot2 · anyplot.ai' top-left (~52 % of width); axis titles 'Credit Score' and 'Cumulative Proportion' in dark ink; tick labels 300-800 and 0 %-100 % in INK_SOFT; left and bottom axis lines; major grid on both axes in full-opacity INK_SOFT, noticeably strong; legend in a framed elevated box at the bottom. All readable.
+      Data: Good Customers solid brand green #009E73 step ECDF rising from ~500 to ~850; Bad Customers longdash matte red #AE3030 rising from ~310 to ~860. Black dotdash vertical segment at score ~613 from ~13 % to ~64 %. Label box 'D = 0.536 / p = 8.23e-63' in the empty lower right (~745-820, 13-23 %), clear of both curves.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title and axis labels render in light-colored text (INK=#F0EFE8) against the dark background. Tick labels in INK_SOFT (#B8B7B0) — clearly readable. Legend box uses elevated dark bg (#242420) with INK_SOFT border. K-S dotdash line adapts to white/INK color for dark mode contrast.
-      Data: Data colors identical to light render — Good Customers remains #009E73 (brand green, solid), Bad Customers remains #C475FD (lavender, longdash). The annotation box uses elevated bg (#242420) with dark-themed text. Brand green is clearly visible against the dark background.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures detected; theme adaptation is correct.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks and legend text in #B8B7B0; grid light grey at full opacity; legend and label box on #242420 with light border. No dark-on-dark text.
+      Data: green and matte red identical to the light render; the K-S segment flips to light ink and stays visible; label text light on the elevated fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,78 +53,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8,
-          annotation=3.0); all text readable in both renders at full resolution
+        comment: Font sizes set explicitly (title 12, axis titles 10, ticks and legend
+          8, annotation 3.0 mm); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotation box positioned clear of ECDF
-          lines
+        comment: D/p box sits in the empty lower-right region, clear of both curves
+          and the segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both ECDF lines clearly visible (linewidth=1.2); K-S dotdash line
-          visible (linewidth=0.9); redundant linetype encoding aids CVD users
+        comment: Both ECDF lines at linewidth 1.2 clearly visible; dotdash K-S segment
+          visible in INK in both themes; legend line samples match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair is CVD-safe; redundant encoding with solid vs
-          longdash linestyles
+        comment: Color pair backed by redundant solid vs longdash line types, so color
+          is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; generous margins; legend at bottom clear
-          of data; title approximately 65% of width
+        comment: 3200x1800 canvas well used; legend at the bottom clear of the data;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X='Credit Score', Y='Cumulative Proportion'; title matches required
-          format
+        comment: '''Credit Score'' (unitless points) and ''Cumulative Proportion''
+          with percent ticks; title in the mandated format'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series (#009E73 for Good Customers) correct; Bad Customers
-          uses lavender (#C475FD, position 2) but should use matte red (#AE3030) per
-          semantic exception (bad/error/fail→red); backgrounds and chrome correctly
-          theme-adaptive
+        passed: true
+        comment: 'Good Customers #009E73; Bad Customers matte red #AE3030 by the semantic
+          exception (good->green, bad->red); backgrounds #FAF8F1 / #1A1A17, chrome
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: custom theme tokens, redundant dual-aesthetic encoding,
-          styled annotation box with custom padding/rounding, legend key width customization'
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, elevated-fill
+          label box; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
-        passed: true
-        comment: Panel border removed (L-shaped frame via axis.line), minor gridlines
-          removed, subtle major grid (INK_SOFT, linewidth=0.2), styled legend box
-          with border
+        passed: false
+        comment: Major grid drawn in INK_SOFT at full opacity on both axes reads as
+          a high-contrast grid, short of the style guide's 15-25 % grid tone (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: K-S dotdash line + annotation box creates clear focal point at the
-          statistical finding; clearly guides viewer to the key inference
+        passed: false
+        comment: The K-S segment and the D/p box are what the Notes prescribe; no
+          further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct K-S plot with two ECDF step functions
+        comment: 'Correct K-S plot: two ECDF step functions on shared axes'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs as step functions, K-S statistic highlighted with line,
-          D and p-value annotated, distributions labeled, Y-axis 0-1
+        comment: 'All Notes and A-good-version bullets met: step ECDFs, distinct colors
+          and line types in a legend, vertical segment at the max gap, D and p shown
+          clear of both curves'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Credit Score on X, Cumulative Proportion on Y, both samples shown
+        comment: Score on x, cumulative proportion on y from 0 to 1; stat_ecdf(pad
+          = FALSE) keeps the steps at the sample values; segment sits exactly at the
+          widest gap
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ks-test-comparison · r · ggplot2 · anyplot.ai' correct; legend
-          labels match data groups
+        comment: Title 'ks-test-comparison · r · ggplot2 · anyplot.ai' correct; merged
+          color+linetype legend with readable entries
     data_quality:
       score: 15
       max: 15
@@ -167,24 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both ECDFs, K-S test statistic, p-value, maximum divergence
-          annotation — all spec features covered
+        comment: Shows both ECDFs, the max-distance location, D and p
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring Good/Bad customers is a real, neutral business analytics
-          use case; plausible score distributions
+        comment: Credit scoring Good vs Bad customers, a real and neutral use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores in 300-850 FICO-like range; Normal(680,60) vs Normal(580,80)
-          are realistic distributions; 500 per group sufficient for reliable KS inference
+        comment: Scores roughly 310-860, FICO-like; D = 0.536 shown equals ks.test's
+          statistic (the segment from ~13 % to ~64 % spans it), p = 8.23e-63 from
+          ks.test
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,64 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme tokens → data → KS computation → plot
-          → save'
+        comment: 'Flat script: imports, tokens, data, K-S computation, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: dplyr is imported but no dplyr functions are called in the script
-          — all data manipulation uses base R (data.frame, factor, rep, sort, unique);
-          remove library(dplyr)
+        passed: true
+        comment: ggplot2, scales (percent_format) and ragg (agg_png) all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R; no fake UI; appropriate complexity for the visualization
+        comment: ks.test for D and p; ecdf() evaluation over the pooled values to
+          locate the maximum, which ks.test does not return
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf; uses current ragg::agg_png
-          API
+        comment: Saves plot-{THEME}.png via ragg; label border set with current linewidth
+          / border.colour
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: stat_ecdf(geom='step') is the idiomatic ggplot2 statistical layer;
-          scale_color_manual + scale_linetype_manual dual-aesthetic encoding; expansion()
-          for axis limits; annotate('label') with ggplot2-specific styling parameters
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: stat_ecdf is a distinctive ggplot2 statistical transformation not
-          easily replicated; annotate('label', label.padding, label.r, label.size)
-          uses ggplot2-specific annotation styling; legend.key.width for linetype
-          legend optimization
+        passed: false
+        comment: stat_ecdf(geom = 'step', pad = FALSE), paired scale_*_manual with
+          shared NULL names merging into one legend, percent_format, expansion()
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: stat_ecdf is a ggplot2 statistical layer computing the ECDF in the
+          grammar; merged color+linetype guide
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
+  rendered_at: '2026-11-27T18:12:40Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - ecdf
+  - hypothesis-testing
   styling:
-  - grid-styling
+  - publication-ready

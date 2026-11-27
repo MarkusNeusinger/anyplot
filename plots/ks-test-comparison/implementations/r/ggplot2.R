@@ -1,10 +1,9 @@
 #' anyplot.ai
 #' ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 90/100 | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-27
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -49,7 +48,6 @@ max_idx   <- which.max(diffs)
 ks_x      <- all_x[max_idx]
 ks_y_lo   <- min(good_vals[max_idx], bad_vals[max_idx])
 ks_y_hi   <- max(good_vals[max_idx], bad_vals[max_idx])
-ks_y_mid  <- (ks_y_lo + ks_y_hi) / 2
 
 # Annotation text
 ks_d     <- round(as.numeric(ks_result$statistic), 3)
@@ -81,21 +79,22 @@ p <- ggplot(df_scores, aes(x = score, color = group, linetype = group)) +
   ) +
   annotate(
     "label",
-    x             = ks_x + 22,
-    y             = ks_y_mid,
+    x             = ks_x + 130,
+    y             = 0.18,
     label         = annot,
     color         = INK,
     fill          = ELEVATED_BG,
     size          = 3.0,
     hjust         = 0,
     label.padding = unit(0.4, "lines"),
-    label.size    = 0.25,
+    linewidth     = 0.25,
+    border.colour = INK_SOFT,
     label.r       = unit(0.12, "lines")
   ) +
   scale_color_manual(
     name   = NULL,
     values = c("Good Customers" = IMPRINT_PALETTE[1],
-               "Bad Customers"  = IMPRINT_PALETTE[2])
+               "Bad Customers"  = IMPRINT_PALETTE[5])  # semantic: bad -> matte red
   ) +
   scale_linetype_manual(
     name   = NULL,
