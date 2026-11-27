@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-29
 """
 
 import os
@@ -11,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.text import Text
 
 
 # Theme tokens
@@ -21,7 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first 4 positions for sector encoding
+# Imprint palette
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 sns.set_theme(
@@ -34,178 +34,133 @@ sns.set_theme(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-np.random.seed(42)
+# Constants
+TOTAL_ANGLE_DEG = 270  # three-quarter layout, the open quarter holds ring labels
+START_ANGLE_DEG = 135
+ANCHOR_FRAC = {
+    "left": 0,
+    "bottom": 0,
+    "center": 0.5,
+    "right": 1,
+    "top": 1,
+}  # share of a label's size left of / below its anchor
+SECTOR_MARKERS = ["o", "s", "D", "^", "P", "X"]
+SIZE_BY_RING = [300, 240, 190, 140]  # nearest horizon gets the largest marker
+RING_FILLS = ["#009E73", "#4467A3", "#BD8233", "#AE3030"]
 
-# Configuration
-sectors = ["AI & ML", "Cloud & Infra", "Sustainability", "Biotech"]
-rings = ["Adopt", "Trial", "Assess", "Hold"]
-ring_radii = {"Adopt": 1.0, "Trial": 2.0, "Assess": 3.0, "Hold": 4.0}
-ring_importance = {"Adopt": 4, "Trial": 3, "Assess": 2, "Hold": 1}
+# Columns
+NAME = "Innovation"  # role: name
+RING = "Time horizon"  # role: ring
+SECTOR = "Sector"  # role: sector
 
-sector_colors = IMPRINT_PALETTE[:4]
-sector_palette = dict(zip(sectors, sector_colors, strict=True))
-sector_markers = {"AI & ML": "o", "Cloud & Infra": "s", "Sustainability": "D", "Biotech": "^"}
-
-total_angle_deg = 270
-sector_width_deg = total_angle_deg / len(sectors)
-start_angle_deg = 135
-
-# Ring fills — Imprint colors at low alpha, visible on both themes
-ring_fill_colors = ["#009E73", "#4467A3", "#BD8233", "#AE3030"]
-ring_boundaries = [0.5, 1.5, 2.5, 3.5, 4.5]
-# Boundary accent gradient via seaborn blend
-ring_accent = sns.blend_palette(["#009E73", "#BD8233", "#AE3030"], n_colors=5)
-
-# Innovation data (27 items across 4 rings × 4 sectors)
-innovations = [
-    ("LLM Agents", "Adopt", "AI & ML"),
-    ("RAG Pipelines", "Adopt", "AI & ML"),
-    ("Multimodal Models", "Trial", "AI & ML"),
-    ("Federated Learning", "Assess", "AI & ML"),
-    ("Neuromorphic Chips", "Hold", "AI & ML"),
-    ("AI Code Review", "Trial", "AI & ML"),
-    ("Synthetic Data Gen", "Assess", "AI & ML"),
-    ("Platform Eng.", "Adopt", "Cloud & Infra"),
-    ("eBPF Observability", "Trial", "Cloud & Infra"),
-    ("Wasm Edge", "Assess", "Cloud & Infra"),
-    ("Confid. Compute", "Trial", "Cloud & Infra"),
-    ("Serverless GPUs", "Assess", "Cloud & Infra"),
-    ("Quantum Network", "Hold", "Cloud & Infra"),
-    ("RISC-V Servers", "Hold", "Cloud & Infra"),
-    ("Carbon Accounting", "Adopt", "Sustainability"),
-    ("Green Software", "Trial", "Sustainability"),
-    ("Digital Twins", "Assess", "Sustainability"),
-    ("Circular Supply", "Trial", "Sustainability"),
-    ("Ocean Carbon Cap.", "Hold", "Sustainability"),
-    ("Energy Harvest IoT", "Assess", "Sustainability"),
-    ("mRNA Therapeutics", "Adopt", "Biotech"),
-    ("CRISPR Diagnostics", "Trial", "Biotech"),
-    ("Organ-on-Chip", "Assess", "Biotech"),
-    ("Biocomputing", "Hold", "Biotech"),
-    ("Precision Nutrition", "Trial", "Biotech"),
-    ("Longevity Biomarkers", "Assess", "Biotech"),
-    ("Phage Therapy", "Hold", "Biotech"),
+# Data
+# Rows are listed nearest horizon first, so each ring and sector is ordered by first appearance
+items = [
+    ("AI Triage", "Now", "Healthcare"),
+    ("Telehealth", "Now", "Healthcare"),
+    ("Wearable ECG", "Near-term", "Healthcare"),
+    ("Digital Therapeutics", "Near-term", "Healthcare"),
+    ("Gene Editing", "Mid-term", "Healthcare"),
+    ("Robotic Surgery", "Mid-term", "Healthcare"),
+    ("Brain Interfaces", "Future", "Healthcare"),
+    ("EV Charging", "Now", "Mobility"),
+    ("Ride Pooling", "Near-term", "Mobility"),
+    ("Solid-State Cells", "Near-term", "Mobility"),
+    ("Robotaxis", "Mid-term", "Mobility"),
+    ("Air Taxis", "Mid-term", "Mobility"),
+    ("Hyperloop", "Future", "Mobility"),
+    ("Instant Payments", "Now", "Finance"),
+    ("Open Banking", "Now", "Finance"),
+    ("Tokenized Assets", "Near-term", "Finance"),
+    ("Digital Euro", "Mid-term", "Finance"),
+    ("Embedded Insurance", "Mid-term", "Finance"),
+    ("Quantum-Safe Crypto", "Future", "Finance"),
+    ("Smallsat Fleets", "Now", "Space"),
+    ("Reusable Rockets", "Near-term", "Space"),
+    ("In-Orbit Servicing", "Mid-term", "Space"),
+    ("Lunar Logistics", "Mid-term", "Space"),
+    ("Space Solar Power", "Future", "Space"),
+    ("Asteroid Mining", "Future", "Space"),
 ]
+df = pd.DataFrame(items, columns=[NAME, RING, SECTOR])
 
-# Build DataFrame with polar positions
-records = []
-for name, ring, sector in innovations:
-    sector_idx = sectors.index(sector)
-    same_group = [(n, r, s) for n, r, s in innovations if s == sector and r == ring]
-    item_idx = same_group.index((name, ring, sector))
-    n_in_group = len(same_group)
+# Plot
+# Layout: angle by sector cell, radius by ring, spread inside each cell (layout, not data)
+rings = list(pd.unique(df[RING]))
+sectors = list(pd.unique(df[SECTOR]))
+n_rings = len(rings)
+n_sectors = len(sectors)
+sector_width_deg = TOTAL_ANGLE_DEG / n_sectors
+sector_palette = dict(zip(sectors, IMPRINT_PALETTE[:n_sectors], strict=True))
+sector_markers = dict(zip(sectors, SECTOR_MARKERS[:n_sectors], strict=True))
+ring_boundaries = np.arange(n_rings + 1) + 0.5
+r_max = ring_boundaries[-1]
+ring_accent = sns.blend_palette(["#009E73", "#BD8233", "#AE3030"], n_colors=n_rings + 1)
 
-    sector_start = np.deg2rad(start_angle_deg - sector_idx * sector_width_deg)
-    sector_end = np.deg2rad(start_angle_deg - (sector_idx + 1) * sector_width_deg)
-    margin = 0.10 * (sector_start - sector_end)
-    usable_start = sector_start - margin
-    usable_end = sector_end + margin
+ANGLE = "angle"
+RADIUS = "radius"
+SIZE = "size"
+ring_idx = df[RING].map({name: i for i, name in enumerate(rings, start=1)})
+sector_idx = df[SECTOR].map({name: i for i, name in enumerate(sectors)})
+cell_rank = df.groupby([SECTOR, RING]).cumcount()
+cell_count = df.groupby([SECTOR, RING])[NAME].transform("size")
+cell_frac = (cell_rank + 0.5) / cell_count  # even spread across the cell, margins kept
+cell_frac = cell_frac.where(cell_count > 1, 0.32)  # a lone item sits off the sector axis, clear of the header
+sector_start = START_ANGLE_DEG - sector_idx * sector_width_deg
+df[ANGLE] = np.deg2rad(sector_start - (0.1 + 0.8 * cell_frac) * sector_width_deg)
+df[RADIUS] = ring_idx + np.where(cell_rank % 2 == 0, 0.2, -0.2) * (cell_count > 1)
+df[SIZE] = ring_idx.map(dict(enumerate(SIZE_BY_RING, start=1)))
 
-    if n_in_group == 1:
-        angle = (usable_start + usable_end) / 2
-    elif n_in_group == 2:
-        mid = (usable_start + usable_end) / 2
-        half = 0.80 * (usable_start - usable_end) / 2
-        angle = mid + half if item_idx == 0 else mid - half
-    else:
-        angle = usable_start + (usable_end - usable_start) * item_idx / (n_in_group - 1)
-
-    radial_jitter = (
-        0.24
-        if (n_in_group == 2 and item_idx == 0)
-        else (-0.24 if (n_in_group == 2 and item_idx == 1) else np.random.uniform(-0.22, 0.22))
-    )
-    radius = ring_radii[ring] + radial_jitter
-
-    records.append(
-        {
-            "name": name,
-            "ring": ring,
-            "sector": sector,
-            "angle": angle,
-            "radius": radius,
-            "importance": ring_importance[ring],
-        }
-    )
-
-df = pd.DataFrame(records)
-
-# Plot — square canvas for radar (2400×2400 px); leave bottom 20% for legend
 fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="polar")
 ax.set_facecolor(PAGE_BG)
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
-fig.subplots_adjust(left=0.05, right=0.95, top=0.91, bottom=0.20)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.16)
 
-# Ring background fills — Imprint colors at very low alpha, theme-neutral
+# Ring fills (Imprint colors at low alpha) and boundary lines
 theta_fill = np.linspace(0, 2 * np.pi, 200)
-for i in range(len(rings)):
-    ax.fill_between(
-        theta_fill, ring_boundaries[i], ring_boundaries[i + 1], color=ring_fill_colors[i], alpha=0.18, zorder=0
-    )
-
-# Ring boundary lines with Imprint-derived gradient
+for i in range(n_rings):
+    ax.fill_between(theta_fill, ring_boundaries[i], ring_boundaries[i + 1], color=RING_FILLS[i], alpha=0.16, zorder=0)
 for i, rb in enumerate(ring_boundaries):
-    lw = 1.2 if i == 1 else 0.7
     ax.plot(
         theta_fill,
         np.full_like(theta_fill, rb),
         color=sns.desaturate(ring_accent[i], 0.5),
-        linewidth=lw,
-        alpha=0.5,
+        linewidth=1.2 if i == 1 else 0.7,
+        alpha=0.55,
         zorder=1,
     )
 
-# Sector divider lines
-for i in range(len(sectors) + 1):
-    angle = np.deg2rad(start_angle_deg - i * sector_width_deg)
-    ax.plot([angle, angle], [0.5, 4.5], color=INK_SOFT, linewidth=0.8, alpha=0.4, zorder=1)
+# Sector dividers
+for i in range(n_sectors + 1):
+    edge = np.deg2rad(START_ANGLE_DEG - i * sector_width_deg)
+    ax.plot([edge, edge], [ring_boundaries[0], r_max], color=INK_SOFT, linewidth=0.8, alpha=0.4, zorder=1)
 
-# Plot innovations — seaborn scatterplot with color + shape + size encoding
-size_map = {1: 150, 2: 250, 3: 340, 4: 440}
+# Items: color + shape by sector, size by time horizon
 sns.scatterplot(
     data=df,
-    x="angle",
-    y="radius",
-    hue="sector",
-    style="sector",
-    size="importance",
-    sizes=size_map,
+    x=ANGLE,
+    y=RADIUS,
+    hue=SECTOR,
+    style=SECTOR,
+    size=SIZE,
+    sizes=(min(SIZE_BY_RING), max(SIZE_BY_RING)),
     markers=sector_markers,
     palette=sector_palette,
     edgecolor=PAGE_BG,
     linewidth=1.2,
-    alpha=0.9,
+    alpha=0.95,
     legend=False,
     ax=ax,
     zorder=5,
 )
-
-# Subtle halo per sector using seaborn scatterplot
-for sector_name in sectors:
-    sector_df = df[df["sector"] == sector_name]
-    sns.scatterplot(
-        data=sector_df,
-        x="angle",
-        y="radius",
-        color=sector_palette[sector_name],
-        s=500,
-        alpha=0.07,
-        legend=False,
-        ax=ax,
-        zorder=3,
-    )
-
-# Axes setup — clean polar frame
-ax.set_ylim(0, 6.0)
+ax.set_ylim(0, r_max + 1.2)
 ax.set_yticks([])
 ax.set_xticks([])
 ax.set_xlabel("")
@@ -213,160 +168,146 @@ ax.set_ylabel("")
 ax.grid(False)
 ax.spines["polar"].set_visible(False)
 
-fig.canvas.draw()
-
-# Innovation labels with improved collision detection and canvas boundary awareness
-placed_boxes = []
-DPI = fig.dpi
-PT = DPI / 72.0
-FONT_SIZE = 10
-CHAR_W = FONT_SIZE * 0.62 * PT
-CHAR_H = FONT_SIZE * 1.3 * PT
-BOX_PAD = 6 * PT
-
-fig_width_px = fig.get_figwidth() * DPI
-fig_height_px = fig.get_figheight() * DPI
-MARGIN_PX = 8 * PT
-
-df_sorted = df.sort_values("radius", ascending=False).reset_index(drop=True)
-
-for _, row in df_sorted.iterrows():
-    angle, radius, name = row["angle"], row["radius"], row["name"]
-    angle_deg = np.rad2deg(angle) % 360
-    px, py = ax.transData.transform((angle, radius))
-
-    if 30 < angle_deg < 150:
-        ha, base_x = "left", 10
-    elif 210 < angle_deg < 330:
-        ha, base_x = "right", -10
-    else:
-        ha, base_x = "center", 0
-
-    best_pos, best_score = (12, base_x), float("inf")
-    for y in [12, -12, 20, -20, 30, -30, 40, -40, 50, -50]:
-        for dx_adj in [0, 10, -10, 20, -20, 30, -30]:
-            x_off = base_x + dx_adj
-            va_c = "bottom" if y > 0 else "top"
-            cx = px + x_off * PT
-            cy = py + y * PT
-            w = len(name) * CHAR_W + BOX_PAD * 2
-            h = CHAR_H + BOX_PAD * 2
-            x0 = cx if ha == "left" else (cx - w if ha == "right" else cx - w / 2)
-            y0 = cy if va_c == "bottom" else cy - h
-            # Canvas boundary penalty — strongly prefer in-bounds placements
-            boundary_penalty = 0
-            if x0 < MARGIN_PX or x0 + w > fig_width_px - MARGIN_PX:
-                boundary_penalty += 50
-            if y0 < MARGIN_PX or y0 + h > fig_height_px - MARGIN_PX:
-                boundary_penalty += 50
-            m = 3 * PT
-            overlap_count = sum(
-                1
-                for bx in placed_boxes
-                if not (x0 + w + m < bx[0] or bx[0] + bx[2] + m < x0 or y0 + h + m < bx[1] or bx[1] + bx[3] + m < y0)
-            )
-            score = boundary_penalty + overlap_count
-            if score < best_score:
-                best_score = score
-                best_pos = (y, x_off)
-                if score == 0:
-                    break
-        if best_score == 0:
-            break
-
-    y_off, x_off = best_pos
-    va = "bottom" if y_off > 0 else "top"
-
-    ax.annotate(
-        name,
-        xy=(angle, radius),
-        xytext=(x_off, y_off),
-        textcoords="offset points",
-        fontsize=FONT_SIZE,
-        color=INK,
-        fontweight="medium",
-        ha=ha,
-        va=va,
-        bbox={"boxstyle": "round,pad=0.18", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.88},
-        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.5},
-        zorder=6,
-    )
-    cx_f = px + x_off * PT
-    cy_f = py + y_off * PT
-    w_f = len(name) * CHAR_W + BOX_PAD * 2
-    h_f = CHAR_H + BOX_PAD * 2
-    x0_f = cx_f if ha == "left" else (cx_f - w_f if ha == "right" else cx_f - w_f / 2)
-    y0_f = cy_f if va == "bottom" else cy_f - h_f
-    placed_boxes.append((x0_f, y0_f, w_f, h_f))
-
-# Sector header labels
+# Sector headers along the outer edge
+texts = []
 for i, sector_name in enumerate(sectors):
-    mid_angle = np.deg2rad(start_angle_deg - (i + 0.5) * sector_width_deg)
-    ax.text(
-        mid_angle,
-        5.4,
-        sector_name,
-        ha="center",
-        va="center",
-        fontsize=16,
-        fontweight="bold",
-        color=sector_palette[sector_name],
-        zorder=7,
+    mid = np.deg2rad(START_ANGLE_DEG - (i + 0.5) * sector_width_deg)
+    texts.append(
+        ax.text(
+            mid,
+            r_max + 0.95,
+            sector_name,
+            ha="center",
+            va="center",
+            fontsize=14,
+            fontweight="bold",
+            color=sector_palette[sector_name],
+            zorder=7,
+        )
     )
 
-# Ring labels along the gap edge
-label_angle = np.deg2rad(start_angle_deg - total_angle_deg - 8)
-for ring_name, ring_r in zip(rings, [1.0, 2.0, 3.0, 4.0], strict=True):
-    ax.text(
-        label_angle,
-        ring_r,
-        ring_name,
-        ha="center",
-        va="center",
-        fontsize=12,
-        fontweight="bold",
-        color=INK_SOFT,
-        bbox={"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.88},
-        zorder=7,
+# Ring names in the open quarter
+label_angle = np.deg2rad(START_ANGLE_DEG - TOTAL_ANGLE_DEG - 10)
+for r, ring_name in enumerate(rings, start=1):
+    texts.append(
+        ax.text(
+            label_angle,
+            r,
+            ring_name,
+            ha="center",
+            va="center",
+            fontsize=11,
+            fontweight="bold",
+            color=INK_SOFT,
+            bbox={"boxstyle": "round,pad=0.2", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.9},
+            zorder=7,
+        )
     )
 
-# Directional storytelling cues (Imprint-derived colors)
-dir_angle = np.deg2rad(start_angle_deg - total_angle_deg - 22)
-ax.text(
-    dir_angle,
-    0.7,
-    "◂ Ready",
-    fontsize=9,
-    color=sns.desaturate("#009E73", 0.55),
-    fontweight="bold",
-    ha="center",
-    va="center",
-    zorder=7,
+# Directional cues
+cue_angle = np.deg2rad(START_ANGLE_DEG - TOTAL_ANGLE_DEG - 26)
+texts.append(
+    ax.text(
+        cue_angle,
+        ring_boundaries[0] + 0.1,
+        "◂ Ready",
+        fontsize=9,
+        color=sns.desaturate("#009E73", 0.55),
+        fontweight="bold",
+        ha="center",
+        va="center",
+        zorder=7,
+    )
 )
-ax.text(
-    dir_angle,
-    4.7,
-    "Emerging ▸",
-    fontsize=9,
-    color=sns.desaturate("#AE3030", 0.55),
-    fontweight="bold",
-    ha="center",
-    va="center",
-    zorder=7,
+texts.append(
+    ax.text(
+        cue_angle,
+        r_max + 0.2,
+        "Emerging ▸",
+        fontsize=9,
+        color=sns.desaturate("#AE3030", 0.55),
+        fontweight="bold",
+        ha="center",
+        va="center",
+        zorder=7,
+    )
 )
 
-# Title — figure-centered via suptitle so it doesn't clip at axes boundaries
+# Item labels: placed radially outward from each marker, greedy against measured boxes
+fig.canvas.draw()
+renderer = fig.canvas.get_renderer()
+PT = fig.dpi / 72.0
+fig_w, fig_h = fig.canvas.get_width_height()
+cx, cy = ax.transData.transform((0, 0))
+rows = df.sort_values(RADIUS, ascending=False)
+placed = [(b.x0, b.y0, b.x1, b.y1) for b in (t.get_window_extent(renderer) for t in texts)]
+marker_boxes = []
+for _, row in rows.iterrows():
+    px, py = ax.transData.transform((row[ANGLE], row[RADIUS]))
+    half = (np.sqrt(row[SIZE]) / 2 + 2) * PT
+    marker_boxes.append((px - half, py - half, px + half, py + half))
+placed += marker_boxes
+
+for k, (_, row) in enumerate(rows.iterrows()):
+    px, py = ax.transData.transform((row[ANGLE], row[RADIUS]))
+    base = np.arctan2(py - cy, px - cx)
+    own = marker_boxes[k]
+    best = None
+    for dist in [11, 17, 25, 35, 47, 60, 76, 94, 112, 135]:
+        for turn in [0, 35, -35, 70, -70, 110, -110, 150, -150, 180]:
+            ang = base + np.deg2rad(turn)
+            ux, uy = np.cos(ang), np.sin(ang)
+            dx, dy = dist * ux, dist * uy
+            ha = "left" if ux > 0.35 else ("right" if ux < -0.35 else "center")
+            va = "bottom" if uy > 0.35 else ("top" if uy < -0.35 else "center")
+            t = ax.annotate(
+                row[NAME],
+                xy=(row[ANGLE], row[RADIUS]),
+                xytext=(dx, dy),
+                textcoords="offset points",
+                fontsize=9,
+                fontweight="medium",
+                ha=ha,
+                va=va,
+                color=INK,
+                bbox={"boxstyle": "round,pad=0.18", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.9},
+                arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.5},
+                zorder=6,
+            )
+            bb = Text.get_window_extent(t, renderer)  # size of the text alone; its position is set below
+            ax_x, ax_y = px + dx * PT, py + dy * PT
+            x0 = ax_x - bb.width * ANCHOR_FRAC[ha]
+            y0 = ax_y - bb.height * ANCHOR_FRAC[va]
+            pad = 2.5 * PT
+            box = (x0 - pad, y0 - pad, x0 + bb.width + pad, y0 + bb.height + pad)
+            hits = sum(
+                not (box[2] < o[0] or o[2] < box[0] or box[3] < o[1] or o[3] < box[1]) for o in placed if o is not own
+            )
+            # keep labels clear of the title (top) and the legend (bottom) bands
+            out = (box[0] < 6 * PT) + (box[2] > fig_w - 6 * PT) + (box[1] < 0.17 * fig_h) + (box[3] > 0.925 * fig_h)
+            score = hits + 5 * out + 0.002 * dist + 0.0005 * abs(turn)
+            if best is None or score < best[0]:
+                if best is not None:
+                    best[1].remove()
+                best = (score, t, box)
+            else:
+                t.remove()
+            if best[0] < 0.5:
+                break
+        if best[0] < 0.5:
+            break
+    placed.append(best[2])
+
 title = "radar-innovation-timeline · python · seaborn · anyplot.ai"
-title_fontsize = max(8, round(12 * 67 / len(title)))
-fig.suptitle(title, fontsize=title_fontsize, fontweight="medium", color=INK, y=0.97)
+fig.suptitle(title, fontsize=max(8, round(12 * 67 / len(title))), fontweight="medium", color=INK, y=0.97)
 
-# Combined legend — placed at bottom of figure using the 270° chart's natural gap
+# Legend: sectors (shape + color) and time horizons (size)
 sector_handles = [
     mlines.Line2D(
         [],
         [],
+        linestyle="",
         marker=sector_markers[s],
-        color="w",
         markerfacecolor=sector_palette[s],
         markeredgecolor=PAGE_BG,
         markersize=10,
@@ -374,35 +315,32 @@ sector_handles = [
     )
     for s in sectors
 ]
-ring_sizes_legend = {"Adopt (Now)": 440, "Trial (Next)": 340, "Assess (Explore)": 250, "Hold (Watch)": 150}
 ring_handles = [
     mlines.Line2D(
         [],
         [],
+        linestyle="",
         marker="o",
-        color="w",
         markerfacecolor=INK_MUTED,
         markeredgecolor=PAGE_BG,
-        markersize=np.sqrt(sz) / 3,
-        label=label,
+        markersize=np.sqrt(sz) / 2.2,
+        label=name,
     )
-    for label, sz in ring_sizes_legend.items()
+    for name, sz in zip(rings, SIZE_BY_RING, strict=True)
 ]
 legend = fig.legend(
     handles=sector_handles + ring_handles,
     loc="lower center",
     bbox_to_anchor=(0.5, 0.01),
     ncols=4,
-    fontsize=8,
-    title="Sectors (shape+color) · Time Horizons (size)",
-    title_fontsize=9,
+    fontsize=9,
+    title="Sectors (shape + color) · Time horizons (marker size)",
+    title_fontsize=10,
     framealpha=0.95,
-    edgecolor=INK_SOFT,
     fancybox=True,
     handletextpad=0.8,
     borderpad=0.9,
 )
 legend.get_frame().set_facecolor(ELEVATED_BG)
 
-# Save — square canvas, no bbox_inches trim (seaborn hard rule)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
