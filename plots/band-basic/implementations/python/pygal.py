@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -72,7 +72,7 @@ custom_style = Style(
     opacity_hover=".40",
     stroke_opacity="1",
     stroke_opacity_hover="1",
-    stroke_width=2.5,
+    stroke_width=8,
     title_font_size=66,
     label_font_size=44,
     major_label_font_size=44,
@@ -118,13 +118,15 @@ chart = pygal.XY(
     margin_left=30,
     margin_right=50,
     spacing=18,
+    # pygal closes a filled series down to the baseline at x=0; a zero-width outline hides that stroke
+    css=["file://style.css", "file://graph.css", "inline:.series.serie-0 path{stroke-width:0 !important}"],
 )
 
 
 # Band as closed polygon: upper boundary forward, then lower boundary reversed
 upper_pts = list(zip(x_vals, df[UPPER].astype(float).tolist(), strict=True))
 lower_pts = list(zip(x_vals, df[LOWER].astype(float).tolist(), strict=True))
-chart.add("95% Confidence Band", upper_pts + lower_pts[::-1], stroke_style={"width": 0.01}, show_dots=False)
+chart.add("95% Confidence Band", upper_pts + lower_pts[::-1], show_dots=False)
 
 # Central line on top of the band
 chart.add(
@@ -133,7 +135,7 @@ chart.add(
     fill=False,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 10, "linecap": "round", "linejoin": "round"},
+    stroke_style={"linecap": "round", "linejoin": "round"},
 )
 
 # Save PNG and interactive HTML
