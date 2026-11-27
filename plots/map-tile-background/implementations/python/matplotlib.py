@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-tile-background: Map with Tile Background
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import io
@@ -25,9 +25,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Continuous colormap (Imprint marks stops) for visitor density
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
@@ -52,8 +52,8 @@ label_offsets = {
     "Colosseum": (12, -14, "left"),
     "Vatican Museums": (-18, 10, "right"),
     "St. Peter's Basilica": (-16, -8, "right"),
-    "Trevi Fountain": (16, 4, "left"),
-    "Pantheon": (16, -22, "left"),
+    "Trevi Fountain": (18, -8, "left"),
+    "Pantheon": (10, 20, "left"),
     "Roman Forum": (-14, -12, "right"),
     "Spanish Steps": (14, 6, "left"),
     "Piazza Navona": (-18, 38, "left"),
