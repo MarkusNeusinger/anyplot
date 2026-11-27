@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:47:36Z'
-updated: '2026-11-27T17:18:29Z'
+updated: '2026-11-27T17:26:19Z'
 generated_by: claude-sonnet
-workflow_run: 46039785469
+workflow_run: 46040944544
 issue: 691
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,35 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
   - Imprint diverging fields ramp via scale_fill_gradient2(midpoint=0) with the page
     color as midpoint in each theme
   - 'Per-cell text contrast through a computed text_color column and scale_color_identity:
     white on strong light-theme cells, INK elsewhere'
-  - Colorbar limits and breaks computed from the data; the 110 px colorbar reads cleanly
-    in both themes
+  - Colorbar limits and breaks computed from the data; ticks every 15 including 0
   - Tiles flush with the axes (expand=(0, 0)) and data-order discrete limits keep
     quarters chronological
   - Full theme-token chrome; both renders readable with no dark-on-dark text
   weaknesses:
-  - 'SC-02 (both): cells are separated by a 0.6 mm INK_SOFT grid (dark grey on light,
-    light grey on dark) instead of the page-colored separator C1 allows → outline
-    the tiles in PAGE_BG, or drop the outline. Likely cause: geom_tile(color=INK_SOFT,
-    size=0.6).'
   - 'Suggestion: a slightly smaller subtitle gap would tighten the header block.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400.
       Chrome: bold title 'heatmap-basic · python · plotnine · anyplot.ai' centered (~75 % width), INK_SOFT subtitle 'Year-over-year growth rate (%) · Q1 2023 – Q4 2024', axis titles Department / Quarter in INK, tick labels in INK_SOFT with quarters rotated 45°. All readable.
-      Data: 8x8 tiles (Engineering..Support x Q1 '23..Q4 '24) on the imprint_div fields ramp, red #AE3030 for negative, page color at 0, blue #4467A3 for positive; dark grey tile outlines. Bold signed numbers in every cell, white on the strongest cells (-32.5, +38.2, +33.7), dark ink elsewhere. Tall colorbar 'Growth (%)' with ticks -30, -15, 0, 15, 30 on an elevated, frameless panel.
+      Data: 8x8 tiles (Engineering..Support x Q1 '23..Q4 '24) on the imprint_div fields ramp, red #AE3030 negative, page color at 0, blue #4467A3 positive; thin page-colored separators between tiles. Bold signed numbers in every cell, white on the strongest cells (-32.5, -26.4, +38.2, +33.7 …), dark ink elsewhere. Tall colorbar 'Growth (%)' with ticks -30, -15, 0, 15, 30 on an elevated frameless panel.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles in light INK, subtitle and ticks in INK_SOFT; no dark-on-dark text.
-      Data: same tiles on the dark field ramp (midpoint is the dark page color, poles #AE3030 / #4467A3); light-grey tile outlines; all in-cell numbers in light ink and readable; colorbar identical in layout.
+      Chrome: title and axis titles in light INK, subtitle and ticks in INK_SOFT; no dark-on-dark text.
+      Data: same tiles on the dark fields ramp (midpoint is the dark page color, poles #AE3030 / #4467A3); thin dark page-colored separators; all in-cell numbers in light ink and readable; colorbar identical in layout.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,8 +48,8 @@ review:
         max: 8
         passed: true
         comment: Title 12 pt bold, subtitle 8 pt, axis titles 10 pt, ticks 8 pt, bold
-          in-cell numbers (geom_text size=5 mm) all readable in both themes; cell
-          text switches to white on strong light-theme cells
+          in-cell numbers all readable in both themes; cell text switches to white
+          on strong light-theme cells
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -67,36 +62,36 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 64 tiles clearly visible; tall 110 px colorbar shows the full gradient
-          in both themes
+        comment: 64 tiles clearly visible; tall colorbar shows the full gradient in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging ramp is CVD-safe; numbers give a redundant value
-          channel
+        comment: Red-blue diverging ramp is CVD-safe; in-cell numbers give a redundant
+          value channel
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, tiles flush with the axes, legend and labels
+        comment: Square 2400x2400 canvas, grid fills the panel, legend and labels
           fit with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Department / Quarter axis titles, subtitle gives the unit; colorbar
-          'Growth (%)'
+        comment: Department / Quarter axis titles; colorbar 'Growth (%)' and subtitle
+          give the unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'imprint_div fields ramp #AE3030 -> page color -> #4467A3 at midpoint
-          0; #FAF8F1 / #1A1A17 backgrounds; all chrome on theme tokens'
+          0 in each theme; #FAF8F1 / #1A1A17 backgrounds; chrome on theme tokens'
     design_excellence:
       score: 11
       max: 20
@@ -106,26 +101,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: a subtitle tier in INK_SOFT under the bold title,
-          bold signed in-cell numbers as a deliberate typographic layer'
+        comment: 'Beyond baseline: an INK_SOFT subtitle tier under the bold title
+          and bold signed in-cell numbers as a deliberate typographic layer'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond baseline: tiles flush to the axes (expand=0), a frameless
-          colorbar on the elevated fill, colorbar breaks computed at a 15-point step
-          that hits 0'
+        comment: 'Beyond baseline: tiles flush to the axes (expand=0), frameless colorbar
+          on the elevated fill, breaks at a 15-point step that hits 0'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Data built as a clear red-to-blue recovery gradient across quarters
-          with distinct hot spots (HR Q1 '23, Sales Q4 '24), so the story reads at
-          a glance
+        comment: Data built as a red-to-blue recovery gradient across quarters with
+          distinct hot spots (HR Q1 '23, Sales Q4 '24)
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,28 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic heatmap with geom_tile; no additions
+        comment: Basic heatmap with geom_tile; no additions
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
+        passed: true
         comment: Diverging colormap, in-cell values, colorbar, logical order present;
-          C1's separator is an INK_SOFT grid, not a page-colored one (defect line)
+          C1 page-colored thin separators, C3 contrast-switching numbers met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarter on x in time order, departments in data order; limits rounded
+        comment: Quarters in time order on x, departments in data order; limits rounded
           out from the data, colorbar ticks every 15 including 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; colorbar titled 'Growth (%)' with readable
-          ticks
+        comment: Title in the mandated format; colorbar titled 'Growth (%)'
     data_quality:
       score: 15
       max: 15
@@ -164,8 +156,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Positive and negative values, gradient, outliers, signed annotations:
-          every aspect of the type shown'
+        comment: Positive and negative values, gradient, outliers, signed annotations
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -178,8 +169,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 8x8 within the 5-50 range; -32.5 % to +38.2 % plausible growth swings;
-          no Check values in the spec
+        comment: 8x8 inside the 5-50 range; -32.5 % to +38.2 % plausible swings; the
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -223,27 +214,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering, scale_color_identity driven by a computed
-          text_color column, discrete scale limits from df to keep data order
+        comment: Grammar-of-graphics layering; discrete scale limits from df keep
+          data order; text color mapped from a computed column
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: scale_fill_gradient2 with midpoint=0 plus an identity color scale
-          for per-cell text contrast
+        comment: scale_color_identity driving per-cell text contrast from a data column
+          (gradient2 itself is mandated by the library prompt)
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
-  rendered_at: '2026-11-27T17:15:15Z'
+  rendered_at: '2026-11-27T17:23:26Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - publication-ready
