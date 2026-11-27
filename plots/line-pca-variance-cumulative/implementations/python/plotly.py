@@ -1,7 +1,7 @@
 """anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: pending | Updated: 2026-11-27
 """
 
 import sys
