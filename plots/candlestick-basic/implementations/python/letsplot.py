@@ -1,7 +1,7 @@
 """ anyplot.ai
 candlestick-basic: Basic Candlestick Chart
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-30
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -20,143 +20,114 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette — semantic exception: finance uses green=profit/up, red=loss/down
-BULL_COLOR = "#009E73"  # Imprint position 1 — bullish / up
-BEAR_COLOR = "#AE3030"  # Imprint position 5 — bearish / down
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BULL_COLOR = IMPRINT_PALETTE[0]  # Imprint position 1 — bullish / up
+BEAR_COLOR = IMPRINT_PALETTE[4]  # Imprint position 5 — bearish / down
 
-# Data — simulated 30 trading days of OHLC prices
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open"  # role: open
+HIGH = "High"  # role: high
+LOW = "Low"  # role: low
+CLOSE = "Close"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 30
-
-dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
-
 price = 100.0
 opens, highs, lows, closes = [], [], [], []
-
 for _ in range(n_days):
     open_price = price
-    change = np.random.randn() * 2
-    close_price = open_price + change
-    high_price = max(open_price, close_price) + abs(np.random.randn()) * 1.5
-    low_price = min(open_price, close_price) - abs(np.random.randn()) * 1.5
+    close_price = open_price + np.random.randn() * 2
+    highs.append(max(open_price, close_price) + abs(np.random.randn()) * 1.5)
+    lows.append(min(open_price, close_price) - abs(np.random.randn()) * 1.5)
     opens.append(open_price)
     closes.append(close_price)
-    highs.append(high_price)
-    lows.append(low_price)
     price = close_price
-
-df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
-
-# Derived candlestick columns
-df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
-df["body_low"] = df[["open", "close"]].min(axis=1)
-df["body_high"] = df[["open", "close"]].max(axis=1)
-df["x"] = range(len(df))
-df["xmin"] = df["x"] - 0.35
-df["xmax"] = df["x"] + 0.35
-df["date_str"] = df["date"].dt.strftime("%b %d")
-
-# 5-day simple moving average
-df["sma5"] = df["close"].rolling(window=5).mean()
-sma_df = df.dropna(subset=["sma5"]).copy()
-
-# Peak price annotation
-peak_idx = int(df["high"].idxmax())
-peak_x = df.loc[peak_idx, "x"]
-peak_y = df.loc[peak_idx, "high"]
-peak_df = pd.DataFrame({"x": [peak_x], "y": [peak_y], "label": [f"Peak ${peak_y:.0f}"]})
-
-# Tick positions: every 5th trading day
-tick_pos = list(range(0, n_days, 5))
-tick_labels = [dates[i].strftime("%b %d") for i in tick_pos]
-
-# Interactive tooltip template
-tip_fmt = (
-    layer_tooltips()  # noqa: F405
-    .line("@date_str")
-    .line("Open|$@open")
-    .line("High|$@high")
-    .line("Low|$@low")
-    .line("Close|$@close")
+df = pd.DataFrame(
+    {
+        DATE: pd.date_range(start="2024-01-02", periods=n_days, freq="B"),
+        OPEN: opens,
+        HIGH: highs,
+        LOW: lows,
+        CLOSE: closes,
+    }
 )
 
+# Plot: reads only df and the constants above
+candles = df.copy()
+candles["Direction"] = np.where(candles[CLOSE] >= candles[OPEN], "Bullish", "Bearish")
+candles["body_low"] = candles[[OPEN, CLOSE]].min(axis=1)
+candles["body_high"] = candles[[OPEN, CLOSE]].max(axis=1)
+candles["x"] = np.arange(len(candles))
+candles["xmin"] = candles["x"] - 0.35
+candles["xmax"] = candles["x"] + 0.35
+candles["Day"] = candles[DATE].dt.strftime("%b %d")
+
+# Date labels on every 5th trading day
+tick_pos = list(range(0, len(candles), 5))
+tick_labels = candles["Day"].iloc[tick_pos].tolist()
+
+tip_fmt = (
+    layer_tooltips()  # noqa: F405
+    .line("@Day")
+    .line(f"{OPEN}|$@{OPEN}")
+    .line(f"{HIGH}|$@{HIGH}")
+    .line(f"{LOW}|$@{LOW}")
+    .line(f"{CLOSE}|$@{CLOSE}")
+)
+
+price_pad = (candles[HIGH].max() - candles[LOW].min()) * 0.05
+
 plot = (
-    ggplot(df)  # noqa: F405
-    # Wicks (high-low lines) — thinner than body
+    ggplot(candles)  # noqa: F405
+    # Wicks (low-high lines), thinner than the body
     + geom_segment(  # noqa: F405
-        aes(x="x", xend="x", y="low", yend="high", color="direction"),  # noqa: F405
+        aes(x="x", xend="x", y=LOW, yend=HIGH, color="Direction"),  # noqa: F405
         size=0.7,
         tooltips=tip_fmt,
     )
     # Candle bodies (open-close range)
     + geom_rect(  # noqa: F405
-        aes(  # noqa: F405
-            xmin="xmin", xmax="xmax", ymin="body_low", ymax="body_high", fill="direction", color="direction"
-        ),
+        aes(xmin="xmin", xmax="xmax", ymin="body_low", ymax="body_high", fill="Direction", color="Direction"),  # noqa: F405
         size=0.4,
         tooltips=tip_fmt,
-    )
-    # 5-day SMA trend line
-    + geom_line(  # noqa: F405
-        aes(x="x", y="sma5"),  # noqa: F405
-        data=sma_df,
-        color=INK_MUTED,
-        size=0.8,
-        alpha=0.7,
-        linetype="dashed",
-        tooltips="none",
-    )
-    # Peak diamond marker
-    + geom_point(  # noqa: F405
-        aes(x="x", y="y"),  # noqa: F405
-        data=peak_df,
-        size=4,
-        shape=18,
-        color=INK,
-    )
-    # Peak label
-    + geom_text(  # noqa: F405
-        aes(x="x", y="y", label="label"),  # noqa: F405
-        data=peak_df,
-        size=4,
-        color=INK,
-        nudge_y=1.8,
-        fontface="bold",
     )
     + scale_fill_manual(values={"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR})  # noqa: F405
     + scale_color_manual(values={"Bullish": BULL_COLOR, "Bearish": BEAR_COLOR})  # noqa: F405
     + scale_x_continuous(breaks=tick_pos, labels=tick_labels, expand=[0.02, 0])  # noqa: F405
-    + scale_y_continuous(expand=[0.14, 0])  # noqa: F405  — headroom for peak label
+    + scale_y_continuous(  # noqa: F405
+        limits=[candles[LOW].min() - price_pad, candles[HIGH].max() + price_pad]
+    )
     + labs(  # noqa: F405
-        x="Trading Day (Jan–Feb 2024)",
+        x="Trading day (Jan–Feb 2024)",
         y="Price ($)",
         title="candlestick-basic · python · letsplot · anyplot.ai",
-        subtitle="Simulated 30-day equity prices — 5-day moving average (dashed)",
         color="",
         fill="",
     )
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
         plot_title=element_text(size=16, color=INK, face="bold"),  # noqa: F405
-        plot_subtitle=element_text(size=11, color=INK_SOFT),  # noqa: F405
         axis_title=element_text(size=12, color=INK),  # noqa: F405
         axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         legend_title=element_text(size=10, color=INK),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405  — y-only grid for financial chart
-        panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),  # noqa: F405
+        panel_grid_major_x=element_blank(),  # noqa: F405
+        panel_grid_major_y=element_line(color=GRID, size=0.3),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         axis_ticks=element_blank(),  # noqa: F405
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
-        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
         legend_position="right",
     )
-    + ggsize(800, 450)  # noqa: F405  — scaled 4× on export → 3200 × 1800 px
+    + ggsize(800, 450)  # noqa: F405
 )
 
-# Save — theme-suffixed outputs (pipeline runs this script twice)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405  → 3200 × 1800 px
+# Save: scaled 4x on export to 3200 x 1800 px
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405
 ggsave(plot, f"plot-{THEME}.html", path=".")  # noqa: F405
