@@ -1,7 +1,7 @@
 """anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-26
+Quality: pending | Updated: 2026-11-26
 """
 
 import os
