@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-27
@@ -70,7 +70,8 @@ y_pad = (df[UPPER].max() - df[LOWER].min()) * 0.05
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major_x=element_blank(),
     panel_grid_major_y=element_line(color=INK_MUTED, size=0.3),
     panel_grid_minor=element_blank(),
