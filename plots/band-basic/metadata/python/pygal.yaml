@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: band-basic
 created: '2025-12-23T09:10:07Z'
-updated: '2026-11-27T21:54:09Z'
+updated: '2026-11-27T22:01:57Z'
 generated_by: claude-sonnet
-workflow_run: 46072547457
+workflow_run: 46073356026
 issue: 979
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,45 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Band drawn as one closed XY polygon with fill=True and 0.25 opacity, so the dashed
-    y grid stays visible through it in both themes
+  - Band drawn as one closed XY polygon (upper boundary forward, lower reversed) with
+    fill=True and 0.25 opacity, following both boundaries at every x
+  - 'An inline: rule in pygal''s css config zeroes the band series'' stroke, removing
+    the baseline-closing stroke pygal adds to filled series'
   - Uniform tick labels with unit formatters ('0h'…'48h', '16.0%'…'44.0%') on a 4
-    % grid make values readable
-  - Theme tokens threaded through Style, including guide_stroke_color, so grid and
-    chrome adapt correctly in dark
-  - Column-name constants and a pandas DataFrame make the data block easy to swap
-    for a real table
+    % grid
+  - Theme tokens threaded through Style, including guide_stroke_color, so chrome adapts
+    correctly in dark
+  - value_formatter / x_value_formatter give readable values in the HTML tooltips
   weaknesses:
-  - 'VQ-03 (both): the central line renders at about 3 px instead of the requested
-    10 px, and in the dark render the blue #4467A3 barely separates from the dark-green
-    fill in the dark render → a clearly heavier line (about 6-8 px). Likely cause:
-    stroke_style width is overridden by Style stroke_width=2.5 / the series stroke
-    width is not applied in the PNG render.'
-  - 'SC-02 (both): a vertical stroke at x=0 runs from the band''s left edge (~38 %)
-    down to the axis floor (~14.5 %), drawing outside the two boundaries → nothing
-    drawn below the lower boundary. Likely cause: pygal''s fill=True closes the series
-    path down to the baseline at the first point; the band stroke (stroke_style width)
-    traces that closing segment.'
+  - 'SC-02 (both): the dashed y gridlines disappear wherever they cross the band (e.g.
+    28 % and 32 % lines between 18 h and 36 h), so the fill does not let gridlines
+    show through as C2 asks → gridlines visible through the band in both themes. Likely
+    cause: the guide lines are hidden behind the band layer in the cairosvg PNG render;
+    the band''s fill needs a lower effective opacity over the guides or the guides
+    need to be drawn above the series (pygal''s css config).'
   - 'Suggestion: put the two legend entries side by side at the left instead of spreading
     them over two half-width columns.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: title 'band-basic · python · pygal · anyplot.ai' centered in dark ink; y title 'Soil Moisture (%)', x title 'Time (hours)'; y ticks 16.0%-44.0% every 4 %, x ticks 0h-48h every 6 h, all one size and readable; dashed muted gridlines; legend at bottom with two entries.
-      Data: semi-transparent #009E73 band from about 38-41 % at 0 h narrowing/widening through a dip near 18 h and a drop to 19-26 % at 48 h; blue #4467A3 central line inside the band, thin (about 3 px); a stray thin green vertical stroke at x=0 runs from the band down to the axis floor.
+      Chrome: title 'band-basic · python · pygal · anyplot.ai' centered in dark ink; y title 'Soil Moisture (%)', x title 'Time (hours)'; y ticks 16.0%-44.0% every 4 %, x ticks 0h-48h every 6 h; dashed muted y gridlines that stop at the band edges; two-column legend at the bottom.
+      Data: semi-transparent #009E73 band without edge strokes, from about 38-41 % at 0 h through a dip near 18 h, a bump near 29 h and a drop to 19-26 % at 48 h; heavy (about 8 px) blue #4467A3 central line on top; no stray stroke at x=0.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; gridlines muted grey and visible.
-      Data: same #009E73 band and #4467A3 center line as the light render; the thin blue line is faint against the dark-green fill; same stray vertical stroke at x=0.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; dashed gridlines visible outside the band, hidden inside it.
+      Data: same #009E73 band (dark green on the dark page) and same #4467A3 central line as the light render; the line now separates clearly from the fill.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,7 +55,7 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 66 px, axis titles, 44 px ticks and legend all explicitly sized
+        comment: Title 66 px, axis titles, 44 px ticks and legend explicitly sized
           and readable in both themes
       - id: VQ-02
         name: No Overlap
@@ -68,11 +65,11 @@ review:
         comment: No text collisions; legend clear of the plot
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Center line renders at about 3 px and the blue reads faint on the
-          dark-green fill in the dark render (defect line)
+        comment: Central line at about 8 px reads clearly on the band in both themes;
+          band distinct from the page
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -84,7 +81,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas; uniform tick sizes; balanced axis titles
+        comment: Plot fills the canvas; balanced axis titles and uniform ticks; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,9 +95,9 @@ review:
         max: 2
         passed: true
         comment: 'Band #009E73 first, center #4467A3; #FAF8F1 / #1A1A17 surfaces;
-          grid tinted with INK_MUTED in both themes'
+          chrome theme-correct'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,16 +108,15 @@ review:
         comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Unit-suffixed tick formatters ('h', '%') and a 4 % y grid with 6
-          h x ticks chosen for this data; x guides off
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
+        passed: true
         comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 14
@@ -135,10 +132,9 @@ review:
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: 'Semi-transparent fill and contrasting central line present; C1 missed:
-          a stray vertical stroke at x=0 runs from the band down to the axis floor
-          (defect line)'
+        passed: false
+        comment: 'Semi-transparent fill and contrasting central line present, stray
+          x=0 stroke gone; C2 missed: gridlines vanish inside the band (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -151,8 +147,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend '95% Confidence Band' and 'Sensor Mean' read
-          well
+        comment: Mandated title; legend '95% Confidence Band' and 'Sensor Mean'
     data_quality:
       score: 15
       max: 15
@@ -162,7 +157,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Band width varies along x; center line inside the band throughout
+        comment: Band width varies along x; central line inside the band throughout
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -174,8 +169,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 19-43 % volumetric moisture and 1-4 % interval half-widths are plausible;
-          no Check values in the Notes
+        comment: 19-43 % volumetric moisture and 1-4 % half-widths plausible; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -203,7 +198,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.convolve for the moving average; no hand-rolled algorithms
+        comment: np.convolve for the moving average; nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
@@ -211,29 +206,33 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: pygal.XY with Style tokens, x_labels_major / show_minor_*_labels
-          and per-series stroke_style
+        comment: pygal.XY with Style tokens and x_labels_major / show_minor_*_labels;
+          default level
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: x_value_formatter / value_formatter drive the HTML tooltips (5e)
+        passed: true
+        comment: 'Pygal''s css config with an inline: rule targets the band series''
+          path to remove the baseline-closing stroke; formatters drive the HTML tooltips'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
-  rendered_at: '2026-11-27T21:50:37Z'
+  rendered_at: '2026-11-27T21:58:24Z'
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
