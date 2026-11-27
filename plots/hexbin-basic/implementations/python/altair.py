@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -96,6 +96,8 @@ hexbins[LATITUDE] = lat_lo + hexbins["row"] * 1.5 * hex_r_px / VIEW_H * (lat_hi 
 lo, hi = hexbins[COUNT].min(), hexbins[COUNT].max()
 log_lo, log_hi = np.log1p(lo), np.log1p(hi)
 color_domain = [float(np.expm1(log_lo + p * (log_hi - log_lo))) for p, _ in SEQ_FIELDS]
+# Round colorbar ticks (1, 3, 10, 30, ...) that fall inside the data's count range
+legend_ticks = [m * 10**k for k in range(int(np.log10(hi)) + 1) for m in (1, 3) if lo <= m * 10**k <= hi]
 
 # Marker area in px^2: the symbol path spans +-1, so a hexagon of flat width hex_w_px
 # fills a square of side hex_w_px * 2 / sqrt(3) * ... (calibrated by render)
@@ -125,7 +127,12 @@ chart = (
             title="Points per hexagon (log)",
             scale=alt.Scale(type="symlog", domain=color_domain, range=[c for _, c in SEQ_FIELDS], interpolate="rgb"),
             legend=alt.Legend(
-                titleFontSize=10, labelFontSize=10, gradientLength=140, gradientThickness=16, titleLimit=140
+                values=legend_ticks,
+                titleFontSize=10,
+                labelFontSize=10,
+                gradientLength=140,
+                gradientThickness=16,
+                titleLimit=140,
             ),
         ),
         size=alt.value(hex_area),
