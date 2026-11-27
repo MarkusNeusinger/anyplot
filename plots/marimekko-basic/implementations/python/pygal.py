@@ -1,7 +1,7 @@
 """anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 95/100 | Updated: 2026-07-24
+Quality: pending | Updated: 2026-07-24
 """
 
 import os
