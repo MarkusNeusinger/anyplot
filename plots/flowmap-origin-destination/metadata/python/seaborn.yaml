@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:05:46Z'
-updated: '2026-11-26T09:13:48Z'
+updated: '2026-11-27T16:23:56Z'
 generated_by: claude-sonnet
-workflow_run: 45788946618
+workflow_run: 46032436837
 issue: 3765
 language_version: 3.14.10
 library_version: 0.13.2
@@ -12,43 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Arcs use the Imprint imprint_seq marks ramp with the theme's own stops, matched
+  - Arcs use the Imprint imprint_seq marks ramp with the theme's current stops, matched
     by a colorbar, so magnitude reads in both color and width in both themes
   - Quadratic Bezier arcs end exactly on the city coordinates and bow sideways, so
     reciprocal pairs (New York-Paris, Dubai-Mumbai) separate
+  - Every city label sits beside its own node with a thin leader line, clear of the
+    other labels and of the major arcs, including the tight London/Paris/Frankfurt
+    cluster
   - sns.scatterplot size semantic sizes hubs by incoming flow, and sns.move_legend
     restyles that legend with theme tokens
-  - 'Clean tidy-table structure: role-named columns, df-only plotting block, exact
-    3200x1800 canvas'
+  - Tidy role-named columns and a df-only plotting block on the exact 3200x1800 canvas
   weaknesses:
-  - 'VQ-02 (both): in the Europe cluster the ''London'' label sits beside the Frankfurt
-    node and the ''Frankfurt'' label above-left of the London node, so the two read
-    swapped, and ''Los Angeles'' runs over the New York-Los Angeles and New York-Sao
-    Paulo arcs → each label next to its own node and clear of the arcs. Likely cause:
-    the candidate-offset loop accepts the first spot clear of other labels and node
-    centres but tests neither the distance to a neighbouring node nor overlap with
-    arc paths.'
   - 'Suggestion: drop the unused np.random.seed(42); the data is fully hard-coded.'
+  - 'Suggestion: `- dy / length * length * ARC_BEND` reduces to `- dy * ARC_BEND`
+    (same for dx), which makes `length` unnecessary.'
   - 'Suggestion: a lighter coastline outline in the light theme would let the thinnest
     arcs lead even more.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1.
-      Chrome: title 'flowmap-origin-destination · python · seaborn · anyplot.ai' in dark ink, axis titles 'Longitude (°)' / 'Latitude (°)', ticks in INK_SOFT, colorbar 'Flow volume (thousand people)' on the right, 'Incoming flow' size legend lower left on an elevated panel. All readable.
-      Data: taupe simplified continents with dark outlines; 18 Bezier arcs 1-5 px wide colored green (low) to blue to navy (high), alpha 0.65; NY-LA and NY-London navy and thick; 12 #009E73 city nodes sized by incoming flow with page-colored edges; bold city labels. Europe cluster labels read swapped (London beside Frankfurt node); 'Los Angeles' crosses two arcs.
+      Chrome: title 'flowmap-origin-destination · python · seaborn · anyplot.ai' in dark ink, axis titles 'Longitude (°)' / 'Latitude (°)', ticks in INK_SOFT, colorbar 'Flow volume (thousand people)' on the right (green -> deep blue -> dark violet), 'Incoming flow' size legend lower left on an elevated panel. All readable.
+      Data: taupe simplified continents with dark outlines, dashed equator and prime meridian; 18 quadratic Bezier arcs 1-5 wide at alpha 0.65 colored green (low) to dark violet (high), New York-London and New York-Los Angeles thickest; 12 #009E73 city nodes sized by incoming flow with page-colored edges; bold city labels each beside its own node with a thin leader line (London left, Paris below-right, Frankfurt above-right), Los Angeles below-left clear of the arcs.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
       Chrome: title, axis titles, ticks, legend and colorbar text in light ink; no dark-on-dark text.
-      Data: charcoal land with light outlines; arcs on the dark marks ramp (dark green low -> brand green -> pale blue high), so NY-LA and NY-London read pale blue; nodes identical #009E73; low-flow arcs dimmer but visible.
+      Data: charcoal land with light outlines; arcs on the dark marks ramp (olive low -> brand green -> pale blue high), so the two New York corridors read pale blue; nodes identical #009E73; the olive New York-Sao Paulo arc is dim but visible; labels and leader lines in light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,37 +53,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks, legend and city labels 8 pt;
-          all readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks, legend and bold city labels
+          8 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Europe cluster labels misattributed ("London" beside the Frankfurt
-          node, "Frankfurt" above-left of London) and "Los Angeles" runs over two
-          arcs (defect line)
+        comment: City labels sit beside their own nodes with leader lines, clear of
+          each other and of the major arcs in both themes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arc widths 1-5 with alpha 0.65 suit 18 flows; low-flow arcs stay
+        comment: Arc widths 1-5 with alpha 0.65 suit 18 flows; lowest-flow arcs stay
           visible on both pages; legend circles filled like the nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint marks ramp keeps 3:1 against both pages; magnitude is also
-          carried by width
+        comment: Ramp keeps contrast against both pages; magnitude is also carried
+          by width, so no hue is the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas; map, legend and colorbar fill it with balanced
-          margins
+        comment: 3200x1800 canvas; map, size legend and colorbar fill it with balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -98,10 +94,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Nodes #009E73; arcs use imprint_seq with the theme''s marks stops;
-          backgrounds #FAF8F1 / #1A1A17'
+        comment: 'Nodes #009E73; arcs use imprint_seq with the theme''s current marks
+          stops; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,17 +109,18 @@ review:
           are the only typographic decision beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Node outlines in the page color separate overlapping hubs; colorbar
-          shrunk to the map height; legend spacing loosened
+        comment: Thin leader lines tie each label to its node, node outlines in the
+          page color separate the clustered European hubs, colorbar shrunk to the
+          map height, loosened legend spacing
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Hub nodes sized by incoming flow give Singapore/Dubai/Los Angeles
+        comment: Hub nodes sized by incoming flow give Singapore, Dubai and Los Angeles
           a focal weight the Notes do not prescribe
     spec_compliance:
       score: 15
@@ -134,29 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Origin-destination flow map with quadratic Bezier arcs on a coastline
-          basemap
+        comment: 'Origin-destination flow map: quadratic Bezier arcs on a coastline
+          basemap'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: C1 arcs end on the cities; C2 width proportional to flow; C3 alpha
-          0.65; C4 color gradient explained by the colorbar; C5 basemap beneath and
-          quieter than the arcs
+        comment: C1 arcs end on the city coordinates; C2 width proportional to flow;
+          C3 alpha 0.65; C4 color gradient explained by the colorbar as flow volume;
+          C5 basemap beneath the arcs, outlined land quieter than the arcs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on x, latitude on y; all 18 flows drawn; arc ends at the
-          exact coordinates
+        comment: Longitude on x, latitude on y; all 18 flows drawn; arc ends and nodes
+          at the exact coordinates; label placement moves only text, never marks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; colorbar and size legend titled for a reader
+        comment: Mandated title; colorbar and 'Incoming flow' size legend titled for
+          a reader
     data_quality:
       score: 15
       max: 15
@@ -166,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Long-haul and short hops, reciprocal pairs (NY-Paris, Dubai-Mumbai),
+        comment: Long-haul and short hops, reciprocal pairs (New York-Paris, Dubai-Mumbai),
           hubs and dominant corridors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Travel/migration volumes between real world cities, neutral
+        comment: Passenger/migration volumes between real world cities, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: Volumes 280-850 thousand people plausible; city coordinates checked
-          against real positions (New York 40.7,-74.0; Sydney -33.9,151.2)
+          (New York 40.71,-74.01; Sydney -33.87,151.21; Sao Paulo -23.55,-46.63);
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -196,7 +195,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,15 +207,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Bezier computed vectorised in a few lines; no fake UI
+        comment: Bezier arcs vectorised in a few lines; the label-placement scoring
+          has no available call that computes it; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 3200x1800, current API
+        comment: Saves plot-{THEME}.png at 3200x1800 with current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,19 +224,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme rc, sns.scatterplot size semantic with sizes=, and
-          sns.move_legend to restyle the legend in place
+        comment: sns.set_theme rc mapping, axes-level sns.scatterplot with a size
+          semantic, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: 'Default: no seaborn feature beyond the size semantic the library
-          prompt expects'
+        passed: true
+        comment: sns.move_legend restyles seaborn's brief size legend in place; seaborn's
+          size-semantic legend is the distinctive bit, nothing more
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-daeae5c713
-  rendered_at: '2026-11-26T09:09:50Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-27T16:20:27Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -244,13 +244,15 @@ impl_tags:
   - colorbar
   - annotations
   - custom-legend
+  - custom-colormap
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
-  - groupby-aggregation
   - normalization
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - custom-colormap
   - edge-highlighting
+  - minimal-chrome
