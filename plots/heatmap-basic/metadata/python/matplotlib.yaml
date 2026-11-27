@@ -2,129 +2,127 @@ library: matplotlib
 language: python
 specification_id: heatmap-basic
 created: '2025-12-23T00:46:03Z'
-updated: '2026-05-28T22:56:08Z'
+updated: '2026-11-27T17:12:54Z'
 generated_by: claude-sonnet
-workflow_run: 26606303140
+workflow_run: 46039221007
 issue: 691
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: diverging colormap, cell annotations, colorbar, and
-    grouped ordering all present'
-  - Sophisticated data storytelling through group separator lines, adaptive cell-text
-    color, and bold emphasis on strong correlations
-  - 'Excellent matplotlib idioms: TwoSlopeNorm, LinearSegmentedColormap.from_list(),
-    minor-tick grid for cell separators'
-  - 'Full theme adaptation: both renders use Imprint diverging cmap with correct theme-adaptive
-    chrome throughout'
+  - Diverging Imprint fields ramp centered on zero with TwoSlopeNorm and a page-colored
+    midpoint, so near-zero cells recede in both themes
+  - In-cell numbers choose INK or the page color per cell by WCAG contrast with the
+    actual fill, legible in both themes
+  - Logical grouped ordering (revenue, technical, admin departments) makes the correlation
+    blocks emerge
+  - Minor-tick grid draws thin page-colored cell separators, an idiomatic matplotlib
+    technique
+  - Reads a tidy long table through column constants and pivot_table(sort=False),
+    so the data block is easy to swap
   weaknesses:
-  - 'Near-zero cells in dark render blend into #1A1A17 background (midpoint = PAGE_BG
-    in dark mode); consider a midpoint of #252520 instead of pure #1A1A17 so near-zero
-    cells remain subtly distinguishable from the background'
-  - Cell annotation fontsize at 7pt is slightly small for mobile readability; bump
-    to 8pt uniformly for better scaling at 400px viewport
+  - 'Suggestion: drop the unused IMPRINT_PALETTE constant, since the plot only uses
+    the diverging ramp.'
+  - 'Suggestion: use one minus glyph throughout — the color bar shows ''−0.25'' while
+    the cells show ''-0.15''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "heatmap-basic · python · matplotlib · anyplot.ai" in dark INK, clearly readable. X-axis label "Department" and Y-axis label "Department" in dark INK at 10pt, readable. Tick labels (department names) in INK_SOFT at 8pt, readable. Colorbar label "Correlation" in INK_SOFT at 8pt, readable. Colorbar tick labels at 7pt, readable.
-      Data: imprint_div diverging colormap — matte red (#AE3030) for strong negative correlations, cream-near-neutral midpoint for near-zero, Imprint blue (#4467A3) for strong positive. All 64 cells annotated with correlation values (7-8pt). White text on deep-colored cells; INK text on near-midpoint cells. Group separator lines in INK_SOFT divide Revenue/Technical/Admin clusters.
-      Legibility verdict: PASS — all text clearly readable against the light background.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'heatmap-basic · python · matplotlib · anyplot.ai' in dark INK, centered; axis titles 'Department (row)' / 'Department (column)' in INK; department tick labels in INK_SOFT, column labels rotated 45°; slim color bar labeled 'Correlation' with ticks −1.00 … 1.00. All text readable.
+      Data: 8x8 correlation grid in the imprint_div fields ramp (red #AE3030 → page midpoint → blue #4467A3), thin page-colored separators, deep-blue diagonal, Finance–Dev −0.65 the deepest red. Cell numbers are dark INK on every cell except the deep-blue 1.00 diagonal, where they are page-colored; all clearly legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all rendered in near-white (#F0EFE8) INK — clearly readable against dark background. No dark-on-dark failures for any text element.
-      Data: Data colors (blue gradient and red gradient) are identical to the light render — only chrome flips as required. NOTABLE: near-zero cells use #1A1A17 as the diverging colormap midpoint (theme-adaptive midpoint = PAGE_BG), making them nearly indistinguishable from the background. Cell separators (also PAGE_BG color) are invisible for those near-zero cells. Strongly colored cells (deep blue and dark red) remain clearly prominent.
-      Legibility verdict: PASS overall — all text readable; minor visual limitation where near-zero cells blend with background in dark mode.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title and axis titles in light INK, ticks and color-bar label in light INK_SOFT; no dark-on-dark text.
+      Data: same layout and mapping with the dark fields stops (page-colored near-black midpoint, deep blue / deep red poles). All cell numbers render light and readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; both renders fully readable. Minor:
-          cell annotations at 7pt slightly small for mobile scale — 8pt would improve.'
+        comment: Font sizes set explicitly (title 12, axis titles 10, ticks and cell
+          numbers 8, color bar 7); every cell number picks INK or the page color by
+          WCAG contrast with its fill, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; rotated 45° x-axis labels prevent collision
-          between department names.
+        comment: 'No collisions: rotated column labels clear each other, every cell
+          number fits its cell'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible in light render. In dark render, near-zero
-          cells (midpoint=#1A1A17) blend into background; cell separators also disappear
-          for those cells. Strongly colored cells remain prominent.
+        comment: All 64 cells clearly visible with thin page-colored separators; color
+          bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_div is CVD-safe; good luminance contrast across diverging
-          range.
+        comment: Red-blue diverging ramp, CVD-safe; in-cell numbers carry the values
+          as well
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for symmetric matrix; subplots_adjust provides
-          well-balanced margins with colorbar.
+        comment: Square 2400x2400 canvas; grid, color bar and labels fit with balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y labeled Department, colorbar labeled Correlation. Descriptive
-          and accurate.
+        comment: Axis titles 'Department (row)' / 'Department (column)' and color-bar
+          label 'Correlation' are reader text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div used for diverging correlation data (correct polarity);
-          backgrounds #FAF8F1/#1A1A17; text uses INK/INK_SOFT tokens; data colors
-          identical across both renders.'
+        comment: 'imprint_div fields ramp (#AE3030 → page color → #4467A3) with the
+          theme''s page midpoint; backgrounds #FAF8F1 / #1A1A17; chrome from INK /
+          INK_SOFT'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Clearly above defaults: custom imprint_div colormap, group separator
-          lines dividing Revenue/Technical/Admin clusters, adaptive cell-text color
-          (white on deep, INK on near-midpoint), bold emphasis on strong correlations.
-          Professional polish.'
+        passed: false
+        comment: 'Medium-weight INK title over soft INK_SOFT ticks and color-bar label,
+          tick marks removed: a clear type hierarchy a little beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: All spines removed, colorbar outline hidden, tick marks removed (length=0),
-          cell separators use PAGE_BG for minimal visual weight. Very polished.
+        passed: false
+        comment: Page-colored cell separators, slim outline-free color bar sized to
+          the grid with a tight pad
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Group separators guide viewer to intra-cluster vs inter-cluster patterns;
-          bold annotations highlight Finance-Dev (-0.65), Sales-Marketing (0.82),
-          Ops-Support (0.60). Visual hierarchy communicates noteworthy correlations.
+        passed: false
+        comment: Data displayed in the grouped order the Notes ask for; no hierarchy
+          chosen beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ax.imshow() heatmap with full 8x8 matrix.
+        comment: Correct heatmap via imshow; basic value grid only, no reference lines,
+          highlights or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap (spec-required for ±values), cell annotations,
-          colorbar, logical grouped ordering all present.
+        comment: Diverging map for signed values, in-cell numbers, labeled color bar,
+          logical ordering; C1, C2, C3, C5, C6 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Departments on both axes; TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
-          ensures symmetric, correctly centered diverging scale.
+        comment: Rows and columns at their labels; TwoSlopeNorm centered on 0 over
+          ±max|value|, color-bar ticks at 0.25 steps
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format heatmap-basic · python · matplotlib · anyplot.ai correct;
-          colorbar labeled Correlation.
+        comment: Title 'heatmap-basic · python · matplotlib · anyplot.ai' correct;
+          color bar labeled
     data_quality:
       score: 15
       max: 15
@@ -165,23 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range from -0.65 to 1.00; diagonal=1.00; symmetric matrix; both
-          strong positive and negative correlations represented.
+        comment: Symmetric 8x8 matrix with strong positive, strong negative and near-zero
+          cells and visible blocks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Department cross-correlation matrix with plausible business groupings
-          (Revenue: Sales/Marketing/Finance; Technical: Dev/Ops/Support; Admin: HR/Legal).
-          Neutral scenario.'
+        comment: Department cross-correlation matrix, neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within [-1,1]; diagonal exactly 1.00; matrix is symmetric;
-          values plausible for department pair relationships.
+        comment: 'Checked: all values in [-1, 1], diagonal 1.00, matrix symmetric,
+          color bar spans −1…1'
     code_quality:
       score: 10
       max: 10
@@ -191,65 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens -> data -> plot -> save. No functions or classes.'
+        comment: Flat Imports → tokens → data → plot → save; two short top-level helpers
+          (luminance, contrast) above their first use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully hardcoded; deterministic.
+        comment: Hardcoded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, matplotlib.pyplot, numpy, LinearSegmentedColormap,
-          TwoSlopeNorm.'
+        comment: All imports used (os, sys, plt, np, pd, LinearSegmentedColormap,
+          TwoSlopeNorm, to_rgb)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake interactivity; sys.path workaround for file
-          naming collision is properly handled.
+        comment: Appropriate complexity; pivot_table reshapes the long table; matplotlib.colors
+          has no contrast-ratio call to replace the luminance formula
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; all matplotlib APIs are current.
+        comment: Saves plot-{THEME}.png; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Correctly uses Axes-level methods throughout; TwoSlopeNorm for symmetric
-          diverging normalization; minor-tick grid for cell separators — idiomatic
-          matplotlib.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: TwoSlopeNorm and LinearSegmentedColormap.from_list() are distinctly
-          matplotlib; minor-tick grid for cell separators is a clever matplotlib-specific
-          technique. Would need one more innovative feature (e.g., hatching for significance
-          zones) to reach 5.
+        passed: false
+        comment: Axes-level API, set_xticks with labels, pivot_table(sort=False) for
+          ordering, fig.colorbar with fraction/pad/aspect
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: TwoSlopeNorm for the zero-centered norm and a minor-tick grid as
+          cell separators are matplotlib-specific idioms
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T17:09:47Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
-  - manual-ticks
+  - colorbar
   patterns:
-  - matrix-construction
+  - long-to-wide
   - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
+  - minimal-chrome
+  - grid-styling

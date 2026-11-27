@@ -1,21 +1,14 @@
 """ anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-28
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
-import sys
-
-
-# Remove current script directory to prevent self-import (file is named altair.py)
-_here = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if p not in ("", ".") and os.path.abspath(p) != _here]
 
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
 
 
 # Theme tokens
@@ -24,12 +17,19 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint diverging colormap midpoint — theme-adaptive
-DIV_MID = "#FAF8F1" if THEME == "light" else "#1A1A17"
+# Imprint diverging ramp for fields: matte red -> page color -> blue
+IMPRINT_DIV = ["#AE3030", PAGE_BG, "#4467A3"]
 
-# Data — correlation matrix for 8 weather variables
+# Constants
+LABEL_CONTRAST = 0.55  # |value| above this fills a cell dark enough for light cell text
+
+# Columns: set these to your table's column names
+X_VARIABLE = "Variable (column)"  # role: x
+Y_VARIABLE = "Weather variable"  # role: y
+CORRELATION = "Correlation"  # role: value
+
+# Data: replace this block with your own matrix, for example df = pd.read_csv("corr.csv", index_col=0)
 np.random.seed(42)
 variables = [
     "Temperature",
@@ -41,147 +41,92 @@ variables = [
     "Precipitation",
     "UV Index",
 ]
-
-n_samples = 200
-raw = np.random.randn(n_samples, len(variables))
-
-# Inject realistic correlations; multiplier 1.2 on Visibility pushes it below -0.8
+raw = np.random.randn(200, len(variables))
 raw[:, 1] += raw[:, 0] * 0.6  # Humidity ~ Temperature
 raw[:, 5] += raw[:, 1] * 0.7  # Cloud Cover ~ Humidity
 raw[:, 6] += raw[:, 5] * 0.65  # Precipitation ~ Cloud Cover
-raw[:, 4] -= raw[:, 5] * 1.2  # Visibility strongly inversely ~ Cloud Cover (< -0.8)
+raw[:, 4] -= raw[:, 5] * 1.2  # Visibility inversely ~ Cloud Cover
 raw[:, 7] -= raw[:, 5] * 0.7  # UV Index inversely ~ Cloud Cover
 raw[:, 7] += raw[:, 0] * 0.5  # UV Index ~ Temperature
 raw[:, 3] -= raw[:, 0] * 0.4  # Pressure inversely ~ Temperature
 raw[:, 2] += raw[:, 3] * 0.3  # Wind Speed ~ Pressure
+df = pd.DataFrame(np.corrcoef(raw.T).round(2), index=variables, columns=variables)
 
-corr = np.corrcoef(raw.T)
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+labels = list(df.columns)
+cells = df.rename_axis(index=Y_VARIABLE, columns=X_VARIABLE).stack().rename(CORRELATION).reset_index()
+limit = float(np.nanmax(np.abs(df.to_numpy())))
 
-axis_order = list(variables)
+x_enc = alt.X(X_VARIABLE.translate(ESCAPE), type="nominal", title=None, sort=labels)
+y_enc = alt.Y(Y_VARIABLE.translate(ESCAPE), type="nominal", title=Y_VARIABLE, sort=labels)
+value = alt.datum[CORRELATION.translate(ESCAPE)]
 
-df = pd.DataFrame(
-    [
-        {"Row": row_var, "Column": col_var, "value": round(corr[i, j], 2)}
-        for i, row_var in enumerate(variables)
-        for j, col_var in enumerate(variables)
-    ]
-)
-
-# Title — 44 chars < 67 baseline → ratio = 1.0 → default fontSize 16
-title_str = "heatmap-basic · python · altair · anyplot.ai"
-
-# Text annotation color: all light on dark theme; adaptive on light theme
-if THEME == "dark":
-    text_color_enc = alt.value("#F0EFE8")
-else:
-    text_color_enc = (
-        alt.when((alt.datum.value > 0.55) | (alt.datum.value < -0.55))
-        .then(alt.value("#ffffff"))
-        .otherwise(alt.value(INK))
-    )
-
-# Heatmap layer — Imprint diverging colormap (#AE3030 → midpoint → #4467A3)
 heatmap = (
-    alt.Chart(df)
-    .mark_rect(stroke="#ffffff", strokeWidth=1.5, cornerRadius=2)
+    alt.Chart(cells)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X(
-            "Column:N",
-            title=None,
-            sort=axis_order,
-            axis=alt.Axis(labelFontSize=12, labelAngle=-45, orient="top", labelPadding=6),
-        ),
-        y=alt.Y(
-            "Row:N",
-            title="Weather Variable",
-            sort=axis_order,
-            axis=alt.Axis(labelFontSize=12, titleFontSize=12, labelPadding=6, titlePadding=8),
-        ),
+        x=x_enc.axis(labelAngle=-45, orient="top", labelPadding=6, labelFontSize=12),
+        y=y_enc.axis(labelPadding=6, labelFontSize=12, titleFontSize=13, titlePadding=8),
         color=alt.Color(
-            "value:Q",
-            scale=alt.Scale(range=["#AE3030", DIV_MID, "#4467A3"], domain=[-1, 1], domainMid=0),
+            CORRELATION.translate(ESCAPE),
+            type="quantitative",
+            title=CORRELATION,
+            scale=alt.Scale(range=IMPRINT_DIV, domain=[-limit, limit], domainMid=0, interpolate="rgb"),
             legend=alt.Legend(
-                title="Correlation",
                 titleFontSize=12,
                 labelFontSize=11,
                 gradientLength=240,
                 gradientThickness=14,
                 titlePadding=6,
+                padding=8,
                 offset=10,
-                direction="vertical",
-                values=[-1, -0.5, 0, 0.5, 1],
                 format="+.1f",
             ),
         ),
         tooltip=[
-            alt.Tooltip("Column:N", title="Column"),
-            alt.Tooltip("Row:N", title="Row"),
-            alt.Tooltip("value:Q", title="Correlation", format=".2f"),
+            alt.Tooltip(X_VARIABLE.translate(ESCAPE), title=X_VARIABLE),
+            alt.Tooltip(Y_VARIABLE.translate(ESCAPE), title=Y_VARIABLE),
+            alt.Tooltip(CORRELATION.translate(ESCAPE), title=CORRELATION, format=".2f"),
         ],
     )
 )
 
-# Bold borders for strong correlations (|r| ≥ 0.7) — theme-adaptive stroke
-highlight = (
-    alt.Chart(df)
-    .transform_filter((alt.datum.value >= 0.7) | (alt.datum.value <= -0.7))
-    .mark_rect(stroke=INK, strokeWidth=2.5, filled=False, cornerRadius=2)
-    .encode(x=alt.X("Column:N", sort=axis_order), y=alt.Y("Row:N", sort=axis_order))
-)
+# Cell numbers: light on saturated cells, ink on pale ones; always light on the dark page
+if THEME == "light":
+    text_color = (
+        alt.when((value > LABEL_CONTRAST * limit) | (value < -LABEL_CONTRAST * limit))
+        .then(alt.value("#FFFFFF"))
+        .otherwise(alt.value(INK))
+    )
+else:
+    text_color = alt.value(INK)
 
-# Cell value annotations
 text = (
-    alt.Chart(df)
+    alt.Chart(cells)
     .mark_text(fontSize=11, fontWeight="bold")
     .encode(
-        x=alt.X("Column:N", sort=axis_order),
-        y=alt.Y("Row:N", sort=axis_order),
-        text=alt.Text("value:Q", format=".2f"),
-        color=text_color_enc,
+        x=x_enc,
+        y=y_enc,
+        text=alt.Text(CORRELATION.translate(ESCAPE), type="quantitative", format=".2f"),
+        color=text_color,
     )
 )
 
 chart = (
-    (heatmap + highlight + text)
+    (heatmap + text)
     .properties(
-        width=350,
-        height=380,
+        width=600,
+        height=600,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
-        title=alt.Title(
-            title_str,
-            subtitle=[
-                "Visibility tracks inversely with Cloud Cover (r ≈ −0.85) — the dominant structural link.",
-                "Warm colors = negative, cool = positive. Bold borders mark |r| ≥ 0.7.",
-            ],
-            fontSize=14,
-            subtitleFontSize=11,
-            subtitleColor=INK_MUTED,
-            color=INK,
-            anchor="start",
-            offset=10,
-        ),
-        padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
+        title=alt.Title("heatmap-basic · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="start"),
     )
     .configure_axis(grid=False, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save PNG — target: 2400 × 2400 (square, 1:1 for symmetric heatmap)
-TW, TH = 2400, 2400
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
-# Save HTML
 chart.save(f"plot-{THEME}.html")
