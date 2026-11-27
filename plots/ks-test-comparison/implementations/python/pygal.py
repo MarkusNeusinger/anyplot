@@ -1,7 +1,7 @@
 """ anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-27
 """
 
 import importlib.util
@@ -9,6 +9,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 
 
@@ -33,17 +34,31 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic mapping: green=good, matte red=bad
-GOOD_COLOR = "#009E73"  # Imprint position 1 — brand green / "good"
-BAD_COLOR = "#AE3030"  # Imprint matte red — semantic anchor for "bad/loss/error"
+# Imprint palette — all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Semantic mapping: green=good, matte red=bad
+GOOD_COLOR = IMPRINT_PALETTE[0]  # brand green / "good"
+BAD_COLOR = IMPRINT_PALETTE[4]  # matte red — semantic anchor for "bad/loss/error"
 KS_COLOR = INK_SOFT  # theme-adaptive neutral for annotation reference line
 
-# Data — credit scoring: Good vs Bad customer score distributions
-# 100 samples keeps the step-function nature clearly visible
+# Columns: set these to your table's column names
+GOOD = "Good Customers"  # role: sample1
+BAD = "Bad Customers"  # role: sample2
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# Credit scoring: score distributions of Good and Bad customers, 100 samples each
 np.random.seed(42)
 n_samples = 100
-good_scores = np.random.normal(loc=650, scale=80, size=n_samples)
-bad_scores = np.random.normal(loc=500, scale=90, size=n_samples)
+df = pd.DataFrame(
+    {
+        GOOD: np.random.normal(loc=650, scale=80, size=n_samples),
+        BAD: np.random.normal(loc=500, scale=90, size=n_samples),
+    }
+)
+
+# Plot: reads only df and the constants above
+good_scores = df[GOOD].dropna().to_numpy()
+bad_scores = df[BAD].dropna().to_numpy()
 
 # Compute ECDFs
 good_sorted = np.sort(good_scores)
@@ -89,6 +104,7 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=(GOOD_COLOR, BAD_COLOR, KS_COLOR, KS_COLOR, KS_COLOR),
+    value_colors=(INK,) * 5,  # annotation labels: pygal defaults them to black, lost on the dark page
     opacity="0.95",
     opacity_hover="1",
     stroke_opacity="1",
@@ -100,7 +116,7 @@ custom_style = Style(
     major_guide_stroke_dasharray="0",
     # Font sizes for 3200×1800 canvas (pygal unitless = source pixels)
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=42,
@@ -147,10 +163,10 @@ chart = pygal.XY(
 )
 
 # Good Customers ECDF — bold green line
-chart.add("Good Customers", good_xy, stroke_style={"width": 5})
+chart.add(GOOD, good_xy, stroke_style={"width": 5})
 
-# Bad Customers ECDF — bold red line
-chart.add("Bad Customers", bad_xy, stroke_style={"width": 5})
+# Bad Customers ECDF — bold red line, dashed so the pair also differs by line style (color-vision safe)
+chart.add(BAD, bad_xy, stroke_style={"width": 5, "dasharray": "30, 14"})
 
 # KS divergence line — dashed neutral annotation
 ks_line_points = [(max_x, min(max_y_good, max_y_bad)), (max_x, max(max_y_good, max_y_bad))]
@@ -162,7 +178,7 @@ chart.add(
     [{"value": (max_x, min(max_y_good, max_y_bad)), "label": f"D = {ks_stat:.3f}"}],
     stroke_style={"width": 0},
     show_dots=True,
-    dots_size=12,
+    dots_size=16,
 )
 
 # KS annotation dot at top with p-value
@@ -171,7 +187,7 @@ chart.add(
     [{"value": (max_x, max(max_y_good, max_y_bad)), "label": f"p = {p_value:.2e}"}],
     stroke_style={"width": 0},
     show_dots=True,
-    dots_size=12,
+    dots_size=16,
 )
 
 chart.render_to_png(f"plot-{THEME}.png")
