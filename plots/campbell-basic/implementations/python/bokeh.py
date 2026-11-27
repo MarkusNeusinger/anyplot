@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-27
@@ -34,6 +34,8 @@ ENGINE_ORDERS = [1, 2, 3]  # excitation lines: frequency (Hz) = order * speed (R
 
 # Columns: set these to your table's column names
 SPEED = "Rotational Speed (RPM)"  # role: speed
+ENGINE_ORDER = "Engine Order"  # role: engine_order
+CRITICAL_SPEED = "Critical Speed (RPM)"  # role: critical_speeds
 MODES = ["1st Bending", "2nd Bending", "1st Torsional", "Axial", "3rd Bending"]  # role: frequency_mode_
 
 # Data: replace this block with your own table, for example df = pd.read_csv("modes.csv")
@@ -41,11 +43,11 @@ speeds = np.linspace(0, 6000, 100)
 df = pd.DataFrame(
     {
         SPEED: speeds,
-        MODES[0]: 25 + 0.008 * speeds + 3.5 * np.sin(speeds / 2800 * np.pi),
-        MODES[1]: 62 - 0.006 * speeds + 2.0 * np.sin(speeds / 2200 * np.pi),
-        MODES[2]: 85 + 0.005 * speeds,
-        MODES[3]: 110 - 0.004 * speeds + 2.5 * np.cos(speeds / 3200 * np.pi),
-        MODES[4]: 130 + 0.010 * speeds - 4.0 * np.cos(speeds / 2600 * np.pi),
+        MODES[0]: 25 + 0.0006 * speeds + 1.0 * np.sin(speeds / 2800 * np.pi),
+        MODES[1]: 62 - 0.0015 * speeds + 2.0 * np.sin(speeds / 2200 * np.pi),
+        MODES[2]: 85 + 0.0012 * speeds,
+        MODES[3]: 110 - 0.001 * speeds + 2.5 * np.cos(speeds / 3200 * np.pi),
+        MODES[4]: 130 + 0.0012 * speeds - 3.0 * np.cos(speeds / 2600 * np.pi),
     }
 )
 
@@ -140,7 +142,7 @@ for order in ENGINE_ORDERS:
 # Critical speed markers
 crit_source = ColumnDataSource(
     {
-        "rpm": crit_rpm,
+        CRITICAL_SPEED: crit_rpm,
         "freq": crit_freq,
         "label": crit_label,
         "rpm_display": [f"{r:.0f}" for r in crit_rpm],
@@ -148,7 +150,7 @@ crit_source = ColumnDataSource(
     }
 )
 crit_scatter = p.scatter(
-    x="rpm",
+    x=CRITICAL_SPEED,
     y="freq",
     source=crit_source,
     marker="diamond",
@@ -162,7 +164,7 @@ legend_items.append(LegendItem(label="Critical Speed", renderers=[crit_scatter])
 p.add_tools(
     HoverTool(
         renderers=[crit_scatter],
-        tooltips=[("Intersection", "@label"), ("RPM", "@rpm_display"), ("Frequency", "@freq_display Hz")],
+        tooltips=[(ENGINE_ORDER, "@label"), (CRITICAL_SPEED, "@rpm_display"), ("Frequency", "@freq_display Hz")],
     )
 )
 
