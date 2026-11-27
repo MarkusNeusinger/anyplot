@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -118,9 +118,9 @@ sns.lineplot(
 )
 
 # Threshold reference lines, labelled at the right edge just below each line
-for thr, color, alpha, dashes, lw in [
-    (max(THRESHOLDS), ANYPLOT_AMBER, 0.85, (6, 3), 1.5),
-    (min(THRESHOLDS), INK_SOFT, 0.55, (3, 2, 6, 2), 1.2),
+for thr, color, text_color, alpha, dashes, lw in [
+    (max(THRESHOLDS), ANYPLOT_AMBER, INK, 0.85, (6, 3), 1.5),
+    (min(THRESHOLDS), INK_SOFT, INK_SOFT, 0.55, (3, 2, 6, 2), 1.2),
 ]:
     ax.axhline(y=thr, color=color, linestyle="--", linewidth=lw, alpha=alpha, dashes=dashes)
     ax.annotate(
@@ -130,7 +130,7 @@ for thr, color, alpha, dashes, lw in [
         xytext=(-6, -3),
         textcoords="offset points",
         fontsize=8,
-        color=color,
+        color=text_color,
         fontweight="bold",
         va="top",
         ha="right",
@@ -157,7 +157,7 @@ ax.annotate(
     xytext=(annotation_x, y_top * 0.486),
     fontsize=8,
     fontweight="bold",
-    color=ANYPLOT_AMBER,
+    color=INK,
     arrowprops={"arrowstyle": "-|>", "color": ANYPLOT_AMBER, "lw": 1.5, "connectionstyle": "arc3,rad=-0.25"},
     bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": ANYPLOT_AMBER, "alpha": 0.92},
 )
