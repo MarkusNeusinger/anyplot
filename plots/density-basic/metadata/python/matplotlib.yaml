@@ -12,97 +12,90 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 84
 review:
   strengths:
-  - Custom imprint_seq gradient fill clipped via PathPatch — sophisticated technique
-    that creates a visually beautiful under-curve fill without bleeding outside the
-    KDE boundary
-  - EventCollection for rug plot — idiomatic matplotlib approach that avoids the scatter-marker
-    workaround
-  - Bimodal server-response-time narrative (cache hits vs DB queries) is compelling,
-    realistic, and immediately interpretable
-  - Theme-adaptive chrome correctly and completely implemented — both renders polished
-    with no dark-on-dark failures
-  - Silverman bandwidth + argrelextrema peak detection = statistically sound; fallback
-    logic for edge cases is defensive without noise
-  - Canvas size exactly 3200x1800, no bbox_inches=tight
+  - scipy gaussian_kde with Silverman bandwidth keeps both modes and the skew visible
+  - Gradient fill of the density area via imshow clipped to a PathPatch, a matplotlib-specific
+    technique
+  - EventCollection rug in a band below the curve
+  - Theme tokens on all text; both renders readable
+  - Realistic cache-hit vs database-query response-time scenario
   weaknesses:
-  - 'Annotation fontsize=8 with two-line labels (Cache hit\n~45 ms) is tight at catalog
-    thumbnail widths (~400px); increase to fontsize=9-10 or collapse to single-line
-    format (Cache hit: ~45 ms) for better readability at small sizes'
-  - Cache hit annotation xytext positioned at (p1_x-15, p1_y*0.60) sits inside the
-    steep slope of the primary peak where gradient fill is densest; reposition slightly
-    left or above the curve to improve arrow-to-label legibility
+  - 'SC-03 (both): the density axis is labelled down to ''-0.002'', a negative density
+    value under the rug band → no tick labels below 0 on the density axis. Likely
+    cause: the FuncFormatter that should blank negative ticks is not applied to the
+    rendered axis; ax.set_ylim(bottom=-0.0020) exposes the tick.'
+  - 'SC-01 (code): the source annotates both peaks with ''Cache hit ~45 ms'' / ''DB
+    query ~140 ms'' callouts with arrows, which the basic variant excludes → remove
+    the two ax.annotate calls and the argrelextrema peak search. Likely cause: the
+    annotation block at the end of the script.'
+  - 'Suggestion: give the curve a little headroom so the main peak does not touch
+    the top of the axes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "density-basic · python · matplotlib · anyplot.ai" in dark INK (#1A1A17), fontsize=12, ~70% canvas width. X-axis label "Response Time (ms)" and Y-axis label "Density" both at fontsize=10 in dark INK. Tick labels at fontsize=8 in INK_SOFT (#4A4A44). Top and right spines removed; left and bottom spines in INK_SOFT. Subtle y-axis horizontal grid at alpha=0.15.
-      Data: Brand green (#009E73) KDE curve, linewidth=2.5. imprint_seq gradient fill (green→blue, alpha=0.45) clipped via PathPatch precisely to the curve boundary. Rug plot ticks in brand green at alpha=0.55 in negative-y band. Two annotation boxes (ELEVATED_BG fill, INK_SOFT border, INK_SOFT text at fontsize=8) labeling "Cache hit ~45ms" and "DB query ~140ms" with arrows.
-      Legibility verdict: PASS — all primary text clearly readable. Annotation text at fontsize=8 two-line format is small but visible at full resolution.
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'density-basic · python · matplotlib · anyplot.ai' in dark ink, x-axis 'Response Time (ms)', y-axis 'Density' with ticks from -0.002 to 0.014; top/right spines removed; subtle horizontal grid. All readable.
+      Data: #009E73 KDE curve (2.5 px) over a vertical gradient fill (green at the base to blue-grey at the peak) clipped to the curve; bimodal peaks near 45 ms and 137 ms; green rug ticks in the band between 0 and -0.002; the peak touches the top of the axes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, axis labels, tick labels all flip to light-colored text (INK = #F0EFE8, INK_SOFT = #B8B7B0). All text clearly readable — NO dark-on-dark failures. Grid lines subtle at alpha=0.15. Spines in INK_SOFT (light gray on dark background).
-      Data: Brand green (#009E73) KDE curve identical to light render. imprint_seq gradient transitions from green (left/first peak) to darker blue-teal (right/second peak). Rug ticks in brand green visible in dense left region. Annotation boxes use ELEVATED_BG (#242420) fill with INK_SOFT (#B8B7B0) text — readable on dark background.
-      Data colours identical to light render: green curve, green→blue gradient fill, green rug ticks. Only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark issues. All text elements adapt correctly to dark theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; no dark-on-dark text.
+      Data: same curve and rug; gradient fill runs dark teal to dark navy; only chrome and fill tone flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All main text explicitly sized and readable in both themes. Two-line
-          annotation labels at fontsize=8 are small at thumbnail scales.
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, all explicitly sized;
+          readable in both themes (INK / INK_SOFT tokens)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No element collisions. Rug plot in dedicated negative-y space. Annotations
-          with arrows clearly separated.
+        comment: No text collisions; rug sits in its own band below the zero line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: KDE curve linewidth=2.5 prominent. Gradient fill visible at alpha=0.45.
-          Rug ticks appropriately subtle. 500 data points well-represented.
+        comment: 2.5 px curve prominent; translucent fill; ~500 rug ticks at alpha
+          0.55 read as density of observations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue design with brand green. High contrast on both backgrounds.
-          CVD-safe.
+        comment: Single hue, high contrast on both surfaces, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 landscape canvas. No bbox_inches=tight. Ample margins.
-          Title ~70% width expected.
+        comment: 3200x1800 canvas, plot fills it with balanced margins; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) and Density are descriptive with units.
+        comment: '''Response Time (ms)'' with unit and ''Density'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. imprint_seq gradient (#009E73 to #4467A3)
-          correct. Backgrounds #FAF8F1/#1A1A17 correct. Data colours identical in
-          both renders.'
+        comment: '#009E73 first series; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical in both renders'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -110,54 +103,52 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom imprint_seq gradient fill with PathPatch clipping clearly
-          above 4/8 default. Professional palette use and intentional hierarchy. Below
-          publication level but genuinely sophisticated.
+        comment: 'Above default: vertical gradient fill clipped to the curve via PathPatch
+          is a deliberate aesthetic decision'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top and right spines removed, y-axis-only grid at alpha=0.15, tick
-          length=0, rug in well-defined sub-zero band. Above 2/6 default.
+        passed: false
+        comment: Spine and grid rules met; the negative '-0.002' tick and the rug
+          band below it are left unrefined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bimodal server-response narrative (cache hits vs DB queries) compelling.
-          Annotations label peaks with descriptive text and arrows. Visual hierarchy
-          emphasises dominant first peak.
+        passed: false
+        comment: Bimodal story is in the data itself; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct KDE/density plot with smooth probability-density curve.
+        passed: false
+        comment: Correct KDE plot, but the source draws two peak callouts (Cache hit
+          / DB query) the basic variant excludes (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth curve, transparency fill, rug plot, Silverman bandwidth selection
-          — all present.
+        comment: Smooth curve, fill, rug, Silverman bandwidth present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X = response time in ms, Y = density, full range 0-230ms shown.
+        passed: false
+        comment: Density axis labelled down to -0.002, a negative density value (defect
+          line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title density-basic · python · matplotlib · anyplot.ai correct. Single-series,
-          no legend needed.
+        comment: Title format correct; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -167,22 +158,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution with two modes, tails, and rug plot showcases
-          full density-plot capability.
+        comment: Two modes, skew/long right tail, rug shows individual observations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response-time scenario (cache hits ~45ms, DB queries ~140ms)
-          is real-world neutral and immediately understandable.
+        comment: 'Cache-hit vs database-query response times: realistic and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 0-230ms and 500 total observations are factually plausible
-          for a mixed cache/database workload.
+        comment: Values 5-220 ms plausible; densities consistent with unit area
     code_quality:
       score: 10
       max: 10
@@ -192,55 +180,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → compute → plot → style →
-          save.'
+        comment: Flat Imports -> tokens -> Data -> Plot -> Save; Data block ends in
+          df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Every import is used: EventCollection, LinearSegmentedColormap,
-          PathPatch, Path, stats, argrelextrema, ticker.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. PathPatch gradient clipping non-trivial but
-          justified. argrelextrema fallback defensive without over-engineering.
+        comment: scipy gaussian_kde and argrelextrema used; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches=tight. Current
-          API throughout.
+        comment: Saves plot-{THEME}.png at dpi=400, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: All Axes methods used. PathPatch for clip paths. EventCollection
-          for rug. argrelextrema for peak detection. Expert-level patterns throughout.
+        comment: 'Above default: Axes API, ticker formatters, EventCollection'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: PathPatch gradient clipping and EventCollection are distinctively
-          matplotlib. Secondary peak could have used additional matplotlib composability
-          features (fill_between, axvspan) for richer mode emphasis.
+        comment: 'Above default: gradient fill of the required area via imshow clipped
+          to a PathPatch, plus EventCollection rug'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  last_kept:
+    pr: 15008
+    code: criterion_below
+    note: '#15008 was kept because it scored below the live version''s re-score on
+      these criteria: DE-01 4 < 5: Style-guide baseline: clean typography and tokens,
+      nothing beyond; LM-02 2 < 3: Above default: EventCollection for the rug, a matplotlib-specific
+      collection rather than a scatter workaround. Do not score lower than the live
+      version on them.'
 impl_tags:
   dependencies:
   - scipy
