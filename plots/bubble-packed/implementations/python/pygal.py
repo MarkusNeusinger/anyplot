@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import math
@@ -34,7 +34,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Constants
 WIDTH = 3200
 HEIGHT = 1800
-PADDING = 10  # gap between packed circles in pixels
+PADDING = 10  # gap between packed circles of one group in pixels
+GROUP_GAP = 90  # gap between circles of different groups in pixels
 FONT_FAMILY = "'Trebuchet MS', 'Lucida Grande', sans-serif"
 TITLE = "bubble-packed · python · pygal · anyplot.ai"
 
@@ -74,7 +75,7 @@ group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(group_names)}
 def text_color_on(fill):
     """White text on dark fills, near-black on light fills (perceived luminance)."""
     r, g, b = (int(fill[i : i + 2], 16) for i in (1, 3, 5))
-    return "#1A1A17" if 0.299 * r + 0.587 * g + 0.114 * b > 150 else "white"
+    return "#1A1A17" if 0.299 * r + 0.587 * g + 0.114 * b > 120 else "white"
 
 
 group_text_color = {g: text_color_on(c) for g, c in group_colors.items()}
@@ -111,7 +112,8 @@ for circle in circles[1:]:
     for existing in placed:
         for angle_deg in range(0, 360, 6):
             angle = math.radians(angle_deg)
-            dist = existing["r"] + circle["r"] + PADDING
+            gap = PADDING if existing["item"]["group"] == circle["item"]["group"] else GROUP_GAP
+            dist = existing["r"] + circle["r"] + gap
             nx = existing["x"] + math.cos(angle) * dist
             ny = existing["y"] + math.sin(angle) * dist
 
@@ -119,7 +121,8 @@ for circle in circles[1:]:
             for other in placed:
                 ddx = nx - other["x"]
                 ddy = ny - other["y"]
-                min_gap = circle["r"] + other["r"] + PADDING * 0.5
+                other_gap = PADDING if other["item"]["group"] == circle["item"]["group"] else GROUP_GAP
+                min_gap = circle["r"] + other["r"] + other_gap * 0.5
                 if math.sqrt(ddx * ddx + ddy * ddy) < min_gap:
                     valid = False
                     break
@@ -300,14 +303,13 @@ def add_packed_bubbles(root):
     # Circle labels: first-word name + value for larger bubbles, value-only for smaller
     for x, y, r, item in packed:
         text_color = group_text_color[item["group"]]
-        if r > 110:
-            fs = max(int(r * 0.22), 26)
-            name = item["label"].split()[0]
-            add_text(g, x, y - fs * 0.55, name, fs, text_color, bold=True)
-            add_text(g, x, y + fs * 0.65, f"${item['value']}K", int(fs * 0.82), text_color)
+        name = item["label"].split()[0]
+        name_fs = int(r * 0.24)
+        if r > 110 and name_fs >= 32 and 0.62 * len(name) * name_fs <= 1.6 * r:
+            add_text(g, x, y - name_fs * 0.6, name, name_fs, text_color, bold=True)
+            add_text(g, x, y + name_fs * 0.65, f"${item['value']}K", max(int(name_fs * 0.9), 32), text_color)
         else:
-            fs = max(int(r * 0.28), 30)
-            add_text(g, x, y, f"${item['value']}K", fs, text_color, bold=True)
+            add_text(g, x, y, f"${item['value']}K", max(int(r * 0.34), 34), text_color, bold=True)
 
     # Group labels: placed above or below each cluster with generous clearance
     for gname, gdata in group_info.items():
