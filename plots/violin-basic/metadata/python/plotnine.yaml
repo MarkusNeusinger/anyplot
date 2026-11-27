@@ -2,122 +2,121 @@ library: plotnine
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:35:38Z'
-updated: '2026-05-29T11:41:06Z'
+updated: '2026-11-27T20:17:21Z'
 generated_by: claude-sonnet
-workflow_run: 26634217780
+workflow_run: 46061856904
 issue: 722
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all three required features (quartile markers, mirrored
-    density, median line) via draw_quantiles=[0.25, 0.5, 0.75]'
-  - Data purposefully designed with four distinct distribution shapes showcasing violin
-    plot advantages over boxplots
-  - Full Imprint palette compliance in both renders; adaptive chrome correctly threads
-    INK/INK_SOFT tokens to all text elements
-  - 'Perfect code quality: KISS structure, explicit font sizes, seed, clean imports,
-    correct output API'
-  - Annotation adds genuine insight by calling out the bimodal nature of Design salaries
+  - draw_quantiles=[0.25, 0.5, 0.75] draws the quartile markers and the median line
+    inside every violin natively, and the ink-colored outline keeps them visible on
+    every fill in both themes
+  - Default trim=True ends each violin at its data range, so the tails no longer trail
+    past the observed latencies
+  - Four contrasting shapes (right-skewed edge cache, bimodal API gateway, tight database,
+    wide batch worker) show what a violin reveals beyond a box plot
+  - 'Category order and fill limits come from df[TIER].unique(), so Edge cache gets
+    #009E73 and the palette follows the data''s order'
+  - 'Clean adaptable structure: column constants with roles, a Data block that ends
+    in df, a Plot block that reads only df, and the axis titles taken from the column
+    names'
   weaknesses:
-  - Annotation text size=2.8mm is quite small; at 400px mobile render it becomes barely
-    readable — increase to ~3.5-4.0 and use INK color (not INK_SOFT) for better contrast
-  - Mean diamond markers at size=2.5 are small relative to violin bodies; increasing
-    to ~3.5 would make mean position more prominent
-  - DE-01 could improve with bolder title weight (fontweight=bold on plot_title element_text)
-    and/or thin outline stroke on violins
+  - 'Suggestion: a 50 ms tick step on the latency axis (only 0, 100 and 200 are labelled
+    now) would let a reader read the medians off more precisely.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - PASS
-      Chrome: Title "violin-basic · python · plotnine · anyplot.ai" in dark ink (#1A1A17) clearly readable; Y-axis label "Annual Salary (USD)" and X-axis "Department" readable in dark ink; tick labels in INK_SOFT (#4A4A44) readable; annotation "Bimodal:\njunior/senior split" small but present
-      Data: Engineering violin in #009E73 (brand green); Design in #C475FD (lavender); Marketing in #4467A3 (blue); Sales in #BD8233 (ochre); quartile lines and mean diamonds visible inside violins
+      Background: warm off-white #FAF8F1 across plot and panel - PASS
+      Chrome: title "violin-basic · python · plotnine · anyplot.ai" in dark ink at top center; y-axis title "Response latency (ms)" and x-axis title "Server tier" in dark ink; tick labels (0, 100, 200; Edge cache, API gateway, Database, Batch worker) in INK_SOFT, all readable; subtle horizontal grid only; left and bottom axis lines
+      Data: four mirrored violins with near-black outlines — Edge cache #009E73 (low, right-skewed with a thin upper tail), API gateway #C475FD (bimodal, ~60 and ~130 ms), Database #4467A3 (tight, ~95 ms), Batch worker #BD8233 (wide, ~40–260 ms); three dark quartile/median lines inside each; tails trimmed to the data range
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - PASS
-      Chrome: Title in light text (#F0EFE8) clearly readable; axis labels in light text readable; tick labels in #B8B7B0 readable; no dark-on-dark failures observed
-      Data: Violin colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233); quantile lines and diamonds visible
+      Background: warm near-black #1A1A17 - PASS
+      Chrome: title, axis titles in light ink #F0EFE8; tick labels in #B8B7B0; grid faint but visible; no dark-on-dark text
+      Data: same four fill hues as the light render (they read slightly deeper through alpha 0.85 over the dark page); outlines and quartile/median lines switch to light ink and stand out on every fill
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8);
-          annotation text at size=2.8mm small but not critical
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt set explicitly; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; violins well-separated
+        comment: No text collisions; violins well separated
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Violins well-sized; mean diamonds and quartile lines visible but
-          small
+        comment: Violins, outlines and quartile lines clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; 4 distinct hue families
+        comment: Imprint hues distinct; categories also named on the x axis
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed 3200x1800; balanced margins and whitespace
+        comment: Canvas gate passed (3200x1800); drawing fills the canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Annual Salary (USD) has units; Department descriptive
+        comment: Response latency (ms) with unit; Server tier
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering uses #009E73 first; full Imprint canonical order; correct
-          bg colors; adaptive chrome'
+        comment: 'First category #009E73, Imprint canonical order, correct backgrounds,
+          chrome flips per theme'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Above configured defaults with intentional alpha, mean diamonds,
-          annotation; not at publication-ready level
+        passed: false
+        comment: 'Style-guide baseline: Imprint fills, theme tokens, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Spines removed; subtle horizontal-only grid at 0.15 alpha; no legend;
-          clean appearance
+        passed: false
+        comment: Vertical grid removed on the categorical axis and an ink outline
+          that frames the quartile lines; otherwise baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Deliberate distribution variety tells salary analysis story; annotation
-          highlights bimodal feature
+        passed: false
+        comment: Data displayed; the distinct shapes are what the spec's example asks
+          for; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with mirrored density
+        comment: Basic violin plot, one color per category, no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: draw_quantiles=[0.25,0.5,0.75] provides quartile markers and median
-          line; mirrored density present
+        comment: Mirrored density, quartile markers, median line (C1, C3); shared
+          non-zero-forced axis with trimmed tails (C4); basic colors only (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Department on X, salary on Y; all groups visible
+        comment: Tier on x, latency on y; automatic axis fitted to the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed (x-axis labels suffice)
+        comment: Correct title; legend N/A, categories named on the x axis
     data_quality:
       score: 15
       max: 15
@@ -156,20 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Four distinct shapes: right-skewed, bimodal, tight normal, wide
-          spread'
+        comment: Skewed, bimodal, tight and wide shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual salary by department is neutral and realistic
+        comment: Response latency by server tier, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary ranges plausible for US business roles
+        comment: Latencies 5–260 ms plausible per tier; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,57 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports->tokens->data->plot->save structure
+        comment: Imports, tokens, constants, Data, Plot, Save top to bottom
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic Python with strict=True in zip; no over-engineering
+        comment: Concise; quantiles computed by the geom
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: plot-{THEME}.png via plot.save, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Grammar-of-graphics layering; scale_fill_manual with named dict;
-          stat_summary as declarative layer
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: draw_quantiles in geom_violin; stat_summary(fun_y=) pattern; element_*
-          theme system all plotnine-distinctive
+        comment: Grammar-of-graphics layering as the library prompt shows; nothing
+          beyond it
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: draw_quantiles is how the library draws what the Notes require; nothing
+          beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  rendered_at: '2026-11-27T20:13:54Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
