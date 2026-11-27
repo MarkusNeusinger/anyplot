@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Title
+from bokeh.models import ColumnDataSource, HoverTool, Title
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -151,17 +151,12 @@ module_types = [
     "L-finder" if (c == 0 or r == rows - 1) else "Timing" if (r == 0 or c == cols - 1) else "Data"
     for r, c in zip(black_rows.tolist(), black_cols.tolist(), strict=True)
 ]
-source = ColumnDataSource(
-    data={
-        "x": cell_x,
-        "y": cell_y,
-        "module_row": black_rows.astype(int),
-        "module_col": black_cols.astype(int),
-        "module_type": module_types,
-    }
-)
 
 # Plot — 2400×2400 square canvas suits the square Data Matrix barcode
+X, Y, ROW, COL, TYPE = "x", "y", "module_row", "module_col", "module_type"
+source = ColumnDataSource(
+    data={X: cell_x, Y: cell_y, ROW: black_rows.astype(int), COL: black_cols.astype(int), TYPE: module_types}
+)
 p = figure(
     width=2400,
     height=2400,
@@ -175,35 +170,12 @@ p = figure(
     min_border_right=90,
 )
 
-OKABE_BLUE = "#4467A3"
-OKABE_ORANGE = "#C475FD"
-OKABE_GREEN = "#009E73"
+# Light tile under the symbol (quiet zone included): black modules on white in both themes, so it scans
+TILE = "#FAF8F1"
+MODULE = "#1A1A17"
+p.rect(x=total_w / 2, y=total_h / 2, width=total_w, height=total_h, fill_color=TILE, line_color=None)
 
-# Structural zone overlays — drawn first so barcode modules render on top
-bx = quiet  # barcode left edge in plot coords
-by = total_h - quiet - rows  # barcode bottom edge in plot coords
-# L-finder: solid left column + solid bottom row
-p.rect(x=bx + 0.5, y=by + rows / 2, width=1, height=rows, fill_color=OKABE_BLUE, fill_alpha=0.15, line_color=None)
-p.rect(x=bx + cols / 2, y=by + 0.5, width=cols, height=1, fill_color=OKABE_BLUE, fill_alpha=0.15, line_color=None)
-# Timing: alternating top row + right column
-p.rect(
-    x=bx + cols / 2, y=by + rows - 0.5, width=cols, height=1, fill_color=OKABE_ORANGE, fill_alpha=0.15, line_color=None
-)
-p.rect(
-    x=bx + cols - 0.5, y=by + rows / 2, width=1, height=rows, fill_color=OKABE_ORANGE, fill_alpha=0.15, line_color=None
-)
-# Data region: inner cells (rows 1..rows-2, cols 1..cols-2)
-p.rect(
-    x=bx + cols / 2,
-    y=by + rows / 2,
-    width=cols - 2,
-    height=rows - 2,
-    fill_color=OKABE_GREEN,
-    fill_alpha=0.12,
-    line_color=None,
-)
-
-modules_renderer = p.rect(x="x", y="y", width=0.95, height=0.95, source=source, fill_color=INK, line_color=None)
+modules_renderer = p.rect(x=X, y=Y, width=1, height=1, source=source, fill_color=MODULE, line_color=None)
 hover = HoverTool(
     renderers=[modules_renderer], tooltips=[("Type", "@module_type"), ("Row", "@module_row"), ("Col", "@module_col")]
 )
@@ -226,30 +198,6 @@ p.title.text_font_style = "normal"
 
 subtitle = Title(text=f'Content: "{content}"', text_font_size="34pt", text_color=INK_SOFT, align="center")
 p.add_layout(subtitle, "below")
-
-# Zone labels in the quiet border areas, color-matched to their overlays
-for lx, ly, ltxt, lcolor, langle in [
-    (1.0, total_h - quiet - rows / 2, "L-finder", OKABE_BLUE, np.pi / 2),
-    (quiet + cols / 2, total_h - quiet + 0.6, "Timing", OKABE_ORANGE, 0.0),
-    (total_w - 1.0, total_h - quiet - rows / 2, "Data", OKABE_GREEN, -np.pi / 2),
-]:
-    p.add_layout(
-        Label(
-            x=lx,
-            y=ly,
-            text=ltxt,
-            text_color=lcolor,
-            text_font_size="18pt",
-            text_font_style="bold",
-            text_align="center",
-            text_baseline="middle",
-            angle=langle,
-            background_fill_color=PAGE_BG,
-            background_fill_alpha=0.8,
-            border_line_color=lcolor,
-            border_line_width=2,
-        )
-    )
 
 # Save interactive HTML (required catalog artifact)
 output_file(f"plot-{THEME}.html")
