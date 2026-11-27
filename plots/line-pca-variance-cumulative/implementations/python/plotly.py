@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: 89/100 | Updated: 2026-11-27
 """
 
 import sys
@@ -124,7 +124,7 @@ fig.add_hline(
     line_width=2.5,
     annotation_text=f"{low_threshold}%",
     annotation_position="top right",
-    annotation_font={"size": 14, "color": AMBER},
+    annotation_font={"size": 14, "color": INK_SOFT},
 )
 fig.add_hline(
     y=high_threshold,
@@ -176,8 +176,8 @@ fig.add_annotation(
     arrowsize=1.4,
     arrowwidth=1.8,
     arrowcolor=ELBOW_COLOR,
-    ax=-65,
-    ay=-55,
+    ax=90,
+    ay=75,
     font={"size": 12, "color": ELBOW_COLOR},
     bgcolor=ELEVATED_BG,
     bordercolor=ELBOW_COLOR,
