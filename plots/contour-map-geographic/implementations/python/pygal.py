@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 77/100 | Updated: 2026-11-26
@@ -6,6 +6,7 @@ Quality: 77/100 | Updated: 2026-11-26
 
 import math
 import os
+import re
 import sys
 from itertools import pairwise
 from pathlib import Path
@@ -15,7 +16,9 @@ sys.path = [p for p in sys.path if p != str(Path(__file__).parent)]
 
 import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal as pygal_lib  # noqa: E402
+from contourpy import FillType, contour_generator  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
@@ -26,79 +29,34 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data — North Pacific sea-level pressure field (hPa)
-np.random.seed(42)
+# Imprint palette: position 4 (ochre) draws the coastlines
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+COAST = IMPRINT_PALETTE[3]
 
-lon_min, lon_max = 120, 240  # 120°E to 120°W
-lat_min, lat_max = 20, 65
+# Imprint sequential ramp, fields stops: colored cells fill the plot
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-n_grid = 40
-lon_grid = np.linspace(lon_min, lon_max, n_grid)
-lat_grid = np.linspace(lat_min, lat_max, n_grid)
-LON, LAT = np.meshgrid(lon_grid, lat_grid)
+# Constants
+ISOBAR_STEP = 4  # hPa between isobars (standard synoptic interval)
+MAJOR_EVERY = 2  # every second isobar is drawn heavy and labelled first
 
-# Background pressure gradient (higher in subtropics, lower at poles)
-pressure_base = 1020 - (LAT - lat_min) * 0.25
-
-# North Pacific High (subtropical high pressure ridge)
-hp_lon, hp_lat = 200, 35
-dist_hp = np.sqrt(((LON - hp_lon) / 25) ** 2 + ((LAT - hp_lat) / 12) ** 2)
-pressure_base += 12 * np.exp(-(dist_hp**2))
-
-# Aleutian Low (subpolar low pressure center)
-al_lon, al_lat = 185, 53
-dist_al = np.sqrt(((LON - al_lon) / 20) ** 2 + ((LAT - al_lat) / 10) ** 2)
-pressure_base -= 18 * np.exp(-(dist_al**2))
-
-# Secondary low off Asian coast
-al2_lon, al2_lat = 145, 45
-dist_al2 = np.sqrt(((LON - al2_lon) / 15) ** 2 + ((LAT - al2_lat) / 10) ** 2)
-pressure_base -= 8 * np.exp(-(dist_al2**2))
-
-PRESSURE = pressure_base + np.random.normal(0, 0.3, pressure_base.shape)
-
-# Isobar levels every 4 hPa
-contour_levels = np.arange(996, 1033, 4)
-
-# Simplified coastlines: North Pacific rim (lon, lat)
-coastlines = [
+# Simplified coastlines of the North Pacific rim, (lon, lat) vertices
+COASTLINES = [
     # Japan main islands
-    [
-        (130, 31),
-        (131, 33),
-        (130, 34),
-        (132, 34),
-        (135, 35),
-        (137, 37),
-        (140, 38),
-        (141, 40),
-        (141, 43),
-        (145, 44),
-        (141, 45),
-        (130, 31),
-    ],
+    [(130, 31), (131, 33), (130, 34), (132, 34), (135, 35), (137, 37), (140, 38), (141, 40), (141, 43), (145, 44)],
     # Kamchatka + Kuril arc
     [(152, 47), (155, 52), (158, 56), (163, 58), (167, 54), (165, 50), (152, 47)],
-    # Aleutian Islands (simplified)
+    # Aleutian Islands
     [(167, 54), (172, 53), (178, 52), (188, 52), (195, 54), (200, 57), (210, 56), (220, 57), (225, 56)],
     # Alaska
     [(195, 57), (200, 59), (205, 60), (210, 60), (215, 60), (220, 60), (225, 59), (230, 58), (235, 55), (237, 53)],
     # North American west coast
-    [
-        (237, 53),
-        (236, 50),
-        (235, 48),
-        (234, 47),
-        (235, 45),
-        (236, 42),
-        (236, 38),
-        (238, 35),
-        (240, 32),
-        (240, 25),
-        (237, 22),
-        (234, 20),
-    ],
-    # Asian mainland coast (rough)
+    [(237, 53), (236, 50), (235, 48), (234, 47), (235, 45), (236, 42), (236, 38), (238, 35), (240, 32), (240, 25)],
+    # Asian mainland coast
     [
         (120, 22),
         (122, 24),
@@ -121,13 +79,6 @@ coastlines = [
     ],
 ]
 
-# Pressure colormap: Imprint sequential ramp (fields stops: colored cells fill the plot)
-SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
-    if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
-)
-
 
 def ramp_color(stops, t):
     """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
@@ -141,9 +92,40 @@ def ramp_color(stops, t):
     )
 
 
-p_min_cb, p_max_cb = 996, 1032
-n_colors = 10
-pressure_colors = [ramp_color(SEQ_FIELDS, i / (n_colors - 1)) for i in range(n_colors)]
+# Columns: set these to your table's column names
+LONGITUDE = "Longitude (°E)"  # role: lon
+LATITUDE = "Latitude (°N)"  # role: lat
+PRESSURE = "Pressure (hPa)"  # role: value
+
+# Data: replace this block with your own grid, for example df = pd.read_csv("pressure_grid.csv")
+# North Pacific sea-level pressure on a regular 40 x 40 lon/lat grid
+rng = np.random.default_rng(42)
+lon_axis = np.linspace(120, 240, 40)
+lat_axis = np.linspace(20, 65, 40)
+lon_mesh, lat_mesh = np.meshgrid(lon_axis, lat_axis)
+
+# Background gradient (higher in the subtropics), North Pacific High, Aleutian Low, low off Asia
+field = 1020 - (lat_mesh - 20) * 0.25
+field += 12 * np.exp(-((((lon_mesh - 200) / 25) ** 2) + ((lat_mesh - 35) / 12) ** 2))
+field -= 18 * np.exp(-((((lon_mesh - 185) / 20) ** 2) + ((lat_mesh - 53) / 10) ** 2))
+field -= 8 * np.exp(-((((lon_mesh - 145) / 15) ** 2) + ((lat_mesh - 45) / 10) ** 2))
+field += rng.normal(0, 0.3, field.shape)
+
+df = pd.DataFrame({LONGITUDE: lon_mesh.ravel(), LATITUDE: lat_mesh.ravel(), PRESSURE: field.ravel()})
+
+# Plot
+grid = df.pivot_table(index=LATITUDE, columns=LONGITUDE, values=PRESSURE)
+lons = grid.columns.to_numpy(dtype=float)
+lats = grid.index.to_numpy(dtype=float)
+values = grid.to_numpy()
+
+lon_min, lon_max = lons.min(), lons.max()
+lat_min, lat_max = lats.min(), lats.max()
+
+levels = np.arange(math.ceil(np.nanmin(values) / ISOBAR_STEP) * ISOBAR_STEP, np.nanmax(values) + 1e-9, ISOBAR_STEP)
+band_edges = [np.nanmin(values) - 1, *levels, np.nanmax(values) + 1]
+n_bands = len(band_edges) - 1
+band_colors = [ramp_color(SEQ_FIELDS, i / (n_bands - 1)) for i in range(n_bands)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -154,7 +136,7 @@ custom_style = Style(
     guide_stroke_color=INK_MUTED,
     major_guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="",
-    colors=(INK_MUTED,) * (len(coastlines) + 1),
+    colors=(INK_MUTED,),
     title_font_size=50,
     label_font_size=44,
     major_label_font_size=44,
@@ -168,13 +150,13 @@ chart = pygal_lib.XY(
     height=1800,
     style=custom_style,
     title="North Pacific Pressure Isobars · contour-map-geographic · python · pygal · anyplot.ai",
-    x_title="Longitude (°E)",
-    y_title="Latitude (°N)",
+    x_title=LONGITUDE,
+    y_title=LATITUDE,
     show_legend=False,
-    stroke=True,
+    stroke=False,
     dots_size=0,
-    show_x_guides=False,
-    show_y_guides=False,
+    show_x_guides=True,
+    show_y_guides=True,
     explicit_size=True,
     print_values=False,
     xrange=(lon_min, lon_max),
@@ -183,216 +165,123 @@ chart = pygal_lib.XY(
     margin_top=160,
     margin_bottom=160,
     margin_left=240,
-    margin_right=260,
+    margin_right=300,
 )
+chart.add("", [(lon_min, lat_min), (lon_max, lat_max)])
+base_svg = chart.render(is_unicode=True)
 
-for coords in coastlines:
-    chart.add(None, coords, stroke=True, dots_size=0, show_dots=False, fill=False)
-
-# Plot area pixel coordinates as pygal lays them out (read from the rendered SVG's
-# plot group and background rect) so the overlay lines up with the axis ticks
-plot_x = 362
-plot_y = 220
-plot_width = 2577
-plot_height = 1306
-
-svg_parts = ['<g opacity="0.55">']
-
-# Filled pressure cells
-cell_w = plot_width / (n_grid - 1)
-cell_h = plot_height / (n_grid - 1)
-
-for i in range(n_grid - 1):
-    for j in range(n_grid - 1):
-        avg_p = (PRESSURE[i, j] + PRESSURE[i, j + 1] + PRESSURE[i + 1, j] + PRESSURE[i + 1, j + 1]) / 4
-        color_idx = int((avg_p - p_min_cb) / 4)
-        color_idx = max(0, min(color_idx, len(pressure_colors) - 1))
-        color = pressure_colors[color_idx]
-        px = plot_x + (lon_grid[j] - lon_min) / (lon_max - lon_min) * plot_width
-        py = plot_y + plot_height - (lat_grid[i + 1] - lat_min) / (lat_max - lat_min) * plot_height
-        svg_parts.append(
-            f'<rect x="{px:.1f}" y="{py:.1f}" width="{cell_w + 1:.1f}" '
-            f'height="{cell_h + 1:.1f}" fill="{color}" stroke="none"/>'
-        )
-
-svg_parts.append("</g>")
-
-# Isobar contour lines via marching squares
-for level in contour_levels:
-    is_major = level % 8 == 0
-    line_color = INK if is_major else INK_SOFT
-    line_width = 3.5 if is_major else 1.8
-
-    all_segments = []
-    for i in range(n_grid - 1):
-        for j in range(n_grid - 1):
-            z00, z01 = PRESSURE[i, j], PRESSURE[i, j + 1]
-            z10, z11 = PRESSURE[i + 1, j], PRESSURE[i + 1, j + 1]
-
-            case = 0
-            if z00 >= level:
-                case |= 1
-            if z01 >= level:
-                case |= 2
-            if z11 >= level:
-                case |= 4
-            if z10 >= level:
-                case |= 8
-
-            if case == 0 or case == 15:
-                continue
-
-            x0 = plot_x + (lon_grid[j] - lon_min) / (lon_max - lon_min) * plot_width
-            y0 = plot_y + plot_height - (lat_grid[i + 1] - lat_min) / (lat_max - lat_min) * plot_height
-            x1 = plot_x + (lon_grid[j + 1] - lon_min) / (lon_max - lon_min) * plot_width
-            y1 = plot_y + plot_height - (lat_grid[i] - lat_min) / (lat_max - lat_min) * plot_height
-
-            t_left = 0.5 if abs(z10 - z00) < 1e-10 else (level - z00) / (z10 - z00)
-            t_right = 0.5 if abs(z11 - z01) < 1e-10 else (level - z01) / (z11 - z01)
-            t_top = 0.5 if abs(z11 - z10) < 1e-10 else (level - z10) / (z11 - z10)
-            t_bottom = 0.5 if abs(z01 - z00) < 1e-10 else (level - z00) / (z01 - z00)
-
-            left = (x0, y1 - cell_h * t_left)
-            right = (x1, y1 - cell_h * t_right)
-            top = (x0 + cell_w * t_top, y0)
-            bottom = (x0 + cell_w * t_bottom, y1)
-
-            if case in [1, 14]:
-                all_segments.append((left, bottom))
-            elif case in [2, 13]:
-                all_segments.append((bottom, right))
-            elif case in [3, 12]:
-                all_segments.append((left, right))
-            elif case in [4, 11]:
-                all_segments.append((right, top))
-            elif case == 5:
-                all_segments.append((left, top))
-                all_segments.append((bottom, right))
-            elif case in [6, 9]:
-                all_segments.append((bottom, top))
-            elif case in [7, 8]:
-                all_segments.append((left, top))
-            elif case == 10:
-                all_segments.append((left, bottom))
-                all_segments.append((right, top))
-
-    # Chain segments into polylines
-    tolerance = 1.5
-    polylines = []
-    used = [False] * len(all_segments)
-
-    for idx, seg in enumerate(all_segments):
-        if used[idx]:
-            continue
-        used[idx] = True
-        chain = list(seg)
-        extended = True
-        while extended:
-            extended = False
-            for j, other in enumerate(all_segments):
-                if used[j]:
-                    continue
-                p0, p1 = other
-                if abs(chain[-1][0] - p0[0]) < tolerance and abs(chain[-1][1] - p0[1]) < tolerance:
-                    chain.append(p1)
-                    used[j] = True
-                    extended = True
-                elif abs(chain[-1][0] - p1[0]) < tolerance and abs(chain[-1][1] - p1[1]) < tolerance:
-                    chain.append(p0)
-                    used[j] = True
-                    extended = True
-                elif abs(chain[0][0] - p1[0]) < tolerance and abs(chain[0][1] - p1[1]) < tolerance:
-                    chain.insert(0, p0)
-                    used[j] = True
-                    extended = True
-                elif abs(chain[0][0] - p0[0]) < tolerance and abs(chain[0][1] - p0[1]) < tolerance:
-                    chain.insert(0, p1)
-                    used[j] = True
-                    extended = True
-        polylines.append(chain)
-
-    for chain in polylines:
-        if len(chain) < 2:
-            continue
-        path_data = f"M {chain[0][0]:.1f} {chain[0][1]:.1f}"
-        for pt in chain[1:]:
-            path_data += f" L {pt[0]:.1f} {pt[1]:.1f}"
-        svg_parts.append(
-            f'<path d="{path_data}" fill="none" stroke="{line_color}" '
-            f'stroke-width="{line_width}" stroke-opacity="0.9" stroke-linejoin="round" stroke-linecap="round"/>'
-        )
-
-# Isobar labels at representative positions
-label_positions = [
-    (135, 30, 1016),
-    (150, 55, 1004),
-    (185, 52, 1000),
-    (200, 37, 1024),
-    (215, 55, 1008),
-    (230, 45, 1016),
-    (155, 38, 1012),
-]
-for lon_l, lat_l, pval in label_positions:
-    if lon_min <= lon_l <= lon_max and lat_min <= lat_l <= lat_max:
-        px = plot_x + (lon_l - lon_min) / (lon_max - lon_min) * plot_width
-        py = plot_y + plot_height - (lat_l - lat_min) / (lat_max - lat_min) * plot_height
-        svg_parts.append(
-            f'<rect x="{px - 58}" y="{py - 29}" width="116" height="50" '
-            f'fill="{ELEVATED_BG}" fill-opacity="0.90" rx="5" stroke="{INK_MUTED}" stroke-width="1"/>'
-        )
-        svg_parts.append(
-            f'<text x="{px}" y="{py + 13}" text-anchor="middle" fill="{INK}" '
-            f'style="font-size:38px;font-weight:bold;font-family:sans-serif">{pval}</text>'
-        )
-
-# Colorbar
-cb_width = 48
-cb_height = plot_height * 0.72
-cb_x = plot_x + plot_width + 55
-cb_y = plot_y + (plot_height - cb_height) / 2
-
-n_cb = len(pressure_colors)
-seg_h = cb_height / n_cb
-for i, color in enumerate(pressure_colors[::-1]):
-    seg_y = cb_y + i * seg_h
-    svg_parts.append(f'<rect x="{cb_x}" y="{seg_y:.1f}" width="{cb_width}" height="{seg_h + 1:.1f}" fill="{color}"/>')
-
-svg_parts.append(
-    f'<rect x="{cb_x}" y="{cb_y}" width="{cb_width}" height="{cb_height}" fill="none" stroke="{INK}" stroke-width="2"/>'
+# Register the overlay on pygal's own axis (the opaque map covers the guides): fit pixel = a * value + b on the tick guides
+plot_x, plot_y = map(float, re.search(r'translate\(([\d.]+), ([\d.]+)\)" class="plot"', base_svg).groups())
+plot_w, plot_h = map(
+    float, re.search(r'class="plot"><rect x="0" y="0" width="([\d.]+)" height="([\d.]+)"', base_svg).groups()
 )
+x_guides = re.findall(
+    r'<path d="M([\d.]+) 0\.000000 v[\d.]+" class="(?:major )?guide line" />.*?<title>([\d.]+)</title>', base_svg
+)
+y_guides = re.findall(
+    r'<path d="M0\.000000 ([\d.]+) h[\d.]+" class="(?:major )?guide line" />.*?<title>([\d.]+)</title>', base_svg
+)
+x_slope, x_off = np.polyfit([float(v) for _, v in x_guides], [float(p) for p, _ in x_guides], 1)
+y_slope, y_off = np.polyfit([float(v) for _, v in y_guides], [float(p) for p, _ in y_guides], 1)
 
-cb_vals = list(range(p_max_cb, p_min_cb - 1, -4))
-for i, val in enumerate(cb_vals):
-    label_y = cb_y + i * seg_h + seg_h / 2 + 11
-    svg_parts.append(
-        f'<text x="{cb_x + cb_width + 12}" y="{label_y:.1f}" fill="{INK}" '
-        f'style="font-size:38px;font-family:sans-serif">{val}</text>'
+
+def to_px(lon, lat):
+    return plot_x + x_slope * lon + x_off, plot_y + y_slope * lat + y_off
+
+
+def path_d(rings, close):
+    return " ".join(
+        "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in (to_px(*pt) for pt in ring)) + (" Z" if close else "")
+        for ring in rings
     )
 
+
+gen_fill = contour_generator(lons, lats, values, fill_type=FillType.OuterCode)
+gen_line = contour_generator(lons, lats, values)
+
+svg_parts = [f'<clipPath id="map"><rect x="{plot_x}" y="{plot_y}" width="{plot_w}" height="{plot_h}"/></clipPath>']
+
+# Filled bands between the isobar levels, opaque
+for lo, hi, color in zip(band_edges[:-1], band_edges[1:], band_colors, strict=True):
+    points, codes = gen_fill.filled(lo, hi)
+    for pts, cds in zip(points, codes, strict=True):
+        starts = np.flatnonzero(cds == 1).tolist() + [len(cds)]
+        rings = [pts[a:b] for a, b in pairwise(starts)]
+        svg_parts.append(f'<path d="{path_d(rings, True)}" fill="{color}" fill-rule="evenodd" stroke="none"/>')
+
+# Coastlines above the fill, in their own ochre
 svg_parts.append(
-    f'<text x="{cb_x + cb_width / 2}" y="{cb_y - 22}" text-anchor="middle" fill="{INK}" '
-    f'style="font-size:40px;font-weight:bold;font-family:sans-serif">hPa</text>'
+    f'<path d="{path_d(COASTLINES, False)}" fill="none" stroke="{COAST}" stroke-width="6" '
+    f'stroke-linejoin="round" stroke-linecap="round" clip-path="url(#map)"/>'
 )
 
-# Pressure center labels (H/L): data-encoding colors, domain-conventional
-HIGH_COLOR = "#C475FD"  # Imprint violet — high pressure
-LOW_COLOR = "#4467A3"  # Imprint blue — low pressure
-centers = [(200, 35, "H", HIGH_COLOR), (185, 53, "L", LOW_COLOR), (145, 45, "L", LOW_COLOR)]
-for lon_c, lat_c, label, color in centers:
-    if lon_min <= lon_c <= lon_max and lat_min <= lat_c <= lat_max:
-        px = plot_x + (lon_c - lon_min) / (lon_max - lon_min) * plot_width
-        py = plot_y + plot_height - (lat_c - lat_min) / (lat_max - lat_min) * plot_height
+# Isobars from contourpy: heavy ink every second level, thin soft ink between
+lines_by_level = {}
+for i, level in enumerate(levels):
+    is_major = i % MAJOR_EVERY == 0
+    lines_by_level[level] = [ln for ln in gen_line.lines(level) if len(ln) > 1]
+    svg_parts.append(
+        f'<path d="{path_d(lines_by_level[level], False)}" fill="none" stroke="{INK if is_major else INK_SOFT}" '
+        f'stroke-width="{4 if is_major else 2}" stroke-linejoin="round" stroke-linecap="round"/>'
+    )
+
+# Isobar labels: each sits on a vertex of its own line, clear of the edges and of earlier labels
+label_w, label_h, min_gap = 116, 50, 260
+placed = []
+order = [lv for i, lv in enumerate(levels) if i % MAJOR_EVERY == 0] + [
+    lv for i, lv in enumerate(levels) if i % MAJOR_EVERY
+]
+for level in order:
+    best = None
+    for line in lines_by_level[level]:
+        px = np.array([to_px(*pt) for pt in line])
+        inside = (
+            (px[:, 0] > plot_x + 90)
+            & (px[:, 0] < plot_x + plot_w - 90)
+            & (px[:, 1] > plot_y + 50)
+            & (px[:, 1] < plot_y + plot_h - 50)
+        )
+        for x, y in px[inside]:
+            gap = min((math.hypot(x - qx, y - qy) for qx, qy in placed), default=1e9)
+            if gap >= min_gap and (best is None or gap > best[0]):
+                best = (gap, x, y)
+    if best is not None and level % (ISOBAR_STEP * MAJOR_EVERY) == 0:
+        _, x, y = best
+        placed.append((x, y))
         svg_parts.append(
-            f'<text x="{px}" y="{py + 18}" text-anchor="middle" fill="{color}" '
-            f'style="font-size:56px;font-weight:bold;font-family:sans-serif;opacity:0.85">{label}</text>'
+            f'<rect x="{x - label_w / 2:.1f}" y="{y - label_h / 2:.1f}" width="{label_w}" height="{label_h}" '
+            f'fill="{ELEVATED_BG}" stroke="{INK_MUTED}" stroke-width="1" rx="5"/>'
+            f'<text x="{x:.1f}" y="{y + 13:.1f}" text-anchor="middle" fill="{INK}" '
+            f'style="font-size:38px;font-weight:bold;font-family:sans-serif">{level:.0f}</text>'
         )
 
-custom_svg = "\n".join(svg_parts)
+# Colorbar: one opaque swatch per band, so it matches the map fills exactly
+cb_x = plot_x + plot_w + 60
+cb_h = plot_h * 0.72
+cb_y = plot_y + (plot_h - cb_h) / 2
+seg_h = cb_h / n_bands
+for i, color in enumerate(band_colors[::-1]):
+    svg_parts.append(
+        f'<rect x="{cb_x}" y="{cb_y + i * seg_h:.1f}" width="48" height="{seg_h + 0.5:.1f}" fill="{color}"/>'
+    )
+svg_parts.append(
+    f'<rect x="{cb_x}" y="{cb_y}" width="48" height="{cb_h}" fill="none" stroke="{INK}" stroke-width="2"/>'
+)
+for i, level in enumerate(levels[::-1]):
+    ty = cb_y + (i + 1) * seg_h
+    svg_parts.append(
+        f'<line x1="{cb_x + 48}" y1="{ty:.1f}" x2="{cb_x + 60}" y2="{ty:.1f}" stroke="{INK}" stroke-width="2"/>'
+        f'<text x="{cb_x + 70}" y="{ty + 13:.1f}" fill="{INK}" style="font-size:38px;font-family:sans-serif">'
+        f"{level:.0f}</text>"
+    )
+cb_name, _, cb_unit = PRESSURE.partition(" ")
+for k, word in enumerate((cb_name, cb_unit)):
+    svg_parts.append(
+        f'<text x="{cb_x + 24}" y="{cb_y - 70 + k * 44}" text-anchor="middle" fill="{INK}" '
+        f'style="font-size:40px;font-weight:bold;font-family:sans-serif">{word}</text>'
+    )
 
-chart.add("", [(lon_min, lat_min)])
-
-base_svg = chart.render(is_unicode=True)
-output_svg = base_svg.replace("</svg>", f"{custom_svg}\n</svg>")
+output_svg = base_svg.replace("</svg>", "\n".join(svg_parts) + "\n</svg>")
 
 cairosvg.svg2png(bytestring=output_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
