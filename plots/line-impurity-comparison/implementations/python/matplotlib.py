@@ -132,7 +132,8 @@ ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_xlim(-0.02, 1.02)
-ax.set_ylim(-0.03, 1.08)
+ax.set_ylim(-0.03, 1.32)
+ax.set_yticks(np.linspace(0, 1, 6))
 
 leg = ax.legend(fontsize=8, loc="upper left")
 if leg:

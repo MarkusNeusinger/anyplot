@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Quality: 82/100 | Updated: 2026-05-29
 """
 
 import os
