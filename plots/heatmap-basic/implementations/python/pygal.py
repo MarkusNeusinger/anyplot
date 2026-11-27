@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-basic: Basic Heatmap
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 77/100 | Updated: 2026-11-27
@@ -106,6 +106,8 @@ custom_style = _Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
+    opacity="1",
+    opacity_hover="1",
     font_family="sans-serif",
 )
 
@@ -121,7 +123,7 @@ chart = _pygal.HorizontalStackedBar(
     show_x_guides=False,
     show_x_labels=False,
     margin_top=200,
-    margin_bottom=100,
+    margin_bottom=220,
     margin_left=300,
     margin_right=450,
     range=(0, len(months)),
@@ -129,6 +131,8 @@ chart = _pygal.HorizontalStackedBar(
     rounded_bars=1,
 )
 chart.x_labels = categories
+chart._series_margin = 0.01  # a thin page-colored separator between rows
+chart._serie_margin = 0.0
 
 for month in months:
     chart.add(
@@ -198,23 +202,28 @@ bg_rects = re.findall(r'<rect[^>]*width="([^"]+)"[^>]*height="([^"]+)"[^>]*class
 plot_w, plot_h = (float(bg_rects[1][0]), float(bg_rects[1][1])) if len(bg_rects) >= 2 else (1720.0, 2100.0)
 grid_right = grid_left + plot_w
 grid_bottom = grid_top + plot_h
-cell_w = plot_w / len(months)
+first_cell = re.search(
+    r'<rect x="([^"]+)" y="[^"]+" rx="[^"]+" ry="[^"]+" width="([^"]+)"[^>]*class="rect reactive', svg
+)
+cell_x0, cell_w = (
+    (float(first_cell.group(1)), float(first_cell.group(2))) if first_cell else (0.0, plot_w / len(months))
+)
 
 extra = [
-    f'<text x="{W / 2:.0f}" y="{grid_top - 55:.0f}" text-anchor="middle" fill="{INK_SOFT}" '
-    f'style="font-size:30px;font-family:sans-serif">'
+    f'<text x="{W / 2:.0f}" y="{grid_top - 60:.0f}" text-anchor="middle" fill="{INK_SOFT}" '
+    f'style="font-size:34px;font-family:sans-serif">'
     f"Monthly website traffic (thousands of visits) by content category</text>"
 ]
 
 for col_j, mn in enumerate(months):
-    mx = grid_left + col_j * cell_w + cell_w / 2
+    mx = grid_left + cell_x0 + col_j * cell_w + cell_w / 2
     extra.append(
-        f'<text x="{mx:.0f}" y="{grid_top - 18:.0f}" text-anchor="middle" fill="{INK}" '
-        f'style="font-size:32px;font-weight:600;font-family:sans-serif">{mn}</text>'
+        f'<text x="{mx:.0f}" y="{grid_bottom + 55:.0f}" text-anchor="middle" fill="{INK}" '
+        f'style="font-size:44px;font-weight:600;font-family:sans-serif">{mn}</text>'
     )
 
 extra.append(
-    f'<text x="{(grid_left + grid_right) / 2:.0f}" y="{grid_bottom + 52:.0f}" '
+    f'<text x="{grid_left + cell_x0 + cell_w * len(months) / 2:.0f}" y="{grid_bottom + 135:.0f}" '
     f'text-anchor="middle" fill="{INK}" '
     f'style="font-size:40px;font-weight:bold;font-family:sans-serif">{MONTH}</text>'
 )
@@ -242,15 +251,15 @@ extra.append(
     f'<rect x="{cb_x:.0f}" y="{cb_top:.0f}" width="{cb_w}" height="{cb_h:.0f}" '
     f'fill="none" stroke="{INK_MUTED}" stroke-width="1.5"/>'
 )
-for frac, label_val in [(0.0, vmax), (0.5, (vmin + vmax) / 2), (1.0, vmin)]:
-    ty = cb_top + cb_h * frac
+for label_val in range(math.ceil(vmin / 20) * 20, int(vmax) + 1, 20):
+    ty = cb_top + cb_h * (vmax - label_val) / span
     extra.append(
-        f'<text x="{cb_x + cb_w + 10:.0f}" y="{ty + 12:.0f}" fill="{INK_SOFT}" '
-        f'style="font-size:34px;font-family:sans-serif">{label_val:.0f}</text>'
+        f'<text x="{cb_x + cb_w + 10:.0f}" y="{ty + 15:.0f}" fill="{INK_SOFT}" '
+        f'style="font-size:44px;font-family:sans-serif">{label_val:.0f}</text>'
     )
 extra.append(
     f'<text x="{cb_x + cb_w / 2:.0f}" y="{cb_top - 40:.0f}" text-anchor="middle" '
-    f'fill="{INK}" style="font-size:30px;font-weight:bold;font-family:sans-serif">{VISITS}</text>'
+    f'fill="{INK}" style="font-size:40px;font-weight:bold;font-family:sans-serif">{VISITS}</text>'
 )
 
 svg = svg.replace("</svg>", "\n".join(extra) + "\n</svg>")
@@ -264,5 +273,5 @@ with open(f"plot-{THEME}.html", "w", encoding="utf-8") as fout:
         f"<title>heatmap-basic - python - pygal - anyplot.ai</title>\n"
         f"<style>body{{margin:0;display:flex;justify-content:center;align-items:center;"
         f"min-height:100vh;background:{PAGE_BG};}}.chart{{max-width:100%;height:auto;}}</style>\n"
-        f'</head>\n<body>\n<figure class="chart">\n{chart.render(is_unicode=True)}\n</figure>\n</body>\n</html>\n'
+        f'</head>\n<body>\n<figure class="chart">\n{svg}\n</figure>\n</body>\n</html>\n'
     )
