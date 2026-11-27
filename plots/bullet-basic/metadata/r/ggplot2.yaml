@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: bullet-basic
 created: '2026-05-29T15:34:29Z'
-updated: '2026-11-27T21:27:54Z'
+updated: '2026-11-27T21:34:24Z'
 generated_by: claude-sonnet
-workflow_run: 46069867641
+workflow_run: 46070576768
 issue: 999
 language_version: 4.6.1
 library_version: 4.0.3
@@ -12,47 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - 'Correct three-layer bullet structure: grayscale geom_rect bands, half-height
-    Imprint-green measure bars from zero, INK geom_segment target markers'
-  - Theme-adaptive grayscale bands that keep a steady progression and stay distinct
-    from the page in both renders
-  - Zone key (Poor / Satisfactory / Good) placed above the first bullet in muted italics,
-    clear of all data
-  - All bullets share one 0-100 scale with x-only subtle grid, which makes the five
-    metrics directly comparable
-  - Idiomatic scale_fill_identity(guide = 'none') and expansion(add = 0.7) for row
-    padding
+  - 'Clean three-layer bullet: grayscale bands, narrower #009E73 measure bar from
+    zero and a thin ink target marker that flips to light ink in dark mode'
+  - Theme-adaptive band steps keep the poor-to-good progression distinguishable from
+    each other and from the page in both renders
+  - scale_fill_identity(guide='none') passes precomputed band colours through geom_rect
+    without a spurious legend
+  - Five bullets on one common 0-100% scale with actual-value labels beside each bar
+    end
   weaknesses:
-  - 'VQ-06 (both): the x-axis title reads ''Performance (% of target)'' while the
-    target markers sit at 70-95, so the unit contradicts the chart → a unit the targets
-    agree with, e.g. ''Performance (% of goal)'' or ''Score (%)''. Likely cause: labs(x
-    = ...).'
-  - 'CQ-04 (code): three near-identical annotate(''text'', ...) calls (zone labels)
-    and dead constants ELEVATED_BG, IMPRINT_PALETTE positions 2-8 and an unused set.seed()
-    add lines with no effect → one annotate(''text'', x = c(poor_mid, sats_mid, good_mid),
-    label = c(''Poor'', ''Satisfactory'', ''Good''), ...) call and delete the unused
-    constants. Likely cause: copy-pasted annotation calls and the template''s palette
-    block.'
-  - 'Suggestion: the zone key is placed at Revenue''s thresholds only; a note that
-    thresholds vary per metric would help readers of the lower rows.'
+  - 'Suggestion: the zone key sits at Revenue''s thresholds only; the lower rows use
+    other thresholds, so a reader may misread their bands.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: bold near-black title 'bullet-basic · r · ggplot2 · anyplot.ai' (~57% width); metric labels Revenue, Customer Sat., Cost Efficiency, Product Quality, Market Share in INK; x ticks 0%-100% in INK_SOFT; x title 'Performance (% of target)'; muted caption decoder; italic muted zone key Poor / Satisfactory / Good above the top band. All readable.
-      Data: five stacked bullets; three grayscale bands per row (#C4C4BE / #D8D8D2 / #EBEBEA) ending at each row's thresholds; half-height #009E73 measure bars from zero; near-black target segments; INK_SOFT value labels 87%, 72%, 63%, 91%, 58% right of each bar end, all in one color.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title 'bullet-basic · r · ggplot2 · anyplot.ai' top-left; metric labels (Revenue, Customer Sat., Cost Efficiency, Product Quality, Market Share) in dark ink on the left; x ticks 0%-100% in soft ink; x-axis title 'Performance (% of goal)'; muted italic zone key Poor / Satisfactory / Good above the first bullet; muted caption 'Bar = actual performance · Vertical line = target · Label = actual value'. All readable.
+      Data: five horizontal bullets; three grayscale bands per row (darkest poor to lightest good, ending at 100); #009E73 measure bars at half band height; near-black target markers at 95/80/75/85/70; value labels 87%/72%/63%/91%/58% beside the bar ends. Subtle vertical grid at 20% steps.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title and metric labels in light cream, ticks/caption/zone key in light grays; no dark-on-dark text.
-      Data: bands flip to #353530 / #464641 / #575752, distinct from each other and the page; measure bars the identical #009E73; target segments in light cream, contrasting with bar and bands; value labels readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title, metric labels and axis title in light ink; ticks, zone key and caption in lighter soft/muted greys; no dark-on-dark text.
+      Data: identical #009E73 measure bars; bands in dark greys (#353530 / #464641 / #575752) still distinct from each other and the page; target markers flip to light ink and contrast with bar and bands; grid visible in the row gaps.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,49 +48,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; zone labels
-          at 3.0 mm
+        comment: Explicit sizes (title 12, axis title 10, ticks 8, y labels 9, value
+          labels 3 mm); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No collisions: zone labels sit above the top band, value labels
-          clear of bars and targets'
+        comment: No collisions; value labels sit clear right of each bar end, zone
+          key above the first bullet
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, bands and target markers clearly visible in both themes
+        comment: Five bullets with bars at half the band height, targets at 0.9 band
+          height; all marks clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green measure on grayscale bands; target in INK contrasts
-          with both; no red-green signal
+        comment: Green bar, ink target and grayscale bands separate by luminance;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas, drawing fills the canvas, nothing clipped,
-          title proportion fine
+        comment: Landscape 3200x1800; plot fills the canvas with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Axis title ''Performance (% of target)'' misdescribes the scale:
-          targets sit at 70-95, not at 100 (defect line)'
+        passed: true
+        comment: '''Performance (% of goal)'' agrees with targets at 70-95 and thresholds
+          at 100; metric labels readable'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Measure bar #009E73 (Imprint position 1); backgrounds #FAF8F1 /
-          #1A1A17; grayscale bands per theme; chrome theme-correct'
+        comment: 'Measure bar #009E73; backgrounds #FAF8F1 / #1A1A17; grayscale bands
+          with per-theme steps; chrome theme-correct'
     design_excellence:
       score: 10
       max: 20
@@ -112,22 +101,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Ink hierarchy INK/INK_SOFT/INK_MUTED with italic muted zone key above
-          the first bullet; above baseline but not exceptional
+        comment: Three-step ink hierarchy (INK labels, INK_SOFT values, INK_MUTED
+          italic zone key and caption) beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Bar-to-band ratio 0.5, target marker at 0.9 of band height, row gaps
-          that let the page separate bullets; small refinement beyond baseline
+        comment: y grid removed, only x grid in the row gaps; bar/band ratio 0.5 and
+          target at 0.9 band height chosen for this chart
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Data displayed with a decoder caption; no hierarchy chosen beyond
-          the spec
+        comment: Data displayed; no hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +125,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bullet chart with the three basic layers; one
-          measure color, no highlights
+        comment: Horizontal bullet chart with bands, measure bar and target only;
+          one measure color
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Grayscale bands, thin contrasting target, value labels, stacked
-          bullets on one common 0-100 scale: all Notes and C1-C4 met'
+        comment: 'Grayscale bands, thin contrasting target, actual-value labels, stacked
+          bullets on one common scale: Notes and C1-C5 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bars from zero on a linear scale, targets and thresholds at their
-          data values, axis 0-100 with 20-step ticks
+        comment: Bars from zero on a linear 0-100 scale; targets and thresholds at
+          their values; 20-step ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'bullet-basic · r · ggplot2 · anyplot.ai' correct; single measure
-          needs no legend; bands keyed by zone labels
+          needs no legend; bands keyed by the zone labels
     data_quality:
       score: 15
       max: 15
@@ -169,8 +157,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five bullets with varied thresholds, measures below and above target
-          (Product Quality passes its target)
+        comment: Five bullets with varied thresholds; measures below target and one
+          above (Product Quality)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -183,10 +171,10 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values 58-91 against targets 70-95 and thresholds 40-80 are sensible
-          for KPI attainment; no Check values in the spec
+        comment: Actuals 58-91, targets 70-95, thresholds 40-80 sensible for KPI attainment;
+          no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -194,34 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script Imports -> Data -> Plot -> Save, no functions
+        comment: Linear Imports -> Data -> Plot -> Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data (set.seed present though unused)
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Three near-identical annotate() calls and dead constants (defect
-          line)
+        passed: true
+        comment: Single vectorised annotate() for the zone key; no dead constants
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave + ragg::agg_png; current API
+        comment: ggsave plot-{THEME}.png via ragg::agg_png; current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -229,25 +216,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_rect layers, geom_segment, scale_fill_identity(guide='none'),
-          expansion(add=) for row padding, labels function on the x scale
+        comment: geom_rect layers with scale_fill_identity(guide='none'), vectorised
+          annotate(), expansion(add=) for row padding, labels function on the x scale
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: true
-        comment: Nothing beyond what the library prompt mandates
+        comment: scale_fill_identity to feed precomputed theme colours straight through
+          the grammar without a legend
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
-  rendered_at: '2026-11-27T21:24:46Z'
+  rendered_at: '2026-11-27T21:31:11Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - grid-styling
