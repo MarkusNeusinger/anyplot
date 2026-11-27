@@ -1,7 +1,7 @@
 """anyplot.ai
 band-basic: Basic Band Plot
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-29
+Quality: pending | Updated: 2026-05-29
 """
 
 import os
