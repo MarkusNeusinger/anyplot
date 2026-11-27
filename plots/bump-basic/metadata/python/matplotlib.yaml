@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: bump-basic
 created: '2025-12-23T09:18:16Z'
-updated: '2026-11-27T20:41:39Z'
+updated: '2026-11-27T20:50:20Z'
 generated_by: claude-sonnet
-workflow_run: 46064380170
+workflow_run: 46065476572
 issue: 982
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,28 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 82
 review:
   strengths:
   - Direct color-matched end labels with a patheffects.withStroke halo key every driver
     without a legend
+  - PchipInterpolator curves pass through every rank and stay between neighbouring
+    ranks, flat where a rank holds
   - Inverted rank axis with whole-number ticks and limits derived from the data
   - Page-colored marker rings keep the dots distinct where lines cross, in both themes
-  - 'Adaptable data block: tidy df with column constants, pivot_table drives lines
-    and ticks'
   weaknesses:
-  - 'SC-03 (both): the cubic spline swings past the ranks it connects — Hamilton rises
-    above rank 1 (to about 0.8) between Suzuka–Shanghai and Imola–Monaco, Norris dips
-    to about 3.7 between Imola and Monaco, and held ranks bow by about ±0.2 → curves
-    that stay between their two ranks (0 overshoot). Likely cause: scipy CubicSpline;
-    use PchipInterpolator or a per-segment sigmoid/straight segments.'
-  - 'Suggestion: tighten the xlim right gutter (about 0.7 of a period sits empty beyond
-    the longest label).'
+  - 'VQ-05 (both): the axes run to x = 9.2 while the longest end label (Verstappen)
+    ends near x = 8.4, and the figure keeps a further 17 % right margin, so an empty
+    band of about a fifth of the canvas width sits right of the labels against a 9
+    % left margin → let the right margin hold only the labels (xlim right edge about
+    len(x) - 1 + 1.5, subplots_adjust right about 0.96). Likely cause: ax.set_xlim(-0.5,
+    len(x) - 1 + 2.2) together with fig.subplots_adjust(right=0.83).'
+  - 'DQ-02 (both): real drivers (Verstappen, Hamilton, Norris, Leclerc, …) on the
+    real 2024 calendar (Bahrain … Monaco) carry invented standings, e.g. Hamilton
+    leading the championship after Suzuka, Shanghai and Imola → either the real standings
+    of that season or invented driver names on the same calendar. Likely cause: the
+    rankings dict in the Data block.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "bump-basic · python · matplotlib · anyplot.ai" in dark ink, ~60% of width; "Grand Prix" and "Championship Position" axis titles and 8 pt ticks in INK_SOFT, x ticks rotated 30°; y axis inverted with ticks 1-7; subtle horizontal grid; L-frame spines. All readable.
-      Data: seven smooth curves through dots at each of 8 races, Verstappen #009E73 first, then Hamilton #C475FD, Norris #4467A3, Leclerc #BD8233, Sainz #AE3030, Piastri #2ABCCD, Russell #954477; uniform dots with page-colored rings; bold color-matched end labels on the right. Curves overshoot between periods (Hamilton above rank 1 twice, Norris dip to ~3.7).
+      Chrome: title "bump-basic · python · matplotlib · anyplot.ai" in dark ink at about 47 % of the width; "Grand Prix" and "Championship Position" axis titles and 8 pt ticks in INK_SOFT, x ticks rotated 30°; y axis inverted, ticks 1-7 only; subtle horizontal grid; L-frame spines. Empty band right of the end labels. All text readable.
+      Data: seven smooth monotone curves through dots at each of 8 races — Verstappen #009E73 first, then Hamilton #C475FD, Norris #4467A3, Leclerc #BD8233, Sainz #AE3030, Piastri #2ABCCD, Russell #954477; flat where a rank holds, no swing past any rank; dots with page-colored rings; bold color-matched end labels at the right.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -43,7 +47,7 @@ review:
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +55,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks and direct labels 8 pt, all
-          at the style-guide sizes and readable in both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and end labels 8 pt, all set
+          explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: End labels sit at seven distinct final ranks; no text collides with
-          text or marks
+        comment: Seven end labels at seven distinct final ranks; no text collides
+          with text or marks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: '56 points at s=70 with a page-colored ring and 2 px lines: prominent
-          for sparse data in both themes'
+        comment: 56 points at s=70 with page-colored rings and 2 pt lines, prominent
+          for sparse data in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues plus a direct label on every line, so identity never
-          rests on color alone
+        comment: Imprint hues plus a direct label on every line, identity never rests
+          on hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3200x1800, drawing fills the canvas, right gutter holds the labels,
-          nothing clipped
+        passed: false
+        comment: Empty band of about a fifth of the canvas width right of the end
+          labels (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Grand Prix'' and ''Championship Position'', reader text; rank
-          needs no unit'
+        comment: '''Grand Prix'' and ''Championship Position'' are reader text; a
+          rank has no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -104,15 +108,15 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Style-guide baseline with color-matched bold end labels; nothing
-          beyond it
+        comment: Style-guide baseline with bold color-matched end labels; nothing
+          decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Page-colored marker rings and a withStroke halo on the labels separate
-          crossing lines from dots and text
+        comment: Page-colored marker rings and a withStroke halo on the labels keep
+          dots and text separate where lines cross; y-only grid at alpha 0.15
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -120,7 +124,7 @@ review:
         passed: false
         comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,7 +133,7 @@ review:
         max: 5
         passed: true
         comment: 'Basic bump chart: one line per entity with markers and direct labels,
-          no excluded layers'
+          no excluded layers (C5)'
       - id: SC-02
         name: Required Features
         score: 4
@@ -140,11 +144,11 @@ review:
           (C1)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'CubicSpline overshoots between periods: Hamilton swings above rank
-          1, Norris dips to about 3.7 (defect line)'
+        passed: true
+        comment: PCHIP curves stay between the ranks they connect and run flat where
+          a rank holds
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -152,7 +156,7 @@ review:
         passed: true
         comment: Mandated title; direct labels key every line
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Lead changes, overtakes, held ranks and a stable back-marker pair
+        comment: Lead changes, multi-rank climbs, held ranks and a swapping back-marker
+          pair
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: F1 championship standings over real Grand Prix venues, neutral sport
-          context
+        passed: false
+        comment: Real drivers on the real 2024 calendar with invented standings (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 entities x 8 periods inside the spec range, ranks 1-7 per period
-          each used once; no Check values in the spec
+        comment: 'Checked: 7 entities x 8 periods inside the spec range, ranks 1-7
+          each used exactly once per period; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -184,8 +189,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, theme, columns, data, plot, style, save, top to bottom;
-          no functions
+        comment: Imports, theme, columns, data, plot, style, save top to bottom; no
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,13 +202,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, patheffects, pyplot, numpy, pandas, CubicSpline all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: pivot_table drives ticks and lines; limits come from the data
+        comment: pivot_table drives lines and ticks; interpolation by a scipy call;
+          limits from the data
       - id: CQ-05
         name: Output & API
         score: 1
@@ -218,8 +224,9 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Axes methods throughout, ax.set_xticks(x, labels) form
+        passed: false
+        comment: Axes methods throughout, ax.set_xticks(x, labels) form; correct usage
+          at the default
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -229,22 +236,19 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
-  rendered_at: '2026-11-27T20:38:27Z'
+  rendered_at: '2026-11-27T20:47:01Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - spline-interpolation
-  - direct-labels
-  - inverted-axis
-  - path-effects
+  - annotations
+  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   - iteration-over-groups
-  - wide-to-long
+  - long-to-wide
   dataprep:
   - interpolation
-  - pivot
   styling:
-  - publication-ready
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
