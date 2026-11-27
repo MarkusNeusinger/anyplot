@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -48,13 +48,13 @@ EO_WIDTH = 0.8  # engine order lines stay thinner than the modes
 SPEED = "Rotational Speed (RPM)"  # role: speed
 ENGINE_ORDER = "Engine order"  # role: engine_order
 CRITICAL_SPEED = "Critical speed (RPM)"  # role: critical_speeds
-MODES = ["1st Bending", "2nd Bending", "1st Torsional", "2nd Torsional", "Axial"]  # role: frequency_mode_
+MODES = ["1st Bending", "2nd Bending", "1st Torsional", "Axial"]  # role: frequency_mode_
 
 # Data: replace this block with your own table, for example df = pd.read_csv("modes.csv")
 np.random.seed(42)
 speed = np.linspace(0, 6000, 80)
-base_hz = [18, 45, 52, 75, 90]
-slope_hz_per_rpm = [0.0015, -0.002, 0.0025, 0.001, -0.0004]
+base_hz = [18, 45, 110, 125]
+slope_hz_per_rpm = [0.0015, -0.002, 0.0025, -0.0004]
 df = pd.DataFrame(
     {SPEED: speed}
     | {
