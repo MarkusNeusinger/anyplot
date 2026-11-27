@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: map-tile-background
 created: '2026-01-20T22:39:11Z'
-updated: '2026-11-26T16:03:48Z'
+updated: '2026-11-27T17:40:39Z'
 generated_by: claude-sonnet
-workflow_run: 45854210210
+workflow_run: 46042859124
 issue: 3756
 language_version: 3.14.10
 library_version: 3.11.2
@@ -16,29 +16,33 @@ quality_score: 85
 review:
   strengths:
   - Theme-matched tile providers (OpenStreetMap on light, Esri Dark Gray on dark),
-    each with its own correct attribution in the lower-right corner
+    each with its own correct attribution in a plate in the lower-right corner
   - Equal ground scale through ax.set_aspect(1/cos(lat)) keeps the Web Mercator tiles
-    undistorted
-  - imprint_seq built with the theme's marks stops, so high-traffic landmarks stand
-    out in both themes (navy on light, pale blue on dark)
-  - annotate() leader lines with per-label alignment keep the dense central cluster
-    readable
+    undistorted and every marker on its coordinates
+  - imprint_seq built with the style guide's marks stops for each theme, so high-traffic
+    landmarks stand out (dark violet on light, pale blue on dark)
+  - annotate() leader lines with per-label alignment keep most of the dense central
+    cluster readable
   weaknesses:
-  - 'VQ-02 (both): the ''Pantheon'' label box overlaps the top of the Roman Forum
-    marker by a few px → keep the box clear of every marker. Likely cause: the Pantheon
-    offset (16, -22) drops its box onto the neighbouring Roman Forum marker.'
+  - 'VQ-02 (both): the ''Pantheon'' label sits directly on top of the Trevi Fountain
+    marker: its leader line runs across the Trevi marker and its box touches the Trevi
+    and Spanish Steps outlines, so the label reads as Trevi''s → place the Pantheon
+    box where the leader does not cross another marker and the box is clear of every
+    marker outline (for example below-left of the Pantheon marker, in the empty area
+    west of Roman Forum). Likely cause: the Pantheon offset (10, 20) points up-right
+    through the Trevi marker.'
   - 'Suggestion: a zoom of 15 would give crisper street labels in the upscaled tiles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page around an OpenStreetMap tile basemap of central Rome, now at equal ground scale with a wider longitude span (12.414-12.532 E)
-      Chrome: title 'Rome Tourist Attractions · map-tile-background · python · matplotlib · anyplot.ai', Longitude/Latitude axis titles, degree ticks, 'Daily Visitors' colorbar — all dark text, readable
-      Data: 12 outlined markers sized and colored by visitors on imprint_seq marks stops (green #009E73 low -> navy high); labels on light plates with leader lines; Piazza Navona and Castel Sant'Angelo labels lifted above the cluster; 'Pantheon' box touches the top of the Roman Forum marker; attribution '© OpenStreetMap contributors' bottom-right
+      Background: warm off-white #FAF8F1 page around an OpenStreetMap tile basemap of central Rome (12.414-12.532 E, 41.872-41.929 N) at equal ground scale
+      Chrome: title 'Rome Tourist Attractions · map-tile-background · python · matplotlib · anyplot.ai', Longitude/Latitude axis titles, degree ticks, 'Daily Visitors' colorbar — dark text, all readable
+      Data: 12 markers with page-colored outline, sized and colored by visitors on imprint_seq marks stops (#009E73 low -> #024582 -> #351E45 dark violet high); names on light rounded plates with leader lines; the Pantheon label sits above the Trevi marker with its leader crossing it; attribution '© OpenStreetMap contributors' bottom-right
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page around an Esri Dark Gray tile basemap, same extent
       Chrome: title, axis titles, ticks and colorbar in light ink, all readable; no dark-on-dark
-      Data: same markers and sizes; continuous ramp uses the dark marks stops (dark green -> brand green -> pale blue #CDD9FF); dark label plates with light text; attribution 'Tiles © Esri — Esri, DeLorme, NAVTEQ' bottom-right
+      Data: same markers, sizes and positions; continuous ramp uses the dark marks stops (olive #6F7E20 -> #009E73 -> pale blue #CDD9FF); dark label plates with light text; attribution 'Tiles © Esri — Esri, DeLorme, NAVTEQ' bottom-right
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -50,37 +54,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes set explicitly: title ~10 pt for the long prefixed title,
-          axis titles 10 pt, ticks 8 pt, colorbar 7-8 pt, place labels 7 pt, attribution
-          6 pt in a plate; readable in both themes'
+        comment: 'Sizes set explicitly: title 10 pt (scaled for the 83-char prefixed
+          title), axis titles 10 pt, ticks 8 pt, colorbar 7-8 pt, place labels 7 pt
+          on plates, attribution 6 pt in a plate; all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: false
-        comment: The 'Pantheon' label box overlaps the top of the Roman Forum marker
-          (defect line); other labels clear via leader lines
+        comment: The 'Pantheon' leader line crosses the Trevi Fountain marker and
+          its box touches the Trevi and Spanish Steps outlines (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 sparse markers sized 60-350 sq pt with a page-colored outline,
+        comment: 12 sparse markers at 60-350 sq pt with a 1.5 pt page-colored outline,
           clear against both tile styles; colorbar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq marks ramp is lightness-ordered and CVD-safe; no red-green
-          signal
+        comment: Lightness-ordered sequential ramp, CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map, colorbar and labels fill the 16:9 canvas sensibly; nothing cut
-          off
+        comment: Map, colorbar and labels use the 16:9 canvas well; nothing cut off;
+          title ~70% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -93,8 +96,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq with the theme''s marks stops (light #009E73->#4467A3->#002850,
-          dark #007755->#009E73->#CDD9FF); backgrounds #FAF8F1 / #1A1A17'
+        comment: 'imprint_seq built with the current marks stops (light #009E73->#024582->#351E45,
+          dark #6F7E20->#009E73->#CDD9FF); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -104,23 +107,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Theme-matched tile provider (OSM on light, Esri Dark Gray on dark)
-          and themed rounded label plates with thin leader lines lift it above the
-          baseline
+        comment: Theme-matched tile providers (OSM on light, Esri Dark Gray on dark)
+          and themed rounded label plates beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Per-label direction and alignment with leader lines; boxed attribution
-          plate; no grid over the map
+        comment: Per-label direction and alignment with thin leader lines, boxed attribution
+          plate, no grid over the map
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Size+color both encode visitors, the data shown; no hierarchy chosen
-          beyond it
+        comment: Size and color both encode visitors, the data itself; no hierarchy
+          chosen beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -136,21 +138,24 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Tile provider per theme, view fitted to data bounds, outlined markers,
-          attribution in a corner, colorbar naming the value
+        comment: C1 tiles cover the whole map, C2 outlined markers at their coordinates,
+          C3 view fitted to the bounds at zoom 14, C4 attribution bottom-right clear
+          of markers, C5 colorbar naming the value clear of the attribution
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Equal ground scale via set_aspect(1/cos(lat)); markers at their coordinates
-          on aligned tiles; view fitted to data
+        comment: Web Mercator extent computed from the tile indices; equal ground
+          scale via set_aspect(1/cos(lat)); markers at their coordinates; all points
+          in frame
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; colorbar labelled
+        comment: Title 'Rome Tourist Attractions · map-tile-background · python ·
+          matplotlib · anyplot.ai'; colorbar labelled
     data_quality:
       score: 15
       max: 15
@@ -172,9 +177,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts 5,500-21,000 plausible; coordinates checked against
-          known positions (Colosseum 41.890 N 12.492 E, Pantheon 41.899 N 12.477 E,
-          Trevi 41.901 N 12.483 E)
+        comment: 'Visitors 5,500-21,000/day plausible (Colosseum ~7.6 M/yr ≈ 21k/day);
+          coordinates checked: Colosseum 41.890 N 12.492 E, Pantheon 41.899 N 12.477
+          E, Trevi 41.901 N 12.483 E, St. Peter''s 41.902 N 12.454 E'
     code_quality:
       score: 10
       max: 10
@@ -184,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat script top to bottom; only formatter lambdas
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,23 +224,24 @@ review:
         max: 5
         passed: false
         comment: ax.imshow with a geographic extent as basemap, scatter with c/s/cmap,
-          colorbar, FuncFormatter degree ticks
+          plt.colorbar(ax=ax), FuncFormatter degree ticks
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: annotate() with offset-points textcoords and arrowprops leader lines
+        comment: annotate() with offset-points textcoords, arrowprops leader lines
+          and bbox plates
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-d239d965a9
-  rendered_at: '2026-11-26T16:00:35Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-27T17:36:42Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
   - colorbar
+  - annotations
   patterns:
   - explicit-figure
   dataprep: []
