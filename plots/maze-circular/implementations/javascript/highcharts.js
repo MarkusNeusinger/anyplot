@@ -1,6 +1,7 @@
 // anyplot.ai
 // maze-circular: Circular Maze Puzzle
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Library: Highcharts | Node
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 89/100 | Created: 2026-09-02
 
 //# anyplot-orientation: square
@@ -110,7 +111,8 @@ function wedgePath(rInner, rOuter, a0, a1) {
   return ['M', ix1, iy1, 'L', ox1, oy1, 'A', rOuter, rOuter, 0, 0, 1, ox2, oy2, 'L', ix2, iy2, 'A', rInner, rInner, 0, 0, 0, ix1, iy1, 'Z'];
 }
 
-const chart = Highcharts.chart('container', {
+Highcharts.chart('container', {
+  palette: { colorScheme: t.theme },
   chart: {
     backgroundColor: 'transparent',
     animation: false,
@@ -214,8 +216,9 @@ const chart = Highcharts.chart('container', {
   },
   title: {
     text: 'maze-circular · javascript · highcharts · anyplot.ai',
-    style: { color: t.ink, fontSize: '27px', fontWeight: '600' },
+    style: { color: t.ink, fontSize: '22px', fontWeight: '600' },
   },
   credits: { enabled: false },
+  plotOptions: { series: { animation: false } },
   series: [],
 });
