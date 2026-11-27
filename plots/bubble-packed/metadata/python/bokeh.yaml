@@ -2,129 +2,139 @@ library: bokeh
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:17:14Z'
-updated: '2026-05-29T23:07:05Z'
+updated: '2026-11-27T22:15:02Z'
 generated_by: claude-sonnet
-workflow_run: 26665850398
+workflow_run: 46074543920
 issue: 992
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'Perfect Imprint palette compliance: canonical tier order (#009E73 → #C475FD →
-    #4467A3 → #BD8233), correct backgrounds, fully theme-adaptive chrome across both
-    renders'
-  - Force-directed packing algorithm with area-scaled radii implements the spec correctly
-    and produces an organic, visually interesting layout
-  - Adaptive label sizing by radius bracket (18/14/12/9pt) elegantly handles the full
-    circle-size range without overlapping circle boundaries
-  - 'Bokeh-distinctive features well-leveraged: HoverTool tooltips, click-policy legend,
-    ColumnDataSource per tier, interactive HTML artifact'
-  - Hardcoded circle-interior text colors correctly reasoned — fill colors are theme-invariant
-    so interior text should not flip with theme
+  - 'Area-correct sizing: radii are sqrt-scaled so circle area is proportional to
+    budget, and the force packing yields one compact cluster with no circle crossing
+    another'
+  - 'Fully theme-adaptive chrome: #FAF8F1 / #1A1A17 surfaces edge to edge, INK title
+    and legend text, elevated legend fill; the Imprint tier fills are identical in
+    both renders'
+  - Label color follows each fill's luminance (white on green and blue, near-black
+    on lavender and ochre), so every in-circle label reads on its fill in both themes
+  - Two-level label typography (bold name over a softer value) sized by circle bracket,
+    with labels only where they fit
+  - 'Idiomatic bokeh: ColumnDataSource per tier built from the DataFrame, LabelSet
+    layers, HoverTool on the circle renderers and a hide-on-click legend in the HTML
+    artifact'
   weaknesses:
-  - Smallest bubble value labels (9pt) are borderline at mobile widths; consider using
-    10pt as the minimum or omitting value labels for radii below ~80 data-units
-  - Data storytelling stops at encoding — no visual emphasis directs the viewer toward
-    an insight (e.g., annotation or focal callout for Engineering/R&D dominance)
-  - Dense central cluster (Finance, QA, Data Science) has labels that may be tight
-    at smaller render sizes
+  - 'VQ-01 (both): the department names and values inside the circles, the plot''s
+    main content, are set at 18/14/12 pt (names) and 14/12/9 pt (values), and the
+    legend labels at 22 pt, against the 34 pt tick and legend reference of the bokeh
+    prompt; the 9 pt values in Legal ($8M) and Security ($6M) and the 12 pt names
+    in IT, QA and HR read small inside their circles → about 34/28/22 pt names and
+    28/22/16 pt values (roughly +12 to +16 pt), legend labels 34 pt (+12 pt), keeping
+    labels only in circles large enough to hold them. Likely cause: the `brackets`
+    font sizes and `p.legend.label_text_font_size = "22pt"`.'
+  - 'VQ-03 (both): the legend keys render as dots of about 12 px beside the 22 pt
+    labels, a speck next to the 40 px glyph box that is set → keys about as tall as
+    the label. Likely cause: `p.circle(radius=...)` in data units draws its legend
+    glyph at a tiny scaled radius; use a separate size-based `scatter` renderer per
+    tier for the legend, or `LegendItem` with a fixed-size glyph.'
+  - 'Suggestion: cluster circles by tier with small gaps between the groups, the optional
+    grouping the Notes allow, so the tier structure reads from position as well as
+    color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "Department Budgets by Spending Tier · bubble-packed · python · bokeh · anyplot.ai" in dark INK text, clearly readable. Legend in top-right with elevated (#FFFDF6) background and border, labels in INK. No axes or ticks (correct for packed bubble).
-      Data: 15 bubbles in 4 Imprint tiers — green (#009E73) for >$35M, lavender (#C475FD) for $20–$35M, blue (#4467A3) for $10–$19M, ochre (#BD8233) for <$10M. First series is #009E73 (Engineering, largest bubble). PAGE_BG-colored 4px borders separate touching circles. Adaptive labels (bold dept name + budget value) inside each bubble.
-      Legibility verdict: PASS — all text readable; sole minor: 9pt value labels in smallest bubbles are small but visible at 2400px
+      Background: warm off-white #FAF8F1 across the whole canvas, edge to edge; a thin INK_SOFT outline frames the plot area
+      Chrome: title 'Department Budgets by Spending Tier · bubble-packed · python · bokeh · anyplot.ai' in near-black bold across ~90% of the width; legend top right on #FFFDF6 with near-black labels >$35M, $20–$35M, $10–$19M, <$10M; no axes or grid
+      Data: 15 packed circles — green #009E73 (Engineering, R&D, Sales), lavender #C475FD (Marketing, Product, Operations, IT, Data Science), blue #4467A3 (Finance, Design, Customer Support, HR, QA), ochre #BD8233 (Legal, Security); page-colored outlines; bold name plus value inside each circle, white on green/blue, near-black on lavender/ochre. Legend keys are small dots
+      Legibility verdict: PASS — everything readable; the 9 pt values in Legal and Security and the 12 pt names in smaller circles read small
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct
-      Chrome: Title rendered in light text (#F0EFE8 INK) against dark background — clearly readable. Legend background switches to #242420 (elevated-dark), border in INK_SOFT. No dark-on-dark failures detected.
-      Data: All four Imprint data colors identical to light render — green, lavender, blue, and ochre circles at same positions and sizes. Circle-interior text (white on green/blue, dark on lavender/ochre) is hardcoded based on fill luminance — correct since fills are theme-invariant.
-      Legibility verdict: PASS — all chrome adapts correctly; no unreadable text elements in dark theme
+      Background: warm near-black #1A1A17 edge to edge
+      Chrome: title and legend labels in light #F0EFE8; legend on #242420 with INK_SOFT border; no dark-on-dark text
+      Data: same 15 circles in the same Imprint fills and positions as the light render; in-circle label colors unchanged and readable on their fills
+      Legibility verdict: PASS — same small-label caveat as light
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set; 41pt title correctly scaled for long
-          string (~80 chars); label brackets (18/14/12/9pt) adaptive; minor: 9pt minimum
-          borderline at mobile widths'
+        passed: false
+        comment: All sizes set explicitly and readable in both themes, but the in-circle
+          labels (18–9 pt) and legend (22 pt) sit well below the 34 pt reference;
+          9 pt values read small (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: PAGE_BG 4px borders create visual separation; force simulation with
-          pad=12 prevents overlap; minor uncertainty about dense center cluster labels
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 15 bubbles visible; area-scaled radii correct; range from large
-          (Engineering) to small (Security) all distinguishable
+        comment: No text collides; circles separated by the packing gap and the page-colored
+          outline
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: false
+        comment: All 15 circles clearly visible; legend keys are tiny dots (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; luminance-matched circle interior text
-          colors
+        comment: Imprint tiers are CVD-safe; label color follows fill luminance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; bubble cluster fills ~70% of 2400x2400; balanced
-          whitespace; min_border=50
+        comment: Cluster uses the square canvas well; empty corners are permitted
+          by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with budget context; no axis labels appropriate
-          for packed bubble
+        comment: N/A for axes (packed layout has none); descriptive title prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order; correct backgrounds;
-          theme-adaptive chrome; identical data colors across renders'
+        comment: 'First tier #009E73, canonical Imprint order, #FAF8F1 / #1A1A17 surfaces
+          edge to edge, theme-adaptive chrome'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above defaults: intentional tier semantics, organic layout, elevated
-          legend. Not publication-exceptional.'
+        passed: false
+        comment: 'Above baseline: two-level label typography (bold name over a softer
+          value at 0.85 alpha) and label size scaled to circle size'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Axes/grid hidden, elevated legend, fill_alpha=0.90, outline_line_color
-          framing. Good but not perfect.
+        passed: false
+        comment: Page-colored 4 px outlines give every circle a crisp edge where neighbors
+          touch; nothing further
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Color+size create hierarchy but no focal point or narrative emphasis
-          directing viewer to an insight
+        comment: The spending-tier color grouping, ordered big to small in the legend,
+          makes the three >$35M departments the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with force-directed simulation
+        comment: Packed bubble chart via force simulation; position carries no data
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled radii, force packing, adaptive labels inside circles,
-          color encoding by group
+        comment: Area-scaled radii (C1), compact packed cluster without axes or grid
+          (C2), color identified by legend (C3), labels inside circles (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: label→name, value→radius (area-scaled), group→tier color; all 15
-          items displayed
+        comment: value → area via sqrt, all 15 items shown; packing positions are
+          layout, not data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          tier definitions
+        comment: Title 'Department Budgets by Spending Tier · bubble-packed · python
+          · bokeh · anyplot.ai'; legend entries are readable tier ranges
     data_quality:
       score: 15
       max: 15
@@ -165,21 +175,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide value range ($6M–$45M), four tiers, labels in circles of varying
-          sizes
+        comment: 15 items spanning $6M–$45M, four tiers, labeled large and small circles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget breakdown — canonical, neutral business use case
+        comment: Department budgets with real department names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Engineering/R&D largest, HR/Legal smaller — plausible tech company
-          proportions
+        comment: Budgets in $M plausible for a mid-size company; no Check values in
+          the Notes
     code_quality:
       score: 10
       max: 10
@@ -189,55 +198,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports → Data → Force sim → Plot → Labels → Save;
-          no functions/classes'
+        comment: Linear top-to-bottom script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seeded RandomState(SEED)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; O(n²) force sim fine for n=15
+        comment: Appropriate complexity; force packing hand-written because bokeh
+          has no packing call, which the spec asks for
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current API used throughout
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: ColumnDataSource per tier, LabelSet for overlays, HoverTool, output_file+save
-          — good idiomatic bokeh
+        passed: false
+        comment: ColumnDataSource per tier built straight from the DataFrame, LabelSet
+          driven by sources, data-unit radius circles on equal ranges
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: HoverTool per-tier tooltips, click_policy=hide legend, LabelSet data-driven
-          text, HTML interactive artifact
+        passed: false
+        comment: HoverTool scoped to the circle renderers and a click_policy='hide'
+          legend in the HTML artifact
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-27T22:11:05Z'
 impl_tags:
   dependencies:
   - selenium
-  - pillow
   techniques:
   - hover-tooltips
   - html-export
@@ -248,7 +259,8 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
+  - binning
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
