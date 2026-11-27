@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -6,8 +6,10 @@ Quality: 82/100 | Updated: 2026-11-27
 
 import os
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.colors import sample_colorscale
 
 
 # Theme
@@ -20,29 +22,24 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint palette, canonical order; the amber warning color sits outside the categorical pool
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-AMBER = "#DDCC77"
+# Imprint continuous ramp (marks stops) for colors on the page; arrows are colored by wavelength on it
+SEQ_MARKS = (
+    [[0.0, "#009E73"], [0.687, "#024582"], [1.0, "#351E45"]]
+    if THEME == "light"
+    else [[0.0, "#6F7E20"], [0.21, "#009E73"], [1.0, "#CDD9FF"]]
+)
 
 # Constants
 HC_EV_NM = 1239.84  # photon energy times wavelength, eV·nm
 IONIZATION = 0.0  # energy of the ionization limit (n → ∞), eV
 CROWDED = 0.08  # levels within this share of the ground-state depth of the limit are labelled together
 GREEK = "αβγδ"
-# Spectral series of hydrogen: name, region, label prefix, lower level, upper levels, arrow colors,
-# schematic x of the series center. Colors follow the spectral region: UV purple, visible warm/cool, IR green/amber.
+# Spectral series of hydrogen: name, region, label prefix, lower level, upper levels,
+# schematic x of the series center
 SERIES = [
-    ("Lyman", "Ultraviolet", "Ly-", 1, [2, 3, 4], [IMPRINT_PALETTE[1], IMPRINT_PALETTE[6], IMPRINT_PALETTE[2]], 0.27),
-    (
-        "Balmer",
-        "Visible",
-        "H",
-        2,
-        [3, 4, 5, 6],
-        [IMPRINT_PALETTE[4], IMPRINT_PALETTE[3], IMPRINT_PALETTE[5], IMPRINT_PALETTE[7]],
-        0.52,
-    ),
-    ("Paschen", "Infrared", "Pa-", 3, [4, 5], [IMPRINT_PALETTE[0], AMBER], 0.77),
+    ("Lyman", "Ultraviolet", "Ly-", 1, [2, 3, 4], 0.27),
+    ("Balmer", "Visible", "H", 2, [3, 4, 5, 6], 0.52),
+    ("Paschen", "Infrared", "Pa-", 3, [4, 5], 0.77),
 ]
 ARROW_SPACING = 0.06  # schematic horizontal gap between neighboring arrows of a series
 LINE_LEFT, LINE_RIGHT = 0.14, 0.88  # schematic extent of each level line
@@ -58,6 +55,15 @@ df = pd.DataFrame({LEVEL: [f"n = {n}" for n in range(1, 7)], ENERGY: [-13.6 / n*
 energies = dict(zip(range(1, len(df) + 1), df[ENERGY], strict=True))
 levels = dict(zip(range(1, len(df) + 1), df[LEVEL], strict=True))
 depth = IONIZATION - df[ENERGY].min()  # ground-state depth sets all vertical offsets
+# Wavelength range of all transitions, for the color ramp (log scale: the series span a factor of 20)
+wavelengths = [
+    HC_EV_NM / (energies[u] - energies[lo])
+    for _n, _r, _p, lo, ups, _c in SERIES
+    for u in ups
+    if u in energies and lo in energies
+]
+log_wl = np.log(wavelengths)
+log_min, log_span = np.nanmin(log_wl), max(np.nanmax(log_wl) - np.nanmin(log_wl), 1e-9)
 crowded = [n for n, e in energies.items() if e > IONIZATION - CROWDED * depth]
 crowded_label = ", ".join(str(n) for n in crowded)
 
@@ -121,19 +127,28 @@ fig.add_annotation(
     yanchor="bottom",
 )
 fig.add_annotation(
-    x=LINE_LEFT - 0.02,
+    x=LINE_LEFT - 0.05,
     y=IONIZATION,
-    yshift=3,
-    text=f"<b>{IONIZATION:g}</b> eV  <i>Ionization</i>",
+    text=f"<b>{IONIZATION:g}</b> eV",
     showarrow=False,
     font={"size": 12, "color": INK_MUTED},
     xanchor="right",
-    yanchor="bottom",
+    yanchor="middle",
+)
+fig.add_annotation(
+    x=LINE_RIGHT + 0.02,
+    y=IONIZATION,
+    yshift=-3,
+    text="<i>Ionization limit</i>",
+    showarrow=False,
+    font={"size": 11, "color": INK_MUTED},
+    xanchor="left",
+    yanchor="top",
 )
 
 # Transitions: one downward emission arrow per upper level, each series in its own column of the diagram
 hover = []
-for name, _region, prefix, lower, uppers, colors, center in SERIES:
+for name, _region, prefix, lower, uppers, center in SERIES:
     for k, upper in enumerate(uppers):
         if upper not in energies or lower not in energies:
             continue  # a table without these levels has no such transition
@@ -141,6 +156,7 @@ for name, _region, prefix, lower, uppers, colors, center in SERIES:
         e_up, e_low = energies[upper], energies[lower]
         gap = e_up - e_low
         wavelength = HC_EV_NM / gap
+        color = sample_colorscale(SEQ_MARKS, np.nan_to_num((np.log(wavelength) - log_min) / log_span))[0]
         label = f"{prefix}{GREEK[k]} {wavelength:.0f} nm"
         gap_pad = min(0.015 * depth, 0.1 * gap)
         fig.add_annotation(
@@ -154,9 +170,9 @@ for name, _region, prefix, lower, uppers, colors, center in SERIES:
             ayref="y",
             showarrow=True,
             arrowhead=2,
-            arrowsize=1.0,
+            arrowsize=min(0.6, 0.5 * gap),  # short gaps get a small head so a shaft shows
             arrowwidth=2.5,
-            arrowcolor=colors[k],
+            arrowcolor=color,
             text="",
         )
         mid = (e_up + e_low) / 2
@@ -167,13 +183,7 @@ for name, _region, prefix, lower, uppers, colors, center in SERIES:
         else:
             lx, ly, anchor = x, energies[2] - 0.03 * depth, "top"
         fig.add_annotation(
-            x=lx,
-            y=ly,
-            text=label,
-            textangle=-90,
-            showarrow=False,
-            font={"size": 11, "color": colors[k]},
-            yanchor=anchor,
+            x=lx, y=ly, text=label, textangle=-90, showarrow=False, font={"size": 11, "color": color}, yanchor=anchor
         )
         hover.append((x, mid, name, upper, lower, wavelength, gap))
 
@@ -195,13 +205,13 @@ for name, *_ in SERIES:
     )
 
 # Series group headers above the limit
-for name, region, _prefix, _lower, _uppers, colors, center in SERIES:
+for name, region, _prefix, _lower, _uppers, center in SERIES:
     fig.add_annotation(
         x=center,
         y=0.115 * depth,
         text=f"<b>{name}</b><br><i>{region}</i>",
         showarrow=False,
-        font={"size": 13, "color": colors[0]},
+        font={"size": 13, "color": INK},
     )
 
 # Style
