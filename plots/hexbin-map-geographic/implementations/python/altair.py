@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-map-geographic: Hexagonal Binning Map
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 88/100 | Updated: 2026-11-26
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -30,9 +30,9 @@ LAND_STROKE = "#B0AFA8" if THEME == "light" else "#4A4A44"
 
 # Imprint sequential ramp for colored fields (hexagon cells fill the map), as (position, hex) stops
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Columns
