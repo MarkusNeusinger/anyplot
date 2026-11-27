@@ -1,7 +1,7 @@
 """ anyplot.ai
 hexbin-basic: Basic Hexbin Plot
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 83/100 | Created: 2026-11-27
+Quality: 84/100 | Created: 2026-11-27
 """
 
 import os
@@ -86,9 +86,9 @@ tick_counts = [c for c in (1, 3, 10, 30, 100, 300, 1000) if c <= counts.max()]
 if counts.max() > 1.3 * tick_counts[-1]:
     tick_counts.append(int(counts.max()))
 
-# Densest hexagons last, so edge overlaps never hide them
+# Pointy-top 'hexagon' symbol matches the lattice, so cells meet edge to edge
 order = np.argsort(counts)
-marker_size = 2 * radius * 1.1
+marker_size = 2 * radius
 
 fig = go.Figure(
     go.Scatter(
@@ -96,7 +96,7 @@ fig = go.Figure(
         y=hex_y[order],
         mode="markers",
         marker={
-            "symbol": "hexagon2",
+            "symbol": "hexagon",
             "size": marker_size,
             "color": log_counts[order],
             "colorscale": SEQ_FIELDS,
