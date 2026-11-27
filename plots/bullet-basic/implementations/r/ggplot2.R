@@ -1,17 +1,14 @@
 #' anyplot.ai
 #' bullet-basic: Basic Bullet Chart
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 83/100 | Updated: 2026-11-27
+#' Quality: 86/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(ragg)
 
-set.seed(42)
-
 # --- Theme tokens -----------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
@@ -22,11 +19,8 @@ BAND_POOR <- if (THEME == "light") "#C4C4BE" else "#353530"
 BAND_SATS <- if (THEME == "light") "#D8D8D2" else "#464641"
 BAND_GOOD <- if (THEME == "light") "#EBEBEA" else "#575752"
 
-# Imprint palette — position 1 used for the actual performance bar
-IMPRINT_PALETTE <- c(
-  "#009E73", "#C475FD", "#4467A3", "#BD8233",
-  "#AE3030", "#2ABCCD", "#954477", "#99B314"
-)
+# Imprint palette position 1 for the actual performance bar
+MEASURE_COLOR <- "#009E73"
 
 # --- Data -------------------------------------------------------------------
 # Q2 departmental KPI dashboard: actual performance vs. targets (% of goal)
@@ -107,17 +101,14 @@ p <- ggplot() +
   ) +
   scale_fill_identity(guide = "none") +
   # Zone labels via annotate() — ggplot2-idiomatic alternative to a side legend
-  annotate("text", x = poor_mid, y = top_y + band_h + 0.17,
-           label = "Poor", color = INK_MUTED, size = 3.0, fontface = "italic") +
-  annotate("text", x = sats_mid, y = top_y + band_h + 0.17,
-           label = "Satisfactory", color = INK_MUTED, size = 3.0, fontface = "italic") +
-  annotate("text", x = good_mid, y = top_y + band_h + 0.17,
-           label = "Good", color = INK_MUTED, size = 3.0, fontface = "italic") +
+  annotate("text", x = c(poor_mid, sats_mid, good_mid), y = top_y + band_h + 0.17,
+           label = c("Poor", "Satisfactory", "Good"),
+           color = INK_MUTED, size = 3.0, fontface = "italic") +
   # Actual performance bars (Imprint palette position 1)
   geom_rect(
     data = bars_df,
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-    fill = IMPRINT_PALETTE[1], color = NA
+    fill = MEASURE_COLOR, color = NA
   ) +
   # Target markers as thin vertical lines
   geom_segment(
@@ -144,7 +135,7 @@ p <- ggplot() +
   ) +
   labs(
     title   = title_str,
-    x       = "Performance (% of target)",
+    x       = "Performance (% of goal)",
     y       = NULL,
     caption = "Bar = actual performance  ·  Vertical line = target  ·  Label = actual value"
   ) +
