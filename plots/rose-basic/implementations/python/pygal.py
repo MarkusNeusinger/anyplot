@@ -1,11 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
-from math import pi
 
 import pandas as pd
 from pygal.graph.radar import Radar
@@ -22,7 +21,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
-ARC_STEPS = 20  # points sampled along each wedge's outer arc for a smooth curve
+STEPS = 15  # odd: radar spokes per wedge, so each wedge is centred on its month label
 HEADROOM = 1.03  # share of the largest value kept free beyond the longest wedge
 
 # Columns: set these to your table's column names
@@ -39,27 +38,16 @@ df = pd.DataFrame(
 
 
 # Plot
-class RoseChart(Radar):
-    """Radar subclass: pie-slice wedges instead of a star polygon, value labels above the fill."""
-
-    def _plot(self):
-        delta = 2 * pi / self._len if self._len else 0
-        half = delta / 2
-        for serie in self.series:
-            serie_node = self.svg.serie(serie)
-            for i, value in enumerate(serie.values):
-                theta_start = self._x_pos[i] - half
-                wedge = [self.view((0, theta_start))] + [
-                    self.view((value, theta_start + delta * k / ARC_STEPS)) for k in range(ARC_STEPS + 1)
-                ]
-                self.svg.line(serie_node["plot"], wedge, close=True, class_="line reactive")
-        labels = self.svg.node(self.nodes["plot"], class_="axis y web")
-        for axis in self.nodes["plot"].findall("g[@class='axis y web']"):
-            for guides in axis:
-                for text in guides.findall("text"):
-                    guides.remove(text)
-                    labels.append(text)
-
+# One closed polygon per month on a radar axis with STEPS spokes per wedge: inside its wedge a
+# series holds the month's value, everywhere else zero, so the fill is a pie-slice.
+# Categories run clockwise from 12 o'clock, so the month order is reversed after January.
+n_months = len(df)
+n_spokes = n_months * STEPS
+half = STEPS // 2
+clockwise = [(n_months - i) % n_months for i in range(n_months)]  # radar position -> month index
+labels = [""] * n_spokes
+for pos, month in enumerate(clockwise):
+    labels[pos * STEPS] = df[MONTH].iloc[month]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -69,7 +57,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     major_guide_stroke_color=INK_MUTED,
-    colors=IMPRINT_PALETTE,
+    colors=[IMPRINT_PALETTE[0]] * len(df),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=56,
@@ -78,7 +66,7 @@ custom_style = Style(
     opacity_hover=0.88,
 )
 
-chart = RoseChart(
+chart = Radar(
     width=2400,
     height=2400,
     style=custom_style,
@@ -88,14 +76,20 @@ chart = RoseChart(
     show_dots=False,
     show_legend=False,
     show_x_guides=True,
+    show_minor_x_labels=False,
     show_y_guides=True,
     range=(0, df[RAINFALL].max() * HEADROOM),
     margin=70,
     value_formatter=lambda v: f"{v:.0f} mm",
 )
 
-chart.x_labels = df[MONTH].tolist()
-chart.add(RAINFALL, df[RAINFALL].tolist())
+chart.x_labels = labels
+chart.x_labels_major = df[MONTH].tolist()
+for pos, month in enumerate(clockwise):
+    values = [0] * n_spokes
+    for step in range(-half, half + 1):
+        values[(pos * STEPS + step) % n_spokes] = df[RAINFALL].iloc[month]
+    chart.add(df[MONTH].iloc[month], values)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
