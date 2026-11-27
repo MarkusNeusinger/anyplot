@@ -1,14 +1,13 @@
 # anyplot.ai
 # candlestick-basic: Basic Candlestick Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-05-30
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 85/100 | Updated: 2026-11-27
 
 using CairoMakie
 using Makie
 using Colors
 using Random
 using Dates
-using Statistics
 
 Random.seed!(42)
 
@@ -21,7 +20,6 @@ const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 # Semantic colors: finance convention — green for gains, red for losses
 const BULL_COLOR = colorant"#009E73"  # Imprint position 1 — bullish / price up
 const BEAR_COLOR = colorant"#AE3030"  # Imprint position 5, semantic anchor: loss/down
-const SMA_COLOR  = colorant"#2ABCCD"  # Imprint position 6 — cyan for trend overlay
 
 # Data: 40 trading days of tech stock OHLC
 n = 40
@@ -46,11 +44,6 @@ end
 
 is_bull     = closes .>= opens
 body_colors = [is_bull[i] ? BULL_COLOR : BEAR_COLOR for i in 1:n]
-
-# 10-day SMA — creates a narrative focal point and trend context
-sma_window = 10
-sma = [i < sma_window ? NaN : mean(closes[i-sma_window+1:i]) for i in 1:n]
-sma_valid_idx = findall(!isnan, sma)
 
 # Date labels for x-axis ticks
 start_date    = Date(2024, 6, 3)
@@ -80,7 +73,7 @@ ax = Axis(
     ylabelsize        = 14,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
-    xticklabelsize    = 11,
+    xticklabelsize    = 12,
     yticklabelsize    = 12,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
@@ -123,12 +116,6 @@ poly!(ax, body_rects;
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.3),
 )
 
-# 10-day SMA trend line in Imprint cyan — provides visual hierarchy and price context
-lines!(ax, sma_valid_idx, sma[sma_valid_idx];
-    color     = SMA_COLOR,
-    linewidth = 2.0,
-)
-
 # Legend
 elem_bull = PolyElement(
     color       = BULL_COLOR,
@@ -140,11 +127,10 @@ elem_bear = PolyElement(
     strokecolor = RGBAf(INK.r, INK.g, INK.b, 0.3),
     strokewidth = 0.5,
 )
-elem_sma = LineElement(color = SMA_COLOR, linewidth = 2.0)
 Legend(
     fig[1, 2],
-    [elem_bull, elem_bear, elem_sma],
-    ["Bullish (↑)", "Bearish (↓)", "SMA (10)"];
+    [elem_bull, elem_bear],
+    ["Bullish (↑)", "Bearish (↓)"];
     framevisible    = false,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
