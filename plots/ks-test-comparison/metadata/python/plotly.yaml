@@ -2,59 +2,55 @@ library: plotly
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:22Z'
-updated: '2026-05-29T03:34:56Z'
+updated: '2026-11-27T18:11:07Z'
 generated_by: claude-sonnet
-workflow_run: 26615663241
+workflow_run: 46046616516
 issue: 4130
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Excellent semantic color mapping: Imprint green (#009E73) for Good Customers
-    and matte red (#AE3030) for Bad Customers, exactly matching the palette''s semantic
-    bad/fail anchor role'
-  - Shaded divergence region (fill=toself with rgba blue at 12% opacity) provides
-    extra visual clarity beyond spec requirements, drawing the eye to the maximum
-    divergence area
-  - Both ECDFs correctly implemented as step functions (line shape='hv') with proper
-    scipy KS test computation via ks_2samp and ecdf
-  - 'Full theme adaptation: all chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
-    INK_MUTED, GRID) correctly applied across both light and dark renders'
-  - 'Rich plotly-distinctive interactive features: unified hover mode, crosshair spike
-    lines, HTML export with custom modeBarButtonsToAdd (drawline, eraseshape)'
-  - Annotation with arrow clearly communicates K-S statistic (D=0.585) and p-value
-    at the midpoint of the divergence line, with theme-adaptive background and border
+  - Both ECDFs drawn as true step functions with line shape='hv' from scipy.stats.ecdf,
+    and the test from ks_2samp
+  - Vertical dashed line with diamond endpoints sits exactly at the widest gap, so
+    the reported D can be read off the plot
+  - 'Complete theme adaptation: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED and
+    GRID tokens threaded through title, axes, legend, annotation and hover labels'
+  - 'Plotly-native interactivity in the HTML: unified x hover, crosshair spike lines,
+    custom hovertemplates and drawline/eraseshape modebar buttons'
+  - K-S statistic box placed in the empty lower right with an arrow to the gap, covering
+    neither curve
   weaknesses:
-  - The shaded fill color is hardcoded as rgba(68,103,163,0.12) — a fixed hex rather
-    than derived from a theme-adaptive token. While it renders acceptably in both
-    themes, the fill could use the BLUE variable with explicit alpha to stay idiomatic
-    with the rest of the theme-adaptive code
-  - 'DE-01 could reach 8/8 with more refined typography: differentiating font weights
-    between the main title and the subtitle <span> to create stronger visual hierarchy,
-    and slightly larger annotation font (14px) for clearer prominence'
-  - DE-02 could be improved by completely removing the zero-line markers from both
-    axes (zeroline=True is default in plotly_white template) and ensuring the annotation
-    box border is slightly more subtle (use GRID color instead of solid BLUE border)
+  - 'VQ-04 (both): Good and Bad Customers are separated only by green #009E73 against
+    red #AE3030, both solid lines at width 3, so red-green is the sole signal → give
+    one curve a second cue such as a dashed line style (the Notes allow colors or
+    styles). Likely cause: both traces use line dash ''solid''.'
+  - 'CQ-04 (code): lines 59–64 concatenate both samples, evaluate both ECDFs and argmax
+    their difference to find the x of the maximum gap, which ks_2samp already returns
+    → use res = ks_2samp(...) and res.statistic_location, evaluating the two ECDFs
+    only there. Likely cause: hand-rolled search instead of the result object''s field.'
+  - 'Suggestion: route the annotation arrow so it does not cross the green curve near
+    score 56, for example by placing the box a little higher in the empty right area.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — confirmed, not pure white, pleasant cream surface.
-      Chrome: Title "ks-test-comparison · python · plotly · anyplot.ai" centered in dark ink (#1A1A17) at 16px, clearly readable. Subtitle "Good vs. Bad customers — distributions differ significantly (D = 0.585, p < 0.001)" in smaller muted text (#6B6A63) is readable. X-axis label "Credit Score (0–100)" and Y-axis label "Cumulative Proportion" in dark ink at 12px — fully readable. Tick labels in INK_SOFT (#4A4A44) at 10px — readable at full resolution. Legend in top-left with elevated cream background, all text visible.
-      Data: Good Customers ECDF in brand green (#009E73) step function — bold, prominent. Bad Customers ECDF in matte red (#AE3030) step function — equally bold. Both lines width=3. Shaded blue region (rgba(68,103,163,0.12)) between curves at divergence area is subtle but visible. Dashed blue (#4467A3) vertical line with diamond markers at endpoints marks max divergence. Dotted reference lines at 0.25, 0.50, 0.75 CDF values are subtle and informative. Annotation box "K-S Statistic / D = 0.585 / p < 0.001" with blue border and arrow clearly positioned to the right of the dashed line.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title 'ks-test-comparison · python · plotly · anyplot.ai' centered in dark ink with a muted grey subtitle 'Good vs. Bad customers — distributions differ significantly (D = 0.585, p < 0.001)'; axis titles 'Credit Score (0–100)' and 'Cumulative Proportion' in dark ink; ticks 0–100 by 20 and 0.00–1.00 by 0.25 in soft ink; three dotted quartile guides; legend box top-left on an elevated cream surface. All readable.
+      Data: Good Customers ECDF in #009E73 rising from score ~27 to ~98, Bad Customers ECDF in #AE3030 from ~5 to ~73, both thick step lines; blue dashed vertical line at score ~44 between diamonds at ~0.715 (red) and ~0.13 (green), inside a faint blue band (scores ~39.5–49.5); 'K-S Statistic / D = 0.585 / p < 0.001' box with blue border in the empty lower right (scores ~71–84, y ~0.12–0.33), its arrow pointing to the middle of the dashed line and crossing the green curve near score 56.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — confirmed, not pure black.
-      Chrome: Title in light text (#F0EFE8) clearly visible against dark background. Subtitle in muted light text also readable. X and Y axis labels in INK (#F0EFE8) at 12px — clearly visible. Tick labels in INK_SOFT (#B8B7B0) — readable. Legend has dark elevated background (#242420) with light text — no dark-on-dark issues found. Annotation box has dark elevated background with light text and blue border — readable.
-      Data: Green (#009E73) and matte red (#AE3030) ECDF curves are identical to the light render — data colors unchanged between themes. Shaded region appears as slightly blue-tinted dark region, visible against the near-black background. Dashed blue vertical line and diamond markers visible. Dotted reference lines subtle but visible.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected. Brand green #009E73 clearly visible on dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend text in light ink, subtitle and ticks in muted light grey; legend and stat box on the elevated dark surface #242420 with light text; dotted guides subtle but visible. No dark-on-dark text.
+      Data: green, red and blue identical to the light render; the band reads as a slightly blue-tinted dark area; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,87 +58,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 16px, axis labels 12px, tick
-          labels 10px, annotation 12px, legend 10px. All text readable in both light
-          and dark renders.'
+        comment: All sizes explicitly set (title 16, subtitle 10, axis titles 12,
+          ticks 10, legend 10, annotation 12 px); every text readable in both themes;
+          mandated title at about 42 % of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No problematic text overlaps. Annotation box intentionally overlays
-          data area but doesn't obscure critical information.
+        comment: 'No text collides: the stat box sits in the empty lower right, clear
+          of both curves; legend in the empty upper left'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step function lines at width=3 (12 source px) appropriate for 200-point
-          ECDFs. Diamond markers at size=11 clearly visible. Shaded region visible
-          in both themes.
+        comment: Step lines at width 3 and diamond endpoints at size 11 are clearly
+          visible; legend glyphs match the traces in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Imprint palette semantic exception correctly applied: green for
-          Good, red for Bad matches established conventions. Curves distinguishable
-          by position and legend labels, not color alone.'
+        passed: false
+        comment: 'Good and Bad are told apart by green #009E73 against red #AE3030
+          alone, both solid at the same width (defect line)'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Landscape 3200x1800 correct. Margins (l=80, r=40,
-          t=80, b=60) appropriate. No text clipped. Title spans ~65% of width — expected
-          for mandated format.
+        comment: Plot area fills the landscape canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Credit Score (0-100)'' with explicit range unit. Y-axis:
-          ''Cumulative Proportion''. Both descriptive with context.'
+        comment: '''Credit Score (0–100)'' with its scale and ''Cumulative Proportion'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series: #009E73 (brand green) for Good Customers. Second:
-          #AE3030 (semantic matte red) for Bad Customers — correct palette slot 5
-          semantic anchor. Third: #4467A3 (slot 3 blue) for Max Divergence marker.
-          Background: #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'First series #009E73; Bad Customers on the red anchor #AE3030 by
+          semantic cue; marker in Imprint blue #4467A3; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design clearly above defaults: semantic color mapping with
-          intentional hierarchy, multiple visualization layers (shaded region, dashed
-          line, diamond markers), subtitle providing narrative context. Not yet publication-ready
-          (typography weight distinction between title/subtitle could be stronger).'
+        passed: false
+        comment: 'Typographic hierarchy decided beyond the baseline: muted subtitle
+          restating the result under the title, bold heading inside the stat box,
+          elevated-surface boxes for legend and annotation'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: 'Good refinement: no visible spines (showline=False), no grid replaced
-          by subtle dotted reference lines at 0.25/0.50/0.75 quartiles, generous whitespace,
-          legend with elevated background. Minor: annotation border uses solid BLUE
-          instead of subtle GRID color.'
+        passed: false
+        comment: Axis grid replaced by three dotted quartile guides chosen for a cumulative-proportion
+          axis; no axis lines or zero lines; generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Good visual hierarchy: shaded divergence region draws the eye to
-          the key statistical finding, dashed line + diamonds mark the exact point,
-          annotation box communicates the numeric result. Subtitle provides the narrative
-          conclusion. Viewer immediately understands what the chart is showing.'
+        passed: false
+        comment: A translucent band around the maximum gap and the arrowed stat box
+          form a focal point the implementation chose itself, beyond the Notes' vertical
+          line
     spec_compliance:
       score: 15
       max: 15
@@ -152,31 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KS plot with ECDFs as step functions (shape='hv'). All required
-          chart elements present.
+        comment: Two ECDF step functions with the K-S distance marked; not a -basic
+          variant
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs as step functions, K-S statistic shown prominently (D=0.585),
-          max divergence highlighted with vertical dashed line + shaded region, p-value
-          included (p<0.001), clear legend, Y-axis 0-1 range.
+        comment: 'All Notes and C1–C4 met: both step ECDFs, distinct colors with legend,
+          vertical line with diamonds at the widest gap, D and p shown in a box that
+          covers neither curve'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Credit Score (0-100) correct. Y-axis: Cumulative Proportion
-          (0-1) correct. All data visible across full range.'
+        comment: Steps sit at each sample's own values (shape='hv'); y axis 0–1; x
+          axis spans the 0–100 score scale; ticks at 20-point and 0.25 steps
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ks-test-comparison · python · plotly · anyplot.ai'' — correct
-          format. Legend: ''Good Customers'', ''Bad Customers'', ''Max Divergence
-          (D=0.585)'' — informative and accurate.'
+        comment: Title 'ks-test-comparison · python · plotly · anyplot.ai'; legend
+          names Good Customers, Bad Customers and the Max Divergence marker
     data_quality:
       score: 15
       max: 15
@@ -186,28 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: both ECDFs, K-S statistic, p-value, max divergence
-          point, reference lines at quartiles, shaded divergence region. Comprehensive
-          coverage of the K-S plot features.'
+        comment: Shows both ECDFs, the stair steps, the maximum gap and the test result
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring scenario (Good vs Bad customers) is real, comprehensible,
-          and neutral. Beta distributions accurately model different customer risk
-          profiles.
+        comment: Credit scoring of good against bad customers, the spec's own first
+          application; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Credit scores 0-100 realistic. D=0.585 with p<0.001 represents meaningful
-          discrimination. 200 samples per group appropriate for reliable KS inference.
-          Beta(5,3) for good customers (higher scores) and Beta(3,5) for bad customers
-          (lower scores) is statistically sound.
+        comment: 'Checked: D = 0.585 matches the diamond gap read off the axis (about
+          0.715 − 0.13); p < 0.001 is plausible for n = 200 per sample at that D;
+          scores on a 0–100 scale'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -215,59 +197,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme tokens → data generation → ECDF computation
-          → KS test → figure construction → layout → save. No functions or classes.'
+        comment: 'Reads top to bottom: imports, constants, data, plot, save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects, scipy.stats (ecdf, ks_2samp) — all
-          imports actually used.
+        comment: os, numpy, pandas, plotly.graph_objects, scipy ecdf/ks_2samp all
+          used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code. Appropriate complexity for the visualization.
-          For loop for reference lines is concise. Shaded region construction via
-          concatenation is idiomatic.
+        passed: false
+        comment: Lines 59–64 recompute the location of the maximum gap by hand, which
+          ks_2samp already returns as statistic_location (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200x1800)
-          and plot-{THEME}.html. Current plotly API.
+        comment: Saves plot-{THEME}.png at 800×450×4 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert plotly usage: go.Figure with multiple trace types, line shape=''hv''
-          for step functions, fill=''toself'' for shaded region, fig.add_annotation
-          with arrow, fig.add_shape for reference lines, spike lines configuration,
-          hover templates with <extra></extra>.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Plotly-distinctive features: HTML export with custom modeBarButtonsToAdd
-          (drawline, eraseshape), unified hover mode (hovermode=''x unified''), spike
-          lines crosshair (xaxis_spikemode/spikedash/spikethickness), hovertemplate
-          with <extra></extra> to suppress secondary box.'
+        passed: false
+        comment: 'Idiomatic graph objects: line shape=''hv'' for steps, fill=''toself''
+          polygon, add_annotation with arrow, hovertemplate with <extra></extra>'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: 'Plotly-specific interactivity: hovermode=''x unified'', crosshair
+          spike lines, modebar drawline/eraseshape buttons in the HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T18:07:05Z'
 impl_tags:
   dependencies:
   - scipy
@@ -275,9 +254,12 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - ecdf
+  - hypothesis-testing
   styling:
   - alpha-blending
+  - grid-styling
