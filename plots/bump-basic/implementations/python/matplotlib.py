@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -10,7 +10,7 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import PchipInterpolator
 
 
 # Theme
@@ -59,12 +59,17 @@ for i, driver in enumerate(table.columns):
     ranks = table[driver].to_numpy()
     color = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
 
-    # Smooth S-curve between periods, passing through the rank at each one
+    # Monotone smooth curve between periods (no overshoot), passing through the rank at each one
     seen = np.isfinite(ranks)  # a period without a rank is skipped, never drawn as zero
     span = x_smooth[(x_smooth >= x[seen].min()) & (x_smooth <= x[seen].max())]
     if seen.sum() > 1:
         ax.plot(
-            span, CubicSpline(x[seen], ranks[seen])(span), linewidth=2.0, color=color, zorder=3, solid_capstyle="round"
+            span,
+            PchipInterpolator(x[seen], ranks[seen])(span),
+            linewidth=2.0,
+            color=color,
+            zorder=3,
+            solid_capstyle="round",
         )
     ax.scatter(x[seen], ranks[seen], s=70, color=color, edgecolors=PAGE_BG, linewidths=0.8, zorder=4)
 
