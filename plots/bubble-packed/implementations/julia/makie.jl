@@ -150,12 +150,15 @@ for i in 1:n
     poly!(ax, pts; color = (circle_colors[i], 0.88), strokewidth = 1.5, strokecolor = INK_SOFT)
 end
 
-# Country labels inside circles (white text, scaled to circle size)
+# Country labels inside circles (contrast-matched text, scaled to circle size)
 for i in 1:n
     r = radii[i]
     # Name size follows the circle, capped so the name's width fits inside it
     fit = 1.7 * r / (0.55 * length(labels[i]))
-    name_fs = min(clamp(r / 4.0, 10.0, 30.0), fit)
+    name_fs = min(clamp(r / 4.0, 12.0, 30.0), fit)
+    # Dark text on the light lavender and ochre fills, white on green and blue
+    on_light = groups[i] in ("Americas", "Europe")
+    label_rgb = on_light ? colorant"#1A1A17" : colorant"#FFFFFF"
     if r >= 55
         fs = round(Int, name_fs)
         # Country name shifted up to make room for population annotation
@@ -163,7 +166,7 @@ for i in 1:n
             text     = labels[i],
             align    = (:center, :center),
             fontsize = Float32(fs),
-            color    = colorant"#FFFFFF",
+            color    = label_rgb,
         )
         # Population value annotation below the country name
         pop_str = values[i] >= 1000 ?
@@ -173,14 +176,14 @@ for i in 1:n
             text     = pop_str,
             align    = (:center, :center),
             fontsize = Float32(clamp(round(Int, fs * 0.8), 11, 22)),
-            color    = RGBAf(1f0, 1f0, 1f0, 0.9f0),
+            color    = RGBAf(red(label_rgb), green(label_rgb), blue(label_rgb), 0.9f0),
         )
-    elseif r >= 28 && name_fs >= 10
+    elseif r >= 28 && name_fs >= 12
         text!(ax, positions_x[i], positions_y[i];
             text     = labels[i],
             align    = (:center, :center),
             fontsize = Float32(name_fs),
-            color    = colorant"#FFFFFF",
+            color    = label_rgb,
         )
     end
 end
