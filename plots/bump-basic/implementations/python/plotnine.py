@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-27
@@ -74,7 +74,7 @@ plot = (
     + geom_line(size=1.4, alpha=0.9)
     + geom_point(size=3.5)
     # Direct end labels instead of a legend
-    + geom_text(aes(label=PLATFORM), data=df_end, nudge_x=0.3, ha="left", size=6, color=INK)
+    + geom_text(aes(label=PLATFORM), data=df_end, nudge_x=0.3, ha="left", size=8, color=INK)
     + scale_y_reverse(breaks=rank_breaks)
     + scale_x_continuous(breaks=range(1, len(periods) + 1), labels=periods, limits=(0.7, len(periods) + 1.7))
     + scale_color_manual(values=IMPRINT_PALETTE, limits=platforms)
