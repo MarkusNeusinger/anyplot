@@ -389,6 +389,17 @@ Then one rule per setting that a library prompt states as mandatory, as a hard r
 | `bbox-tight` | matplotlib, seaborn | The figure is saved with `bbox_inches="tight"`. |
 | `animation` | chartjs, echarts, highcharts, muix | The entrance animation stays on: no `animation: false` (Highcharts: fewer than the two the prompt asks for, the chart's and the series'), or no `skipAnimation` in MUI X. A name bound to `false` counts as `false`, and a named object that holds the switch counts once for each place it's used. A value the file doesn't resolve leaves it unjudged. |
 
+The last rule, `data-block`, applies to the seven libraries whose prompt has a "Data block" section: ggplot2, makie, and the five JavaScript libraries. Python has its own checker, `core/adaptability.py`. The rule checks the zones of `prompts/adaptable-code.md` as far as the file's comments and column-0 lines show them, and it asks only for what the spec's data shape needs, as the Python checker does. "The markers" are a `# Data` line and a `# Plot` line below it (`// Data` and `// Plot` in JavaScript); "the binding" is a line between them that starts with `df <-` (R), `df =` (Julia) or `const data` (JavaScript).
+
+| Shape | The file must have |
+|---|---|
+| Table | The markers, the binding, and at least one line of code above the block with a trailing `# role:` comment (`// role:` in JavaScript). |
+| Matrix, network | The markers and the binding. A matrix and a network's node and edge tables need no column constant. |
+| Generated | The markers. The block holds named parameters and binds no table. |
+| Map | Nothing: the map specs fetch their geometry and aren't judged. |
+
+A marker is a whole comment line at column 0, the word alone or followed by a colon or a dash and a hint, as in the Python checker. A section header such as `# --- Data ---` or `// Data layer:` doesn't count. The rule reads each line as its code and its line comment, so a marker or a role inside a string, a template or a block comment is text. The shape comes from `plots/{spec}/specification.md` in the workspace, read by the rule of `core/spec_roles.py` through its mirror `adaptability_check.py`, which the job copies beside the script. When the spec or the mirror is missing, the rule isn't judged. For these seven libraries, the `contract_check` notice ends in `shape=`, the shape the rule used, or `shape=unknown` when it wasn't judged. A record written with `--out` (version 3) carries the same in its `shape` field, `null` when unknown.
+
 These rules exist because a regeneration carries a library-prompt line that a gate checks into nearly every file, but a line that is only read into about half of them. Of the 16 bokeh files that the regenerations of 2026-11-26 replaced, 9 paint the page; the 7 that don't show the light edge line in their dark render, and the 9 that do show none. Of the 16 replaced pygal files, 7 set both tick sizes alike.
 
 The `palette` rule records a deviation and never judges it. The owner's rule is to use the Imprint colours unless there is a very good reason, such as the squares of a chessboard, and whether a reason is good is for a reader to decide. The record therefore lists up to eight of the hexes it found.
@@ -418,11 +429,25 @@ On `main` at e20def8b5, of 325 files per library (323 for Highcharts), the libra
 | `bokeh-toolbar` | 1 |
 | `plotly-autosize` | 0 |
 
+On `main` at e50627eb4, `data-block` flags these files. The files of the 13 map specs aren't judged. MUI X was generated after the convention; most files of the other libraries predate it:
+
+| Library | Files that break `data-block` |
+|---|---|
+| chartjs | 306 of 321 |
+| d3 | 312 of 325 |
+| echarts | 310 of 325 |
+| highcharts | 309 of 323 |
+| muix | 5 of 323 |
+| ggplot2 | 297 of 325 |
+| makie | 305 of 325 |
+
+The regenerations of 2026-11-26 and 2026-11-27 replaced 19 R and Julia files and no JavaScript file. Seven belong to map specs. Of the other 12, 4 keep the layout and 8 break the rule: 6 kept their predecessor's data code, as the generate prompt allows for a regeneration in these languages, and 2 kept the section headers `# --- Data ---` and `# --- Plot ---`.
+
 The rules that later become defect lines will be chosen from the nightly records.
 
 #### Contract self-check
 
-The record comes after the session, so the generating session runs the same rules on its own file first: Step 2b of `impl-generate-claude.md`, in every language, right after the file is written and before the first render. It runs `contract_check.py selfcheck` from the workspace with the workspace's `.venv` interpreter. The command prints one line per rule the file breaks, with what it found and, after `→`, the words of the prompt that set the rule; `palette` is marked advisory. A last line gives the verdict: `contract: pass`, `pass (advisory: palette)`, `fix (<keys>)`, or `not run`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it can't read the file, and it writes no record and no job summary.
+The record comes after the session, so the generating session runs the same rules on its own file first: Step 2b of `impl-generate-claude.md`, in every language, right after the file is written and before the first render. It runs `contract_check.py selfcheck` from the workspace with the workspace's `.venv` interpreter. The command prints one line per rule the file breaks, with what it found (for `data-block`, each part of the layout that's missing) and, after `→`, the words of the prompt that set the rule; `palette` is marked advisory. A last line gives the verdict: `contract: pass`, `pass (advisory: palette)`, `fix (<keys>)`, or `not run`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it can't read the file, and it writes no record and no job summary.
 
 The session fixes every line that isn't advisory, on a regeneration also the ones the previous file already broke, because the library prompt wins over the previous code. It keeps a colour outside the palette only for a reason that holds and names it. When a later fix changed the file, Step 4 runs the check once more before the record-only adaptability run. The commit body carries the result in a `Contract self-check:` line: `pass`, `fixed (<keys>)`, `open (<keys>)`, or `not run`, with a kept palette colour and its reason after a semicolon. The check decides nothing: "Contract check (record-only)" in `impl-review.yml` runs its own copy of the script on the committed file.
 

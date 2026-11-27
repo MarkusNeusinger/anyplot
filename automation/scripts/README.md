@@ -299,6 +299,16 @@ seaborn, and the entrance animation off in Chart.js, ECharts, Highcharts and
 MUI X. Each rule carries the prompt's own words, and a unit test keeps them
 in the prompt.
 
+The last rule, `data-block`, checks the layout of the "Data block" section
+in the R, Julia and JavaScript library prompts: the `# Data` and `# Plot`
+markers (`//` in JavaScript), the column constants with `# role:` comments
+above the block, and the `df` or `const data` that the block binds. It asks
+only for what the spec's data shape needs, and it doesn't judge a map spec.
+The shape comes from `plots/{spec}/specification.md` under the working
+directory, through the adaptability checker's mirror `adaptability_check.py`
+next to the script. Without the spec or the mirror, the rule isn't judged:
+the notice ends in `shape=unknown`, and the record's `shape` field is `null`.
+
 `check` compares the file at the PR head with its predecessor from `main`,
 prints a `contract_check` notice, and writes a job-summary line
 (`impl-review.yml`, "Contract check (record-only)", from a copy at the

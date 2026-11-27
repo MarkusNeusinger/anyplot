@@ -60,6 +60,34 @@ these rules make the read lines checkable:
   ``false``, or as a named object that holds it, once for each place the
   object is used; a value the file does not resolve leaves the file unjudged.
 
+Last, ``data-block``: the layout of the "Data block" section that the library
+prompts of R (ggplot2), Julia (makie) and JavaScript (chartjs, d3, echarts,
+highcharts, muix) mandate, the zones of ``prompts/adaptable-code.md``. Python
+has its own checker (``core/adaptability.py``) and no such rule here. The rule
+reads the comments, so it scans each line for its code and its line comment,
+and a comment inside a string, a template or a block comment is text. It
+asks only for what the data shape of the spec needs, the way the Python
+checker waives it:
+
+- every shape: a ``# Data`` (``// Data``) marker line at column 0, the word
+  alone or followed by a colon or a dash and a hint, and a ``# Plot`` marker
+  line at column 0 below it;
+- a table: at least one line of code with a trailing ``# role:`` comment
+  above the block (a network's node and edge tables and a matrix need none);
+- a table, a matrix or a network: a column-0 binding of ``df`` (R, Julia) or
+  ``const data`` (JavaScript) between the two markers;
+- a generated spec (a maze, a fractal, a barcode): the markers alone;
+- a map spec, which fetches its geometry, or a shape that cannot be read:
+  not judged.
+
+The shape comes from ``plots/{spec}/specification.md`` under the working
+directory, read by the adaptability checker's own rule through its
+standard-library mirror ``adaptability_check.py`` next to this file. Both run
+from the repository root, and ``impl-review.yml`` copies the mirror beside
+this script. Only these seven libraries read the spec and the mirror. The
+record and the notice carry the shape the rule used, ``unknown`` in the
+notice when it was not judged.
+
 Comments and the generated header never count. The patterns are deliberately
 narrow: a rule that flags a compliant file is worse than no rule, so a
 colormap name counts only where a colormap goes, never as a data label such
@@ -74,6 +102,8 @@ from a script, ``"tight"``) use the code with its strings.
 
 Stdlib only: ``impl-review.yml`` runs a copy taken at the workflow's own ref
 with the job's pinned ``python3``, so a PR head cannot choose its own rules.
+A lone copy without the mirror beside it still runs and leaves ``data-block``
+unjudged.
 
 Subcommands::
 
@@ -88,15 +118,18 @@ missing predecessor as a first generation.
 ``selfcheck`` is the generator's own run on the file it wrote
 (``prompts/workflow-prompts/impl-generate-claude.md``, Step 2b). It prints
 plain lines, writes no record and no job summary: one line per broken rule
-with what it found and the prompt's words, ``palette`` marked advisory, and a
-verdict line. It exits 0 when nothing must be fixed, 1 when something must,
-and 2 when the file cannot be read.
+with what it found and the prompt's words (for ``data-block``, each part of
+the layout that is missing), ``palette`` marked advisory, and a verdict line.
+It exits 0 when nothing must be fixed, 1 when something must, and 2 when the
+file cannot be read.
 """
 
 from __future__ import annotations
 
 import argparse
 import ast
+import functools
+import importlib.util
 import io
 import json
 import os
@@ -105,10 +138,11 @@ import sys
 import tokenize
 from collections.abc import Callable
 from pathlib import Path
+from types import ModuleType
 from typing import NamedTuple
 
 
-RECORD_VERSION = 2
+RECORD_VERSION = 3
 RULES = (
     "title",
     "theme",
@@ -125,6 +159,7 @@ RULES = (
     "letsplot-wrap",
     "bbox-tight",
     "animation",
+    "data-block",
 )
 # A deviation the owner allows with a good reason: the self-check names it, the generator decides.
 ADVISORY = frozenset({"palette"})
@@ -796,6 +831,144 @@ def strip_comments(language: str, code: str) -> str:
     return "\n".join(line for line in lines if line.strip())
 
 
+def _comment_lines(language: str, code: str) -> list[tuple[str, str | None]]:
+    """Each line of ``code`` as its code and the text after its line-comment marker (None without one).
+
+    The scan of ``_scan_out_comments``: a marker inside a string is text, and a quote still open at the
+    end of its line closes there, except a backtick, whose template spans lines. A block comment goes
+    whole, but its lines stay, empty, so a row is still a line of the file.
+    """
+    marker, block, quotes = _COMMENT_SYNTAX[language]
+    rows: list[tuple[str, str | None]] = []
+    out: list[str] = []
+    comment: str | None = None
+    quote = ""
+    index = 0
+    size = len(code)
+    while index < size:
+        char = code[index]
+        if char == "\n":
+            rows.append(("".join(out), comment))
+            out, comment = [], None
+            quote = quote if quote == "`" else ""
+            index += 1
+            continue
+        if quote:
+            out.append(char)
+            if char == "\\" and index + 1 < size and code[index + 1] != "\n":
+                out.append(code[index + 1])
+                index += 2
+                continue
+            if char == quote:
+                quote = ""
+            index += 1
+            continue
+        if block and code.startswith(block[0], index):
+            end = code.find(block[1], index + len(block[0]))
+            stop = size if end == -1 else end + len(block[1])
+            for _ in range(code.count("\n", index, stop)):
+                rows.append(("".join(out), comment))
+                out, comment = [], None
+            index = stop
+            continue
+        if code.startswith(marker, index):
+            end = code.find("\n", index)
+            end = size if end == -1 else end
+            comment = code[index + len(marker) : end]
+            index = end
+            continue
+        if char in quotes:
+            quote = char
+        out.append(char)
+        index += 1
+    rows.append(("".join(out), comment))
+    return rows
+
+
+# The "Data block" section of each library prompt in these words; the test keeps them in the prompt.
+_JS_DATA_BLOCK = (
+    "role constants above the block, one `// Data` block that ends in `const data`, an array of records (one "
+    "object per row, keyed by the constants), and plot code below `// Plot`"
+)
+DATA_BLOCK_QUOTES: dict[str, str] = {
+    "chartjs": _JS_DATA_BLOCK,
+    "d3": _JS_DATA_BLOCK,
+    "echarts": _JS_DATA_BLOCK,
+    "highcharts": _JS_DATA_BLOCK,
+    "muix": _JS_DATA_BLOCK,
+    "ggplot2": "the column constants above the block, one `# Data` block that builds a `tibble` keyed by them and "
+    "ends in `df`, and plot code below `# Plot`",
+    "makie": "the column constants above the block, one `# Data` block that builds a `DataFrame` keyed by them and "
+    "ends in `df`, and plot code below `# Plot`",
+}
+# The self-check line follows this with each part that is missing (``data_block_gaps``).
+DATA_BLOCK_FOUND = "the file misses part of the Data block layout of its library prompt"
+# What each data shape asks of the block besides its two markers (core/adaptability.py waives the same):
+# a matrix and a network's node and edge tables need no column constant, a generated spec holds named
+# parameters and binds no table. A map spec, or a shape that could not be read, is not judged.
+_DATA_BLOCK_NEEDS: dict[str, frozenset[str]] = {
+    "table": frozenset({"constants", "binding"}),
+    "network": frozenset({"binding"}),
+    "matrix": frozenset({"binding"}),
+    "generated": frozenset(),
+}
+# The marker after its comment sign: the word alone, or a colon or a dash and a hint (core/adaptability.py).
+_MARKER_TAIL = r"(?:\s*:.*|\s+[-–—].*)?\s*$"
+_DATA_MARKER_RE = re.compile(r" Data" + _MARKER_TAIL)
+_PLOT_MARKER_RE = re.compile(r" Plot" + _MARKER_TAIL)
+_ROLE_COMMENT_RE = re.compile(r"\s*role:\s*\S")
+# The table the block ends in, at column 0: a TypeScript type may follow `const data` (`const data: Row[] = []`).
+_DATA_BINDING: dict[str, tuple[re.Pattern[str], str]] = {
+    "javascript": (re.compile(r"(?:export\s+)?const\s+data(?![\w$])"), "`const data`"),
+    "r": (re.compile(r"df\s*(?:<<?-|=(?!=))"), "`df <-`"),
+    "julia": (re.compile(r"(?:const\s+)?df\s*=(?!=)"), "`df =`"),
+}
+
+
+def _is_marker(row: tuple[str, str | None], pattern: re.Pattern[str]) -> bool:
+    """A whole-line comment at column 0 whose text, after the comment sign, is the marker."""
+    code, comment = row
+    return code == "" and comment is not None and bool(pattern.match(comment))
+
+
+def data_block_gaps(language: str, body: str, shape: str | None) -> list[str]:
+    """What ``body`` (the file without its header) lacks of the Data block layout, for the spec's ``shape``.
+
+    Empty when nothing is missing, and when the rule does not judge the file: Python, a map spec, or a
+    shape that could not be read. Without a ``Data`` marker, the constants and the binding are looked
+    for in the whole file.
+    """
+    needs = _DATA_BLOCK_NEEDS.get(shape or "")
+    if needs is None or language not in _DATA_BINDING:
+        return []
+    sign = _COMMENT_SYNTAX[language][0]
+    rows = _comment_lines(language, body)
+    start = next((index for index, row in enumerate(rows) if _is_marker(row, _DATA_MARKER_RE)), None)
+    stop = None
+    if start is not None:
+        stop = next((index for index in range(start + 1, len(rows)) if _is_marker(rows[index], _PLOT_MARKER_RE)), None)
+    gaps = []
+    if start is None:
+        gaps.append(f"no `{sign} Data` marker line at column 0")
+    elif stop is None:
+        gaps.append(f"no `{sign} Plot` marker line at column 0 below the `{sign} Data` line")
+    if "constants" in needs and not any(
+        code.strip() and comment is not None and _ROLE_COMMENT_RE.match(comment) for code, comment in rows[:start]
+    ):
+        where = "in the file" if start is None else f"above the `{sign} Data` line"
+        gaps.append(f"no column constant with a trailing `{sign} role:` comment {where}")
+    pattern, binding = _DATA_BINDING[language]
+    if "binding" in needs and not any(pattern.match(code) for code, _ in rows[start:stop]):
+        if start is None:
+            where = "in the file"
+        elif stop is None:
+            where = f"below the `{sign} Data` line"
+        else:
+            where = f"between the `{sign} Data` and `{sign} Plot` lines"
+        gaps.append(f"no column-0 {binding} {where}")
+    return gaps
+
+
 def custom_hexes(code: str) -> list[str]:
     """The six-digit hexes of ``code`` outside the style guide's set, upper case, in order of appearance."""
     seen: list[str] = []
@@ -806,9 +979,16 @@ def custom_hexes(code: str) -> list[str]:
     return seen
 
 
-def check(source: str, *, spec_id: str, language: str, library: str) -> tuple[list[str], dict[str, list[str]]]:
-    """The rules ``source`` breaks, in ``RULES`` order, and per rule what it found (the palette rule's hexes)."""
-    code = strip_comments(language, strip_header(language, source))
+def check(
+    source: str, *, spec_id: str, language: str, library: str, shape: str | None = None
+) -> tuple[list[str], dict[str, list[str]]]:
+    """The rules ``source`` breaks, in ``RULES`` order, and per rule what it found (the palette rule's hexes,
+    the parts of the Data block that are missing).
+
+    ``shape`` is the spec's data shape (``spec_shape``); without it, ``data-block`` is not judged.
+    """
+    body = strip_header(language, source)
+    code = strip_comments(language, body)
     found = []
     details: dict[str, list[str]] = {}
     if f"{language} · {library} · anyplot.ai" not in code or spec_id not in code:
@@ -826,12 +1006,16 @@ def check(source: str, *, spec_id: str, language: str, library: str) -> tuple[li
         found.append("palette")
         details["palette"] = hexes[:PALETTE_DETAIL_CAP]
     found += [mandate.key for mandate in MANDATES if mandate.library == library and mandate.breaks(code)]
+    gaps = data_block_gaps(language, body, shape) if library in DATA_BLOCK_QUOTES else []
+    if gaps:
+        found.append("data-block")
+        details["data-block"] = gaps
     return found, details
 
 
-def violations(source: str, *, spec_id: str, language: str, library: str) -> list[str]:
+def violations(source: str, *, spec_id: str, language: str, library: str, shape: str | None = None) -> list[str]:
     """The rules ``source`` breaks, in ``RULES`` order."""
-    return check(source, spec_id=spec_id, language=language, library=library)[0]
+    return check(source, spec_id=spec_id, language=language, library=library, shape=shape)[0]
 
 
 def _read(path: str | None) -> str | None:
@@ -843,9 +1027,72 @@ def _read(path: str | None) -> str | None:
         return None
 
 
-def build_record(new: str | None, prev: str | None, *, spec_id: str, language: str, library: str) -> dict:
-    """The record of one check: the new file's violations, the predecessor's, and the ones only the new file has."""
-    record: dict = {"version": RECORD_VERSION, "spec_id": spec_id, "language": language, "library": library}
+# A spec id as the branch name carries it; anything else never reaches a path.
+_SPEC_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+_SHAPES = frozenset({"table", "matrix", "network", "generated", "excluded"})
+
+
+@functools.cache
+def _adaptability_checker() -> ModuleType | None:
+    """The standard-library mirror of the adaptability checker next to this file, or None without one.
+
+    Loaded from its path, so it is found under ``python -I`` and next to the workflow-ref copy alike.
+    """
+    path = Path(__file__).resolve().with_name("adaptability_check.py")
+    if not path.is_file():
+        return None
+    loader_spec = importlib.util.spec_from_file_location("anyplot_adaptability_check", path)
+    if loader_spec is None or loader_spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(loader_spec)
+    sys.modules[loader_spec.name] = module  # its dataclasses look their module up while they are built
+    try:
+        loader_spec.loader.exec_module(module)
+    except Exception:  # a broken mirror leaves the Data block rule unjudged, never the other rules
+        del sys.modules[loader_spec.name]
+        return None
+    return module
+
+
+def spec_shape(spec_id: str) -> str | None:
+    """The data shape of ``spec_id`` by the adaptability checker's own rule (``core/spec_roles.py``).
+
+    Read from ``plots/{spec_id}/specification.md`` under the working directory, through the mirror
+    ``adaptability_check.py`` next to this file. None when the spec or the mirror is not at hand, so the
+    rule that needs the shape is not judged.
+    """
+    if not _SPEC_ID_RE.fullmatch(spec_id):
+        return None
+    text = _read(str(Path("plots") / spec_id / "specification.md"))
+    checker = _adaptability_checker()
+    if text is None or checker is None:
+        return None
+    try:
+        shape = checker.spec_shape(spec_id, checker.parse_roles(checker.data_bullets(text)))
+    except Exception:  # a mirror without the shape rule, or one that fails on this spec: not judged
+        return None
+    return str(shape) if shape in _SHAPES else None
+
+
+def _shape_for(spec_id: str, library: str) -> str | None:
+    """The spec's shape for a library the Data block rule judges; no other library reads the spec or the mirror."""
+    return spec_shape(spec_id) if library in DATA_BLOCK_QUOTES else None
+
+
+def build_record(
+    new: str | None, prev: str | None, *, spec_id: str, language: str, library: str, shape: str | None = None
+) -> dict:
+    """The record of one check: the new file's violations, the predecessor's, and the ones only the new file has.
+
+    ``shape`` is the spec's data shape the Data block rule used; None leaves that rule unjudged.
+    """
+    record: dict = {
+        "version": RECORD_VERSION,
+        "spec_id": spec_id,
+        "language": language,
+        "library": library,
+        "shape": shape,
+    }
     if new is None:
         return {
             **record,
@@ -855,8 +1102,10 @@ def build_record(new: str | None, prev: str | None, *, spec_id: str, language: s
             "new_only": [],
             "details": {},
         }
-    now, details = check(new, spec_id=spec_id, language=language, library=library)
-    before = None if prev is None else violations(prev, spec_id=spec_id, language=language, library=library)
+    now, details = check(new, spec_id=spec_id, language=language, library=library, shape=shape)
+    before = (
+        None if prev is None else violations(prev, spec_id=spec_id, language=language, library=library, shape=shape)
+    )
     new_only = now if before is None else [rule for rule in now if rule not in before]
     return {
         **record,
@@ -892,6 +1141,8 @@ def notice_line(record: dict) -> str:
     )
     if record["details"].get("palette"):
         line += " palette_hexes=" + ",".join(record["details"]["palette"])
+    if record["library"] in DATA_BLOCK_QUOTES:
+        line += f" shape={record.get('shape') or 'unknown'}"  # unknown: data-block not judged
     return line
 
 
@@ -899,24 +1150,30 @@ def reason(key: str, library: str) -> tuple[str, str, str]:
     """What rule ``key`` found in a ``library`` file, and the words of the prompt that sets it, with their path."""
     if key in BASE_REASONS:
         return BASE_REASONS[key]
+    if key == "data-block":
+        return DATA_BLOCK_FOUND, f"prompts/library/{library}.md", DATA_BLOCK_QUOTES[library]
     mandate = next(mandate for mandate in MANDATES if mandate.key == key and mandate.library == library)
     return mandate.found, f"prompts/library/{library}.md", mandate.quote
 
 
-def selfcheck_lines(source: str | None, *, spec_id: str, language: str, library: str) -> tuple[list[str], int]:
+def selfcheck_lines(
+    source: str | None, *, spec_id: str, language: str, library: str, shape: str | None = None
+) -> tuple[list[str], int]:
     """The generator's own run: one line per broken rule, then the verdict line, and the exit code.
 
     0 when nothing must be fixed (an advisory line may remain), 1 when something must, 2 when there is no file.
     """
     if source is None:
         return ["contract: not run (the file is missing or not UTF-8 text)"], 2
-    found, details = check(source, spec_id=spec_id, language=language, library=library)
+    found, details = check(source, spec_id=spec_id, language=language, library=library, shape=shape)
     lines = []
     for key in found:
         what, path, quote = reason(key, library)
         if key in ADVISORY:
             listed = ", ".join(details.get(key, []))
             lines.append(f"{key} (advisory): {listed}: {what} → {path}: “{quote}”")
+        elif details.get(key):
+            lines.append(f"{key}: {what}: {'; '.join(details[key])} → {path}: “{quote}”")
         else:
             lines.append(f"{key}: {what} → {path}: “{quote}”")
     must = [key for key in found if key not in ADVISORY]
@@ -929,14 +1186,25 @@ def selfcheck_lines(source: str | None, *, spec_id: str, language: str, library:
 
 
 def cmd_selfcheck(args: argparse.Namespace) -> int:
-    lines, code = selfcheck_lines(_read(args.file), spec_id=args.spec_id, language=args.language, library=args.library)
+    lines, code = selfcheck_lines(
+        _read(args.file),
+        spec_id=args.spec_id,
+        language=args.language,
+        library=args.library,
+        shape=_shape_for(args.spec_id, args.library),
+    )
     print("\n".join(lines))
     return code
 
 
 def cmd_check(args: argparse.Namespace) -> int:
     record = build_record(
-        _read(args.source), _read(args.prev), spec_id=args.spec_id, language=args.language, library=args.library
+        _read(args.source),
+        _read(args.prev),
+        spec_id=args.spec_id,
+        language=args.language,
+        library=args.library,
+        shape=_shape_for(args.spec_id, args.library),
     )
     print(notice_line(record))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")

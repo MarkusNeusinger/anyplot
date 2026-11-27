@@ -22,6 +22,7 @@ from automation.scripts import contract_check
 from automation.scripts.contract_check import (
     ADVISORY,
     BASE_REASONS,
+    DATA_BLOCK_QUOTES,
     MANDATES,
     PALETTE_HEXES,
     RULES,
@@ -30,6 +31,7 @@ from automation.scripts.contract_check import (
     notice_line,
     reason,
     selfcheck_lines,
+    spec_shape,
     strip_comments,
     strip_header,
     summary_line,
@@ -431,7 +433,8 @@ def test_check_records_and_never_fails(tmp_path):
         "**Contract check (record-only):** title, colormap (new in this version: title, colormap)\n"
     )
     record = json.loads((tmp_path / "record.json").read_text(encoding="utf-8"))
-    assert record["version"] == 2 and record["new_only"] == ["title", "colormap"]
+    assert record["version"] == 3 and record["new_only"] == ["title", "colormap"]
+    assert record["shape"] is None  # a lone copy: no mirror and no spec beside it
 
 
 @pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
@@ -949,19 +952,32 @@ plot = gggrid(panels, ncol=2) + ggsize(800, 450) + theme(plot_background=element
     assert _mandates(before, "letsplot") == ["letsplot-wrap"]
 
 
+def _prose(path: str) -> str:
+    """A prompt's text with its line breaks as spaces: a quote may run across the wrap of a paragraph."""
+    return " ".join((ROOT / path).read_text(encoding="utf-8").split())
+
+
 def test_every_rule_has_its_reason_and_the_prompt_still_says_it():
     """Each rule names what it found and quotes its prompt; the quote must still stand in that file."""
     keys = [mandate.key for mandate in MANDATES]
-    assert set(BASE_REASONS) | set(keys) == set(RULES)
+    assert set(BASE_REASONS) | set(keys) | {"data-block"} == set(RULES)
     # The mandates come after the base rules and keep RULES order, so a record lists them in that order.
     assert sorted(set(keys), key=RULES.index) == list(dict.fromkeys(keys))
+    assert RULES[-1] == "data-block"
     assert ADVISORY == {"palette"}
     for mandate in MANDATES:
         what, path, quote = reason(mandate.key, mandate.library)
         assert path == f"prompts/library/{mandate.library}.md"
-        assert quote in (ROOT / path).read_text(encoding="utf-8"), (mandate.key, mandate.library)
+        assert quote in _prose(path), (mandate.key, mandate.library)
     for key, (_found, path, quote) in BASE_REASONS.items():
-        assert quote in (ROOT / path).read_text(encoding="utf-8"), key
+        assert quote in _prose(path), key
+    # The Data block rule: the libraries whose prompt has the section, Python's eight excluded.
+    assert set(DATA_BLOCK_QUOTES) == {"chartjs", "d3", "echarts", "highcharts", "muix", "ggplot2", "makie"}
+    for library in DATA_BLOCK_QUOTES:
+        what, path, quote = reason("data-block", library)
+        assert path == f"prompts/library/{library}.md"
+        assert "## Data block" in _prose(path)
+        assert quote in _prose(path), library
 
 
 def test_a_regeneration_records_the_mandates_its_predecessor_also_broke():
@@ -975,6 +991,382 @@ def test_a_regeneration_records_the_mandates_its_predecessor_also_broke():
     assert build_record(unpainted, unpainted, **kwargs)["new_only"] == []
     record = build_record(unpainted, painted, **kwargs)
     assert record["violations"] == record["new_only"] == ["bokeh-page-paint"]
+
+
+# --- the Data block (R, Julia, JavaScript) --------------------------------------------------------
+# Excerpts of real files, pasted at the commit named beside each, from a line of the head zone down to
+# the first plot call. Each starts with code, as the files do, so the header scan stops before them.
+
+# ggplot2 histogram-basic, 844e428a8 (#14699): the prompt's layout.
+R_TABLE = """
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+SALARY <- "Annual Salary"  # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("salaries.csv", check.names = FALSE)
+set.seed(42)
+n <- 400
+salaries <- c(
+  rnorm(round(n * 0.70), mean = 65000,  sd = 15000),
+  rnorm(round(n * 0.20), mean = 105000, sd = 20000),
+  rnorm(round(n * 0.10), mean = 175000, sd = 30000)
+)
+df <- tibble::tibble(!!SALARY := pmax(salaries, 28000))
+
+# Plot: reads only df and the constants above
+p <- ggplot(df, aes(x = .data[[SALARY]])) +
+"""
+# ggplot2 stock-event-flags, b819ea63a (#14633): a regeneration that kept the data code of its predecessor.
+R_NO_BLOCK = """
+GRID_COLOR  <- adjustcolor(INK, alpha.f = 0.15)
+
+# Generate 190 trading days (weekdays only, Jan–Sep 2023)
+all_days     <- seq(as.Date("2023-01-03"), as.Date("2023-12-29"), by = "day")
+trading_days <- all_days[!weekdays(all_days) %in% c("Saturday", "Sunday")]
+trading_days <- trading_days[seq_len(190)]
+
+# Geometric random walk starting at $150 (fictional tech company)
+returns      <- rnorm(190, mean = 0.0005, sd = 0.015)
+close_prices <- 150 * cumprod(1 + returns)
+
+price_df <- data.frame(
+  date  = trading_days,
+  close = close_prices
+)
+"""
+# ggplot2 curve-bias-variance-tradeoff, a66420b1c (#14665), a generated spec: the section headers of
+# the files before the convention, `# --- Data ---`, which are not its markers.
+R_DECORATED = """
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
+
+# --- Data ---
+n            <- 100
+complexity   <- seq(1, 10, length.out = n)
+irreducible  <- rep(0.15, n)
+bias_squared <- 0.70 * exp(-0.5 * (complexity - 1))
+
+title_str <- "curve-bias-variance-tradeoff · r · ggplot2 · anyplot.ai"
+
+# --- Plot ---
+p <- ggplot(df_long,
+"""
+# makie area-basic, 73932a54c (#14687): the prompt's layout, with the bare `# Plot` marker.
+JULIA_TABLE = """
+const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD"]
+
+# Columns: set these to your table's column names
+const HOUR = "Hour"                       # role: x
+const CPU = "CPU Utilization (%)"         # role: y
+
+# Data: hourly CPU utilization over 48 hours (diurnal workload pattern)
+Random.seed!(42)
+n = 48
+hours = collect(0:(n - 1))
+base_load = 30.0 .+ 28.0 .* sin.(2π .* (hours .- 6) ./ 24)
+noise = 5.0 .* randn(n)
+df = DataFrame(HOUR => hours, CPU => clamp.(base_load .+ noise, 5.0, 95.0))
+
+# Plot
+fig = Figure(
+"""
+# makie curve-bias-variance-tradeoff, afc4099f8 (#14676), a generated spec: named parameters between the
+# markers, a dash and a hint after `# Data`, no table.
+JULIA_GENERATED = """
+const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD"]
+
+# Data — theoretical bias-variance tradeoff curves
+complexity = range(0.1, 10.0, length=80)
+
+bias_sq         = 1.0 ./ (1.0 .+ complexity) .+ 0.02
+variance        = (complexity .^ 1.4) ./ 22.0
+
+# Plot
+fig = Figure(
+"""
+# makie alluvial-opinion-flow, dc6b34b3a (#10641): a file from before the convention whose section
+# headers read as the markers, with neither column constants nor `df`.
+JULIA_SECTIONS = """
+const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD"]
+
+# Data — quarterly political opinion survey, 1000 respondents tracked across 4 waves
+Random.seed!(42)
+
+waves      = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
+categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
+
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
+title_str      = "Political Opinion Survey · alluvial-opinion-flow · julia · makie · anyplot.ai"
+"""
+# highcharts climograph-walter-lieth, e690a8867 (#12849): the prompt's layout, a hint over three lines.
+JS_TABLE = """
+const t = window.ANYPLOT_TOKENS;
+
+const MONTH = "Month"; // role: month
+const TEMPERATURE = "Temperature (°C)"; // role: temperature
+
+// Data: replace this block with your own records, one object per month
+// Seville (Aeropuerto) climate normals 1991–2020, a Mediterranean station
+// with a pronounced summer arid period.
+const data = [
+  { [MONTH]: "Jan", [TEMPERATURE]: 10.3 },
+  { [MONTH]: "Feb", [TEMPERATURE]: 12.0 },
+];
+
+// Plot: reads only data and the constants above
+const months = data.map((d) => d[MONTH]);
+"""
+# muix icicle-basic, bae6fab09 (#12365): `const data` with a TypeScript type over several lines.
+JS_TYPED = """
+import { BarChart } from "@mui/x-charts/BarChart";
+
+// Columns: set these to your data's column names
+const ID = "Node path"; // role: id
+const VALUE = "Size (KB)"; // role: value
+
+// Data: replace this block with your own records
+const data: Array<{
+  [ID]: string;
+  [VALUE]: number;
+}> = [
+  { [ID]: "repo/", [VALUE]: 0 },
+  // Top-level directories
+  { [ID]: "repo/dist/", [VALUE]: 0 },
+];
+
+// Plot: reads only data and the constants above
+const unitMatch = VALUE.match(/\\(([^)]+)\\)/);
+"""
+# muix maze-circular, 6a9261207 (#12706), a generated spec: the parameters carry role comments inside the
+# block, and there are no records.
+JS_GENERATED = """
+const GOAL_INK = "#1A1A17"; // the ink with the stronger contrast on the brand green goal disc
+
+// Data: replace this block with your own parameters
+const RINGS = 7; // role: rings
+const DIFFICULTY = "medium"; // role: difficulty
+const SEED = 42; // role: seed
+
+// Plot: reads only the parameters and the constants above
+const edges = [];
+for (let s = 0; s < SECTORS; s += 1) edges.push({ a: "hub", b: `1-${s}`, key: `h-${s}` });
+"""
+# muix bar-basic, 6562ba9c9 (#12271): a file from before the convention, its records named `dataset`.
+JS_LEGACY = """
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic) ---------------------------------------
+// Annual coffee consumption per capita — top consuming countries (kg/person/year)
+const countries = ["Finland", "Norway", "Iceland", "Denmark", "Netherlands", "Sweden", "Switzerland"];
+const kgPerCapita = [12.0, 9.9, 9.0, 8.7, 8.4, 8.2, 7.9];
+
+const dataset = countries.map((country, i) => ({ country, kgPerCapita: kgPerCapita[i] }));
+
+// --- Chart (default-exported component — the harness mounts it) -----------
+export default function Chart() {
+"""
+_LANGUAGE = {"ggplot2": "r", "makie": "julia"}
+
+
+def _data_block(source: str, library: str, shape: str | None = "table") -> list[str]:
+    """What the Data block rule finds in ``source``: the missing parts, or [] when it passes or is not judged."""
+    language = _LANGUAGE.get(library, "javascript")
+    found, details = check(source, spec_id=SPEC, language=language, library=library, shape=shape)
+    assert ("data-block" in found) == bool(details.get("data-block"))
+    return details.get("data-block", [])
+
+
+@pytest.mark.parametrize(
+    ("library", "source", "shape"),
+    [
+        ("ggplot2", R_TABLE, "table"),
+        ("makie", JULIA_TABLE, "table"),
+        ("makie", JULIA_GENERATED, "generated"),
+        ("highcharts", JS_TABLE, "table"),
+        ("chartjs", JS_TABLE, "table"),
+        ("muix", JS_TYPED, "table"),
+        ("muix", JS_GENERATED, "generated"),
+        # A matrix and a network need no column constant; a map spec and an unread shape are not judged.
+        ("makie", JULIA_TABLE.replace("# role:", "#"), "matrix"),
+        ("d3", JS_TABLE.replace("// role:", "//"), "network"),
+        ("ggplot2", R_NO_BLOCK, "excluded"),
+        ("echarts", JS_LEGACY, None),
+    ],
+)
+def test_a_file_that_keeps_the_data_block_passes(library, source, shape):
+    assert _data_block(source, library, shape) == []
+
+
+@pytest.mark.parametrize(
+    ("library", "source", "shape", "gaps"),
+    [
+        (
+            "ggplot2",
+            R_NO_BLOCK,
+            "table",
+            [
+                "no `# Data` marker line at column 0",
+                "no column constant with a trailing `# role:` comment in the file",
+                "no column-0 `df <-` in the file",
+            ],
+        ),
+        ("ggplot2", R_DECORATED, "generated", ["no `# Data` marker line at column 0"]),
+        (
+            "makie",
+            JULIA_SECTIONS,
+            "table",
+            [
+                "no column constant with a trailing `# role:` comment above the `# Data` line",
+                "no column-0 `df =` between the `# Data` and `# Plot` lines",
+            ],
+        ),
+        # A generated spec's file read as a table: its parameters are no column constants above the block.
+        (
+            "makie",
+            JULIA_GENERATED,
+            "table",
+            [
+                "no column constant with a trailing `# role:` comment above the `# Data` line",
+                "no column-0 `df =` between the `# Data` and `# Plot` lines",
+            ],
+        ),
+        (
+            "muix",
+            JS_GENERATED,
+            "table",
+            [
+                "no column constant with a trailing `// role:` comment above the `// Data` line",
+                "no column-0 `const data` between the `// Data` and `// Plot` lines",
+            ],
+        ),
+        (
+            "muix",
+            JS_LEGACY,
+            "table",
+            [
+                "no `// Data` marker line at column 0",
+                "no column constant with a trailing `// role:` comment in the file",
+                "no column-0 `const data` in the file",
+            ],
+        ),
+        # A matrix still ends in its table; a block without its Plot marker runs to the end of the file.
+        (
+            "highcharts",
+            JS_TABLE.replace("const data = [", "const rows = ["),
+            "matrix",
+            ["no column-0 `const data` between the `// Data` and `// Plot` lines"],
+        ),
+        (
+            "highcharts",
+            JS_TABLE.replace("// Plot: reads only data and the constants above\n", ""),
+            "table",
+            ["no `// Plot` marker line at column 0 below the `// Data` line"],
+        ),
+    ],
+)
+def test_a_missing_part_of_the_data_block_is_named(library, source, shape, gaps):
+    assert _data_block(source, library, shape) == gaps
+
+
+def test_the_data_block_reads_markers_and_roles_only_from_real_comments():
+    """A marker counts as a whole comment line at column 0, a role as a trailing comment on code: text in a
+    string, a template, a block comment or an indented comment counts as neither."""
+    # The marker spellings: the word alone, or a colon or a dash and a hint; another word after it is no marker.
+    hint = "// Data: replace this block with your own records, one object per month"
+    assert _data_block(JS_TABLE.replace(hint, "// Data"), "highcharts") == []
+    assert _data_block(JS_TABLE.replace("// Data:", "// Data —"), "highcharts") == []
+    marker_missing = "no `// Data` marker line at column 0"
+    assert marker_missing in _data_block(JS_TABLE.replace("// Data:", "// Data layer:"), "highcharts")
+    assert marker_missing in _data_block(JS_TABLE.replace("// Data:", "//Data:"), "highcharts")
+    # An indented comment, a template literal and a block comment that hold the marker are no marker.
+    without = JS_TABLE.replace("// Data: replace this block with your own records, one object per month\n", "")
+    indented = without.replace("const data = [", "  // Data: the records\nconst data = [")
+    assert marker_missing in _data_block(indented, "highcharts")
+    template = without.replace("const data = [", "const note = `\n// Data: the records\n`;\nconst data = [")
+    assert marker_missing in _data_block(template, "highcharts")
+    block = without.replace("const data = [", "/*\n// Data: the records\n*/\nconst data = [")
+    assert marker_missing in _data_block(block, "highcharts")
+    # A role written in a string is no role comment, also after a `//` inside the string.
+    no_roles = "no column constant with a trailing `// role:` comment above the `// Data` line"
+    in_string = JS_TABLE.replace('"Month"; // role: month', '"Month // role: month";').replace(
+        '"Temperature (°C)"; // role: temperature', '"role: temperature";'
+    )
+    assert _data_block(in_string, "highcharts") == [no_roles]
+    # A role comment on a line of its own names no constant.
+    alone = JS_TABLE.replace('const MONTH = "Month"; // role: month', "// role: month").replace(
+        'const TEMPERATURE = "Temperature (°C)"; // role: temperature', "// role: temperature"
+    )
+    assert _data_block(alone, "highcharts") == [no_roles]
+    # In R a role inside the column name's string, in Julia a marker inside a block comment.
+    r_quoted = R_TABLE.replace('"Annual Salary"  # role: value', '"Annual Salary  # role: value"')
+    assert _data_block(r_quoted, "ggplot2") == [
+        "no column constant with a trailing `# role:` comment above the `# Data` line"
+    ]
+    julia_block = JULIA_TABLE.replace("# Data: hourly", "#=\n# Data: hourly").replace(
+        "Random.seed!(42)", "=#\nRandom.seed!(42)"
+    )
+    assert "no `# Data` marker line at column 0" in _data_block(julia_block, "makie")
+
+
+def test_the_data_block_binds_its_table_at_column_0_under_the_prompts_name():
+    """`const data`, `df <-` or `df =` at column 0 between the markers; another name or a nested binding is not
+    the table the block ends in."""
+    no_binding = ["no column-0 `const data` between the `// Data` and `// Plot` lines"]
+    assert _data_block(JS_TABLE.replace("const data = [", "const dataset = ["), "chartjs") == no_binding
+    assert _data_block(JS_TABLE.replace("const data = [", "let data = ["), "chartjs") == no_binding
+    assert _data_block(JS_TABLE.replace("const data = [", "  const data = ["), "chartjs") == no_binding
+    assert _data_block(JS_TABLE.replace("const data = [", "export const data = ["), "chartjs") == []
+    # Bound only below the Plot marker, the table is not the block's.
+    moved = JS_TABLE.replace("const data = [", "const rows = [").replace(
+        "const months =", "const data = rows;\nconst months ="
+    )
+    assert _data_block(moved, "chartjs") == no_binding
+    assert _data_block(R_TABLE.replace("df <- tibble", "df = tibble"), "ggplot2") == []
+    assert _data_block(R_TABLE.replace("df <- tibble", "salary_df <- tibble"), "ggplot2") == [
+        "no column-0 `df <-` between the `# Data` and `# Plot` lines"
+    ]
+    assert _data_block(JULIA_TABLE.replace("df = DataFrame", "const df = DataFrame"), "makie") == []
+    assert _data_block(JULIA_TABLE.replace("df = DataFrame", "df == DataFrame"), "makie") == [
+        "no column-0 `df =` between the `# Data` and `# Plot` lines"
+    ]
+
+
+def test_the_data_block_rule_is_its_libraries_own():
+    """Python has its own checker, and a library without the prompt section is never judged."""
+    found, _details = check(PYTHON, spec_id=SPEC, language="python", library="matplotlib", shape="table")
+    assert found == []
+    found, _details = check(R_NO_BLOCK, spec_id=SPEC, language="python", library="ggplot2", shape="table")
+    assert "data-block" not in found
+    # The legacy file breaks the rule in a regeneration's record as inherited, not as new.
+    kwargs = {"spec_id": SPEC, "language": "r", "library": "ggplot2", "shape": "table"}
+    inherited = build_record(R_NO_BLOCK, R_NO_BLOCK, **kwargs)
+    assert "data-block" in inherited["violations"] and "data-block" not in inherited["new_only"]
+    assert inherited["shape"] == "table"
+    assert inherited["details"]["data-block"][0] == "no `# Data` marker line at column 0"
+    converted = build_record(R_TABLE, R_NO_BLOCK, **kwargs)
+    assert "data-block" not in converted["violations"]
+
+
+def test_spec_shape_reads_the_spec_by_the_adaptability_checkers_rule(tmp_path, monkeypatch):
+    """The shape of the spec under the working directory; None for a missing spec or an id that is no slug."""
+    monkeypatch.chdir(tmp_path)
+    for spec_id, data in (
+        ("histogram-basic", "- `values` (numeric) - The continuous variable to visualize\n"),
+        ("maze-circular", "- `rings` (int) - Number of concentric rings\n"),
+        ("map-projections", "- `lon` (numeric) - Longitude\n"),
+    ):
+        folder = tmp_path / "plots" / spec_id
+        folder.mkdir(parents=True)
+        (folder / "specification.md").write_text(f"# {spec_id}\n\n## Data\n\n{data}", encoding="utf-8")
+    assert spec_shape("histogram-basic") == "table"
+    assert spec_shape("maze-circular") == "generated"
+    assert spec_shape("map-projections") == "excluded"
+    assert spec_shape("no-such-spec") is None
+    assert spec_shape("../plots/histogram-basic") is None
+    # Only the libraries of the Data block rule read the spec and the mirror.
+    assert contract_check._shape_for("histogram-basic", "ggplot2") == "table"
+    assert contract_check._shape_for("histogram-basic", "matplotlib") is None
 
 
 # --- the generator's self-check ------------------------------------------------------------------
@@ -1023,3 +1415,71 @@ def test_the_selfcheck_command_prints_plain_lines_and_writes_no_summary(tmp_path
     assert runs["missing.py"].returncode == 2
     assert not any("::" in run.stdout for run in runs.values())
     assert not (tmp_path / "summary").exists()
+
+
+def test_the_selfcheck_names_each_missing_part_of_the_data_block():
+    source = R.replace("p <- ggplot(df", R_NO_BLOCK + "p <- ggplot(df")
+    lines, code = selfcheck_lines(source, spec_id=SPEC, language="r", library="ggplot2", shape="table")
+    assert code == 1
+    assert lines == [
+        "data-block: the file misses part of the Data block layout of its library prompt: no `# Data` marker line "
+        "at column 0; no column constant with a trailing `# role:` comment in the file; no column-0 `df <-` in the "
+        "file → prompts/library/ggplot2.md: “the column constants above the block, one `# Data` block that builds "
+        "a `tibble` keyed by them and ends in `df`, and plot code below `# Plot`”",
+        "contract: fix (data-block)",
+    ]
+    unjudged, code = selfcheck_lines(source, spec_id=SPEC, language="r", library="ggplot2")
+    assert (code, unjudged) == (0, ["contract: pass"])
+
+
+def _tree(tmp_path: Path, *, mirror: bool) -> Path:
+    """A repository root as the two entry points see it: a spec under plots/, and the workflow-ref copy of
+    the script in regen-tools/, with or without the checker's mirror beside it."""
+    tools = tmp_path / "regen-tools"
+    tools.mkdir()
+    shutil.copy(SCRIPT, tools / "contract_check.py")
+    if mirror:
+        shutil.copy(SCRIPT.with_name("adaptability_check.py"), tools / "adaptability_check.py")
+    spec = tmp_path / "plots" / SPEC
+    spec.mkdir(parents=True)
+    (spec / "specification.md").write_text(
+        "# scatter-basic\n\n## Data\n\n- `x` (numeric) - Values for the horizontal axis\n"
+        "- `y` (numeric) - Values for the vertical axis\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "new.R").write_text(R.replace("p <- ggplot(df", R_NO_BLOCK + "p <- ggplot(df"), encoding="utf-8")
+    return tools / "contract_check.py"
+
+
+@pytest.mark.parametrize("mirror", [True, False], ids=["mirror", "lone-copy"])
+def test_both_entry_points_read_the_shape_from_the_working_directory(tmp_path, mirror):
+    """`check` as impl-review runs it and `selfcheck` under `python -I`, each from a repository root."""
+    script = _tree(tmp_path, mirror=mirror)
+    common = ["--spec-id", SPEC, "--language", "r", "--library", "ggplot2"]
+    env = {"PATH": "/usr/bin:/bin"}
+    review = subprocess.run(
+        [sys.executable, str(script), "check", "--source", "new.R", *common, "--out", "record.json"],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert review.returncode == 0, review.stderr
+    record = json.loads((tmp_path / "record.json").read_text(encoding="utf-8"))
+    generator = subprocess.run(
+        [sys.executable, "-I", str(script), "selfcheck", "new.R", *common],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert not generator.stderr
+    if mirror:
+        assert record["shape"] == "table" and record["violations"] == ["data-block"]
+        assert review.stdout.strip().endswith("violations=data-block prev=n/a new_only=data-block shape=table")
+        assert generator.returncode == 1
+        assert generator.stdout.splitlines()[-1] == "contract: fix (data-block)"
+    else:
+        assert record["shape"] is None and record["violations"] == []
+        assert review.stdout.strip().endswith("status=clean violations=none prev=n/a new_only=none shape=unknown")
+        assert (generator.returncode, generator.stdout) == (0, "contract: pass\n")
