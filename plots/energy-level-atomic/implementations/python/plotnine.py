@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-27
@@ -55,7 +55,9 @@ BAND_BALMER = "#FEE2E2" if THEME == "light" else "#3C1A1A"
 IONIZATION_ENERGY = 0.0  # a bound level approaches 0 eV, the ionization limit
 HC_EV_NM = 1239.84  # h*c in eV·nm, turns an energy gap into a wavelength
 X_LEFT, X_RIGHT = 0.15, 0.78  # schematic horizontal extent of every level line
-X_LABEL = 0.91  # schematic x of the level labels on the right
+X_LABEL = 0.84  # schematic x of the level labels on the right
+X_MAX = 1.08  # right edge of the panel, just past the level labels
+LABEL_PT = 8  # point size of every annotation text, the size of the tick labels
 X_ARROW_FIRST, X_ARROW_LAST = 0.28, 0.70  # schematic span of the arrow columns
 LABEL_MIN_GAP = 0.24  # minimum vertical gap between right-hand level labels (sqrt-eV units)
 TICKED_LEVELS = 4  # the lowest levels get an energy tick; the crowded upper ones are labelled at the right
@@ -160,14 +162,20 @@ plot = (
         "segment", x=X_LEFT, xend=X_RIGHT, y=ion_vis, yend=ion_vis, color=IONIZATION_COLOR, size=1.2, linetype="dashed"
     )
     + annotate(
-        "text", x=X_LABEL, y=ion_label_y, label="Ionization\nlimit (0 eV)", size=3.5, ha="left", color=IONIZATION_COLOR
+        "text",
+        x=X_LABEL,
+        y=ion_label_y,
+        label="Ionization\nlimit (0 eV)",
+        size=LABEL_PT,
+        ha="left",
+        color=IONIZATION_COLOR,
     )
     + annotate(
         "segment", x=X_RIGHT + 0.01, xend=X_LABEL - 0.02, y=ion_vis, yend=ion_label_y, color=IONIZATION_COLOR, size=0.4
     )
     # Connector lines from level endpoints to the spread labels, then the labels
     + geom_segment(data=levels, mapping=aes(x="x_c1", xend="x_c2", y="vis", yend="label_y"), color=INK_MUTED, size=0.4)
-    + geom_text(data=levels, mapping=aes(x="x_lab", y="label_y", label="label"), size=3.5, ha="left", color=INK)
+    + geom_text(data=levels, mapping=aes(x="x_lab", y="label_y", label="label"), size=LABEL_PT, ha="left", color=INK)
     # Transition arrows (emission = downward), colored by series
     + geom_segment(
         data=transitions,
@@ -177,19 +185,19 @@ plot = (
     )
     # Wavelength labels, split by series for theme-adaptive Balmer contrast
     + geom_text(
-        data=lyman, mapping=aes(x="x_pos", y="label_y", label="label"), size=3.2, nudge_x=-0.045, color=LYMAN_COLOR
+        data=lyman, mapping=aes(x="x_pos", y="label_y", label="label"), size=LABEL_PT, nudge_x=-0.045, color=LYMAN_COLOR
     )
     + geom_text(
         data=balmer,
         mapping=aes(x="x_pos", y="label_y", label="label"),
-        size=3.2,
+        size=LABEL_PT,
         nudge_x=-0.045,
         color=BALMER_LABEL_COLOR,
     )
     # Series group labels above the diagram (inline legend, series-matched color)
-    + geom_text(data=series_info, mapping=aes(x="x", y="y", label="label", color=SERIES), size=4)
+    + geom_text(data=series_info, mapping=aes(x="x", y="y", label="label", color=SERIES), size=LABEL_PT + 1)
     + scale_color_manual(values=SERIES_COLORS, limits=list(SERIES_COLORS))
-    + scale_x_continuous(limits=(0.0, 1.18), expand=(0, 0))
+    + scale_x_continuous(limits=(0.0, X_MAX), expand=(0, 0))
     + scale_y_continuous(name=ENERGY, breaks=y_breaks, labels=y_labels)
     + coord_cartesian(ylim=(levels["vis"].min() - 0.25, ion_vis + 0.52))
     + labs(title=title, subtitle="Hydrogen Atom Emission Spectrum  —  Lyman (UV) & Balmer (Visible) Series", x="")
