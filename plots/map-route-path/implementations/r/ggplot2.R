@@ -13,15 +13,18 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID        <- alpha(INK, 0.15)
+LAND        <- if (THEME == "light") "#ECE8DA" else "#2A2A25"  # quiet land fill
+SEA         <- if (THEME == "light") "#E4ECEA" else "#1E2624"  # quiet sea tint
+COAST       <- alpha(INK_SOFT, 0.55)
 
 # Imprint palette: start marker = position 1, end marker = matte red (position 5)
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 # Imprint sequential ramp for marks (a colored line sits on the page)
 SEQ_MARKS <- if (THEME == "light") {
-  list(colours = c("#009E73", "#4467A3", "#002850"), values = c(0, 0.338, 1))
+  list(colours = c("#009E73", "#024582", "#351E45"), values = c(0, 0.687, 1))
 } else {
-  list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))
+  list(colours = c("#6F7E20", "#009E73", "#CDD9FF"), values = c(0, 0.21, 1))
 }
 
 # Columns: set these to your table's column names
@@ -45,6 +48,15 @@ df <- tibble::tibble(
 )
 
 # Plot: reads only df and the constants above
+# Simplified basemap: a smooth coastline just southwest of the route with land to the
+# northeast; replace with real land polygons for your own region
+sc <- seq(-0.15, 1.15, length.out = 120)
+coast_lon <- -121.945 + 0.125 * sc - 0.009
+coast_lat <- 36.640 - 0.060 * sc + 0.020 * sin(sc * 2.4 * pi) - 0.016
+land <- data.frame(x = c(coast_lon, rev(coast_lon) + 0.5), y = c(coast_lat, rev(coast_lat) + 0.5))
+coast <- data.frame(x = coast_lon, y = coast_lat)
+x_pad <- 0.04 * diff(range(df[[LON]]))
+y_pad <- 0.06 * diff(range(df[[LAT]]))
 ends <- df[c(1, n_points), ]
 ends$role <- factor(c("Start", "End"), levels = c("Start", "End"))
 
@@ -56,6 +68,10 @@ arrows_df <- data.frame(
 )
 
 p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
+  geom_polygon(data = land, aes(x = x, y = y), inherit.aes = FALSE,
+               fill = LAND, color = NA) +
+  geom_path(data = coast, aes(x = x, y = y), inherit.aes = FALSE,
+            color = COAST, linewidth = 0.5) +
   geom_path(aes(color = .data[[ELEVATION]]), linewidth = 2.2,
             lineend = "round", linejoin = "round") +
   geom_segment(
@@ -73,9 +89,10 @@ p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
   ) +
   scale_fill_manual(values = c(Start = IMPRINT_PALETTE[1], End = IMPRINT_PALETTE[5])) +
   scale_shape_manual(values = c(Start = 21, End = 22)) +
-  scale_x_continuous(expand = expansion(mult = 0.04), n.breaks = 6) +
-  scale_y_continuous(expand = expansion(mult = 0.06)) +
-  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180)) +
+  scale_x_continuous(n.breaks = 6) +
+  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180), expand = FALSE,
+              xlim = range(df[[LON]]) + c(-x_pad, x_pad),
+              ylim = range(df[[LAT]]) + c(-y_pad, y_pad)) +
   guides(fill = guide_legend(order = 1, title = NULL),
          shape = guide_legend(order = 1, title = NULL)) +
   labs(
@@ -85,7 +102,7 @@ p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background  = element_rect(fill = PAGE_BG, color = NA),
+    panel.background  = element_rect(fill = SEA, color = NA),
     panel.border      = element_blank(),
     panel.grid.major  = element_line(color = GRID, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
