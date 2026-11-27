@@ -1,7 +1,7 @@
 """ anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: 89/100 | Updated: 2026-11-27
 """
 
 import os
@@ -71,26 +71,21 @@ bad_sorted = np.sort(df[BAD].dropna().to_numpy())
 good_ecdf = np.arange(1, len(good_sorted) + 1) / len(good_sorted)
 bad_ecdf = np.arange(1, len(bad_sorted) + 1) / len(bad_sorted)
 
-# K-S test
-ks_stat, p_value = stats.ks_2samp(good_sorted, bad_sorted)
+# K-S test — the statistic's own location is the point of maximum divergence
+ks_result = stats.ks_2samp(good_sorted, bad_sorted)
+ks_stat, p_value, max_x = ks_result.statistic, ks_result.pvalue, ks_result.statistic_location
 
-# Find point of maximum divergence
 all_values = np.sort(np.concatenate([good_sorted, bad_sorted]))
 good_ecdf_at = np.searchsorted(good_sorted, all_values, side="right") / len(good_sorted)
 bad_ecdf_at = np.searchsorted(bad_sorted, all_values, side="right") / len(bad_sorted)
-max_idx = np.argmax(np.abs(good_ecdf_at - bad_ecdf_at))
-max_x = all_values[max_idx]
-ks_y_lower = min(good_ecdf_at[max_idx], bad_ecdf_at[max_idx])
-ks_y_upper = max(good_ecdf_at[max_idx], bad_ecdf_at[max_idx])
+good_at_max = np.searchsorted(good_sorted, max_x, side="right") / len(good_sorted)
+bad_at_max = np.searchsorted(bad_sorted, max_x, side="right") / len(bad_sorted)
+ks_y_lower = min(good_at_max, bad_at_max)
+ks_y_upper = max(good_at_max, bad_at_max)
 
-# Build step function arrays — interleave x,y pairs for step rendering
-good_x_step = np.concatenate([[good_sorted[0]], np.repeat(good_sorted, 2)[1:]])
-good_y_step = np.concatenate([[0], np.repeat(good_ecdf, 2)[:-1]])
-bad_x_step = np.concatenate([[bad_sorted[0]], np.repeat(bad_sorted, 2)[1:]])
-bad_y_step = np.concatenate([[0], np.repeat(bad_ecdf, 2)[:-1]])
-
-good_source = ColumnDataSource(data={SCORE: good_x_step, CUM: good_y_step})
-bad_source = ColumnDataSource(data={SCORE: bad_x_step, CUM: bad_y_step})
+# A leading (first value, 0) point makes each step start with its rise from 0
+good_source = ColumnDataSource(data={SCORE: np.r_[good_sorted[0], good_sorted], CUM: np.r_[0, good_ecdf]})
+bad_source = ColumnDataSource(data={SCORE: np.r_[bad_sorted[0], bad_sorted], CUM: np.r_[0, bad_ecdf]})
 
 # Shaded band near max divergence for visual storytelling (distinctive Bokeh Band model)
 band_mask = (all_values >= max_x - BAND_HALF_WIDTH) & (all_values <= max_x + BAND_HALF_WIDTH)
@@ -125,8 +120,10 @@ band = Band(
 p.add_layout(band)
 
 # ECDF step lines — solid green (Good) vs dashed red (Bad)
-good_line = p.line(x=SCORE, y=CUM, source=good_source, line_width=5, line_color=COLOR_GOOD, alpha=0.9)
-bad_line = p.line(x=SCORE, y=CUM, source=bad_source, line_width=5, line_color=COLOR_BAD, alpha=0.9, line_dash=[14, 7])
+good_line = p.step(x=SCORE, y=CUM, source=good_source, mode="after", line_width=5, line_color=COLOR_GOOD, alpha=0.9)
+bad_line = p.step(
+    x=SCORE, y=CUM, source=bad_source, mode="after", line_width=5, line_color=COLOR_BAD, alpha=0.9, line_dash=[14, 7]
+)
 
 # HoverTool for HTML artifact — shows exact ECDF values at cursor position
 hover = HoverTool(
