@@ -2,59 +2,56 @@ library: altair
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:16:07Z'
-updated: '2026-05-29T23:01:53Z'
+updated: '2026-11-27T22:12:32Z'
 generated_by: claude-sonnet
-workflow_run: 26665923777
+workflow_run: 46074194202
 issue: 992
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - 'Two-tier labeling system: large bubbles show name+budget while small bubbles
-    show name only — thoughtful adaptation to circle size'
-  - Interactive Vega-Lite legend selection (selection_point bind=legend) dims unselected
-    groups — genuine Altair interactivity, not fake UI
-  - circlify correctly maps ascending-value order back to original indices via np.argsort,
-    producing accurate size-proportional packing
-  - White PAGE_BG stroke (strokeWidth=2.5) on all circles cleanly separates touching
-    bubbles in both themes
-  - Subtitle 'Technology division leads at 39% of total budget' creates a clear data
-    story focal point
-  - 'Full theme-adaptive chrome: title color=INK, subtitleColor=INK_SOFT, legend labelColor/titleColor,
-    configure_view fill — all switch correctly between light and dark'
-  - Title font size scaled via linear formula (14px) to prevent overflow on the 74-char
-    mandated title
-  - Canvas padded to exact 2400×2400 target with PAGE_BG fill — no cropping, no clipping
+  - 'True packing: every circle touches its neighbours and none crosses another, in
+    one compact cluster'
+  - 'Area-true sizing: radius = sqrt(value) and Vega size = diameter squared with
+    scale=None, one px-per-unit on both axes'
+  - Two-tier in-circle labels (name + budget in large circles, name only in small
+    ones) with no collisions
+  - Legend-bound selection_point dims the other divisions in the HTML, plus typed
+    tooltips
+  - Subtitle computed from the data names the leading division (39%) and the largest
+    department
+  - 'Theme-adaptive chrome: title, subtitle, legend fill, border and labels switch
+    correctly; data colors identical across themes'
   weaknesses:
-  - Small bubble labels (HR, Legal, Security, QA) at fontSize=12 may slightly overflow
-    the circle boundary at their small radii — consider reducing to fontSize=10 for
-    the smallest tier or adding a radius-proportional font size clamp
-  - 'Center cluster crowding: Finance, Data Science, and IT bubbles are tightly packed
-    and their labels are close together, creating visual density in the center — acceptable
-    but tight'
-  - White text on ochre Corporate circles (#BD8233) has borderline WCAG contrast (~3.3:1);
-    bold weight compensates but could be improved with a slightly darker or thicker
-    text weight
+  - 'VQ-01 (both): white bold labels on the light lavender Revenue fill (Sales, Marketing,
+    Support, #C475FD at 0.9 opacity) have about 2.5:1 contrast and read faint on that
+    fill → label color follows the fill (dark ink on light fills such as lavender,
+    white on dark ones). Likely cause: captions color=alt.value("#FFFFFF") for every
+    circle.'
+  - 'Suggestion: pack each division as its own cluster with spacing between groups,
+    the grouping the Notes allow.'
+  - 'Suggestion: the 580 x 548 view size is measured by hand; deriving it from the
+    fitted layout would keep circles round if the title changes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: bold title "Department Budget Allocation · bubble-packed · python · altair · anyplot.ai" in dark #1A1A17 ink, readable; subtitle in muted #4A4A44, readable; legend "Division" with ELEVATED_BG fill and INK_SOFT border, all legend labels readable
-      Data: 15 circles packed without overlap, 5 Imprint palette colors — Technology=#009E73 (green), Revenue=#C475FD (lavender), Operations=#4467A3 (blue), Corporate=#BD8233 (ochre), Product=#AE3030 (red); white PAGE_BG stroke separates touching circles; large circles (Engineering, R&D, Sales, Product, Marketing, Data Science, Finance, IT, Operations) show name+budget in bold white; smaller circles (QA, HR, Support, Legal, Security, Design) show name only
-      Legibility verdict: PASS — all title, subtitle, and legend text clearly readable; bubble labels readable (smaller ones slightly tight but not clipped)
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "Department Budget Allocation · bubble-packed · python · altair · anyplot.ai" (~83% width), grey subtitle "Technology division leads at 39% of total budget — Engineering alone at $850K", framed "Division" legend top-left on an elevated fill; all readable. No axes, no grid.
+      Data: 15 circles packed into one compact cluster, touching, none crossing, separated by a page-colored outline. Technology #009E73 (Engineering, R&D, Data Science, QA), Revenue lavender, Operations blue, Corporate ochre, Product red. Large circles show name + budget in bold white, small ones the name only. White on the lavender Revenue circles reads faint.
+      Legibility verdict: PASS (white-on-lavender labels low-contrast but readable)
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: title text in light #F0EFE8 ink, clearly readable against dark background; subtitle in #B8B7B0, readable; legend box in ELEVATED_BG #242420 with INK_SOFT #B8B7B0 border, all labels readable; NO dark-on-dark failure
-      Data: identical Imprint palette data colors to light render — Technology=#009E73, Revenue=#C475FD, Operations=#4467A3, Corporate=#BD8233, Product=#AE3030; white labels on bubbles remain white (correct); bubble sizes and packing identical
-      Legibility verdict: PASS — theme adaptation fully correct; all chrome elements switch from dark-ink to light-ink; no dark-on-dark issues detected
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in light ink, subtitle in soft grey, legend on a #242420 box with light border and labels; no dark-on-dark text.
+      Data: same layout and same categorical colors as the light render (0.9 opacity blends slightly with each background); circle outlines in the dark page color; white labels readable on every fill, weakest on the lavender Revenue circles.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,78 +59,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, subtitle, and legend text fully readable in both themes. White
-          bubble labels readable on all colored circles. Small bubble labels (HR,
-          Legal) slightly tight at mobile scale but pass at full resolution.
+        comment: All sizes set explicitly; title, subtitle and legend readable in
+          both themes. White bold labels on the light lavender Revenue fill (Sales,
+          Marketing, Support) have low contrast (defect line).
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels stay within their circles. Center cluster (Finance/Data Science/IT)
-          is dense but text does not overlap. Minor crowding acceptable.
+        comment: No text collisions; every label sits inside its own circle; legend
+          clear of the cluster.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 15 circles clearly visible with distinct sizes and colors. Size
-          differences effectively communicate budget differences.
+        comment: All 15 circles fully visible, separated by a page-colored outline;
+          legend glyphs match the marks in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Imprint palette used. CVD-safe. White stroke on bubbles aids
-          separation. Bold text on ochre compensates for borderline contrast.
+        comment: Imprint hues, CVD-safe; color is backed by labels and legend.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Square 2400x2400 appropriate for packed bubble
-          chart. Good proportions, generous padding, legend right-positioned.
+        comment: Square canvas, cluster fills the drawing area; legend in the empty
+          top-left corner; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly removed (position has no meaning in packed bubble
-          chart). Descriptive title with optional prefix. Informative subtitle.
+        comment: N/A for axes (position has no meaning); descriptive title prefix
+          and subtitle.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First group Technology=#009E73 (brand green). Groups follow canonical
-          Imprint order. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
-          across themes.'
+        comment: 'First group #009E73, Imprint canonical order, #FAF8F1 / #1A1A17
+          backgrounds, data colors identical across themes.'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Two-tier labeling (large: name+budget, small: name only), interactive
-          legend selection, insightful subtitle, white outline strokes on bubbles
-          all demonstrate intentional design thinking above defaults.'
+        comment: 'Two-tier typography: name + budget in large circles, name only in
+          small ones, sized 16/12 bold.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Axes removed, no grid, strokeWidth=0 on view, theme-adaptive legend
-          styling. Clean minimal composition above default.
+        comment: Page-colored 2.5 px outlines separate touching circles; legend placed
+          into the empty canvas corner.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtitle creates clear focal point (Technology 39%). Size hierarchy
-          makes comparison intuitive. Color grouping reinforces division structure.
+        comment: Subtitle computed from the data names the leading division share
+          and the largest department.
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart. Circles packed without overlap via circlify.
-          Position has no semantic meaning.
+        comment: 'True packed bubble chart: circles touch, none crosses, no axes or
+          grid.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled circles, force packing, labels inside circles (size-conditional),
-          color encoding group membership. All spec features present.
+        comment: Area scaling, non-overlapping packing, labels inside large-enough
+          circles, color by group with legend (C1-C5 met; grouping clusters are optional).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 departments shown. Value drives circle size. Group membership
-          drives color.
+        comment: radius = sqrt(value), Vega size = diameter^2 with scale=None, one
+          shared px-per-unit on both axes so circles stay round and area-true.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format. Legend shows all 5 divisions with correct colors.
+        comment: Title 'Department Budget Allocation · bubble-packed · python · altair
+          · anyplot.ai'; legend 'Division' with all five groups.
     data_quality:
       score: 15
       max: 15
@@ -175,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows size comparison, group clustering, in-circle labels, interactive
-          filtering, tooltips. All aspects of the plot type demonstrated.
+        comment: Wide size range ($150K-$850K), labelled and unlabelled-value tiers,
+          group color.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is realistic, neutral, and plausible.
-          Values ($150K-$850K) appropriate for department budgets.
+        comment: 'Department budgets by division: neutral, plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 items within recommended 10-100 range. Good size variation across
-          departments.
+        comment: '15 items within 10-100; checked subtitle: Technology 850+750+460+195
+          = 2255 of 5845 = 39%, matches render.'
     code_quality:
       score: 10
       max: 10
@@ -200,66 +193,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Sequential, linear code flow.
+        comment: Linear Imports -> Data -> Plot -> Save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic.
+        comment: Fixed data, deterministic packing (stable argsort).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, altair, circlify, numpy, pandas, PIL.Image) are
-          used.
+        comment: os, altair, numpy, pandas, PIL all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable. No fake UI. Proper use of alt.condition for opacity.
+        comment: 'Written-out front-chain packing is fine: no circle-packing call
+          is available in CI (circlify not installed).'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Scale_factor=4.0. PAD-only
-          canvas sizing.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6 API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct encoding types (Q/N), alt.layer composition, alt.condition,
-          alt.selection_point — all idiomatic Vega-Lite/Altair patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Interactive legend selection with bind=''legend'', alt.layer multi-mark
-          composition, tooltips, alt.condition opacity — strong use of Altair-specific
-          interactivity. Minor deduction: could leverage alt.param or more advanced
-          Vega-Lite signals.'
+        comment: alt.layer with shared X/Y encodings, Size with scale=None for exact
+          pixel areas, alt.condition on datum for label size.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Legend-bound selection_point dims other divisions in the HTML; typed
+          tooltips.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-27T22:08:17Z'
 impl_tags:
   dependencies:
-  - circlify
   - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome

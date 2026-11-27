@@ -2,108 +2,110 @@ library: plotnine
 language: python
 specification_id: bubble-packed
 created: '2025-12-23T09:16:24Z'
-updated: '2026-05-29T23:02:02Z'
+updated: '2026-11-27T22:10:24Z'
 generated_by: claude-sonnet
-workflow_run: 26665999790
+workflow_run: 46074213311
 issue: 992
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Custom vectorized physics simulation (greedy placement + 2000-iteration force
-    relaxation) produces genuinely well-packed circles with no overlaps — impressive
-    technical sophistication for a static library
-  - Three-tier font system (large/medium/small bubbles) with calibrated nudge offsets
-    keeps labels readable at every bubble size without overlapping name and value
-    text
-  - 'Correct Imprint palette: brand green #009E73 as Software (first series), positions
-    2–4 for Hardware/Services/Consumer; both renders theme-correct with all chrome
-    adapting via INK/INK_SOFT tokens'
-  - Subtitle with group revenue totals ($159B / $136B / $90B / $135B) adds quantitative
-    context beyond the spec requirements — genuine storytelling bonus
-  - Area-based radius scaling (sqrt(value)) ensures accurate visual perception per
-    spec requirement; deterministic algorithm is fully reproducible
+  - Vectorized greedy placement plus force relaxation packs 20 circles into one compact
+    cluster with no visible overlap
+  - Three label tiers via per-layer data subsets keep name and value inside every
+    circle without collisions
+  - 'Correct Imprint palette with #009E73 first and theme tokens threaded through
+    title, subtitle and legend in both renders'
+  - Subtitle with per-group totals adds a group-level reading to the item-level sizes
   weaknesses:
-  - Groups are scattered throughout the packed layout (determined by packing physics)
-    rather than spatially clustered — visual group membership relies entirely on color;
-    spatial clustering with inter-group gaps would significantly improve group-level
-    storytelling
-  - Some unused corner space in the square canvas (inherent to circle-pack geometry
-    but coord_fixed bounds could be tightened slightly to reduce dead space in corners)
+  - 'SC-02 (both): circle radius is 0.22 + 0.78*sqrt(v/max), so area is not proportional
+    to value (C1): Managed ($11B) is drawn at about 33 % of Cloud''s ($52B) area instead
+    of 21 % (+12 points) → radius = sqrt(v/max) with no offset. Likely cause: MIN_RADIUS
+    added to the sqrt scaling in the radius line.'
+  - 'VQ-01 (both): white value labels at size 2.5-3.0 mm with alpha 0.85-0.9 on the
+    lavender #C475FD Hardware fill (e.g. ''$12B'' in Peripherals, ''$18B'' in Displays)
+    are low in contrast, about 2.6:1 → a dark INK label on light fills or full-opacity
+    labels. Likely cause: color=''white'' with alpha<1 on every value geom_text.'
+  - 'VQ-02 (both): the bold legend title ''Tech Segment'' touches the legend frame
+    on its left and right edges → at least a few px of padding (smaller legend_title,
+    about 8 pt, -1 pt). Likely cause: legend_title size=9 bold with legend_background
+    framed.'
+  - 'DQ-02 (both): labels ''Tech Svc'', ''Managed'' and ''APIs'' read as abbreviated
+    stubs rather than real segment names → ''IT Services'', ''Managed Services'',
+    ''API Platforms''. Likely cause: the LABEL list in the data block.'
+  - 'Suggestion: cluster circles by group with spacing between the clusters, as the
+    Notes allow, so group membership reads from position as well as color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 range) — correct, not pure white
-      Chrome: Bold dark title "bubble-packed · python · plotnine · anyplot.ai" spans ~80% canvas width — readable. Subtitle with group totals in muted dark ink — readable. Legend "Tech Segment" with 4 swatches — readable. All text visible against light background.
-      Data: 20 packed circles, color-coded by group: green #009E73 (Software), lavender #C475FD (Hardware), blue #4467A3 (Services), ochre #BD8233 (Consumer). White bold text inside circles (name + value for medium/large, name only for small). First series (Software) = #009E73 brand green ✓.
-      Legibility verdict: PASS — all text readable in light theme
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: bold dark title 'bubble-packed · python · plotnine · anyplot.ai' about 72 % of width; INK_SOFT subtitle 'Software: $159B · Hardware: $136B · Services: $90B · Consumer: $135B' renders cleanly; framed legend 'Tech Segment' at right with four swatches. All text readable.
+      Data: 20 packed circles, Software #009E73, Hardware #C475FD, Services #4467A3, Consumer #BD8233, separated by thin page-colored outlines; white bold names and lighter values inside, tiered by size. Groups are interleaved, not clustered. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17 range) — correct, not pure black
-      Chrome: Title in bold white (#F0EFE8 range) — clearly readable. Subtitle in muted INK_SOFT gray — readable. Legend text in INK_SOFT, title in INK — both readable. Elevated legend box (#242420) with INK_SOFT border. No dark-on-dark failures observed.
-      Data: All 20 bubble colors identical to light render — Imprint palette unchanged. White text labels inside circles unchanged. Data colors correctly theme-independent.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title in light INK, subtitle in INK_SOFT, legend on elevated #242420 with light frame; no dark-on-dark text.
+      Data: circle colors and layout identical to the light render; white labels unchanged.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title auto-scales, subtitle=8pt,
-          legend title=9pt, legend text=8pt, bubble labels in 3 tiers (3.5/3.0/2.5
-          mm). Both renders fully readable.'
+        passed: false
+        comment: All text readable in both themes; small white value labels on the
+          lavender Hardware fill have low contrast (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping elements. Force simulation ensures no circle overlaps.
-          Nudge offsets keep name/value labels separated within each bubble.
+        passed: false
+        comment: Legend title 'Tech Segment' runs into the legend frame on both sides
+          (defect line); no label collisions inside the bubbles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 20 bubbles clearly visible with strong size variation proportional
-          to revenue values.
+        comment: 20 circles clearly visible; legend swatches filled and visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White text on colored bubbles. CVD-safe Imprint palette with 4 distinct
-          hue families.
+        comment: Imprint hues CVD-distinct; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good square canvas use. Some unused corner space inherent to circular
-          packing geometry. Legend well-positioned.
+        comment: Square 2400x2400 canvas; cluster plus right legend use it well; empty
+          corners permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format. Subtitle with group totals. No axis labels
-          needed (theme_void appropriate).
+        comment: Title in mandated format; no axes needed for a packed layout (theme_void)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Imprint palette (green/lavender/blue/ochre). Correct backgrounds
-          (#FAF8F1 / #1A1A17). Data colors identical across both renders.'
+        comment: 'Software = #009E73, Imprint positions 2-4 for the other groups;
+          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,26 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: custom physics packing, dual-tier text labels, subtitle
-          with group totals, PAGE_BG circle borders. Not publication-ready due to
-          lack of spatial group clustering.'
+        comment: 'Above baseline: two-tier bold name / lighter value typography inside
+          bubbles and a group-totals subtitle in INK_SOFT'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_void removes all axes/spines/grid. Circle borders use PAGE_BG.
-          Legend has elevated background with INK_SOFT border. Adequate margins.
+        comment: PAGE_BG outlines separate touching circles; elevated legend box on
+          ELEVATED_BG with INK_SOFT frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Size variation communicates revenue hierarchy. Four Imprint hues
-          make group membership readable. Subtitle anchors with group totals. Minor:
-          no spatial group clustering.'
+        comment: Subtitle with per-group totals gives a group-level reading next to
+          the item-level sizes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,31 +138,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with physics simulation and area-based
-          radius scaling.
+        comment: Correct packed bubble chart, packed by a greedy placement plus force
+          relaxation
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Area-based size encoding, labels inside circles, color encoding of
-          groups, optional grouping via color all present.
+        passed: false
+        comment: 'C1 missed: radius has a 0.22 offset, so area is not proportional
+          to value (defect line); labels, color by group, legend present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 20 items within recommended range. label/value/group columns all
-          correctly used.
+        comment: Value, label and group columns mapped correctly; position from packing,
+          as the spec says
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bubble-packed · python · plotnine · anyplot.ai'' correct.
-          Legend ''Tech Segment'' with 4 correct swatches.'
+        comment: Title correct; legend 'Tech Segment' with four entries matching the
+          fills
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Strong size variation across 20 items, 4 distinct groups, dual labels
-          (name + value), group totals in subtitle.
+        comment: Strong size range (9-52), four groups, name and value labels tiered
+          by size
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Global tech industry revenue by segment (2024 est., $B) — real-world
-          scenario, comprehensible, neutral.
+        passed: false
+        comment: Tech revenue by segment is plausible and neutral, but some labels
+          are abbreviated to generic stubs (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $9B–$52B are plausible for major tech market segments. Proportions
-          consistent with publicly known market sizes.
+        comment: Values 9-52 USD billion sensible for segment revenue; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -195,65 +195,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens → data → packing algorithm → plot → save. No
-          functions or classes.'
+        comment: Flat script, imports -> tokens -> data -> packing -> plot -> save;
+          no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: greedy placement + vectorized force simulation has
-          no random elements.'
+        comment: Deterministic packing, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, pandas, and all named plotnine
-          components.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Vectorized NumPy operations. No over-engineering.
+        comment: Packing written out in vectorized NumPy; no available call computes
+          circle packing
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API throughout.
+        comment: Saves plot-{THEME}.png via plot.save with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert plotnine grammar: ggplot() + geom_polygon() + geom_text()
-          layers + scale_fill_manual() + coord_fixed() + theme_void() + theme(). geom_polygon
-          with group=''circle_id'' is the correct idiomatic approach.'
+        comment: 'geom_polygon with group aesthetic for circles, per-layer data subsets,
+          coord_fixed, theme_void: grammar-of-graphics composition'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: geom_polygon for precise area-correct circles, coord_fixed() for
-          1:1 aspect ratio, conditional data filtering per geom layer for 3 bubble
-          size tiers. Above default but not fully distinctive.
+        passed: false
+        comment: Per-layer data= subsets drive three label tiers; coord_fixed keeps
+          circles round
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  rendered_at: '2026-11-27T22:06:49Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
-  - iteration-over-groups
-  - matrix-construction
-  - groupby-aggregation
+  - data-generation
   dataprep:
   - normalization
   styling:
   - minimal-chrome
-  - alpha-blending
