@@ -1,12 +1,14 @@
 """ anyplot.ai
 hexbin-basic: Basic Hexbin Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 94/100 | Created: 2026-05-29
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Created: 2026-11-27
 """
 
+import math
 import os
 import sys
 import time
+from itertools import pairwise
 from pathlib import Path
 
 
@@ -15,12 +17,12 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, LinearColorMapper
 from bokeh.plotting import figure
 from bokeh.transform import transform
 from bokeh.util.hex import hexbin
-from PIL import Image as _PILImage
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -31,48 +33,59 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint sequential colormap — green (#009E73) → blue (#4467A3), single-polarity
-_c0 = (0x00, 0x9E, 0x73)
-_c1 = (0x44, 0x67, 0xA3)
-ANYPLOT_SEQ256 = [
-    "#{:02X}{:02X}{:02X}".format(
-        int(round(_c0[0] + (_c1[0] - _c0[0]) * t / 255.0)),
-        int(round(_c0[1] + (_c1[1] - _c0[1]) * t / 255.0)),
-        int(round(_c0[2] + (_c1[2] - _c0[2]) * t / 255.0)),
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential ramp for colored cells (fields), sampled at 256 even steps
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
     )
-    for t in range(256)
-]
 
-# Data — IoT sensor readings across urban monitoring zones (overlapping plumes)
+
+ANYPLOT_SEQ256 = [ramp_color(SEQ_FIELDS, k / 255) for k in range(256)]
+
+# Columns: set these to your table's column names
+X = "Distance East (km)"  # role: x
+Y = "Distance North (km)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
+# IoT sensor readings across urban monitoring zones (overlapping plumes)
 np.random.seed(42)
-
 centers = [(-3, -1), (2, 1), (-0.5, 3), (1.0, -2), (0.5, 0.5)]
 cluster_sizes = [3500, 3000, 1800, 1200, 1500]
 spreads = [1.0, 1.3, 0.65, 0.75, 1.6]
-
 x_data, y_data = [], []
 for (cx, cy), size, sigma in zip(centers, cluster_sizes, spreads, strict=True):
     x_data.extend(np.random.randn(size) * sigma + cx)
     y_data.extend(np.random.randn(size) * sigma + cy)
+df = pd.DataFrame({X: x_data, Y: y_data})
 
-x = np.array(x_data)
-y = np.array(y_data)
-
-# Hexbin aggregation using Bokeh's native utility (returns HexBinResult namedtuple)
-bins = hexbin(x, y, 0.3)
-counts_max = int(max(bins.counts))
+# Plot: reads only df and the constants above
+# Bin width: about 42 hexagons across the x range
+hex_size = (df[X].max() - df[X].min()) / 42
+bins = hexbin(df[X].to_numpy(), df[Y].to_numpy(), hex_size)
 source = ColumnDataSource({"q": bins.q, "r": bins.r, "counts": bins.counts})
 
-# Title — 40 chars < 67 baseline, so fontsize stays at 50pt default
-title = "hexbin-basic · python · bokeh · anyplot.ai"
-
-# Plot
 p = figure(
     width=3200,
     height=1800,
-    title=title,
-    x_axis_label="Distance East (km)",
-    y_axis_label="Distance North (km)",
+    title="hexbin-basic · python · bokeh · anyplot.ai",
+    x_axis_label=X,
+    y_axis_label=Y,
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -80,13 +93,9 @@ p = figure(
     min_border_right=250,
 )
 
-# Imprint sequential color mapper
-mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=0, high=counts_max)
+mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=0, high=float(bins.counts.max()))
+p.hex_tile(q="q", r="r", size=hex_size, line_color=None, source=source, fill_color=transform("counts", mapper))
 
-# Hex tiles
-p.hex_tile(q="q", r="r", size=0.3, line_color=None, source=source, fill_color=transform("counts", mapper))
-
-# Color bar
 color_bar = ColorBar(
     color_mapper=mapper,
     width=80,
@@ -134,7 +143,6 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot via Selenium headless Chrome
-# --window-size alone is eaten by Chrome chrome in headless mode (gives 1661 instead of 1800)
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -151,13 +159,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so the anti-aliased canvas edge shows no light line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Belt-and-braces: pin the saved PNG to exact dims so the post-render gate passes
-_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (W, H):
-    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
