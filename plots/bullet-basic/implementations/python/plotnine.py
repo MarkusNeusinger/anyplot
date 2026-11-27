@@ -1,7 +1,7 @@
 """ anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-27
+Quality: 87/100 | Updated: 2026-11-27
 """
 
 import os
@@ -121,18 +121,18 @@ plot = (
     + geom_rect(df_actual, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=BRAND, color="none")
     # Target marker — thin contrasting line perpendicular to the bar
     + geom_segment(df_target, aes(x="target", xend="target", y="seg_ymin", yend="seg_ymax"), color=INK, size=2.0)
-    # Actual value labels (geom_text size in mm; ~3.5 ≈ 10pt at 400dpi)
+    # Actual value labels (geom_text size is in pt)
     + geom_text(
         df_actual,
         aes(x="xmax", y="label_y", label="actual"),
         ha="right",
         va="bottom",
-        size=5.5,
+        size=9,
         color=BRAND,
         fontweight="bold",
     )
     # Band zone labels below the bottom metric
-    + annotate("text", x=zone_x, y=zone_y, label=BAND_NAMES, size=6.5, color=INK_MUTED, va="top")
+    + annotate("text", x=zone_x, y=zone_y, label=BAND_NAMES, size=8, color=INK_MUTED, va="top")
     # Scales
     + scale_x_continuous(limits=(0, 100), breaks=[0, 25, 50, 75, 100], expand=(0, 0.02))
     + scale_y_continuous(breaks=list(range(n)), labels=df[LABEL].tolist()[::-1], expand=(0.08, 0.08))
