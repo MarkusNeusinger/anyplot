@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -75,6 +75,15 @@ elbow_df[LABEL] = [
     f"Elbow: {int(c)} components\n({v:.1f}%)" for c, v in zip(elbow_df[N_COMPONENTS], elbow_df[CUMULATIVE], strict=True)
 ]
 
+# Name the bars: label above the median bar, placed by a rule over df
+bar_label_df = pd.DataFrame(
+    {
+        N_COMPONENTS: [df[N_COMPONENTS].median()],
+        CUMULATIVE: [df[INDIVIDUAL].median() + 5],
+        LABEL: ["Bars: individual variance\nper component"],
+    }
+)
+
 thresholds = pd.DataFrame(
     {N_COMPONENTS: first_component - 0.3, CUMULATIVE: list(THRESHOLDS), LABEL: [f"{t:g}%" for t in THRESHOLDS]}
 )
@@ -119,11 +128,20 @@ plot = (
         mapping=aes(x=N_COMPONENTS, y=CUMULATIVE, label=LABEL),
         ha="left",
         va="top",
-        size=6.0,
+        size=8.5,
         color=IMPRINT_RED,
         fontweight="bold",
         nudge_x=0.4,
         nudge_y=-4.0,
+    )
+    # Bar name
+    + geom_text(
+        data=bar_label_df,
+        mapping=aes(x=N_COMPONENTS, y=CUMULATIVE, label=LABEL),
+        ha="center",
+        va="bottom",
+        size=8,
+        color=INK_SOFT,
     )
     # Threshold labels
     + geom_text(
@@ -131,13 +149,15 @@ plot = (
         mapping=aes(x=N_COMPONENTS, y=CUMULATIVE, label=LABEL),
         ha="left",
         va="bottom",
-        size=5.5,
+        size=8,
         color=INK_MUTED,
         nudge_y=0.5,
     )
     # Scales
     + scale_x_continuous(
-        breaks=df[N_COMPONENTS].tolist(), labels=df[N_COMPONENTS].astype(str).tolist(), expand=(0.02, 0.4)
+        breaks=df[N_COMPONENTS].dropna().tolist(),
+        labels=df[N_COMPONENTS].dropna().astype(str).tolist(),
+        expand=(0.02, 0.4),
     )
     + scale_y_continuous(
         limits=(0, df[CUMULATIVE].max() * 1.02), breaks=range(0, 101, 20), labels=[f"{b}%" for b in range(0, 101, 20)]
