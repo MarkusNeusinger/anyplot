@@ -192,11 +192,11 @@ scatter!(ax, x, y; color = group, colormap = IMPRINT_PALETTE)
 # contourf, surface, map polygons). MARKS: colored points, lines, outlines or
 # bars on the page. Keep only the ramps the plot uses.
 const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
-    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.368, 0.582, 1.0]) :
-    cgrad([colorant"#00573D", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.467, 1.0])
+    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.369, 0.803, 1.0]) :
+    cgrad([colorant"#404C02", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.487, 1.0])
 const ANYPLOT_SEQ_MARKS = THEME == "light" ?
-    cgrad([colorant"#009E73", colorant"#4467A3", colorant"#002850"], [0.0, 0.338, 1.0]) :
-    cgrad([colorant"#007755", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.32, 1.0])
+    cgrad([colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.687, 1.0]) :
+    cgrad([colorant"#6F7E20", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.21, 1.0])
 # Diverging: the midpoint is the page for fields and a grey that keeps 3:1 for marks
 const ANYPLOT_DIV_FIELDS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17", colorant"#4467A3"])
 const ANYPLOT_DIV_MARKS = cgrad([colorant"#AE3030", THEME == "light" ? colorant"#6B6A63" : colorant"#686762", colorant"#4467A3"])

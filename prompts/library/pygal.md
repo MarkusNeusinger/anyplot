@@ -142,14 +142,14 @@ custom_style = Style(..., colors=IMPRINT_PALETTE)
 import math
 from itertools import pairwise
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 # Diverging (around a meaningful midpoint): the midpoint is the page for fields
 # and a grey that keeps 3:1 for marks
