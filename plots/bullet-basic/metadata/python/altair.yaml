@@ -2,130 +2,121 @@ library: altair
 language: python
 specification_id: bullet-basic
 created: '2025-12-23T09:18:21Z'
-updated: '2026-05-29T15:39:30Z'
+updated: '2026-11-27T21:08:41Z'
 generated_by: claude-sonnet
-workflow_run: 26645562212
+workflow_run: 46067489916
 issue: 999
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - Semantic green/red color coding immediately communicates above/below-target status,
-    creating clear visual hierarchy
-  - Theme-adaptive grayscale bands correctly follow spec requirement and adapt cleanly
-    to both themes
-  - Color-matched value labels reinforce the bar color meaning for cohesive storytelling
-  - Altair layer composition (alt.layer + alt.condition) is idiomatic and correctly
-    implements the bullet chart structure
-  - 'Full spec compliance: background bands, actual bar, target tick marker, and value
-    labels all present'
-  - Normalizing different KPI scales to % of goal is a smart data design choice enabling
-    fair cross-metric comparison
-  - Clean no-grid layout with removed view stroke shows deliberate visual refinement
+  - One Imprint-green measure bar throughout, narrower than the grayscale bands and
+    running from zero, with a thin ink-token target tick that contrasts with bar and
+    bands in both themes
+  - Four KPIs on different units normalised to percent of their top threshold so all
+    bullets share one common scale, while the value labels keep the original units
+    (275, 85, 320, 4.2)
+  - 'Idiomatic Altair layering: band segments via x/x2 range encoding, mark_bar, mark_tick
+    and mark_text layers sharing one y encoding and one x scale'
+  - Theme tokens threaded through title, axes, legend, target marker and value labels;
+    both renders fully legible
+  - Native tooltips on bands, measure and target add precise values in the HTML output
   weaknesses:
-  - 'Red value labels (85 and 4.2) rendered in #AE3030 against the dark #1A1A17 background
-    have borderline contrast (~3:1) — consider slightly lighter red for dark-mode
-    value labels, or use INK_SOFT token for the label color while keeping bar color
-    at #AE3030'
+  - 'Suggestion: the x axis carries a tick label every 5 % (24 labels); a coarser
+    step such as every 10 or 20 % would read calmer.'
+  - 'Suggestion: the dark Poor band (#2e2e2e) and its legend swatch sit close to the
+    page and legend fill; a slightly lighter first stop would separate them more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct.
-      Chrome: Title "bullet-basic · python · altair · anyplot.ai" bold and centered (~75% width, expected for mandated title). Y-axis labels (Revenue ($K), Profit ($K), New Customers, Satisfaction) in bold dark text, clearly readable. X-axis label "Performance (% of Goal)" readable at fontsize=12. Tick labels 0–120 at fontsize=10, all readable. Legend "Performance Band: Poor / Satisfactory / Good" at bottom, readable.
-      Data: Green (#009E73) bars for Revenue (275) and New Customers (320) — above target. Red (#AE3030) bars for Profit (85) and Satisfaction (4.2) — below target. Three grayscale background bands (light/medium/dark gray). Dark vertical target tick markers. Value labels at bar ends colored to match bars.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: warm off-white #FAF8F1, correct; legend box on the slightly lighter elevated fill.
+      Chrome: centered bold title "bullet-basic · python · altair · anyplot.ai" (~37 % of width); bold dark-gray metric labels (Revenue ($K), Profit ($K), New Customers, Satisfaction) on the left; x axis 0–110 ticked every 5 with title "Performance (% of Goal)"; bottom legend "Performance band: Poor / Satisfactory / Good". All text readable.
+      Data: four stacked bullets; three grayscale bands (#e8e8e8 → #c8c8c8 → #a0a0a0) ending at each metric's thresholds and at 100; a narrower #009E73 measure bar from zero (Revenue ~92, Profit ~68, New Customers ~91, Satisfaction ~84); a thin near-black target tick at 83, 80, 86, 90; bold ink value labels 275, 85, 320, 4.2 right of each bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct.
-      Chrome: Title and all axis labels rendered in light color (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Target tick markers appear in light/white — correct theme adaptation. No dark-on-dark text failures for chrome elements.
-      Data: Green (#009E73) bars identical to light render. Red (#AE3030) bars identical. Grayscale bands use darker shades (#2e2e2e / #3e3e3e / #545454) — correctly adapted for dark theme. Data colors identical to light render (only chrome flips).
-      Legibility verdict: PASS with minor note — the red value labels "85" and "4.2" in #AE3030 on the near-black background have reduced contrast (~3:1) that is readable but borderline. All other text clearly passes legibility.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, metric labels, tick labels, axis title and legend all in light tokens, clearly readable; no dark-on-dark text.
+      Data: measure bars the identical #009E73 as light; bands use the dark grayscale stops (#2e2e2e → #3e3e3e → #545454), all distinguishable from each other and from the page; target ticks flip to light ink and contrast with green bar and gray bands; value labels in light ink.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; all chrome text readable in both
-          themes. Minor: red value labels (#AE3030) on dark background have ~3:1 contrast,
-          readable but borderline.'
+        comment: Title 16, axis titles 12, metric labels 12 bold, ticks 10, value
+          labels 12 bold; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; value labels offset correctly with dx=6.
+        comment: No text collisions; value labels sit clear right of each bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, bands, and target markers clearly visible at appropriate sizes
-          in both themes.
+        comment: Bars, bands, target ticks and legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe: green/red supplemented by position and value labels. Grayscale
-          bands use lightness differences.'
+        comment: Single green measure on grayscale bands; lightness-only bands are
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, well-centered, appropriate margins. Domain
-          to 120 provides breathing room for value labels.
+        comment: autosize fit fills the 3200x1800 canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Performance (% of Goal)' includes unit; metric names on Y
-          are self-describing.
+        comment: '''Performance (% of Goal)'' with unit; metric labels carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Semantic green (#009E73) for above-target, matte red (#AE3030) for
-          below-target — valid semantic exception. Grayscale bands per spec. Both
-          backgrounds correct.
+        comment: 'Measure #009E73, grayscale bands per spec, correct page backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Intentional semantic color strategy, theme-adaptive bands, color-matched
-          value labels. Above well-configured default but not FiveThirtyEight-level
-          polish.
+        passed: false
+        comment: 'Typographic hierarchy chosen beyond the baseline: bold 12 pt metric
+          and value labels over 10 pt ticks, legend on the elevated fill'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid explicitly disabled, view stroke removed, scale padding tuned.
-          Clear deliberate refinement beyond defaults.
+        passed: false
+        comment: Spine and grid rules met; the every-5 tick density is not tuned for
+          this chart
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Semantic color creates immediate visual hierarchy: green=on-track,
-          red=needs attention. Mixed results (2 above, 2 below) create a balanced,
-          realistic dashboard story.'
+        passed: false
+        comment: Data displayed clearly; no hierarchy beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bullet chart with all required components: background bands,
-          actual bar, target marker.'
+        comment: 'Basic bullet chart: bands, measure bar, target marker, value label
+          only'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: qualitative bands, actual bar, target marker,
-          labels, horizontal orientation.'
+        comment: Grayscale bands, thin contrasting target, horizontal, value labels,
+          common scale (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=performance % of goal, Y=metric names. Normalization enables cross-metric
-          comparison.
+        comment: Bars from zero on a linear % scale; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bullet-basic · python · altair · anyplot.ai' correct. Legend
-          'Performance Band' with Poor/Satisfactory/Good correct.
+        comment: Mandated title; band legend with reader-facing labels
     data_quality:
       score: 15
       max: 15
@@ -167,22 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all bullet chart aspects: mix of above/below target, varied
-          band coverage, multiple KPI domains.'
+        comment: Measures both above and below target, landing in different bands,
+          thresholds vary per metric
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real business KPI dashboard: Revenue, Profit, New Customers, Satisfaction
-          — neutral and plausible.'
+        comment: Neutral business KPI dashboard with plausible units
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values factually appropriate: $275K revenue, $85K profit, 320 customers,
-          4.2/5 satisfaction — all sensible proportions.'
+        comment: 'Checked: 275/300=91.7, 85/125=68, 320/350=91.4, 4.2/5=84 on the
+          axis; targets 83.3, 80, 85.7, 90; computed in code'
     code_quality:
       score: 10
       max: 10
@@ -192,60 +180,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear Import → Data → Plot → Save structure.
+        comment: Top-to-bottom; y_enc is a short helper above its first use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no random.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, pandas, PIL.Image, os, sys.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate complexity for a layered bullet chart.
+        comment: Vectorised normalisation and band frame; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and .html with current Altair 6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of alt.layer, alt.condition(alt.datum.*), shared Y scale
-          references, configure_* methods.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: x2 encoding for band ranges, alt.condition for conditional color,
-          alt.datum expression — clearly Altair-distinctive. Not a 5 as no especially
-          exotic feature.
+        passed: false
+        comment: alt.layer of mark_bar/mark_tick/mark_text sharing encodings and scale,
+          configure_* chrome, autosize fit
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: x/x2 range encoding for the bands and native tooltips in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-27T21:05:14Z'
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep:
   - normalization
   styling: []
