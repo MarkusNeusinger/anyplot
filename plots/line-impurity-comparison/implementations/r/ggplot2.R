@@ -60,13 +60,17 @@ LEGEND_LABELS <- c(
 plot_title <- "line-impurity-comparison · r · ggplot2 · anyplot.ai"
 
 p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)) +
-  geom_area(aes(fill = metric), alpha = 0.08, position = "identity") +
+  geom_area(aes(fill = metric), color = NA, alpha = 0.08, position = "identity", show.legend = FALSE) +
   geom_line(linewidth = 1.2) +
-  geom_vline(
-    xintercept = 0.5,
-    color      = INK_SOFT,
-    linewidth  = 0.4,
-    linetype   = "dotted"
+  annotate(
+    "segment",
+    x         = 0.5,
+    xend      = 0.5,
+    y         = 0,
+    yend      = 1.04,
+    color     = INK_SOFT,
+    linewidth = 0.4,
+    linetype  = "dotted"
   ) +
   annotate(
     "text",
@@ -80,25 +84,16 @@ p_plot <- ggplot(df, aes(x = p, y = impurity, color = metric, linetype = metric)
   scale_color_manual(
     name   = "Splitting Criterion",
     labels = LEGEND_LABELS,
-    values = c(
-      "Gini: 2p(1-p)"                                    = IMPRINT_PALETTE[1],
-      "Entropy: -p log2(p) - (1-p) log2(1-p)"            = IMPRINT_PALETTE[2]
-    )
+    values = IMPRINT_PALETTE[1:2]
   ) +
   scale_fill_manual(
-    values = c(
-      "Gini: 2p(1-p)"                                    = IMPRINT_PALETTE[1],
-      "Entropy: -p log2(p) - (1-p) log2(1-p)"            = IMPRINT_PALETTE[2]
-    ),
+    values = IMPRINT_PALETTE[1:2],
     guide  = "none"
   ) +
   scale_linetype_manual(
     name   = "Splitting Criterion",
     labels = LEGEND_LABELS,
-    values = c(
-      "Gini: 2p(1-p)"                                    = "solid",
-      "Entropy: -p log2(p) - (1-p) log2(1-p)"            = "dashed"
-    )
+    values = c("solid", "dashed")
   ) +
   scale_x_continuous(
     breaks = seq(0, 1, 0.25),
