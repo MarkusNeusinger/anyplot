@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-26
@@ -21,9 +21,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint sequential ramp for filled fields (low -> high)
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)
 
@@ -53,23 +53,23 @@ elevation += 3000 * np.exp(-((lon_grid - 13.0) ** 2) / 4) * np.exp(-((lat_grid -
 # Po Valley lowlands (Italian side — low elevation)
 elevation -= 700 * np.exp(-((lon_grid - 11.0) ** 2) / 20) * np.exp(-((lat_grid - 44.2) ** 2) / 0.8)
 
-# Add noise for realism
-elevation += np.random.normal(0, 80, elevation.shape)
+# Small-scale roughness, a few metres so the isolines stay smooth
+elevation += np.random.normal(0, 4, elevation.shape)
 elevation = np.clip(elevation, 0, None)
 
 # Simplified country border lines
 borders = [
     {"lons": [5.5, 6.5, 7.0, 7.5], "lats": [47.5, 47.5, 46.0, 45.8]},
     {"lons": [6.8, 8.0, 10.0, 12.5, 13.8], "lats": [45.8, 45.9, 46.0, 46.3, 46.5]},
-    {"lons": [8.0, 9.5, 10.5, 12.0, 13.0, 15.0, 17.0], "lats": [47.7, 47.6, 47.7, 47.8, 48.0, 48.5, 48.5]},
+    {"lons": [8.0, 9.5, 10.5, 12.0, 13.0, 15.0, 17.0], "lats": [47.7, 47.6, 47.7, 48.2, 48.4, 48.5, 48.5]},
     {"lons": [13.5, 14.5, 15.5, 16.5], "lats": [46.5, 46.3, 46.0, 45.8]},
 ]
 
 # Notable peaks to annotate
 peaks = [
-    {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83, "dx": -0.1, "dy": -0.6},
-    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98, "dx": -1.0, "dy": 0.8},
-    {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07, "dx": 0.25, "dy": -0.5},
+    {"name": "Mont Blanc", "lon": 6.86, "lat": 45.83, "dx": -0.1, "dy": -0.6},
+    {"name": "Matterhorn", "lon": 7.66, "lat": 45.98, "dx": -1.0, "dy": 0.8},
+    {"name": "Großglockner", "lon": 12.69, "lat": 47.07, "dx": 0.25, "dy": -0.5},
 ]
 
 # Plot
@@ -77,26 +77,37 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Filled contours using the Imprint sequential ramp
-levels = np.arange(0, 5000, 200)
+levels = np.arange(0, 5000, 500)
 filled = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap=imprint_seq, extend="max")
 
 # Contour lines every 500 m — heavier weight for high-res visibility
 line_levels = np.arange(500, 5000, 500)
 contour_lines = ax.contour(lon_grid, lat_grid, elevation, levels=line_levels, colors=INK, linewidths=2.0, alpha=0.45)
-labels = ax.clabel(contour_lines, inline=True, fontsize=9, fmt="%d m", colors=INK)
+labels = ax.clabel(contour_lines, levels=line_levels[1::2], inline=True, fontsize=9, fmt="%d m", colors=INK)
 for label in labels:
     label.set_alpha(1.0)
     label.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.8, "pad": 1.0})
 
 # Country border lines
-for border in borders:
-    ax.plot(border["lons"], border["lats"], color=INK_SOFT, linewidth=1.0, linestyle="--", zorder=4)
+for i, border in enumerate(borders):
+    ax.plot(
+        border["lons"],
+        border["lats"],
+        color=INK_SOFT,
+        linewidth=1.0,
+        linestyle="--",
+        zorder=4,
+        label="Country border" if i == 0 else None,
+    )
 
 # Peak markers and annotations — focal point emphasis
 for peak in peaks:
+    row = np.abs(lats - peak["lat"]).argmin()
+    col = np.abs(lons - peak["lon"]).argmin()
+    peak_label = f"{peak['name']}\n{elevation[row, col]:.0f} m"
     ax.plot(peak["lon"], peak["lat"], marker="^", markersize=6, color=INK, zorder=6, markeredgewidth=0)
     ax.annotate(
-        peak["name"],
+        peak_label,
         xy=(peak["lon"], peak["lat"]),
         xytext=(peak["lon"] + peak["dx"], peak["lat"] + peak["dy"]),
         fontsize=9,
@@ -112,6 +123,8 @@ for peak in peaks:
         },
         zorder=7,
     )
+
+ax.legend(loc="lower right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, labelcolor=INK)
 
 # Colorbar — idiomatic fig.colorbar
 cbar = fig.colorbar(filled, ax=ax, orientation="vertical", pad=0.02, shrink=0.88)
