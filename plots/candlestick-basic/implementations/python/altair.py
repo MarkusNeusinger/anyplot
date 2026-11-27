@@ -1,17 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 candlestick-basic: Basic Candlestick Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
 """
 
 import os
-import sys
-
-
-# Remove the script's own directory from sys.path so `import altair` finds the
-# installed package, not this file (which is named altair.py).
-_this_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if p and os.path.abspath(p) != _this_dir]
 
 import altair as alt
 import numpy as np
@@ -19,31 +12,38 @@ import pandas as pd
 from PIL import Image
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Theme-adaptive chrome tokens (Imprint palette style guide)
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — finance semantic exception: green=profit/bullish, red=loss/bearish
-BULLISH = "#009E73"  # Imprint position 1, brand green
-BEARISH = "#AE3030"  # Imprint position 5, matte red (loss/error semantic anchor)
-SMA_COLOR = "#4467A3"  # Imprint position 3, blue
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Simulated 30 business days of stock price data
+# Constants
+# Finance semantic exception: green = close above open, red = close below open
+DIRECTION_COLORS = {"Bullish": IMPRINT_PALETTE[0], "Bearish": IMPRINT_PALETTE[4]}
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+OPEN = "Open ($)"  # role: open
+HIGH = "High ($)"  # role: high
+LOW = "Low ($)"  # role: low
+CLOSE = "Close ($)"  # role: close
+DIRECTION = "Direction"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 30
 dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
 
 prices = [100.0]
 for _ in range(n_days - 1):
-    change = np.random.randn() * 2
-    prices.append(prices[-1] + change)
+    prices.append(prices[-1] + np.random.randn() * 2)
 
-data = []
+rows = []
 for i, date in enumerate(dates):
     base = prices[i]
     volatility = np.random.uniform(1, 3)
@@ -51,88 +51,83 @@ for i, date in enumerate(dates):
     close_price = base + np.random.uniform(-volatility, volatility)
     high_price = max(open_price, close_price) + np.random.uniform(0.5, volatility)
     low_price = min(open_price, close_price) - np.random.uniform(0.5, volatility)
-    data.append(
+    rows.append(
         {
-            "date": date,
-            "open": round(open_price, 2),
-            "high": round(high_price, 2),
-            "low": round(low_price, 2),
-            "close": round(close_price, 2),
+            DATE: date,
+            OPEN: round(open_price, 2),
+            HIGH: round(high_price, 2),
+            LOW: round(low_price, 2),
+            CLOSE: round(close_price, 2),
         }
     )
+df = pd.DataFrame(rows)
 
-df = pd.DataFrame(data)
-df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
-df["sma5"] = df["close"].rolling(window=5).mean()
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+df[DIRECTION] = np.where(df[CLOSE] >= df[OPEN], "Bullish", "Bearish")
 
-# Imprint color scale — finance semantic: green=bullish, red=bearish
-color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=[BULLISH, BEARISH])
+date_enc = alt.X(
+    DATE.translate(ESCAPE),
+    type="temporal",
+    title=DATE,
+    axis=alt.Axis(format="%b %d", grid=False),
+    scale=alt.Scale(padding=14),
+)
+price_scale = alt.Scale(zero=False)
+color_scale = alt.Scale(domain=list(DIRECTION_COLORS), range=list(DIRECTION_COLORS.values()))
 
-# Wicks: high-low lines, thinner than bodies
+# Wicks: low-high rule through the middle of each body, thinner than the body
 wicks = (
     alt.Chart(df)
-    .mark_rule(strokeWidth=1.5)
+    .mark_rule(strokeWidth=2)
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %d")),
-        y=alt.Y("low:Q", title="Price ($)", scale=alt.Scale(zero=False)),
-        y2="high:Q",
-        color=alt.Color("direction:N", scale=color_scale, legend=None),
+        x=date_enc,
+        y=alt.Y(LOW.translate(ESCAPE), type="quantitative", title="Price ($)", scale=price_scale),
+        y2=alt.Y2(HIGH.translate(ESCAPE)),
+        color=alt.Color(
+            DIRECTION.translate(ESCAPE),
+            type="nominal",
+            title=DIRECTION,
+            scale=color_scale,
+            legend=alt.Legend(symbolType="square", symbolSize=120),
+        ),
     )
 )
 
-# Bodies: open-close bars — thin ink stroke aids CVD accessibility (shape outline)
+# Bodies: open-close bar, outlined in ink so direction does not rest on color alone
 bodies = (
     alt.Chart(df)
-    .mark_bar(size=12, stroke=INK, strokeWidth=0.7)
+    .mark_bar(size=14, stroke=INK, strokeWidth=0.7)
     .encode(
-        x="date:T",
-        y="open:Q",
-        y2="close:Q",
+        x=date_enc,
+        y=alt.Y(OPEN.translate(ESCAPE), type="quantitative", title="Price ($)", scale=price_scale),
+        y2=alt.Y2(CLOSE.translate(ESCAPE)),
         color=alt.Color(
-            "direction:N", scale=color_scale, legend=alt.Legend(title="Direction", labelFontSize=10, titleFontSize=10)
+            DIRECTION.translate(ESCAPE),
+            type="nominal",
+            title=DIRECTION,
+            scale=color_scale,
+            legend=alt.Legend(symbolType="square", symbolSize=120),
         ),
         tooltip=[
-            alt.Tooltip("date:T", title="Date", format="%b %d, %Y"),
-            alt.Tooltip("open:Q", title="Open", format="$.2f"),
-            alt.Tooltip("high:Q", title="High", format="$.2f"),
-            alt.Tooltip("low:Q", title="Low", format="$.2f"),
-            alt.Tooltip("close:Q", title="Close", format="$.2f"),
+            alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE, format="%b %d, %Y"),
+            alt.Tooltip(OPEN.translate(ESCAPE), type="quantitative", title=OPEN, format="$.2f"),
+            alt.Tooltip(HIGH.translate(ESCAPE), type="quantitative", title=HIGH, format="$.2f"),
+            alt.Tooltip(LOW.translate(ESCAPE), type="quantitative", title=LOW, format="$.2f"),
+            alt.Tooltip(CLOSE.translate(ESCAPE), type="quantitative", title=CLOSE, format="$.2f"),
         ],
     )
 )
 
-# 5-day simple moving average overlay
-sma_df = df.dropna(subset=["sma5"])
-sma_line = (
-    alt.Chart(sma_df)
-    .mark_line(strokeWidth=2.0, strokeDash=[6, 3], opacity=0.85)
-    .encode(x="date:T", y="sma5:Q", color=alt.value(SMA_COLOR))
-)
-
-# SMA inline label — positioned early (before the peak) to avoid overlap with tall candles
-sma_mid = sma_df.iloc[[2]]
-sma_label = (
-    alt.Chart(sma_mid)
-    .mark_text(align="left", dy=-10, fontSize=10, fontWeight="bold", fontStyle="italic")
-    .encode(x="date:T", y="sma5:Q", text=alt.value("5-day MA"), color=alt.value(SMA_COLOR))
-)
-
 chart = (
-    alt.layer(wicks, bodies, sma_line, sma_label)
-    .resolve_scale(color="independent")
+    alt.layer(wicks, bodies)
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
-        title=alt.Title(
-            "candlestick-basic · python · altair · anyplot.ai",
-            fontSize=16,
-            anchor="middle",
-            color=INK,
-            subtitle="30-day price action with 5-day moving average",
-            subtitleFontSize=12,
-            subtitleColor=INK_MUTED,
-        ),
+        title=alt.Title("candlestick-basic · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
@@ -145,9 +140,9 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
     )
-    .configure_axisX(grid=False)
     .configure_legend(
         fillColor=ELEVATED_BG,
+        padding=8,
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
@@ -157,21 +152,14 @@ chart = (
     .interactive()
 )
 
-# Save PNG at canonical landscape target: 3200 × 1800
+# Save: PNG at 3200 x 1800, then pad (never crop) a size that is off
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-# PAD-only to canonical target — never crop (cropping clips title/labels, triggers AR-09)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
