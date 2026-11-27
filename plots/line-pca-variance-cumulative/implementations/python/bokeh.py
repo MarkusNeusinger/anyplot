@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-29
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import Band, ColumnDataSource, HoverTool, Label, Span
 from bokeh.plotting import figure
@@ -26,79 +27,83 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint categorical palette — canonical order, positions 1–4
-BRAND = "#009E73"  # pos 1: cumulative variance line (always first series)
-LAVENDER = "#C475FD"  # pos 2: individual variance bars
-BLUE = "#4467A3"  # pos 3: 90% threshold reference line
-OCHRE = "#BD8233"  # pos 4: 95% threshold reference line
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — Wine dataset (13 chemical features, authentic PCA distribution)
+# Constants
+THRESHOLDS = [90, 95]  # percent of variance to retain, the spec's common thresholds
+PERCENT = 100  # the full scale of the y axis
+
+# Columns: set these to your table's column names
+COMPONENT = "Number of Principal Components"  # role: n_components
+VARIANCE_RATIO = "Explained variance ratio"  # role: explained_variance_ratio
+INDIVIDUAL = "Individual Variance (%)"  # role: extra
+CUMULATIVE = "Cumulative Explained Variance (%)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pca.csv")
 wine = load_wine()
-X_scaled = StandardScaler().fit_transform(wine.data)
-pca = PCA()
-pca.fit(X_scaled)
-
-n_components = np.arange(1, len(pca.explained_variance_ratio_) + 1)
-cumulative_variance = np.cumsum(pca.explained_variance_ratio_) * 100
-individual_variance = pca.explained_variance_ratio_ * 100
-
-threshold_90 = int(np.argmax(cumulative_variance >= 90) + 1)
-threshold_95 = int(np.argmax(cumulative_variance >= 95) + 1)
-
-# ColumnDataSources
-source_main = ColumnDataSource(
-    data={
-        "component": n_components,
-        "cumulative": cumulative_variance,
-        "individual": individual_variance,
-        "base": np.zeros_like(cumulative_variance),
-    }
+pca = PCA().fit(StandardScaler().fit_transform(wine.data))
+df = pd.DataFrame(
+    {COMPONENT: np.arange(1, len(pca.explained_variance_ratio_) + 1), VARIANCE_RATIO: pca.explained_variance_ratio_}
 )
-source_bars = ColumnDataSource(data={"component": n_components, "individual": individual_variance})
+
+# Plot: reads only df and the constants above
+table = df.copy()
+table[INDIVIDUAL] = df[VARIANCE_RATIO] * PERCENT
+table[CUMULATIVE] = df[VARIANCE_RATIO].cumsum() * PERCENT
+source = ColumnDataSource(table)
+components = table[COMPONENT].to_numpy()
+
+# Crossing of each threshold: the first component count that reaches it
+crossings = [int(components[np.argmax(table[CUMULATIVE].to_numpy() >= th)]) for th in THRESHOLDS]
+cumulative_at = dict(zip(components, table[CUMULATIVE], strict=True))
 
 # Title — scale fontsize if > 67 chars
 title_str = "line-pca-variance-cumulative · python · bokeh · anyplot.ai"
-n_chars = len(title_str)
-ratio = 67 / n_chars if n_chars > 67 else 1.0
+ratio = 67 / len(title_str) if len(title_str) > 67 else 1.0
 title_fontsize = f"{max(34, round(50 * ratio))}pt"
 
-# Plot — canonical 3200×1800 bokeh canvas with toolbar disabled for PNG
+# Bars need more opacity on the dark page to stay visible
+bar_alpha = 0.20 if THEME == "light" else 0.32
+band_alpha = 0.08 if THEME == "light" else 0.12
+
 p = figure(
     width=3200,
     height=1800,
     title=title_str,
-    x_axis_label="Number of Principal Components",
-    y_axis_label="Cumulative Explained Variance (%)",
+    x_axis_label=COMPONENT,
+    y_axis_label=CUMULATIVE,
     toolbar_location=None,
-    y_range=(-2, 112),
-    x_range=(0.3, 13.7),
+    y_range=(-0.02 * PERCENT, 1.12 * PERCENT),
+    x_range=(components.min() - 0.7, components.max() + 0.7),
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
     min_border_right=120,
 )
 
-# Area fill under cumulative curve (Bokeh Band — library-distinctive)
-band = Band(
-    base="component",
-    upper="cumulative",
-    lower="base",
-    source=source_main,
-    fill_color=BRAND,
-    fill_alpha=0.08,
-    line_color=None,
+# Area fill under the cumulative curve (Bokeh Band — library-distinctive)
+p.add_layout(
+    Band(
+        base=COMPONENT,
+        upper=CUMULATIVE,
+        lower=0,
+        source=source,
+        fill_color=IMPRINT_PALETTE[0],
+        fill_alpha=band_alpha,
+        line_color=None,
+    )
 )
-p.add_layout(band)
 
 # Individual variance bars (subtle background, secondary series)
 p.vbar(
-    x="component",
-    top="individual",
-    source=source_bars,
+    x=COMPONENT,
+    top=INDIVIDUAL,
+    source=source,
     width=0.5,
-    fill_color=LAVENDER,
-    fill_alpha=0.20,
-    line_color=LAVENDER,
+    fill_color=IMPRINT_PALETTE[1],
+    fill_alpha=bar_alpha,
+    line_color=IMPRINT_PALETTE[1],
     line_alpha=0.30,
     line_width=1.5,
     legend_label="Individual Variance",
@@ -106,48 +111,51 @@ p.vbar(
 
 # Cumulative variance line — capture renderer for HoverTool attachment
 cumulative_renderer = p.line(
-    x="component",
-    y="cumulative",
-    source=source_main,
+    x=COMPONENT,
+    y=CUMULATIVE,
+    source=source,
     line_width=6,
-    line_color=BRAND,
+    line_color=IMPRINT_PALETTE[0],
     line_alpha=0.9,
     legend_label="Cumulative Variance",
 )
 
 # Markers at each component count
 p.scatter(
-    x="component",
-    y="cumulative",
-    source=source_main,
+    x=COMPONENT,
+    y=CUMULATIVE,
+    source=source,
     size=18,
-    fill_color=BRAND,
+    fill_color=IMPRINT_PALETTE[0],
     line_color=PAGE_BG,
     line_width=3,
     fill_alpha=0.95,
 )
 
-# Horizontal threshold reference lines
-p.add_layout(Span(location=90, dimension="width", line_color=BLUE, line_width=2.5, line_dash="dashed", line_alpha=0.7))
-p.add_layout(Span(location=95, dimension="width", line_color=OCHRE, line_width=2.5, line_dash="dashed", line_alpha=0.7))
-
-# Right-edge threshold labels (kept inside canvas boundary)
-p.add_layout(
-    Label(
-        x=13.2, y=86.0, text="90%", text_font_size="30pt", text_color=BLUE, text_align="right", text_font_style="bold"
+# Threshold reference lines, edge labels, glow rings and crossing annotations
+for i, (th, crossing) in enumerate(zip(THRESHOLDS, crossings, strict=True)):
+    color = IMPRINT_PALETTE[2 + i]
+    value = cumulative_at[crossing]
+    below = i == 0  # the lower line's labels sit below it, the upper line's above
+    p.add_layout(
+        Span(location=th, dimension="width", line_color=color, line_width=2.5, line_dash="dashed", line_alpha=0.7)
     )
-)
-p.add_layout(
-    Label(
-        x=13.2, y=96.5, text="95%", text_font_size="30pt", text_color=OCHRE, text_align="right", text_font_style="bold"
+    p.add_layout(
+        Label(
+            x=components.max() + 0.2,
+            y=th,
+            y_offset=-12 if below else 12,
+            text=f"{th}%",
+            text_font_size="30pt",
+            text_color=color,
+            text_align="right",
+            text_baseline="top" if below else "bottom",
+            text_font_style="bold",
+        )
     )
-)
-
-# Glow-ring highlights at threshold crossings
-for th, color in [(threshold_90, BLUE), (threshold_95, OCHRE)]:
     p.scatter(
-        x=[th],
-        y=[cumulative_variance[th - 1]],
+        x=[crossing],
+        y=[value],
         size=42,
         fill_color=color,
         fill_alpha=0.15,
@@ -155,47 +163,26 @@ for th, color in [(threshold_90, BLUE), (threshold_95, OCHRE)]:
         line_alpha=0.3,
         line_width=2,
     )
-    p.scatter(
-        x=[th],
-        y=[cumulative_variance[th - 1]],
-        size=28,
-        fill_color=color,
-        line_color=PAGE_BG,
-        line_width=3,
-        fill_alpha=0.9,
+    p.scatter(x=[crossing], y=[value], size=28, fill_color=color, line_color=PAGE_BG, line_width=3, fill_alpha=0.9)
+    p.add_layout(
+        Label(
+            x=crossing - 1.0 if below else crossing + 1.5,
+            y=value - 16 if below else value + 3,
+            text=f"{crossing} components ({value:.1f}%)",
+            text_font_size="28pt",
+            text_color=color,
+            text_font_style="bold",
+            text_align="center",
+        )
     )
 
-# Crossing annotations — offset to avoid crowding
-p.add_layout(
-    Label(
-        x=threshold_90 - 1.5,
-        y=cumulative_variance[threshold_90 - 1] - 9,
-        text=f"{threshold_90} components ({cumulative_variance[threshold_90 - 1]:.1f}%)",
-        text_font_size="24pt",
-        text_color=BLUE,
-        text_font_style="bold",
-        text_align="center",
-    )
-)
-p.add_layout(
-    Label(
-        x=threshold_95 + 1.5,
-        y=cumulative_variance[threshold_95 - 1] + 3,
-        text=f"{threshold_95} components ({cumulative_variance[threshold_95 - 1]:.1f}%)",
-        text_font_size="24pt",
-        text_color=OCHRE,
-        text_font_style="bold",
-        text_align="center",
-    )
-)
-
-# HoverTool attached to named renderer (avoids fragile magic index)
+# HoverTool attached to the named renderer
 p.add_tools(
     HoverTool(
         tooltips=[
-            ("Component", "@component"),
-            ("Cumulative Variance", "@cumulative{0.1}%"),
-            ("Individual Variance", "@individual{0.1}%"),
+            ("Component", f"@{{{COMPONENT}}}"),
+            ("Cumulative Variance", f"@{{{CUMULATIVE}}}{{0.1}}%"),
+            ("Individual Variance", f"@{{{INDIVIDUAL}}}{{0.1}}%"),
         ],
         mode="vline",
         renderers=[cumulative_renderer],
@@ -205,7 +192,7 @@ p.add_tools(
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_font_size = title_fontsize
 p.title.text_color = INK
@@ -227,7 +214,7 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-p.xaxis.ticker = list(n_components)
+p.xaxis.ticker = list(components)
 
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.15
@@ -250,8 +237,7 @@ p.legend.spacing = 16
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome — CDP override pins inner viewport to exact dims
-# (--window-size alone gives 1661 instead of 1800 due to browser chrome offset)
+# Screenshot with headless Chrome — CDP override pins the inner viewport to exact dims
 W, H = 3200, 1800
 opts = Options()
 for arg in (
@@ -268,16 +254,10 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so no white edge shows through the canvas
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Belt-and-braces: ensure saved PNG is exactly W×H so the post-render gate passes
-from PIL import Image as _PILImage
-
-
-_img = _PILImage.open(f"plot-{THEME}.png").convert("RGB")
-if _img.size != (W, H):
-    _norm = _PILImage.new("RGB", (W, H), PAGE_BG)
-    _norm.paste(_img, ((W - _img.size[0]) // 2, (H - _img.size[1]) // 2))
-    _norm.save(f"plot-{THEME}.png")
