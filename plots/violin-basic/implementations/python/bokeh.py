@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-basic: Basic Violin Plot
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import os
@@ -32,7 +32,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — canonical order, position 1 always first series
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -93,8 +92,6 @@ p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.major_tick_line_color = INK_SOFT
-p.yaxis.major_tick_line_color = INK_SOFT
 p.axis.minor_tick_line_color = None
 p.axis.major_tick_line_color = None
 
