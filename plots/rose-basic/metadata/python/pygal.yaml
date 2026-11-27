@@ -2,149 +2,138 @@ library: pygal
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:33Z'
-updated: '2026-07-25T10:42:56Z'
+updated: '2026-11-27T17:59:29Z'
 generated_by: claude-sonnet
-workflow_run: 30154214596
+workflow_run: 46045174173
 issue: 1003
-language_version: 3.13.14
+language_version: 3.14.10
 library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'The primary weakness from the first review is fully resolved: the chart now draws
-    true pie-slice wedge sectors (center → radial edge → curved outer arc sampled
-    with ARC_STEPS → radial edge → center) via a custom RoseChart(Radar) subclass,
-    instead of the previous connected star/spider polygon — this now matches the spec''s
-    rose/coxcomb definition precisely, with each month visually separated as its own
-    petal.'
-  - Jan is still placed at the 12 o'clock start position as the spec requests for
-    time-cyclical data, and the circular month ordering is preserved.
-  - Both radial (show_y_guides) and angular (show_x_guides) gridlines are present,
-    and value_formatter appends 'mm' units to every radial tick.
-  - Single-series legend is correctly omitted (show_legend=False) per style-guide
-    decoration-removal guidance.
-  - Identical brand-green (#009E73) data color and theme-correct chrome (background,
-    title, month labels, tick values) across both light and dark renders; no clipping
-    at any canvas edge.
-  - Realistic, neutral Pacific-Northwest monthly rainfall dataset with a clear winter-high/summer-low
-    seasonal curve spanning the full 20-155mm range.
-  - Deterministic hardcoded data, only used imports, correct output convention (plot-{theme}.png
-    + plot-{theme}.html).
+  - 'True rose geometry: each month is a closed equal-angle wedge with a curved outer
+    arc sampled along ARC_STEPS, centred on its spoke, radius linear from zero'
+  - Radial value labels are moved into an SVG group drawn after the series, so the
+    mm scale stays crisp above the wedge fill in both themes
+  - Grid colored through guide_stroke_color / major_guide_stroke_color from INK_MUTED,
+    so the rings and spokes stay subtle but visible on both the light and the dark
+    page
+  - 'Theme-correct chrome and identical brand-green #009E73 wedges in both renders;
+    legend correctly omitted for the single series'
+  - Data held in a DataFrame with named column roles and a HEADROOM-derived range,
+    deterministic and neutral rainfall scenario
+  - Wedges stay reactive SVG elements, so the HTML output keeps pygal's hover behaviour
   weaknesses:
-  - 'VQ-01: pygal draws the axis/guide group before the data series group, so the
-    semi-transparent wedge fill (opacity=0.7) paints over the radial tick-value labels
-    (''100 mm'', ''80 mm'', ''60 mm'', ''40 mm'', ''20 mm'', ''0 mm'') wherever they
-    fall inside a wedge, tinting the ink-colored text and softening contrast versus
-    labels sitting on plain background. Consider drawing the value labels in a separate
-    top-level overlay group (or bumping their z-order) so they always render above
-    the wedge fills.'
-  - 'VQ-02: the Jan vertex dot marker (dots_size=10, Jan=145mm) sits directly on top
-    of the ''140 mm'' guide label and visibly overlaps the trailing ''m'' character
-    in both renders. Not severe (the numeric value stays legible) but a real, avoidable
-    overlap — nudge the dot''s z-order below the text-overlay, or offset the guide
-    label''s x position slightly away from the Jan spoke.'
-  - 'CQ-01: achieving true wedge geometry required subclassing Radar and overriding
-    the private _plot() method (relying on internal APIs like self._x_pos and self.view()),
-    which departs from the KISS ''imports → data → plot → save, no functions/classes''
-    structure — justified here since pygal has no public API for coxcomb/rose wedges,
-    but worth noting as added structural complexity.'
+  - 'SC-02 (both): the months run counter-clockwise (Jan at the top, Feb to its left,
+    Dec to its right), against the clockwise reading of a calendar or clock face,
+    so the spec''s natural circular order (C2) is reversed → clockwise order with
+    Jan still at 12 o''clock. Likely cause: pygal''s Radar lays x_labels out counter-clockwise;
+    pass the categories (and their values) as Jan, Dec, Nov, …, Feb, or flip the angle
+    in the wedge geometry.'
+  - 'CQ-01 (code): the wedges are drawn inside a RoseChart(Radar) class that overrides
+    pygal''s private _plot(), so the data drawing sits in a class the agent chat''s
+    validator refuses → build the wedges at the top level (for example one closed
+    polygon per month computed from the angles, drawn with a public pygal chart type).
+    Likely cause: the subclass approach to wedge geometry.'
+  - 'Suggestion: a labelled outer ring just above the largest value (for example 160
+    mm) would let the reader bound the Dec wedge, which now reaches past the last
+    labelled ring at 140 mm.'
+  - 'Suggestion: circular rather than 12-sided polygon rings would match the curved
+    wedge arcs exactly between spokes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "rose-basic · python · pygal · anyplot.ai" in dark ink at top, ~75% of canvas width — expected for the mandated title length, not a deduction. 12 month labels (Jan-Dec) arranged clockwise starting at 12 o'clock, dark and clearly readable, several rotated near the sides for legibility. Radial axis shows "0 mm" through "160 mm" along the Jan spoke; labels overlapping the wedge fill are tinted darker-teal but still legible (see VQ-01 weakness). Dotted circular/radial guide lines are subtle but visible.
-      Data: single brand-green (#009E73) series now rendered as 12 discrete pie-slice wedges (true wedge sectors with a curved outer arc per month) instead of a connected star polygon — visible stepped "petal" silhouette between adjacent months of different rainfall values, which is the defining rose/coxcomb visual. Semi-transparent fill (opacity 0.7) so the grid stays faintly visible through it, solid stroke outlining each wedge, dot markers (size 10) at the outer-arc midpoint of every month. Shape clearly bulges toward Nov-Feb (high rainfall) and collapses toward Jun-Aug (low rainfall).
-      Legibility verdict: PASS (all text readable; minor tinting of tick labels under the fill and a small overlap between the "140 mm" label and the Jan dot marker, noted as weaknesses but not legibility failures).
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "rose-basic · python · pygal · anyplot.ai" in dark ink across ~65% of the width; twelve month labels (Jan at 12 o'clock, then Feb, Mar ... counter-clockwise, Dec to the right of Jan) in dark ink; radial value labels 0 mm–140 mm along the Jan spoke at one size, drawn above the wedges in dark ink. Dashed muted-grey 12-sided rings and thin spokes, subtle but visible.
+      Data: twelve brand-green #009E73 wedges at 0.7 opacity with a slightly darker same-hue outline separating neighbours; large winter wedges (Nov–Feb, Dec longest at 155 mm) and slivers in summer (Jul 20 mm). No dots, no legend.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: same title and month labels rendered in light cream text, clearly legible against the dark background — no dark-on-dark failures anywhere. Grid guide lines remain subtle and visible in a lighter dotted tone.
-      Data: identical brand-green (#009E73) wedge sectors, same shape and vertex positions as the light render — confirms only chrome flipped, data color held constant. Same "140 mm" label / Jan-dot overlap and under-fill tick-label tinting as in the light render.
-      Legibility verdict: PASS (all text readable; same minor weaknesses as light render).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, month labels and radial value labels in light cream ink, all clearly readable; the value labels sit above the dark-green fill and read crisply. Grid rings and spokes in a muted light grey, visible on the dark page. No dark-on-dark text.
+      Data: the same #009E73 wedges, identical shape and color to the light render (only chrome flipped).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set, readable in both themes; radial tick labels
-          rendered under the semi-transparent wedge fill (axis drawn before series)
-          have reduced contrast for the inner ring values
+        comment: All text set explicitly (title 66, labels 56); radial value labels
+          now drawn above the fill at one size, crisp in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Jan vertex dot marker slightly overlaps the '140 mm' guide label's
-          trailing 'm' in both renders; minor, numeric value stays legible
+        comment: No text collisions; the 140 mm label crosses a wedge edge but sits
+          above it and stays fully legible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: dots_size=10 keeps low-radius summer months readable even where wedges
-          collapse near center; sparse 12-point data appropriately prominent
+        comment: 12 wedges clearly visible, thin same-hue separators; the small summer
+          wedges still read
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue, no CVD concern, good contrast against both backgrounds
+        comment: Single hue, no CVD issue, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills a large, balanced share of the 2400x2400 canvas, no cut-off,
-          margins even
+        comment: Rose and labels fill the square canvas with even margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis carries explicit 'mm' units via value_formatter
+        comment: Radial values carry mm units; month labels self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 identical in both renders; backgrounds and chrome
-          are theme-correct in both'
+        comment: 'Brand green #009E73 in both renders, backgrounds #FAF8F1 / #1A1A17,
+          grid in INK_MUTED'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'Strong design: the custom wedge-sector rendering produces a genuine
-          petal silhouette clearly above a configured default, plus unit-formatted
-          labels and deliberate dot sizing'
+        passed: false
+        comment: 'Style-guide baseline: tokens, explicit sizes, single brand color'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle dotted grid, legend correctly omitted, generous margin=70,
-          opacity tuned to 0.7; still fairly standard chrome otherwise
+        passed: false
+        comment: 'Raised one: the radial value labels are lifted out of the guide
+          group into a layer above the wedge fill, so the scale stays crisp over the
+          data'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: The stepped wedge silhouette communicates the winter-high/summer-low
-          seasonal story clearly without needing annotations
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -152,51 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True rose/coxcomb wedge sectors (radial edge → curved outer arc →
-          radial edge) now implemented — matches the spec's pie-slice-with-radius-proportional-to-value
-          definition precisely
+        comment: True equal-angle wedge sectors with curved outer arcs; no unasked
+          layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Circular ordering, 12 o'clock start, radial+angular gridlines, single
-          consistent color, and the pie-slice wedge visual metaphor are all present
+        passed: false
+        comment: Radius proportional to value, start at top, radial gridlines with
+          labels visible in both themes, consistent color; months run counter-clockwise
+          (defect line, C2)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months and values correctly mapped to angle/radius
+        comment: Each wedge centred on its spoke, radius linear from zero (20 mm ≈
+          98 px, Jan 145 mm reaches ≈ 716 px); readable 20 mm ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend correctly omitted for single series
+        comment: Title matches the format; legend correctly omitted for a single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full 20-155mm range across 12 months, clear seasonal variation
+        comment: Twelve months with a full winter-high / summer-low range 20–155 mm,
+          showing dominant and sliver wedges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral Pacific-Northwest rainfall scenario
+        comment: Plausible neutral monthly rainfall scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and winter/summer proportions align with real-world PNW rainfall
-          patterns
+        comment: 'Checked: values 20–155 mm plausible for a wet-winter maritime climate;
+          wedge radii read off the rings match the data (Jan ≈ 145, Jul ≈ 20). No
+          Check values in the spec'
     code_quality:
       score: 9
       max: 10
@@ -205,62 +197,64 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Introduces a RoseChart(Radar) subclass with an overridden _plot()
-          method to achieve wedge geometry — justified (pygal has no public coxcomb
-          API) but departs from the pure imports→data→plot→save script shape
+        passed: false
+        comment: A small RoseChart(Radar) class holds the wedge drawing (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, math.pi, pygal.graph.radar.Radar, pygal.style.Style — all
-          used
+        comment: os, pi, pandas, Radar, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Subclass approach is clean and well-documented, not over-engineered,
-          no fake functionality
+        comment: Appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: render_to_png + render() to plot-{theme}.png/.html, current API
+        comment: plot-{THEME}.png and plot-{THEME}.html, current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct high-level Style/add/x_labels usage, but the wedge rendering
-          relies on overriding a private internal method (_plot) rather than a documented
-          public pattern
+        passed: false
+        comment: Style/add/x_labels/value_formatter used idiomatically; wedges rely
+          on a private method override
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom wedge-sector rendering built on pygal's internal polar view/coordinate
-          machinery (self.view(), self._x_pos) is a technique distinctive to this
-          library's SVG/polar internals, not easily replicated elsewhere
+        passed: false
+        comment: 'Raised one: wedges built on pygal''s polar view() and SVG node tree,
+          kept as reactive SVG elements with hover in the HTML output'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-27T17:55:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  patterns: []
+  - patches
+  - hover-tooltips
+  - html-export
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
