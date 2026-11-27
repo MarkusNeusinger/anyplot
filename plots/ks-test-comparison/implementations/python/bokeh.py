@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: pending | Updated: 2026-11-27
+Quality: 89/100 | Updated: 2026-11-27
 """
 
 import os
