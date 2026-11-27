@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: candlestick-basic
 created: '2025-12-23T09:59:54Z'
-updated: '2026-11-27T23:25:02Z'
+updated: '2026-11-27T23:32:32Z'
 generated_by: claude-sonnet
-workflow_run: 46081662350
+workflow_run: 46082478954
 issue: 812
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
   - 'Bullish solid #009E73 vs bearish hollow #AE3030 bodies give a redundant, CVD-safe
@@ -26,22 +26,19 @@ review:
   - 'Theme chrome flips cleanly: backgrounds, ink, y-only subtle grid and elevated
     legend frame'
   weaknesses:
-  - 'DQ-02 (both): the instrument is labelled ''ACME Corp Stock'', the stock placeholder
-    name, which reads as generic → a plausible fictional ticker and company name (e.g.
-    ''Northwind Logistics (NWLG)''). Likely cause: the title prefix string.'
   - 'Suggestion: a vectorised OHLC build (open = close.shift() with the start price)
     would shorten the data loop.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, page-painted to the canvas edge
-      Chrome: title 'ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai' in dark ink at ~67% width; 'Price (USD)' and 'Date' axis titles in dark ink; $130-$165 and Jan 01 2024 / Jan 08 / Jan 15 / Jan 22 / Feb 01 / Feb 08 ticks in INK_SOFT; legend top-left on elevated frame with 40 px keys and 34pt 'Bullish' / 'Bearish'; y-only grid at low alpha
-      Data: 30 business-day candles with weekend gaps; bullish solid #009E73, bearish hollow with #AE3030 outline; thin wicks through the body centres; rise to ~$160, drop through Jan 22-29 to ~$131, flat base near $135
+      Background: warm off-white #FAF8F1, painted to the canvas edge
+      Chrome: title 'Northwind (NWLG) · candlestick-basic · python · bokeh · anyplot.ai' in dark ink at ~68% width; 'Price (USD)' and 'Date' axis titles in dark ink; $130-$165 and Jan 01 2024 / Jan 08 / Jan 15 / Jan 22 / Feb 01 / Feb 08 ticks in INK_SOFT; legend top-left on an elevated frame with 'Bullish' / 'Bearish'; y-only grid at low alpha
+      Data: 30 business-day candles with weekend gaps; bullish solid #009E73, bearish hollow with #AE3030 outline; thin wicks through the body centres; rise to ~$160, drop Jan 19-29 to ~$131, flat base near $135
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
       Chrome: title and axis titles in light ink, ticks and legend labels in light INK_SOFT, legend frame #242420; grid subtle; no dark-on-dark text
-      Data: identical green #009E73 solid and red #AE3030 hollow candles, same positions; hollow bodies filled with the dark page colour
+      Data: identical #009E73 solid and #AE3030 hollow candles at the same positions; hollow bodies filled with the dark page colour
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,7 +50,7 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; all readable
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; all text readable
           in both themes
       - id: VQ-02
         name: No Overlap
@@ -61,32 +58,34 @@ review:
         max: 6
         passed: true
         comment: No text collisions; legend sits in empty top-left space clear of
-          candles
+          the candles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 candles clearly visible; 3 px wicks thinner than bodies; 40 px
-          legend keys match the solid and hollow bodies
+        comment: 30 sparse candles clearly visible; 3 px wicks thinner than bodies;
+          40 px legend keys match the solid and hollow bodies in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red pair plus solid vs hollow body gives a non-color signal
+        comment: Green/red pair backed by solid vs hollow bodies, a non-color up/down
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); plot fills the canvas, nothing clipped
+        comment: Canvas gate passed (3200x1800); plot area fills the canvas, nothing
+          clipped, title within ~68% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) with unit
+        comment: '''Date'' and ''Price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -103,15 +102,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Solid-bullish / hollow-bearish body convention chosen as a redundant
-          CVD-safe encoding, beyond the baseline
+        comment: Solid-bullish / hollow-bearish bodies chosen as a redundant CVD-safe
+          encoding, beyond the style-guide baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
         comment: 'Grid density chosen for this chart: horizontal price-level grid
-          only, no x grid, tick marks removed'
+          only, x grid and tick marks removed, elevated legend frame'
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -128,30 +127,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Candlestick with vbar bodies and segment wicks; no unasked layers
+        comment: 'Candlestick: vbar bodies and segment wicks; no unasked layers (C5
+          met)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Green/red up/down, wicks thinner than bodies, weekly date ticks,
+        comment: Green/red up/down, wicks thinner than bodies, date-formatted axis,
           subtle grid; C1-C5 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Candles at their dates and values; price axis spans lows and highs,
+        comment: Candles at their dates and OHLC values; price axis spans $128-$164,
           not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title ACME Corp Stock · candlestick-basic · python · bokeh · anyplot.ai;
-          legend Bullish/Bearish
+        comment: Title 'Northwind (NWLG) · candlestick-basic · python · bokeh · anyplot.ai'
+          in the required format; legend Bullish/Bearish
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -159,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Rising, falling and doji-like candles, long and short wicks, a clear
-          rise-fall-base sequence
+        comment: Rising, falling and doji-like candles, long and short wicks, a rise-fall-base
+          sequence with weekend gaps
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Daily stock OHLC is plausible, but 'ACME Corp' is the stock placeholder
-          name (defect line)
+        comment: Daily OHLC prices of a plausible fictional listed company 'Northwind
+          (NWLG)'; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: $128-$165 with ~1.8% daily moves; checked in code that high >= max(open,
-          close) and low <= min(open, close), open = previous close
+          close), low <= min(open, close), open = previous close
     code_quality:
       score: 10
       max: 10
@@ -218,8 +218,9 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Split ColumnDataSources per direction, vbar/segment glyphs with column
-          names, NumeralTickFormatter, Range1d derived from the data step
+        comment: Split ColumnDataSources per direction, vbar/segment glyphs driven
+          by column names, NumeralTickFormatter, Range1d derived from the data's median
+          step
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -230,7 +231,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
-  rendered_at: '2026-11-27T23:21:39Z'
+  rendered_at: '2026-11-27T23:29:52Z'
 impl_tags:
   dependencies:
   - selenium
