@@ -64,10 +64,13 @@ Comments and the generated header never count. The patterns are deliberately
 narrow: a rule that flags a compliant file is worse than no rule, so a
 colormap name counts only where a colormap goes, never as a data label such
 as ``"Oranges"``, and a setting counts as present in any spelling the
-catalogue uses for it. In Python, the patterns that look for code (a call, an
-import, an operator) read the code with its string literals emptied, so a
-title that names ``coord_fixed(`` is no call. The JavaScript patterns read
-strings as code: an ``animation: false`` written inside a string counts.
+catalogue uses for it. The patterns that look for code (a call, an import,
+an operator, a switch) read the code with its string literals emptied, so a
+title that names ``coord_fixed(`` is no call and ``"animation: false"`` in a
+JavaScript string is no switch. Python strings go by their tokens; JavaScript
+strings by a scan that keeps a template's ``${...}`` fields and an object key
+in quotes. The patterns that read a value inside a string (a page colour set
+from a script, ``"tight"``) use the code with its strings.
 
 Stdlib only: ``impl-review.yml`` runs a copy taken at the workflow's own ref
 with the job's pinned ``python3``, so a PR head cannot choose its own rules.
@@ -93,6 +96,7 @@ and 2 when the file cannot be read.
 from __future__ import annotations
 
 import argparse
+import ast
 import io
 import json
 import os
@@ -280,7 +284,7 @@ _LETSPLOT_FIXED_RE = re.compile(r"\bcoord_(?:fixed|polar|map)\(")
 _LETSPLOT_WRAP_RE = re.compile(r"\bgg(?:grid|bunch)\(")
 _BBOX_TIGHT_RE = re.compile(r"bbox_inches\s*=\s*[\"']tight[\"']")
 _JS_FALSE_NAME_RE = re.compile(r"\b(?:const|let|var)\s+(\w+)\s*=\s*false\b")
-_JS_ANIMATION_VALUE_RE = re.compile(r"\banimation\s*[:=]\s*([A-Za-z_$][\w$]*)")
+_JS_ANIMATION_VALUE_RE = re.compile(r"\banimation[\"']?\s*[:=]\s*([A-Za-z_$][\w$]*)")
 _SKIP_ANIMATION_RE = re.compile(r"\bskipAnimation\b(?!\s*(?:=\s*\{\s*false\s*\}|:\s*false\b))")
 _FSTRING_START = frozenset(
     getattr(tokenize, name) for name in ("FSTRING_START", "TSTRING_START") if hasattr(tokenize, name)
@@ -396,21 +400,174 @@ def _altair_compound(code: str) -> bool:
     return any(re.search(rf"\b{name}\s*[|&]|[|&]=?\s*\(?\s*{name}\b", structure) for name in names)
 
 
+_JS_OBJECT_KEY_RE = re.compile(r"\s*:")
+
+
+def _js_scan(code: str, index: int, in_field: bool) -> tuple[str, int]:
+    """``code`` from ``index`` with its string literals emptied; in a template field, up to its closing brace.
+
+    Returns the text and the index where the scan stopped. A quote that is still open at the end of its
+    line closes there, as in the comment scan (an apostrophe in JSX text). A string followed by a colon
+    is an object key (``"animation": false``) and keeps its text.
+    """
+    out: list[str] = []
+    depth = 0
+    size = len(code)
+    while index < size:
+        char = code[index]
+        if char in "'\"":
+            end = index + 1
+            while end < size and code[end] not in (char, "\n"):
+                end += 2 if code[end] == "\\" else 1
+            end = min(end + 1 if end < size and code[end] == char else end, size)
+            out.append(code[index:end] if _JS_OBJECT_KEY_RE.match(code, end) else char * 2)
+            index = end
+        elif char == "`":
+            out.append("`")
+            index += 1
+            while index < size and code[index] != "`":
+                if code[index] == "\\":
+                    index += 2
+                elif code.startswith("${", index):
+                    field, index = _js_scan(code, index + 2, in_field=True)
+                    out.append("${" + field + "}")
+                    index += 1
+                else:
+                    index += 1
+            out.append("`")
+            index += 1
+        elif in_field and char == "}" and depth == 0:
+            return "".join(out), index
+        else:
+            depth += {"{": 1, "}": -1}.get(char, 0)
+            out.append(char)
+            index += 1
+    return "".join(out), index
+
+
+def _js_without_strings(code: str) -> str:
+    """JavaScript ``code`` (comments already gone) with the text of every string and template emptied.
+
+    A template's ``${...}`` fields stay code. A regular expression literal that holds a quote
+    (``/'/g``) reads as a string to the end of its line: a known edge, which only ever hides code.
+    """
+    return _js_scan(code, 0, in_field=False)[0]
+
+
 def _animation_switches(code: str) -> int | None:
     """How often the code turns animation off: a literal ``false``, a name bound to it, or a named object that
-    holds the switch, counted where it is used. None when a value is a name the code does not resolve."""
+    holds the switch, counted where it is used. None when a value is a name the code does not resolve.
+
+    A switch written inside a string (``const note = "animation: false"``) is text, not a switch.
+    """
+    code = _js_without_strings(code)
     false_names = set(_JS_FALSE_NAME_RE.findall(code))
     values = _JS_ANIMATION_VALUE_RE.findall(code)
     if any(value not in false_names | {"false", "true"} for value in values):
         return None
     switches = sum(value in false_names | {"false"} for value in values)
     off = "|".join(["false", *sorted(false_names)])
-    holder = re.compile(rf"\b(?:const|let|var)\s+(\w+)\s*=\s*\{{[^{{}}]*\banimation\s*:\s*(?:{off})\b")
+    holder = re.compile(rf"\b(?:const|let|var)\s+(\w+)\s*=\s*\{{[^{{}}]*\banimation[\"']?\s*:\s*(?:{off})\b")
     for name in holder.findall(code):
         # The object's own switch counts once for every place it is used, not for its definition.
         # A spread (`...NAME`) is a use; a member access (`obj.NAME`) is another name.
         switches += len(re.findall(rf"(?:(?<=\.\.\.)|(?<![\w$.])){re.escape(name)}(?![\w$])", code)) - 2
     return switches
+
+
+_FIXED_ASPECT_CALLS = frozenset({"coord_fixed", "coord_polar", "coord_map"})
+_WRAPPER_CALLS = frozenset({"gggrid", "ggbunch"})
+
+
+def _call_name(node: ast.AST) -> str | None:
+    if not isinstance(node, ast.Call):
+        return None
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    return node.func.attr if isinstance(node.func, ast.Attribute) else None
+
+
+def _outside_wrappers(node: ast.AST):
+    """The nodes of ``node`` without the arguments of a ``gggrid`` or ``ggbunch`` call: a theme in there
+    paints a panel's own plot box, not the wrapper's canvas."""
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        yield current
+        if _call_name(current) not in _WRAPPER_CALLS:
+            stack.extend(ast.iter_child_nodes(current))
+
+
+def _paints_the_page(node: ast.AST, page_themes: set[str]) -> bool:
+    """A ``theme(plot_background=element_rect(fill=...))``, or a name bound to one (``anyplot_theme``)."""
+    if isinstance(node, ast.Name):
+        return node.id in page_themes
+    if _call_name(node) != "theme" or not isinstance(node, ast.Call):
+        return False
+    return any(
+        keyword.arg == "plot_background"
+        and isinstance(keyword.value, ast.Call)
+        and _call_name(keyword.value) == "element_rect"
+        and any(inner.arg == "fill" for inner in keyword.value.keywords)
+        for keyword in node.keywords
+    )
+
+
+def _letsplot_unwrapped(code: str) -> bool:
+    """A fixed-aspect plot that no ``gggrid`` or ``ggbunch`` both holds and paints in the page colour.
+
+    The statements are read in order. A name holds the fixed-aspect plot when its value calls a fixed
+    coordinate system or names such a name; a wrapper holds it when its arguments do. The wrapper is
+    painted when the expression it stands in, or a later statement on the name it went to, adds a theme
+    with a ``plot_background`` fill outside the wrapper's arguments. A file that does not parse is
+    judged by the calls alone.
+    """
+    structure = _without_strings(code)
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return bool(_LETSPLOT_FIXED_RE.search(structure)) and not _LETSPLOT_WRAP_RE.search(structure)
+    statements: list[tuple[set[str], ast.AST, bool]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets = {name.id for target in node.targets for name in ast.walk(target) if isinstance(name, ast.Name)}
+            statements.append((targets, node.value, False))
+        elif isinstance(node, (ast.AugAssign, ast.AnnAssign)) and node.value is not None:
+            targets = {name.id for name in ast.walk(node.target) if isinstance(name, ast.Name)}
+            statements.append((targets, node.value, isinstance(node, ast.AugAssign)))
+        elif isinstance(node, ast.Expr):
+            statements.append((set(), node.value, False))
+    statements.sort(key=lambda item: (getattr(item[1], "lineno", 0), getattr(item[1], "col_offset", 0)))
+    fixed: set[str] = set()
+    page_themes: set[str] = set()
+    holders: set[str] = set()
+    any_fixed = wrapped = painted = False
+    for targets, value, augmented in statements:
+        nodes = list(ast.walk(value))
+        names = {node.id for node in nodes if isinstance(node, ast.Name)} | (targets if augmented else set())
+        calls_fixed = any(_call_name(node) in _FIXED_ASPECT_CALLS for node in nodes)
+        any_fixed |= calls_fixed
+        if calls_fixed or names & fixed:
+            fixed |= targets
+        builds_plot = any(_call_name(node) in {"ggplot", *_WRAPPER_CALLS} for node in nodes)
+        if not builds_plot and any(_paints_the_page(node, page_themes) for node in nodes):
+            page_themes |= targets  # a theme the file names, such as `anyplot_theme`
+        holding = [
+            node
+            for node in nodes
+            if isinstance(node, ast.Call)
+            and _call_name(node) in _WRAPPER_CALLS
+            and any(
+                (isinstance(inner, ast.Name) and inner.id in fixed) or _call_name(inner) in _FIXED_ASPECT_CALLS
+                for argument in [*node.args, *(keyword.value for keyword in node.keywords)]
+                for inner in ast.walk(argument)
+            )
+        ]
+        if holding or names & holders:
+            wrapped |= bool(holding)
+            holders |= targets
+            painted |= any(_paints_the_page(node, page_themes) for node in _outside_wrappers(value))
+    return any_fixed and not (wrapped and painted)
 
 
 def _too_few_animation_switches(needed: int) -> Callable[[str], bool]:
@@ -480,11 +637,10 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "letsplot-wrap",
         "letsplot",
-        lambda code: (
-            bool(_LETSPLOT_FIXED_RE.search(_without_strings(code)))
-            and not _LETSPLOT_WRAP_RE.search(_without_strings(code))
-        ),
-        "a fixed-aspect plot is not wrapped in a one-panel grid, so the canvas outside its plot box stays transparent",
+        _letsplot_unwrapped,
+        "a fixed-aspect plot is not held by a `gggrid` or `ggbunch` that carries the page colour "
+        "(`theme(plot_background=element_rect(fill=PAGE_BG, ...))` on the wrapper), so the canvas outside its "
+        "plot box stays transparent",
         "Wrap the finished plot in a one-panel `gggrid` of the canvas size that carries the page color.",
     ),
     Mandate(
@@ -527,7 +683,7 @@ MANDATES: tuple[Mandate, ...] = (
     Mandate(
         "animation",
         "muix",
-        lambda code: not _SKIP_ANIMATION_RE.search(code),
+        lambda code: not _SKIP_ANIMATION_RE.search(_js_without_strings(code)),
         "no chart component passes `skipAnimation`, so the screenshot can catch a frame before the last",
         "**`skipAnimation` is mandatory**",
     ),

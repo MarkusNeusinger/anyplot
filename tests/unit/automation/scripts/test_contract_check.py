@@ -883,6 +883,72 @@ def test_code_patterns_skip_string_literals():
     assert _mandates(BOKEH_FIGURE + BOKEH_SAVE_PAINTED, "bokeh") == []
 
 
+def test_javascript_switches_in_strings_are_text():
+    """A JavaScript string or template literal that spells a switch is no switch; its `${}` fields are code."""
+    note = CHARTJS_OPTIONS.replace("    animation: false,\n", "") + 'const note = "animation: false";\n'
+    assert _mandates(note, "chartjs", language="javascript") == ["animation"]
+    single = note.replace('"animation: false"', "'animation: false'")
+    assert _mandates(single, "chartjs", language="javascript") == ["animation"]
+    escaped = note.replace('"animation: false"', '"say \\"animation: false\\" here"')
+    assert _mandates(escaped, "chartjs", language="javascript") == ["animation"]
+    template = note.replace('"animation: false"', "`${t.ink} animation: false`")
+    assert _mandates(template, "chartjs", language="javascript") == ["animation"]
+    # Code inside a template field stays code, and a key in quotes stays a key.
+    field = ECHARTS_OPTION.replace("  animation: false,\n", "  name: `${JSON.stringify({ animation: false })}`,\n")
+    assert _mandates(field, "echarts", language="javascript") == []
+    quoted_key = ECHARTS_OPTION.replace("  animation: false,", '  "animation": false,')
+    assert _mandates(quoted_key, "echarts", language="javascript") == []
+    # Highcharts needs both switches: one of them in a string leaves one.
+    in_string = HIGHCHARTS_BOTH.replace("series: { animation: false }", 'series: { name: "animation: false" }')
+    assert _mandates(in_string, "highcharts", language="javascript") == ["animation"]
+    # MUI X: the prop in a hint string is no prop; an apostrophe in JSX text closes at the end of its line.
+    hint = MUIX_CHART.replace("        skipAnimation\n", "") + 'const hint = "pass skipAnimation";\n'
+    assert _mandates(hint, "muix", language="javascript") == ["animation"]
+    jsx_text = "<Typography>Users' share</Typography>\n" + MUIX_CHART
+    assert _mandates(jsx_text, "muix", language="javascript") == []
+
+
+def test_the_letsplot_wrapper_must_hold_the_fixed_aspect_plot_and_paint_the_page():
+    """The wrap the prompt asks for: a gggrid or ggbunch that holds the plot and carries the page colour."""
+    # The real wrap of heatmap-geographic (#14301), and the wrap painted in a later statement, as
+    # line-parametric does it.
+    assert _mandates(LETSPLOT_WRAPPED, "letsplot") == []
+    later = LETSPLOT_WRAPPED.replace(
+        "plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))",
+        "grid = gggrid([plot])\nfinal = grid + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG))",
+    )
+    assert _mandates(later, "letsplot") == []
+    named = "PAGE = theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))\n" + LETSPLOT_WRAPPED.replace(
+        "+ theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))", "+ PAGE"
+    )
+    assert _mandates(named, "letsplot") == []
+    through_list = """
+map_plot = ggplot(df) + coord_fixed(ratio=1.0)
+key_plot = ggplot(df) + geom_tile()
+panels = [map_plot, key_plot]
+plot = gggrid(panels, ncol=2) + ggsize(800, 450) + theme(plot_background=element_rect(fill=PAGE_BG))
+"""
+    assert _mandates(through_list, "letsplot") == []
+    inline = (
+        "plot = ggplot(df) + coord_fixed()\nggsave(gggrid([plot]) + theme(plot_background=element_rect(fill=BG)), f)\n"
+    )
+    assert _mandates(inline, "letsplot") == []
+    # A wrapper that holds another panel, a wrapper without the page colour, and the page colour
+    # only on the panel inside the wrapper all leave the strips transparent.
+    other_panel = through_list.replace("panels = [map_plot, key_plot]", "panels = [key_plot]")
+    assert _mandates(other_panel, "letsplot") == ["letsplot-wrap"]
+    unpainted = LETSPLOT_WRAPPED.replace(" + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))", "")
+    assert _mandates(unpainted, "letsplot") == ["letsplot-wrap"]
+    inside = unpainted.replace("gggrid([plot])", "gggrid([plot + theme(plot_background=element_rect(fill=PAGE_BG))])")
+    assert _mandates(inside, "letsplot") == ["letsplot-wrap"]
+    # A theme painted before the wrap belongs to the panel, not to the wrapper.
+    before = LETSPLOT_WRAPPED.replace(
+        "plot = gggrid([plot]) + ggsize(600, 600) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))",
+        "plot = plot + theme(plot_background=element_rect(fill=PAGE_BG))\nplot = gggrid([plot]) + ggsize(600, 600)",
+    )
+    assert _mandates(before, "letsplot") == ["letsplot-wrap"]
+
+
 def test_every_rule_has_its_reason_and_the_prompt_still_says_it():
     """Each rule names what it found and quotes its prompt; the quote must still stand in that file."""
     keys = [mandate.key for mandate in MANDATES]
