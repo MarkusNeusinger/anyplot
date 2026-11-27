@@ -2,56 +2,45 @@ library: pygal
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:36:15Z'
-updated: '2026-05-28T14:11:13Z'
+updated: '2026-11-27T16:27:51Z'
 generated_by: claude-sonnet
-workflow_run: 26577416479
+workflow_run: 46032847440
 issue: 689
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 88
 review:
   strengths:
-  - Sophisticated SVG post-processing to enhance box fill opacity (0.7), ink-colored
-    borders per series, enlarged outlier circles (r=20), and thickened whiskers (stroke-width:5)
-    — well above pygal defaults
-  - Storytelling subtitle annotation below the title highlights highest/lowest median
-    department and the salary gap, creating genuine narrative value
-  - Comma-formatted y-axis tick labels via SVG regex (80,000 vs 80000) adds professional
-    polish
-  - 'Perfect Imprint palette compliance: Engineering=#009E73 first, canonical order
-    through HR, correct #FAF8F1/#1A1A17 backgrounds, theme-adaptive chrome in both
-    renders'
-  - 'Complete spec compliance: Tukey whiskers, visible outlier dots, median line,
-    per-category colors for all 5 departments'
-  - Clean code with explanatory comments on each SVG workaround (explains the pygal
-    hardcoded .subtle-fill opacity, the r=3 outlier issue, etc.)
+  - Whiskers and caps re-drawn in the theme ink at 6 px, so the box skeleton and the
+    median read clearly in both themes
+  - Tukey 1.5*IQR whiskers via box_mode='tukey' with enlarged, outlined outlier points
+    (r=20)
+  - Axis range and ticks derived from df instead of literals; the table-driven Data
+    block adapts to other data
+  - Realistic PM2.5-by-zone scenario with a clear Industrial-to-Park gradient and
+    plausible smog and bonfire episodes
+  - Imprint palette in canonical order with theme-correct chrome in both renders
   weaknesses:
-  - 'DE-01 moderate: design is above defaults but not yet publication-ready — Engineering
-    box (highest median) could be further visually emphasized (e.g. slightly higher
-    fill opacity or a subtle glow border) to create a stronger focal point and push
-    to 8/8'
-  - 'DE-02 moderate: dashed grid lines in the dark render read slightly busy against
-    the near-black background — consider reducing grid opacity or switching to thin
-    solid lines at 10% opacity for more refined look'
-  - 'LM-02: SVG post-processing is creative but pygal has additional distinctive features
-    that could be showcased, such as custom x_labels for category display or sparkline-based
-    annotations native to pygal''s SVG output'
+  - 'Suggestion: x_labels with the zone names under each box would let a reader identify
+    the boxes without going through the legend.'
+  - 'Suggestion: centring the bottom legend under the plot area would balance the
+    free band to the right of ''Park''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
-      Chrome: Title "box-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Italic subtitle annotation in muted ink: "Highest median: Engineering ($83,265) · Lowest median: HR ($57,393) · Gap: $25,872". Y-axis label "Salary ($)" and X-axis label "Department" both readable in dark ink. Comma-formatted tick labels (20,000–140,000) clearly visible. Bottom legend with 5 color swatches and labels all readable.
-      Data: 5 box plots — Engineering (#009E73 green), Marketing (#C475FD lavender), Sales (#4467A3 blue), Operations (#BD8233 ochre), HR (#AE3030 red) — in anyplot canonical order. Boxes have 0.7 fill opacity with ink-colored borders. Outlier circles enlarged and clearly visible (Engineering has 3 above + 2 below, Sales has 1 above + 1 below). Tukey whiskers with horizontal caps visible for all categories. Dashed y-axis grid lines subtle. Bottom axis line visible. No x-axis grid (cleaner look).
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: warm off-white #FAF8F1, no chart border.
+      Chrome: title "box-basic · python · pygal · anyplot.ai" in dark ink at top centre; y-axis title "PM2.5 (µg/m³)" and x-axis title "City zone" in dark ink; y tick labels 0-140 in steps of 10, one size; dashed muted y-grid; bottom legend with five swatches (Industrial, Downtown, Residential, Suburban, Park). All readable.
+      Data: five boxes in #009E73, #C475FD, #4467A3, #BD8233, #AE3030 at 0.7 fill with ink-soft borders; median line in a darker shade of each series inside the box; whiskers and caps in black ink at 6 px; outliers as large outlined circles (Industrial 4 above, Downtown 5 above, Residential 1, Suburban 2 touching, Park 3). Medians fall from ~46 to ~12.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title and subtitle in light/near-white ink, clearly readable. Axis labels, tick labels, and legend text all in light colors. No dark-on-dark failures observed.
-      Data: Colors identical to light render — Engineering green, Marketing lavender, Sales blue, Operations ochre, HR red. Box borders appear with #B8B7B0 ink in dark mode, making the box boundaries clearly visible against the dark background. Outlier circles and whiskers visible.
-      Legibility verdict: PASS — all text readable against dark background, data-color identity confirmed
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink; grid subtle and visible; no dark-on-dark text.
+      Data: same five categorical colors as light (box fills read deeper over the dark page at 0.7 opacity, legend swatches identical); medians in a lighter tint visible in every box; whiskers and caps in light ink; outliers outlined in light ink. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,75 +51,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36). Proportional and readable in both themes.
+        comment: All sizes set explicitly at the pygal references (title 66, tick
+          labels 44, legend 44); one uniform tick size on the y-axis; every text element
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap observed in either render.
+        comment: No text collisions; the two touching Suburban outliers stay distinguishable
+          by their outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes with 0.7 fill opacity + ink borders clearly visible. Outlier
-          circles enlarged (r=20). Whiskers thickened (stroke-width:5).
+        comment: Whiskers and caps drawn in ink at 6 px, boxes at 0.7 fill with a
+          4 px border, outliers enlarged to r=20; all marks clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5-color Imprint palette is CVD-safe by design with max-min delta-E
-          optimization.
+        comment: Five well-separated Imprint hues, boxes also separated by position;
+          ink outlines add luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape. Balanced margins (80px). Legend at bottom well-placed.
-          Chart area fills canvas proportionally.
+        comment: Plot area spans the 3200x1800 canvas; margins hold title, axis titles
+          and the bottom legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Salary ($)'' with units. X-axis: ''Department'' descriptive.'
+        comment: '''PM2.5 (µg/m³)'' with unit, ''City zone'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering first = #009E73. Canonical palette order through all
-          5 departments. Light background #FAF8F1, dark #1A1A17. Theme-adaptive chrome
-          correct in both renders.'
+        comment: 'Industrial first in #009E73, then Imprint positions 2-5 in canonical
+          order; #FAF8F1 / #1A1A17 backgrounds, theme-correct chrome in both renders'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design clearly above defaults: SVG post-processing for enhanced
-          box fills, enlarged outliers, ink borders, comma-formatted ticks, storytelling
-          annotation. Not yet FiveThirtyEight-level.'
+        comment: 'Beyond the baseline: whiskers and caps re-drawn in the theme ink
+          so the box skeleton reads as one system, ink-soft box borders and enlarged
+          outlined outliers; typography stays at the defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: chart border removed, y-axis only grid, generous
-          margins. Dashed grid lines in dark render slightly busy.'
+        comment: Line-weight hierarchy decided for this chart (6 px whiskers, 4 px
+          box borders), chart border removed, y-only grid at 10-unit steps fitted
+          to the data
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtitle annotation highlights highest/lowest median and salary gap
-          — genuine storytelling above mere data display.
+        comment: Zones ordered from Industrial to Park so the medians fall in a clear
+          pollution gradient, with smog and bonfire episodes as outliers; no further
+          emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box plot with Tukey mode (1.5*IQR whiskers).
+        comment: Basic box plot, one box per category, nothing beyond median, whiskers
+          and outliers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: median line, outliers as dots, whiskers
-          at 1.5*IQR, different colors per category.'
+        comment: Median line stands out in both themes (C1), Tukey 1.5*IQR whiskers
+          with outliers as points (C2), one shared axis (C3), a color per category
+          (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department categories, Y=Salary values. All 5 departments correctly
-          displayed.
+        comment: Range derived from df (0-140), all outliers inside, round ticks every
+          10
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''box-basic · python · pygal · anyplot.ai'' correct. Legend
-          at bottom with correct department labels.'
+        comment: Title 'box-basic · python · pygal · anyplot.ai'; legend names the
+          five zones
     data_quality:
       score: 15
       max: 15
@@ -171,23 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all boxplot features: different distributions, different IQR
-          spreads, outliers in multiple categories (Engineering 3+2, Sales 1+1), varying
-          medians.'
+        comment: Different medians and spreads, skewed lognormal shapes, outliers
+          in four zones and none in one
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary distributions across 5 business departments — comprehensible,
-          real-world, neutral scenario.
+        comment: 'PM2.5 readings by city zone: a real, neutral environmental-monitoring
+          scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Salary ranges realistic: Engineering ~$40K–$135K, HR ~$40K–$80K.
-          Relationships between departments plausible.'
+        comment: 'Checked: medians read off the axis (~46, 33, 27, 19, 12) match the
+          lognormal medians in lines 42-46; episode values 96-133 µg/m³ plausible
+          smog peaks'
     code_quality:
       score: 10
       max: 10
@@ -197,62 +191,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → sys.path fix → data → style → chart
-          → SVG post-processing → save. No functions or classes.'
+        comment: Imports, tokens, column constants, Data, Plot, Save at the top level;
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all data generation.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, re, cairosvg, numpy, pygal, pygal.style.Style — all used.
-          No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG post-processing is pragmatic workaround for pygal limitations,
-          well-commented explaining the why for each step.
+        comment: Three short commented SVG passes, each with a visible effect pygal
+          offers no option for
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (PNG) and plot-{THEME}.html (interactive SVG)
-          as required for pygal.
+        comment: Writes plot-{THEME}.html and plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.Box with Style object, box_mode='tukey', truncate_legend=-1,
-          legend_at_bottom — uses library's recommended patterns.
+        comment: pygal.Box fed by a groupby dict, a Style object with guide stroke
+          colors, legend_at_bottom_columns sized from the data, range derived from
+          df
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: box_mode='tukey' is pygal-specific. SVG post-processing leverages
-          pygal's SVG-native output. HTML export uses pygal's interactive SVG features.
+        passed: false
+        comment: Restyles pygal's native SVG output and keeps its per-box tooltips
+          in the HTML; box_mode='tukey' itself is what the Notes ask for
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-27T16:23:34Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
-  - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
