@@ -2,52 +2,48 @@ library: altair
 language: python
 specification_id: density-basic
 created: '2025-12-23T10:00:19Z'
-updated: '2026-05-30T03:38:07Z'
+updated: '2026-11-27T22:49:59Z'
 generated_by: claude-sonnet
-workflow_run: 26672978047
+workflow_run: 46078362709
 issue: 912
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 86
 review:
   strengths:
-  - Altair-native transform_density for KDE computation — no scipy dependency required
-  - Legitimate Altair selection-based hover interactivity (nearest-point tooltip +
-    conditional opacity hover dot) correctly used in interactive library
-  - Bimodal test-score distribution tells a clear, readable educational story with
-    labeled peaks
-  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders pass
-    legibility checks with no dark-on-dark or light-on-light failures'
-  - 'Complete feature set: filled area curve, rug plot, peak annotations, subtitle
-    — all spec-optional features included'
-  - PIL canvas padding correctly used to meet exact 3200×1800 target without cropping
-  - Layer composition (alt.layer) idiomatically combines density curve, rug, annotations,
-    and hover elements
+  - Altair-native transform_density computes the KDE in Vega-Lite, reused as one base
+    chart for the area, the hover points and the hover dot
+  - The curve falls back to zero at both ends because the density extent and the x
+    domain are both derived from the data range plus three bandwidths
+  - autosize fit fills the 3200x1800 canvas exactly; title, axes and rug use the space
+    well in both themes
+  - 'Native Vega-Lite interactivity in the HTML: nearest-point selection on pointerover
+    with a conditional-opacity hover dot and formatted tooltips'
+  - Theme tokens threaded through axis, title and subtitle; both renders fully legible,
+    Imprint green identical across themes
+  - Bandwidth 4 keeps both modes and the asymmetric right tail visible without noise
   weaknesses:
-  - 'DE-01/DE-02: Design is strong but not publication-level — axis domain lines and
-    tick marks could be made more subtle (lighter domainColor, reduced tick length)
-    to lift refinement from ''configured'' to ''polished'''
-  - 'DE-02: No explicit spine removal beyond configure_view(strokeWidth=0); removing
-    tick marks (tickSize=0 in configure_axis) would further clean the chrome'
-  - 'LM-02: While transform_density and selection-based hover are used, a more creative
-    use of Altair-exclusive features (e.g. repeat/facet composition, param-driven
-    brushing) could push library mastery higher'
+  - 'Suggestion: the extent of three bandwidths (about 8 to 112) draws flat tails
+    past the 0-100 score scale; two bandwidths, or capping the upper extent at the
+    maximum possible score, would end the curve closer to the data'
+  - 'Suggestion: a slightly heavier rug opacity in the dark render would make the
+    individual observations read as clearly as on the light surface'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "density-basic · python · altair · anyplot.ai" in bold dark ink at 16px, subtitle "Kernel density estimation of test scores across two course levels" in secondary gray (INK_SOFT). Y-axis label "Probability Density" and X-axis label "Test Score (points)" clearly readable in dark ink. Tick labels on both axes legible at 10px. Subtle horizontal grid lines (Y-axis only) at ~12% dark opacity barely visible — not competing with data.
-      Data: Imprint brand green #009E73 density fill at 40% opacity with a 2.5px solid line forming the KDE curve. Bimodal peaks at ~38 (Foundational Course) and ~72 (Advanced Course) clearly visible. Rug plot at y=0 in the same green at 30% opacity. "Foundational Course" and "Advanced Course" bold dark-text annotations positioned above respective peaks via dy=-14 offset.
-      Legibility verdict: PASS — all text elements readable, no light-on-light failures, balanced axis labels.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title 'density-basic · python · altair · anyplot.ai' with an INK_SOFT subtitle 'Kernel density estimation of test scores across two course levels'; axis titles 'Probability Density' and 'Test Score (points)' in dark ink; tick labels 10-110 and 0.000-0.035 in INK_SOFT; subtle y-only grid, visible through the fill.
+      Data: one Imprint #009E73 KDE curve (2.5 px outline, 40% fill) with peaks at ~38 (0.030) and ~73 (0.019) and a dip at ~55; curve falls to zero at both ends (about 8 and 112); green rug ticks at 30% opacity along the baseline. Chart fills the canvas.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title and axis labels rendered in near-white (#F0EFE8) INK token — clearly readable against the dark surface. Subtitle in secondary INK_SOFT (#B8B7B0). Tick labels in INK_SOFT, legible. Grid lines rendered in near-white at 12% opacity — very subtle horizontal bands, not dominant. No dark-on-dark failures observed.
-      Data: Density curve and rug plot are identical Imprint green #009E73 — data colors unchanged from light render, confirming only chrome flipped. Filled area, outline stroke, rug ticks, and annotations all correctly rendered. Peak annotations "Foundational Course" and "Advanced Course" appear in near-white INK text — fully readable on the dark surface.
-      Legibility verdict: PASS — all chrome correctly inverted, no dark-on-dark issues, data colors constant across themes.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, subtitle and ticks in #B8B7B0; grid lines subtle but visible; no dark-on-dark text.
+      Data: identical #009E73 curve, fill and rug as in the light render; fill reads as deep green, outline distinct; rug visible though dimmer.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,78 +54,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=16px, subtitle=13px, axis titles=12px,
-          tick labels=10px, annotations=11px bold. Both renders fully readable, no
-          proportional imbalance.'
+        comment: All sizes set explicitly (title 16, subtitle 13, axis titles 12,
+          tick labels 10); every text readable in both themes, title ~45% of width,
+          balanced axes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or text-data collisions in either render. Annotations
-          positioned with dy=-14 offset clear of peaks.
+        comment: No text collides with text or data in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density curve fill at opacity=0.40 with 2.5px outline clearly visible.
-          Rug plot at opacity=0.3 appropriate for 350 observations.
+        comment: '2.5 px curve outline, 40% fill, 350 rug ticks at 30% opacity: all
+          visible and suited to the density in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series Imprint brand green #009E73 — CVD-safe. No red-green
-          dependency.'
+        comment: Single green series with strong luminance contrast against both surfaces;
+          no hue-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). PIL padding correctly centers chart.
-          Chart fills proportionate canvas area with balanced margins.
+        comment: autosize fit fills the 3200x1800 canvas; title near the top, axes
+          reach the sides, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Test Score (points)'' with units; Y: ''Probability Density''
-          — descriptive and appropriate.'
+        comment: '''Test Score (points)'' with unit; ''Probability Density'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Background #FAF8F1 (light) / #1A1A17
-          (dark). Chrome flips correctly. Data colors identical across themes.'
+        comment: 'Curve, fill and rug in Imprint #009E73; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Strong design clearly above defaults: bimodal data story, filled
-          area, rug plot, subtitle, peak annotations. Not quite publication-level
-          but thoughtfully crafted.'
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes)
+          and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid (12% opacity), L-shaped frame via strokeWidth=0,
-          generous whitespace. Could be lifted with tick mark removal and lighter
-          domain lines.
+        comment: 'One step beyond the baseline: x grid switched off so the rug and
+          the curve read cleanly against the baseline, y-only grid at 12% opacity,
+          density ticks fixed to three decimals'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bimodal distribution with labeled peaks guides viewer to key insight
-          immediately. Visual hierarchy via annotation labels creates clear narrative.
+        passed: false
+        comment: Bimodal data is displayed but no hierarchy or focal point chosen
+          beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE density plot using Altair's native transform_density.
+        comment: Single KDE curve with the fill and rug the Notes allow; no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled area (opacity=0.40), smooth curve, rug plot, appropriate bandwidth=4
-          — all spec features present.
+        comment: Smooth density curve, transparent fill, optional rug, bandwidth 4
+          that keeps both modes; curve falls to zero at both ends (C1), gridlines
+          visible through the fill (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Test Score, Y=Probability Density. Domain [10,100] shows full data
-          range.
+        comment: X = score, Y = density from zero; domain derived from the data (min/max
+          +- 3 bandwidths); readable round ticks every 10 points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'density-basic · python · altair · anyplot.ai' matches required
-          format. No legend needed for single series.
+        comment: Title 'density-basic · python · altair · anyplot.ai' correct; single
+          series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -170,22 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shows skewness, multimodality, density estimation
-          characteristics. Rug plot shows individual observations.
+        comment: Bimodal, slightly asymmetric distribution shows modality, skew and
+          a thin tail; rug shows the observations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Foundational vs advanced course test scores: real, neutral educational
-          scenario, clearly comprehensible.'
+        comment: 'Test scores of a foundational and an advanced course: real, neutral
+          education scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Foundational course N(38,7), advanced N(72,8), scores clipped to
-          [5,100] — realistic and factually coherent for student performance data.
+        comment: 'Checked: modes read off at ~38 and ~73 match N(38,7) and N(72,8);
+          peak heights ~0.030 and ~0.019 match the mixture weights 200/350 and 150/350
+          convolved with bandwidth 4; scores clipped to 5-100'
     code_quality:
       score: 10
       max: 10
@@ -195,62 +190,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → Plot → Save flow with no functions or classes.
+        comment: Imports -> tokens -> constants -> Data -> Plot -> Save, all at the
+          top level; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (importlib, os, sys, numpy, pandas, PIL) are used.
+        comment: All imports used (importlib, os, sys, numpy, pandas; PIL via importlib)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic. The sys.path + importlib trick has an explanatory
-          comment and is a documented workaround.
+        comment: One shared density base chart reused by area, hover points and hover
+          dot; no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Altair
-          6.1.0 API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current Altair
+          6 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of declarative grammar: transform_density, alt.layer,
-          alt.condition, configure_view/axis/title, alt.Title with subtitle.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: transform_density (Altair-native KDE, no scipy needed) and selection_point(nearest=True)
-          with conditional opacity hover are distinctively Altair. Stops short of
-          5 as more creative composition (repeat, facet, param-driven brushing) wasn't
-          explored.
+        comment: 'Idiomatic Vega-Lite grammar beyond the mandates: one transform_density
+          base chart reused across layers, mark_area with a line property, y=alt.Y(datum=0)
+          for the rug, alt.Title subtitle'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'selection_point(nearest=True, on=''pointerover'') driving a conditional-opacity
+          hover dot plus formatted tooltips: Vega-Lite parameter interactivity in
+          the HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-27T22:46:07Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
