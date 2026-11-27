@@ -1,15 +1,15 @@
 """ anyplot.ai
 density-basic: Basic Density Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-30
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from scipy import stats
 
 
 # Theme tokens — Imprint palette + theme-adaptive chrome
@@ -37,78 +37,37 @@ sns.set_theme(
     },
 )
 
-# Data — bimodal API response latencies: cache hits (fast) vs. cache misses (slow)
-np.random.seed(42)
-latencies = np.concatenate(
-    [
-        np.random.normal(45, 12, 350),  # Cache hit: fast path ~45ms
-        np.random.normal(185, 40, 150),  # Cache miss: slow path ~185ms
-    ]
-)
-latencies = np.clip(latencies, 5, 320)
+# Columns: set these to your table's column names
+BATTERY_LIFE = "Battery life (hours)"  # role: values
 
-# Pre-compute KDE peaks for annotation placement
-kde_func = stats.gaussian_kde(latencies)
-x_fine = np.linspace(5, 310, 1000)
-y_fine = kde_func(x_fine)
+# Data: replace this block with your own table, for example df = pd.read_csv("batteries.csv")
+rng = np.random.default_rng(42)
+df = pd.DataFrame({BATTERY_LIFE: rng.gamma(shape=6, scale=1.5, size=500) + 2})
 
-peak1_mask = x_fine < 120
-peak1_x = x_fine[peak1_mask][np.argmax(y_fine[peak1_mask])]
-peak1_y = np.max(y_fine[peak1_mask])
-
-peak2_mask = x_fine >= 120
-peak2_x = x_fine[peak2_mask][np.argmax(y_fine[peak2_mask])]
-peak2_y = np.max(y_fine[peak2_mask])
-
-# Canvas: 3200 × 1800 px (16:9 landscape)
+# Plot: reads only df and the constants above
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# KDE with native seaborn fill (idiomatic fill=True)
-sns.kdeplot(data=latencies, ax=ax, fill=True, alpha=0.35, color=BRAND, linewidth=2.5, bw_adjust=0.9)
+# KDE with native seaborn fill; cut=2 lets the tails fall to zero near the data range
+sns.kdeplot(data=df, x=BATTERY_LIFE, ax=ax, fill=True, alpha=0.35, color=BRAND, linewidth=2.5, bw_adjust=0.9, cut=2)
 
 # Rug plot showing individual observations
-sns.rugplot(data=latencies, ax=ax, color=BRAND, alpha=0.3, height=0.04)
+sns.rugplot(data=df, x=BATTERY_LIFE, ax=ax, color=BRAND, alpha=0.3, height=0.04)
 
-# Peak annotations
-ax.annotate(
-    "Cache hit",
-    xy=(peak1_x, peak1_y),
-    xytext=(peak1_x - 18, peak1_y * 0.65),
-    fontsize=8,
-    fontweight="medium",
-    color=INK,
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
-    ha="center",
-    va="top",
-)
-ax.annotate(
-    "Cache miss",
-    xy=(peak2_x, peak2_y),
-    xytext=(peak2_x + 32, peak2_y + peak1_y * 0.18),
-    fontsize=8,
-    fontweight="medium",
-    color=INK,
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
-    ha="center",
-    va="bottom",
-)
-
-# Style
 title = "density-basic · python · seaborn · anyplot.ai"
 n = len(title)
 ratio = 67 / n if n > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 
-ax.set_xlabel("Response Latency (ms)", fontsize=10, color=INK)
 ax.set_ylabel("Density", fontsize=10, color=INK)
+ax.set_xlabel(BATTERY_LIFE, fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
-ax.set_xlim(left=0)
+ax.set_ylim(bottom=0)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 
 plt.tight_layout()
