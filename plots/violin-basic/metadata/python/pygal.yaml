@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:37:04Z'
-updated: '2026-11-27T20:20:42Z'
+updated: '2026-11-27T20:29:00Z'
 generated_by: claude-sonnet
-workflow_run: 46062213667
+workflow_run: 46063106003
 issue: 722
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,57 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 83
 review:
   strengths:
-  - Mirrored Silverman KDE, IQR box and warm-white median line cover every required
-    feature in both themes
-  - Per-hue darker IQR shades derived from the Imprint color keep each violin's box
+  - Mirrored Silverman KDE via scipy.stats.gaussian_kde, IQR box and warm-white median
+    bar cover every required feature in both themes
+  - Per-hue darker IQR shades derived from each Imprint color keep each violin's box
     cohesive with its fill
-  - 'Chrome fully themed: #FAF8F1/#1A1A17 backgrounds, INK/INK_MUTED text and grid;
-    dark render fully readable'
-  - Uniform 44 px tick labels on both axes and a data-fitted value axis not forced
-    to zero
+  - Fill-only polygons with zero stroke opacity draw clean violin, box and median
+    shapes without pygal's closing edges
+  - 'Chrome fully themed: #FAF8F1/#1A1A17 surfaces, INK/INK_MUTED text and grid; dark
+    render fully readable'
   - Per-series formatter tooltips show median, Q1 and Q3 in the interactive HTML
   weaknesses:
-  - 'VQ-03 (both): pygal''s fill closes each violin and IQR polygon to the plot edge,
-    leaving thin vertical stroke lines from every violin tail and IQR box corner down
-    to the x-axis (and up to 103% for Remedial) that read as marks without data →
-    no lines outside the violins. Likely cause: fill=True on pygal.XY series closing
-    to the baseline; close the polygons without the baseline (fill only the violin
-    series, draw the IQR box with stroke only or zero-width boundary).'
-  - 'VQ-03 (both): the median line renders as a roughly 1-2 px hairline inside the
-    IQR box, far thinner than the requested 18 px, and the IQR box outline does not
-    show → a median line at least 6-8 px thick. Likely cause: per-series stroke_style
-    width not applied in the PNG render; set it via the style or a dedicated series
-    config that pygal honours.'
-  - 'SC-01 (both): violins with more than one density peak are drawn 1.2x wider (Advanced),
-    a highlighted violin the basic variant excludes (C5) → one width rule for all
-    violins. Likely cause: MULTIMODAL_SCALE multiplier.'
-  - 'SC-03 (both): the density grid ends at data max + 3, so the Advanced violin is
-    cut flat at 103% instead of closing → extend the grid until the density falls
-    near zero or clip at the data range. Likely cause: y_grid = np.linspace(y_min,
-    y_max, N_POINTS).'
-  - 'CQ-04 (code): the Gaussian KDE with Silverman bandwidth is written out by hand
-    → scipy.stats.gaussian_kde(values, bw_method=''silverman'')(y_grid). Likely cause:
-    the manual bandwidth and exp-sum density lines.'
+  - 'SC-03 (both): the density grid runs 2.5 bandwidths past each group''s data range,
+    so the tails of scores clipped at 100 reach about 105% (Honors), 107% (Standard)
+    and 109% (Advanced) and Remedial''s lower tail about 33% → tails that end near
+    the data range (at most about 1 bandwidth past it, or cut at the data min/max).
+    Likely cause: TAIL_BANDWIDTHS = 2.5 in the grid reach.'
   - 'Suggestion: a thin page-colored outline on each violin would sharpen the silhouettes
-    on the dark surface.'
+    where the Advanced box meets its fill on the dark surface.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title 'violin-basic · python · pygal · anyplot.ai' (~52% width) dark and readable; 'Test Score (%)' and 'Class Group' axis titles and uniform 44 px tick labels (40%-100%, Honors/Standard/Remedial/Advanced) readable; subtle dashed y-grid.
-      Data: four mirrored violins Honors #009E73 (first), Standard #C475FD, Remedial #4467A3, Advanced #BD8233 (bimodal, drawn wider) at 0.78 opacity, each with a darker IQR box and a hairline warm-white median; thin vertical fill-artifact lines run from tails and box corners down to the axis (Remedial also up to 103%); Advanced top cut flat at 103%.
+      Chrome: title 'violin-basic · python · pygal · anyplot.ai' (~52% width), 'Test Score (%)' and 'Class Group' axis titles, ticks 40%-100% and Honors/Standard/Remedial/Advanced, all dark and readable; subtle dashed y-grid.
+      Data: four mirrored violins Honors #009E73 (first), Standard #C475FD (right-skewed), Remedial #4467A3, Advanced #BD8233 (bimodal) at 0.78 opacity, each with a darker IQR box and a thick warm-white median bar; no stray lines outside the shapes; upper tails run past 100% to about 105-109%.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles and ticks in light #F0EFE8/#A8A79F text, all readable, no dark-on-dark; grid lines visible in muted ink.
-      Data: categorical colors identical to the light render; IQR boxes of Remedial and Advanced lower contrast but visible; same artifact lines and hairline medians; brand green clearly visible.
+      Chrome: title, axis titles and ticks in light ink, all readable, no dark-on-dark; muted dashed grid visible.
+      Data: categorical colors identical to the light render; IQR boxes lower contrast on Remedial and Advanced but visible; median bars clearly visible; brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -80,36 +64,35 @@ review:
         comment: No text collisions; violins well separated
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Fill-closure artifact lines run from every violin and IQR box to
-          the plot edges, and the median line renders hairline-thin (defect lines)
+        passed: true
+        comment: 'Fill-only polygons with invisible strokes: no closing artifact lines;
+          median bar clearly visible on every IQR box in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hues, CVD-safe, no red-green signal
+        comment: Four distinct Imprint hues, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, uniform tick sizes, balanced margins, nothing cut off
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Test Score (%)'' with unit, ''Class Group''; canonical title'
+        comment: '''Test Score (%)'' with unit, ''Class Group'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Green first, Imprint order, #FAF8F1/#1A1A17, grid themed in both
-          renders'
+        comment: '#009E73 first, Imprint order, #FAF8F1/#1A1A17 surfaces, themed chrome'
     design_excellence:
       score: 9
       max: 20
@@ -119,54 +102,52 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Per-hue darker IQR box shades and a warm-white median give each violin
-          an internal hierarchy beyond the baseline
+        comment: Per-hue darker IQR box shade and a warm-white median bar give each
+          violin an internal hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Style-guide baseline (y-guides only, no legend); fill artifact lines
-          detract, nothing beyond
+        comment: 'Style-guide baseline: y-guides only, no x-guides, no legend; nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; the wider multimodal violin is an unasked highlight
-          and earns no credit
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: 'Violin plot, but violins with several density peaks are drawn 1.2x
-          wider: a highlighted violin the basic variant excludes (defect line)'
+        passed: true
+        comment: Basic violin plot, one color per category, one width rule for all
+          violins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mirrored density, IQR box as quartile markers, median line all present
-          (C1, C3)
+        comment: Mirrored density (C1), IQR box as quartile markers and median bar
+          (C3) in every violin
       - id: SC-03
         name: Data Mapping
         score: 2
         max: 3
         passed: false
-        comment: Shared value axis not forced to zero; the density grid stops at data
-          max + 3, so the Advanced violin is cut flat at 103% (defect line)
+        comment: Shared value axis not forced to zero, but the KDE tails run 2.5 bandwidths
+          past the data and reach about 105-109% on a 0-100 score (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'violin-basic · python · pygal · anyplot.ai' correct; categories
-          on x-axis, no legend needed
+        comment: Canonical title; categories on x-axis, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -176,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Symmetric, right-skewed, wide and bimodal shapes cover the plot type
+        comment: Symmetric, right-skewed, wide and bimodal shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Test scores by class group (Honors, Standard, Remedial, Advanced):
-          plausible, neutral'
+        comment: 'Test scores by class group: plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 40-100%, 200 points per group; no Check values in the spec
+        comment: Scores 30-100, 200 per group; the spec has no Check values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -214,11 +194,10 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Gaussian KDE with Silverman bandwidth written out by hand where scipy.stats.gaussian_kde
-          computes it (defect line)
+        passed: true
+        comment: KDE from scipy.stats.gaussian_kde(bw_method='silverman')
       - id: CQ-05
         name: Output & API
         score: 1
@@ -234,22 +213,22 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: 'pygal.XY polygons with fill/stroke as the violin workaround, Style
-          object: default'
+        comment: 'pygal.XY polygons with a Style object: default'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Per-series formatter tooltips carrying median/Q1/Q3 in the HTML output
+        comment: Per-series formatter tooltips carrying median, Q1 and Q3 in the HTML
+          output
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
-  rendered_at: '2026-11-27T20:17:07Z'
+  rendered_at: '2026-11-27T20:25:53Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -257,7 +236,5 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - kde
-  - normalization
   styling:
   - alpha-blending
-  - grid-styling
