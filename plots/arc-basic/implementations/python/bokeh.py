@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 arc-basic: Basic Arc Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-27
@@ -43,12 +43,44 @@ TARGET = "Responder"  # role: extra
 WEIGHT = "Shared scenes"  # role: weights
 
 # Data: replace this block with your own edge list, for example df = pd.read_csv("edges.csv")
-# Character interactions in one chapter of a story; nodes follow the order of first appearance.
+# Character interactions in chapter 1 of a fictional harbour-town story; nodes follow the order of first appearance.
 df = pd.DataFrame(
     {
-        SOURCE: ["Alice", "Alice", "Bob", "Carol", "Alice", "David", "Eve", "Alice", "Bob", "Carol", "Frank", "Bob"],
-        TARGET: ["Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Henry", "Eve", "Grace", "Henry", "Carol"],
-        WEIGHT: [3, 2, 1, 2, 1, 2, 1, 3, 2, 1, 2, 1],
+        SOURCE: [
+            "Mara",
+            "Mara",
+            "Tobias",
+            "Ingrid",
+            "Mara",
+            "Jonas",
+            "Elsie",
+            "Mara",
+            "Tobias",
+            "Ingrid",
+            "Corin",
+            "Wren",
+            "Odile",
+            "Mara",
+            "Silas",
+        ],
+        TARGET: [
+            "Tobias",
+            "Ingrid",
+            "Jonas",
+            "Elsie",
+            "Corin",
+            "Wren",
+            "Silas",
+            "Silas",
+            "Elsie",
+            "Wren",
+            "Odile",
+            "Peregrine",
+            "Hester",
+            "Hester",
+            "Peregrine",
+        ],
+        WEIGHT: [3, 2, 1, 2, 1, 2, 1, 3, 2, 1, 2, 1, 1, 2, 2],
     }
 )
 
@@ -100,7 +132,10 @@ p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.add_layout(
-    Title(text="Character interaction frequency · Chapter 1", text_font_size="30pt", text_color=INK_SOFT), "above"
+    Title(
+        text="Character interactions in The Harbour at Saltmere · Chapter 1", text_font_size="30pt", text_color=INK_SOFT
+    ),
+    "above",
 )
 
 # Arcs: one renderer per weight level, ordered levels run along the sequential ramp
