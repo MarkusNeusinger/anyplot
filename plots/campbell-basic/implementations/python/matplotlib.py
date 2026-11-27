@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 campbell-basic: Campbell Diagram
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-27
@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter
 
 
@@ -20,7 +19,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 ANYPLOT_AMBER = "#DDCC77"  # warning / caution — semantic anchor for critical condition
 
 # Imprint palette: all eight positions, one per mode in order
@@ -28,7 +26,6 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Constants
 ENGINE_ORDERS = [1, 2, 3]  # excitation orders drawn as lines from the origin
-OPERATING_RANGE = (2500, 4500)  # RPM band the machine runs in
 
 # Columns: set these to your table's column names
 SPEED = "Rotational Speed (RPM)"  # role: speed
@@ -38,15 +35,15 @@ CRITICAL_SPEED = "Critical Speed"  # role: critical_speeds
 FREQUENCY_AXIS = "Frequency (Hz)"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("modes.csv")
-rpm = np.linspace(0, 6000, 200)
+rpm = np.linspace(0, 4000, 200)
 df = pd.DataFrame(
     {
         SPEED: rpm,
-        MODES[0]: 18 + 0.004 * rpm - 1.5e-7 * rpm**2,
-        MODES[1]: 48 - 0.003 * rpm + 2.0e-7 * rpm**2,
-        MODES[2]: 58 + 0.0004 * rpm,
-        MODES[3]: 78 - 0.005 * rpm + 4.0e-7 * rpm**2,
-        MODES[4]: 92 + 0.005 * rpm - 3.5e-7 * rpm**2,
+        MODES[0]: 40 + 0.004 * rpm - 2.0e-7 * rpm**2,
+        MODES[1]: 80 - 0.0025 * rpm + 1.0e-7 * rpm**2,
+        MODES[2]: 105 + 0.0008 * rpm,
+        MODES[3]: 145 - 0.006 * rpm + 5.0e-7 * rpm**2,
+        MODES[4]: 170 + 0.006 * rpm - 4.0e-7 * rpm**2,
     }
 )
 
@@ -55,57 +52,37 @@ speed_rpm = df[SPEED].to_numpy()
 speed_hz = speed_rpm / 60
 mode_labels = list(MODES)
 modes = [df[m].to_numpy() for m in mode_labels]
-mode_colors = [IMPRINT_PALETTE[i] for i in range(len(modes))]
 x_max = np.nanmax(speed_rpm)
 y_max = np.ceil(np.nanmax(modes) * 1.05 / 20) * 20
-op_min, op_max = OPERATING_RANGE
 
 # Critical speeds: where an engine order line crosses a mode curve (linear interpolation)
-critical_speeds, critical_freqs, critical_mlabels = [], [], []
-for mode, mlabel in zip(modes, mode_labels, strict=True):
+critical_speeds, critical_freqs = [], []
+for mode in modes:
     for eo in ENGINE_ORDERS:
         diff = mode - eo * speed_hz
         for idx in np.where(np.diff(np.sign(diff)))[0]:
             t = abs(diff[idx]) / (abs(diff[idx]) + abs(diff[idx + 1]))
-            rpm_x = speed_rpm[idx] + t * (speed_rpm[idx + 1] - speed_rpm[idx])
-            freq = mode[idx] + t * (mode[idx + 1] - mode[idx])
-            if 0.02 * x_max < rpm_x < 0.98 * x_max:
-                critical_speeds.append(rpm_x)
-                critical_freqs.append(freq)
-                critical_mlabels.append(mlabel)
+            critical_speeds.append(speed_rpm[idx] + t * (speed_rpm[idx + 1] - speed_rpm[idx]))
+            critical_freqs.append(mode[idx] + t * (mode[idx + 1] - mode[idx]))
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Operating range shading
-ax.axvspan(op_min, op_max, alpha=0.06, color=INK, zorder=0)
-ax.axvline(op_min, color=INK_SOFT, linewidth=1.0, linestyle=":", alpha=0.5, zorder=1)
-ax.axvline(op_max, color=INK_SOFT, linewidth=1.0, linestyle=":", alpha=0.5, zorder=1)
-ax.text(
-    (op_min + op_max) / 2,
-    0.025,
-    "Operating Range",
-    transform=ax.get_xaxis_transform(),
-    fontsize=8,
-    color=INK_SOFT,
-    ha="center",
-    va="bottom",
-    fontstyle="italic",
-)
-
 # Mode curves
-for mode, color in zip(modes, mode_colors, strict=True):
-    ax.plot(speed_rpm, mode, linewidth=2.5, color=color, zorder=3, solid_capstyle="round")
+for i, mode in enumerate(modes):
+    ax.plot(speed_rpm, mode, linewidth=2.5, color=IMPRINT_PALETTE[i], zorder=3, solid_capstyle="round")
 
-# End-of-line labels — de-collide vertically (increased min_gap for cleaner separation)
-end_vals = [(mode[-1], label, color) for mode, label, color in zip(modes, mode_labels, mode_colors, strict=True)]
-end_vals.sort(key=lambda x: x[0])
-min_gap = 7.5
+# End-of-line labels, spaced apart vertically
+end_vals = [
+    (mode[-1], label, IMPRINT_PALETTE[i]) for i, (mode, label) in enumerate(zip(modes, mode_labels, strict=False))
+]
+end_vals.sort(key=lambda v: v[0])
+min_gap = 0.05 * y_max
 positions = [v[0] for v in end_vals]
 for i in range(1, len(positions)):
     if positions[i] - positions[i - 1] < min_gap:
         positions[i] = positions[i - 1] + min_gap
-for y_pos, (_, label, color) in zip(positions, end_vals, strict=True):
+for y_pos, (_, label, color) in zip(positions, end_vals, strict=False):
     ax.annotate(
         label,
         xy=(x_max, y_pos),
@@ -119,24 +96,16 @@ for y_pos, (_, label, color) in zip(positions, end_vals, strict=True):
         annotation_clip=False,
     )
 
-# Engine order lines with rotated labels
-# slope in display inches: (eo/60 Hz/RPM) × (axes_h_in / y_range) / (axes_w_in / x_range)
-ax_h_frac = 0.78  # top(0.91) - bottom(0.13)
-ax_w_frac = 0.75  # right(0.84) - left(0.09)
-ax_h_in = 4.5 * ax_h_frac
-ax_w_in = 8.0 * ax_w_frac
-
+# Engine order lines with labels rotated to the line's angle in data space
 for eo in ENGINE_ORDERS:
     eo_line = eo * speed_hz
     visible = eo_line <= y_max
     ax.plot(
         speed_rpm[visible], eo_line[visible], linewidth=1.5, color=INK_SOFT, linestyle=(0, (8, 4)), alpha=0.7, zorder=2
     )
-    target_freq = y_max * 0.28
+    target_freq = y_max * 0.13
     target_rpm = target_freq * 60 / eo
     if target_rpm < 0.967 * x_max:
-        slope_display = (eo / 60) * (ax_h_in / y_max) / (ax_w_in / x_max)
-        angle_deg = np.degrees(np.arctan(slope_display))
         ax.annotate(
             f"{eo}×",
             xy=(target_rpm, target_freq),
@@ -145,52 +114,17 @@ for eo in ENGINE_ORDERS:
             fontweight="bold",
             ha="center",
             va="bottom",
-            rotation=angle_deg,
+            rotation=np.degrees(np.arctan(eo / 60)),
+            transform_rotates_text=True,
             rotation_mode="anchor",
             zorder=4,
             bbox={"boxstyle": "round,pad=0.15", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85},
         )
 
 # Critical speed markers
-cs_arr, cf_arr = np.array(critical_speeds), np.array(critical_freqs)
-in_op = (cs_arr >= op_min) & (cs_arr <= op_max)
-
-if np.any(~in_op):
-    ax.scatter(
-        cs_arr[~in_op], cf_arr[~in_op], s=80, color=INK_MUTED, edgecolors=PAGE_BG, linewidth=0.8, zorder=5, alpha=0.55
-    )
-
-if np.any(in_op):
-    ax.scatter(
-        cs_arr[in_op], cf_arr[in_op], s=110, color=ANYPLOT_AMBER, edgecolors=INK, linewidth=1.0, zorder=6, marker="D"
-    )
-    op_s = cs_arr[in_op]
-    op_f = cf_arr[in_op]
-    op_m = np.array(critical_mlabels)[in_op]
-    order_idx = np.argsort(op_f)
-    n = len(order_idx)
-    for rank, si in enumerate(order_idx):
-        sign = 1 if rank % 2 == 0 else -1
-        dx = sign * 22
-        dy = -22 if rank < n / 2 else 18
-        ax.annotate(
-            op_m[si],
-            xy=(op_s[si], op_f[si]),
-            xytext=(dx, dy),
-            textcoords="offset points",
-            fontsize=8,
-            color=INK,
-            fontweight="bold",
-            arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 0.8, "shrinkB": 3},
-            zorder=7,
-            bbox={
-                "boxstyle": "round,pad=0.2",
-                "facecolor": ELEVATED_BG,
-                "edgecolor": ANYPLOT_AMBER,
-                "alpha": 0.9,
-                "linewidth": 0.7,
-            },
-        )
+ax.scatter(
+    critical_speeds, critical_freqs, s=100, color=ANYPLOT_AMBER, edgecolors=INK, linewidth=1.0, zorder=6, marker="D"
+)
 
 # Style
 title = "campbell-basic · python · matplotlib · anyplot.ai"
@@ -213,46 +147,34 @@ ax.set_ylim(0, y_max)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
-# Legend
+# Legend below the axes, clear of every curve and marker
 eo_handle = Line2D([0], [0], color=INK_SOFT, linewidth=1.5, linestyle=(0, (8, 4)), alpha=0.7)
-crit_outside = Line2D(
-    [0], [0], marker="o", color="none", markerfacecolor=INK_MUTED, markeredgecolor=PAGE_BG, markersize=7, alpha=0.5
-)
-crit_inside = Line2D(
+crit_handle = Line2D(
     [0], [0], marker="D", color="none", markerfacecolor=ANYPLOT_AMBER, markeredgecolor=INK, markersize=7
 )
-op_handle = Patch(facecolor=INK, alpha=0.25, edgecolor="none")
-
-handles = [Line2D([0], [0], color=c, linewidth=2.5) for c in mode_colors] + [
+handles = [Line2D([0], [0], color=IMPRINT_PALETTE[i], linewidth=2.5) for i in range(len(modes))] + [
     eo_handle,
-    crit_outside,
-    crit_inside,
-    op_handle,
+    crit_handle,
 ]
-legend_labels = mode_labels + [
-    f"{ENGINE_ORDER} ({min(ENGINE_ORDERS)}×–{max(ENGINE_ORDERS)}×)",
-    CRITICAL_SPEED,
-    "Critical (op. range)",
-    "Operating Range",
-]
+legend_labels = mode_labels + [f"{ENGINE_ORDER} ({min(ENGINE_ORDERS)}×–{max(ENGINE_ORDERS)}×)", CRITICAL_SPEED]
 
 leg = ax.legend(
     handles,
     legend_labels,
     fontsize=8,
-    loc="upper left",
-    ncol=2,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.17),
+    ncol=7,
     framealpha=0.92,
     edgecolor=INK_SOFT,
     borderpad=0.5,
-    labelspacing=0.4,
     handlelength=1.4,
     columnspacing=1.0,
 )
 leg.get_frame().set_facecolor(ELEVATED_BG)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.09, right=0.86, top=0.91, bottom=0.13)
+fig.subplots_adjust(left=0.09, right=0.86, top=0.91, bottom=0.22)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
