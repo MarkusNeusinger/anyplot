@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-29
@@ -7,6 +7,7 @@ Quality: 90/100 | Updated: 2026-05-29
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -29,21 +30,31 @@ IMPRINT_PALETTE = (
     "#99B314",
 )
 
-# Data — realistic PCA variance ratios for a 13-feature Wine-like dataset
+# Constants
+THRESHOLDS = (90, 95)  # variance shares (%) that guide how many components to keep
+ELBOW_SLOPE_SHARE = 0.35  # elbow: first step whose gain falls below this share of the first gain
+
+# Columns: set these to your table's column names
+COMPONENT = "Number of Components"  # role: n_components
+VARIANCE_RATIO = "Explained variance ratio"  # role: explained_variance_ratio
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pca_variance.csv")
+# Realistic PCA variance ratios for a 13-feature Wine-like dataset
 eigenvalues = np.array([4.73, 2.51, 1.45, 0.92, 0.85, 0.64, 0.55, 0.35, 0.29, 0.21, 0.17, 0.13, 0.08])
-explained_variance_ratio = eigenvalues / eigenvalues.sum()
-individual_variance = explained_variance_ratio * 100
-cumulative_variance = np.cumsum(explained_variance_ratio) * 100
-n_components = len(cumulative_variance)
-component_labels = [str(i) for i in range(1, n_components + 1)]
+df = pd.DataFrame({COMPONENT: np.arange(1, len(eigenvalues) + 1), VARIANCE_RATIO: eigenvalues / eigenvalues.sum()})
 
-# Detect elbow: where slope drops below 35% of the initial slope
+# Plot: reads only df and the constants above
+individual_variance = df[VARIANCE_RATIO].to_numpy() * 100
+cumulative_variance = pd.Series(individual_variance).cumsum().to_numpy()  # a missing ratio stays a gap
+n_components = len(df)
+component_labels = df[COMPONENT].astype(str).tolist()
+
+# Detect elbow: where slope drops below a share of the initial slope
 slopes = np.diff(cumulative_variance)
-elbow_idx = int(np.argmax(slopes < slopes[0] * 0.35))
+elbow_idx = int(np.argmax(slopes < slopes[0] * ELBOW_SLOPE_SHARE)) if n_components > 1 else 0
 
-# Threshold crossings
-cross_90 = int(np.searchsorted(cumulative_variance, 90))
-cross_95 = int(np.searchsorted(cumulative_variance, 95))
+# Threshold crossings: first component whose cumulative variance reaches each threshold
+crossings = {t: int(np.argmax(cumulative_variance >= t)) for t in THRESHOLDS if (cumulative_variance >= t).any()}
 
 # Style — Imprint palette, theme-adaptive tokens, 3200×1800 canvas sizing
 custom_style = Style(
@@ -55,6 +66,7 @@ custom_style = Style(
     colors=IMPRINT_PALETTE,
     opacity=0.38,  # semi-transparent fill so y-axis labels remain legible beneath the green area
     opacity_hover=1.0,
+    value_colors=(INK,) * 4,  # value labels follow the theme ink
     stroke_opacity=1.0,
     stroke_opacity_hover=1.0,
     stroke_width=2.5,
@@ -64,7 +76,7 @@ custom_style = Style(
     major_guide_stroke_color=INK_SOFT,
     major_guide_stroke_dasharray="8,12",  # longer gap for major guides at 90%/95%
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -83,7 +95,7 @@ chart = pygal.Line(
     width=3200,
     height=1800,
     title="line-pca-variance-cumulative · python · pygal · anyplot.ai",
-    x_title="Number of Components",
+    x_title=COMPONENT,
     y_title="Cumulative Explained Variance (%)",
     style=custom_style,
     show_dots=True,
@@ -96,7 +108,10 @@ chart = pygal.Line(
     legend_box_size=26,
     truncate_legend=-1,
     range=(0, 105),
-    secondary_range=(0, 55),  # individual variance secondary axis; wider margin ensures labels are visible
+    secondary_range=(
+        0,
+        max(105 * 0.5, np.nanmax(individual_variance) * 1.1),
+    ),  # half the primary scale: tidy right-axis ticks
     margin=30,
     margin_bottom=90,
     margin_left=220,  # wider left margin so y-axis labels sit clearly outside the green fill
@@ -104,7 +119,6 @@ chart = pygal.Line(
     margin_top=40,
     print_values=True,
     print_values_position="top",
-    value_formatter=lambda x: "",
     spacing=20,
     show_minor_x_labels=True,
     tooltip_fancy_mode=True,
@@ -112,26 +126,29 @@ chart = pygal.Line(
     interpolate="cubic",
     interpolation_precision=200,
     human_readable=False,
+    value_formatter=lambda x: f"{x:g}",  # compact axis ticks; points carry their own formatters
     no_data_text="No variance data",
 )
 
 # Axes — custom y-tick positions highlight the decision thresholds
 chart.x_labels = component_labels
 # Mark the three decision-point components as major x-labels (bold, guided)
-chart.x_labels_major = [str(elbow_idx + 1), str(cross_90 + 1), str(cross_95 + 1)]
-chart.y_labels = [0, 20, 40, 60, 80, 90, 95, 100]
-chart.y_labels_major = [90, 95]  # major guide lines drawn at the two decision thresholds
+chart.x_labels_major = [component_labels[i] for i in (elbow_idx, *crossings.values())]
+chart.y_labels = [0, 20, 40, 60, 80, *THRESHOLDS, 100]
+chart.y_labels_major = list(THRESHOLDS)  # major guide lines drawn at the two decision thresholds
 
 # Annotations at key decision points
-annotations = {
-    elbow_idx: lambda x: f"Elbow: n={elbow_idx + 1} ({x:.0f}%)",
-    cross_90: lambda x: f"90%: n={cross_90 + 1}",
-    cross_95: lambda x: f"95%: n={cross_95 + 1}",
-}
+annotations = {elbow_idx: lambda x: f"Elbow: n={elbow_idx + 1} ({x:.0f}%)"}
+for t, idx in crossings.items():
+    annotations[idx] = lambda x, t=t, idx=idx: f"{t}%: n={idx + 1}"
 
 # Cumulative variance — brand green filled area, thick primary stroke for visual hierarchy
 cumulative_values = [
-    {"value": round(v, 1), "label": f"PC{i + 1}", "formatter": annotations.get(i, lambda x: "")}
+    {
+        "value": None if np.isnan(v) else round(v, 1),
+        "label": f"PC{i + 1}",
+        "formatter": annotations.get(i, lambda x: ""),
+    }
     for i, v in enumerate(cumulative_variance)
 ]
 chart.add(
@@ -141,28 +158,25 @@ chart.add(
     fill=True,
 )
 
-# 90% threshold — lavender dashed, thinner to reinforce secondary role
-chart.add(
-    "90% Threshold",
-    [{"value": 90, "label": "90% variance threshold", "formatter": lambda x: ""} for _ in range(n_components)],
-    show_dots=False,
-    fill=False,
-    stroke_style={"width": 3, "dasharray": "22, 12", "linecap": "round"},
-)
-
-# 95% threshold — blue dotted, thinner for visual hierarchy
-chart.add(
-    "95% Threshold",
-    [{"value": 95, "label": "95% variance threshold", "formatter": lambda x: ""} for _ in range(n_components)],
-    show_dots=False,
-    fill=False,
-    stroke_style={"width": 3, "dasharray": "8, 10", "linecap": "round"},
-)
+# Threshold lines: thin dashed, in palette order after the primary series
+THRESHOLD_DASHES = ("22, 12", "8, 10")
+for i, t in enumerate(THRESHOLDS):
+    chart.add(
+        f"{t}% Threshold",
+        [{"value": t, "label": f"{t}% variance threshold", "formatter": lambda x: ""} for _ in range(n_components)],
+        show_dots=False,
+        fill=False,
+        stroke_style={"width": 3, "dasharray": THRESHOLD_DASHES[i], "linecap": "round"},
+    )
 
 # Individual variance on secondary Y-axis — ochre with larger dots for salience
 # Per-point formatters serve as secondary-axis labels for components with meaningful variance
 individual_values = [
-    {"value": round(v, 1), "label": f"PC{i + 1}: {v:.1f}%", "formatter": lambda x: f"{x:.1f}%" if x > 3 else ""}
+    {
+        "value": None if np.isnan(v) else round(v, 1),
+        "label": f"PC{i + 1}: {v:.1f}%",
+        "formatter": lambda x: f"{x:.1f}%" if x > 3 else "",
+    }
     for i, v in enumerate(individual_variance)
 ]
 chart.add(
