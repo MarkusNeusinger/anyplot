@@ -1,7 +1,7 @@
 """anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Quality: pending | Updated: 2026-05-20
 """
 
 import sys
