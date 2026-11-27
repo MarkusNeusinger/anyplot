@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bullet-basic: Basic Bullet Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -142,7 +142,8 @@ plot = (
         panel_grid_minor=element_blank(),
         panel_grid_major_x=element_line(size=0.3, color=INK_SOFT),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
     )
     + ggsize(800, 450)
 )
