@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-29
@@ -24,32 +24,35 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
+# Columns: set these to your table's column names
+PROBABILITY = "Probability (p)"  # role: p
+IMPURITY = "Impurity (normalized)"  # role: extra
+CRITERION = "Splitting criterion"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("impurity.csv")
 p = np.linspace(0, 1, 500)
 
 gini = 2 * p * (1 - p)
-gini_normalized = gini / gini.max()
 
 # Entropy with edge-case handling (0 * log2(0) → 0 by convention)
 entropy = np.zeros_like(p)
-mask = (p > 0) & (p < 1)
-entropy[mask] = -p[mask] * np.log2(p[mask]) - (1 - p[mask]) * np.log2(1 - p[mask])
-entropy_normalized = entropy / entropy.max()
-
-# Long-format DataFrame — enables seaborn's idiomatic hue+style palette mapping
-GINI_LABEL = "Gini: 2p(1−p)"
-ENTROPY_LABEL = "Entropy: −p log₂p − (1−p) log₂(1−p)"
+inner = (p > 0) & (p < 1)
+entropy[inner] = -p[inner] * np.log2(p[inner]) - (1 - p[inner]) * np.log2(1 - p[inner])
 
 df = pd.DataFrame(
     {
-        "p": np.concatenate([p, p]),
-        "Impurity": np.concatenate([gini_normalized, entropy_normalized]),
-        "Criterion": [GINI_LABEL] * len(p) + [ENTROPY_LABEL] * len(p),
+        PROBABILITY: np.concatenate([p, p]),
+        IMPURITY: np.concatenate([gini / gini.max(), entropy / entropy.max()]),
+        CRITERION: ["Gini: 2p(1−p)"] * len(p) + ["Entropy: −p log₂p − (1−p) log₂(1−p)"] * len(p),
     }
 )
 
-# Canvas: landscape 3200×1800 px (8 × 400 = 3200, 4.5 × 400 = 1800)
-# Do NOT pass bbox_inches='tight' to savefig — see prompts/library/seaborn.md "Canvas"
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=PROBABILITY, columns=CRITERION, values=IMPURITY, sort=False)
+gini_curve, entropy_curve = table.iloc[:, 0], table.iloc[:, 1]
+gap = entropy_curve - gini_curve
+top = df[IMPURITY].max()
+
 sns.set_theme(
     style="ticks",
     rc={
@@ -67,78 +70,70 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Canvas: landscape 3200×1800 px; no bbox_inches="tight" at save
+fig, (ax, ax_gap) = plt.subplots(
+    2, 1, figsize=(8, 4.5), dpi=400, sharex=True, gridspec_kw={"height_ratios": [4, 1.3], "hspace": 0.12}
+)
 
-color_gini = IMPRINT_PALETTE[0]  # #009E73 — first series (Gini)
-color_entropy = IMPRINT_PALETTE[1]  # #C475FD — second series (Entropy)
-
-# Shaded region between the two curves to highlight their divergence
-ax.fill_between(p, gini_normalized, entropy_normalized, alpha=0.08, color=color_gini, zorder=1)
-
-# Seaborn hue+style mapping — idiomatic multi-series approach using seaborn's
-# palette dispatch and automatic dash-cycle differentiation
+n_criteria = df[CRITERION].nunique()
 sns.lineplot(
     data=df,
-    x="p",
-    y="Impurity",
-    hue="Criterion",
-    style="Criterion",
-    palette={GINI_LABEL: color_gini, ENTROPY_LABEL: color_entropy},
+    x=PROBABILITY,
+    y=IMPURITY,
+    hue=CRITERION,
+    style=CRITERION,
+    palette=IMPRINT_PALETTE[:n_criteria],
     linewidth=2.5,
     ax=ax,
 )
 
-# Subtle y-axis-only grid for readability (spec recommends a light grid)
-ax.yaxis.grid(True, alpha=0.12, linewidth=0.8)
-
-# Annotation: max divergence between the two curves
-divergence = np.abs(entropy_normalized - gini_normalized)
-max_div_idx = np.argmax(divergence)
-mid_y = (gini_normalized[max_div_idx] + entropy_normalized[max_div_idx]) / 2
-
+# Max-impurity marker at the peak of the curves
+peak = df.loc[df[IMPURITY].idxmax()]
+ax.plot(peak[PROBABILITY], peak[IMPURITY], "o", color=INK, markersize=5, zorder=5)
 ax.annotate(
-    "Max divergence",
-    xy=(p[max_div_idx], mid_y),
-    xytext=(p[max_div_idx] + 0.07, mid_y + 0.09),
-    fontsize=9,
-    fontstyle="italic",
-    color=INK_SOFT,
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
-)
-
-# Annotation: both curves peak at p = 0.5
-ax.plot(0.5, 1.0, "o", color=INK, markersize=5, zorder=5)
-ax.annotate(
-    "Max impurity\np = 0.5",
-    xy=(0.5, 1.0),
-    xytext=(0.34, 0.77),
+    f"Max impurity\np = {peak[PROBABILITY]:.1f}",
+    xy=(peak[PROBABILITY], peak[IMPURITY]),
+    xytext=(-80, -38),
+    textcoords="offset points",
     fontsize=9,
     color=INK,
     arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.2, "connectionstyle": "arc3,rad=0.15"},
     bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "lw": 0.8},
 )
 
-# Labels and title
-ax.set_xlabel("Probability (p)", fontsize=10, labelpad=8)
-ax.set_ylabel("Impurity (normalized)", fontsize=10, labelpad=8)
-ax.set_title("line-impurity-comparison · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=14)
+ax.yaxis.grid(True, linewidth=0.8)
+ax.set_ylim(-0.03 * top, top * 1.34)
+ax.set_ylabel(IMPURITY, fontsize=10, labelpad=8)
+ax.set_xlabel("")
 ax.tick_params(axis="both", labelsize=8)
-ax.set_xlim(0, 1)
-ax.set_ylim(-0.02, 1.1)
+ax.tick_params(axis="x", labelbottom=False)
+ax.set_title("line-impurity-comparison · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=14)
+ax.legend(
+    title=CRITERION, title_fontsize=8, fontsize=8, loc="upper right", framealpha=0.95, fancybox=False, borderpad=0.8
+).get_frame().set_linewidth(0.8)
 
-sns.despine(ax=ax, top=True, right=True)
-
-# Legend — seaborn auto-generates merged hue+style handles
-legend = ax.legend(
-    title="Splitting Criterion",
-    title_fontsize=8,
+# Lower strip: the difference between the two curves
+ax_gap.plot(gap.index, gap.values, color=INK_SOFT, linewidth=1.5)
+widest = gap.idxmax()
+ax_gap.plot(widest, gap.max(), "o", color=INK_SOFT, markersize=4, zorder=5)
+ax_gap.annotate(
+    f"Max gap {gap.max():.2f} at p = {widest:.2f}",
+    xy=(widest, gap.max()),
+    xytext=(10, 9),
+    textcoords="offset points",
     fontsize=8,
-    loc="upper right",
-    framealpha=0.95,
-    fancybox=False,
-    borderpad=0.8,
+    fontstyle="italic",
+    color=INK_SOFT,
+    va="bottom",
 )
-legend.get_frame().set_linewidth(0.8)
+ax_gap.yaxis.grid(True, linewidth=0.8)
+ax_gap.set_ylim(0, gap.max() * 1.7)
+ax_gap.set_ylabel("Entropy − Gini", fontsize=8, labelpad=8)
+ax_gap.set_xlabel(PROBABILITY, fontsize=10, labelpad=8)
+ax_gap.tick_params(axis="both", labelsize=8)
+ax_gap.set_xlim(df[PROBABILITY].min(), df[PROBABILITY].max())
 
-fig.tight_layout()
+sns.despine(fig=fig, top=True, right=True)
+
+plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
