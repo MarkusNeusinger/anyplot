@@ -1,7 +1,7 @@
 """ anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-26
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -52,9 +52,9 @@ LAND_FILL = "#E6E1D0" if THEME == "light" else "#2D2C27"
 
 # Imprint sequential ramp for filled fields (single-polarity data), per theme
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Constants
