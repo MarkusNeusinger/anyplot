@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-26
@@ -46,9 +46,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint sequential ramp for fields (colored cells filling the plot), (position, hex) stops
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -69,7 +69,7 @@ ITERATIONS = "iterations"  # role: max_iterations
 # Data — Mandelbrot set via smooth (normalized) iteration count
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
-width, height = 800, 571
+width, height = 1050, 750
 max_iter = 100
 
 real = np.linspace(x_min, x_max, width)
