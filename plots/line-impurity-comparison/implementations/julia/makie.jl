@@ -78,7 +78,7 @@ ax = Axis(
 )
 
 band!(ax, collect(p), gini, entropy;
-    color = (IMPRINT_PALETTE[3], 0.12))
+    color = (IMPRINT_PALETTE[3], 0.2))
 
 lines!(ax, collect(p), gini;
     color     = IMPRINT_PALETTE[1],
@@ -97,7 +97,7 @@ vlines!(ax, [0.5];
     linewidth = 1.5,
     linestyle = :dot)
 
-text!(ax, 0.52, 0.97;
+text!(ax, 0.52, 0.82;
     text     = "max at p = 0.5",
     color    = INK_MUTED,
     fontsize = 13,
