@@ -1,17 +1,13 @@
 """ anyplot.ai
 density-basic: Basic Density Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-30
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
-import sys
-
-
-# Remove the script's own directory from sys.path to avoid shadowing the plotly package
-sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
 
@@ -20,36 +16,27 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 
 # Theme-adaptive chrome tokens (see default-style-guide.md)
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint palette — first series is always #009E73
+# Imprint palette: first series is always #009E73
 BRAND = "#009E73"
 FILL = "rgba(0,158,115,0.2)"
 
-# Data — SAT Math scores with bimodal distribution
-np.random.seed(42)
-sat_scores = np.concatenate(
-    [
-        np.random.normal(540, 60, 350),  # main group
-        np.random.normal(680, 35, 150),  # high achievers
-    ]
-)
-sat_scores = np.clip(sat_scores, 200, 800)
+# Columns: set this to your table's column name
+SAT_MATH = "SAT Math Score (points)"  # role: values
 
-# KDE via scipy
-kde = gaussian_kde(sat_scores)
-x_grid = np.linspace(350, 800, 500)
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+rng = np.random.default_rng(42)
+df = pd.DataFrame({SAT_MATH: np.clip(np.concatenate([rng.normal(540, 60, 350), rng.normal(680, 35, 150)]), 200, 800)})
+
+# Plot
+scores = df[SAT_MATH].dropna().to_numpy()
+kde = gaussian_kde(scores)
+pad = 0.1 * (scores.max() - scores.min())
+x_grid = np.linspace(scores.min() - pad, scores.max() + pad, 500)
 density = kde(x_grid)
-
-# Locate the two peaks (valley near 620)
-split = int(500 * (620 - 350) / (800 - 350))
-peak1_idx = np.argmax(density[:split])
-peak2_idx = split + np.argmax(density[split:])
-peak1_x, peak1_y = x_grid[peak1_idx], density[peak1_idx]
-peak2_x, peak2_y = x_grid[peak2_idx], density[peak2_idx]
 
 fig = go.Figure()
 
@@ -67,39 +54,17 @@ fig.add_trace(
     )
 )
 
-# Rug plot — individual observations as tick marks along x-axis
+# Rug plot: individual observations as tick marks along the x-axis
 fig.add_trace(
     go.Scatter(
-        x=sat_scores,
-        y=np.zeros(len(sat_scores)),
+        x=scores,
+        y=np.zeros(len(scores)),
         mode="markers",
         marker={"symbol": "line-ns", "size": 10, "color": INK_SOFT, "opacity": 0.5, "line": {"width": 1}},
         name="Observations",
         hovertemplate="Score: %{x:.0f}<extra></extra>",
     )
 )
-
-# Peak annotations highlighting the bimodal structure
-for label, px, py, ax, ay in [
-    (f"<b>Primary Peak</b><br>~{peak1_x:.0f} pts", peak1_x, peak1_y, -80, -50),
-    (f"<b>High Achievers</b><br>~{peak2_x:.0f} pts", peak2_x, peak2_y, 80, -40),
-]:
-    fig.add_annotation(
-        x=px,
-        y=py,
-        text=label,
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1.2,
-        arrowwidth=1.5,
-        arrowcolor=BRAND,
-        font={"size": 10, "color": INK},
-        ax=ax,
-        ay=ay,
-        bgcolor=ELEVATED_BG,
-        borderpad=4,
-        borderwidth=0,
-    )
 
 fig.update_layout(
     autosize=False,
@@ -110,7 +75,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "SAT Math Score (points)", "font": {"size": 12, "color": INK}},
+        "title": {"text": SAT_MATH, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
@@ -135,7 +100,7 @@ fig.update_layout(
     font={"color": INK},
     showlegend=False,
     hovermode="x",
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 60, "b": 60},
 )
 
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
