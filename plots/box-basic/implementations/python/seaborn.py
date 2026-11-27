@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-basic: Basic Box Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-28
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-27
 """
 
 import os
@@ -18,9 +18,28 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — daily PM2.5 air quality readings (ug/m3) across 5 city zones
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
+
+# Columns
+ZONE = "City Zone"  # role: category
+PM25 = "PM2.5 (ug/m3)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("pm25.csv")
+# Daily PM2.5 air quality readings (ug/m3) across 5 city zones
 np.random.seed(42)
 
 zones_config = [
@@ -41,55 +60,29 @@ for zone, dist, loc, scale, n in zones_config:
         values = np.random.normal(loc, scale, n)
     values = np.clip(values, 1, None)
     for v in values:
-        records.append({"Zone": zone, "PM2.5 (ug/m3)": v})
+        records.append({ZONE: zone, PM25: v})
 
 df = pd.DataFrame(records)
-zone_order = ["Park", "Residential", "Commercial", "Downtown", "Industrial"]
-
-# Theme
-sns.set_theme(
-    style="ticks",
-    rc={
-        "figure.facecolor": PAGE_BG,
-        "axes.facecolor": PAGE_BG,
-        "axes.edgecolor": INK_SOFT,
-        "axes.labelcolor": INK,
-        "text.color": INK,
-        "xtick.color": INK_SOFT,
-        "ytick.color": INK_SOFT,
-    },
-)
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-palette = dict(zip(zone_order, IMPRINT_PALETTE, strict=True))
+zones = list(df[ZONE].unique())
+palette = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(zones))]
 
 sns.boxplot(
     data=df,
-    x="Zone",
-    y="PM2.5 (ug/m3)",
-    hue="Zone",
-    order=zone_order,
-    hue_order=zone_order,
+    x=ZONE,
+    y=PM25,
+    hue=ZONE,
+    order=zones,
+    hue_order=zones,
     palette=palette,
+    saturation=1,
     linewidth=1.5,
-    fliersize=0,
+    linecolor=INK_SOFT,
     width=0.55,
-    legend=False,
-    ax=ax,
-)
-
-sns.stripplot(
-    data=df,
-    x="Zone",
-    y="PM2.5 (ug/m3)",
-    hue="Zone",
-    order=zone_order,
-    hue_order=zone_order,
-    palette=palette,
-    size=3,
-    alpha=0.25,
-    jitter=0.2,
+    medianprops={"color": INK, "linewidth": 2.5},
+    flierprops={"marker": "o", "markersize": 4, "markerfacecolor": "none", "markeredgecolor": INK_SOFT},
     legend=False,
     ax=ax,
 )
@@ -101,8 +94,8 @@ ratio = 67 / n_chars if n_chars > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
-ax.set_xlabel("City Zone", fontsize=10, color=INK)
-ax.set_ylabel("PM2.5 (ug/m3)", fontsize=10, color=INK)
+ax.set_xlabel(ZONE, fontsize=10, color=INK)
+ax.set_ylabel(PM25, fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 sns.despine(ax=ax)

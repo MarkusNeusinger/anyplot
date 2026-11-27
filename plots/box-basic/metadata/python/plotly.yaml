@@ -2,125 +2,122 @@ library: plotly
 language: python
 specification_id: box-basic
 created: '2025-12-23T00:35:23Z'
-updated: '2026-05-28T13:44:08Z'
+updated: '2026-11-27T16:07:01Z'
 generated_by: claude-sonnet
-workflow_run: 26577000800
+workflow_run: 46029749172
 issue: 689
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - 'Full theme-adaptive chrome: all non-data elements correctly flip between light/dark
-    surfaces; annotation callout boxes use ELEVATED_BG'
-  - 'Excellent spec compliance: all required box plot features present (median, quartile
-    box, 1.5xIQR whiskers, outlier points, per-category colors)'
-  - 'Strong data storytelling: highest/lowest annotations with arrows, market rate
-    band, and gap metric create a coherent salary-benchmarking narrative'
-  - 'Correct canvas: 3200x1800 px via width=800, height=450, scale=4 + autosize=False'
-  - np.random.seed(42) ensures reproducibility
+  - Median line, box outline and whiskers drawn in the INK token over the Imprint
+    fill, so the median stands out against every box in both themes
+  - go.Box with boxpoints='outliers' computes quartiles, 1.5xIQR fences and outlier
+    points natively instead of by hand
+  - 'Fully theme-adaptive chrome: INK/INK_SOFT/GRID tokens flip cleanly; Imprint positions
+    1-5 identical in both renders'
+  - 'Clean -basic scope: one box per department, no callouts, bands or reference lines;
+    redundant legend dropped since the x axis names every box'
+  - hovertemplate with dollar-formatted salary for the HTML view
+  - Column constants and a single tidy df make the data block easy to swap
   weaknesses:
-  - Lowest median annotation (ax=80, ay=-60) overlaps the visual space of the Finance
-    box — shift horizontal offset leftward (e.g., ax=-80) to point away from Finance
-  - Market rate band annotation label (font_size=9) is very small and sits flush against
-    the Finance box; increase to 10pt and adjust annotation_position
-  - No explicit mirror=False on axes — add mirror=False to both xaxis and yaxis dicts
-    to guarantee no mirrored right/top spines
+  - 'Suggestion: a slightly lighter whisker or outline weight (e.g. 2 px) in the dark
+    render would let the colored fills carry more of the visual weight against the
+    bright ink lines.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "box-basic · python · plotly · anyplot.ai" in bold dark ink, subtitle in INK_SOFT — all readable. Y-axis label "Annual Salary ($)" in INK. Tick labels in INK_SOFT ($20k–$140k, dollar-formatted). Annotation callout boxes in ELEVATED_BG (#FFFDF6).
-      Data: 5 box plots — Engineering #009E73, Marketing #C475FD, Sales #4467A3, HR #BD8233, Finance #AE3030. First series correctly #009E73. Horizontal market rate band ($75k–$90k) in subtle green. Outlier points visible.
+      Background: warm off-white #FAF8F1 across paper and plot area.
+      Chrome: bold title 'box-basic · python · plotly · anyplot.ai' centred in dark ink; y title 'Annual salary ($)', x title 'Department'; dollar-formatted y ticks $20,000-$140,000 and department tick labels in INK_SOFT; subtle horizontal grid; left and bottom axis lines only. All readable.
+      Data: five boxes - Engineering #009E73, Marketing #C475FD, Sales #4467A3, HR #BD8233, Finance #AE3030 - with near-black outlines, median lines and capped whiskers; outliers as filled circles (Engineering low at ~$56k, Sales high at ~$147k). First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. Tick labels in INK_SOFT for dark (#B8B7B0). Annotation callout boxes in ELEVATED_BG dark (#242420). No dark-on-dark failures observed.
-      Data: Identical data colors to light render — Engineering #009E73, Marketing #C475FD, Sales #4467A3, HR #BD8233, Finance #AE3030. Brand green clearly visible on dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks in #B8B7B0, faint grid; no dark-on-dark text.
+      Data: identical fill colors to the light render; outlines, medians and whiskers flip to light ink, so medians stand out clearly on every fill. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text legible in both themes; minor deduction for borderline small
-          annotation (11pt) and legend (10pt) at mobile scale
+        comment: Title 16 px, axis titles 12 px, ticks 11 px (above the 10 px reference);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor: Lowest median annotation (ax=80) overlaps Finance box visual
-          space; Market rate band label (9pt) sits flush against Finance'
+        comment: No text collisions; the two outliers sit clear of every box and whisker
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All box plot elements clearly visible; outliers shown correctly;
-          opacity 0.85 on boxes appropriate
+        comment: Boxes, 2.5 px ink outlines, whiskers and 10 px outlier markers all
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; CVD-safe; no red-green sole signal
+        comment: Five distinct Imprint hues on labelled x positions; color is never
+          the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas via width=800 height=450 scale=4. No clipping.
-          Good proportions.
+        comment: Plot area fills the 3200x1800 canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label Annual Salary ($) with units. Title format matches spec
-          exactly. Subtitle adds context.
+        comment: x 'Department', y 'Annual salary ($)' with unit; dollar-formatted
+          ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. All 5 categories use canonical palette positions
-          1-5. Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Imprint positions 1-5 in canonical order, first #009E73; #FAF8F1
+          / #1A1A17 backgrounds; ink tokens flip per theme'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Above generic: custom palette, market rate band, dual annotation
-          arrows with category colors, elevated-bg callout boxes, descriptive subtitle'
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-only grid correct; axis lines with proper weight; horizontal legend
-          placement; no explicit mirror=False for top/right spine guarantee
+        comment: 'Beyond the spine/grid rules: the redundant legend is dropped because
+          the x categories already name every box, leaving a clean, uncluttered field'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear narrative: Engineering highest, HR lowest, gap quantified.
-          Market rate band provides business context. Three annotations create coherent
-          story.'
+        comment: Data displayed plainly; no hierarchy chosen (appropriate for -basic)
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker using go.Box
+        comment: go.Box per category; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outlier points (boxpoints=outliers), 1.5xIQR whiskers,
-          per-category colors — all present
+        comment: 'Median line (ink on fill, stands out in both themes), Q1-Q3 box,
+          1.5xIQR whiskers, outliers as points, one color per category: C1-C4 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories (within 2-8), 60-120 points each (within 20-500), Y-axis
-          covers all data
+        comment: One shared, automatic value axis not forced to zero; marks at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title box-basic · python · plotly · anyplot.ai matches spec. Legend
-          labels match categories.
+        comment: Title 'box-basic · python · plotly · anyplot.ai' correct; legend
+          N/A (categories labelled on the x axis)
     data_quality:
       score: 15
       max: 15
@@ -161,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All box plot features shown: median, IQR box, whiskers, outliers.
-          Five departments for comparison.'
+        comment: Shows median, IQR, whiskers, outliers on both sides, and boxes of
+          differing spread and position
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary data across corporate departments is realistic and neutral.
-          Values ($65k-$95k median) plausible.
+        comment: 'Salaries across five corporate departments: realistic and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis $20k-$155k appropriate. Different means and SDs per department
-          realistic.
+        comment: 'Medians $65k-$93k, whiskers $25k-$123k: plausible salaries; no Check
+          values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -186,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct linear code
+        comment: Imports -> Theme -> Data -> Plot -> Style -> Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,21 +194,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects; all used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean category iteration; appropriate complexity; no fake UI
+        comment: Compact; whisker/outlier logic left to go.Box; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -220,20 +216,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct go.Box, add_hrect, add_annotation, update_layout usage.
-          Minor: per-trace marker dicts could use update_traces more idiomatically.'
+        comment: Idiomatic go.Box with boxpoints='outliers' computing quartiles and
+          fences itself, df.groupby(sort=False) trace loop, tickformat '$,.0f'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: add_hrect with annotation_text, hovertemplate, write_html — all distinctively
-          Plotly. Could further leverage updatemenus or customdata.
+        comment: hovertemplate with formatted salary in the HTML view; nothing further
+          distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T16:03:24Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -241,4 +239,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - edge-highlighting
