@@ -13,7 +13,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
-GRID        <- adjustcolor(INK, alpha.f = 0.12)
+GRID        <- adjustcolor(INK, alpha.f = 0.15)
 
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233")
 CRITICAL_COLOR  <- "#AE3030"
@@ -82,12 +82,13 @@ p <- ggplot() +
   geom_rect(
     data = zone_data,
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-    fill = CRITICAL_COLOR, alpha = 0.05, inherit.aes = FALSE
+    fill = CRITICAL_COLOR, alpha = 0.09, inherit.aes = FALSE
   ) +
   geom_line(
     data = order_data,
-    aes(x = speed, y = frequency, group = order),
-    color = INK_MUTED, linewidth = 0.7, linetype = "dashed"
+    aes(x = speed, y = frequency, group = order,
+        linetype = "Engine order (1x, 2x, 3x)"),
+    color = INK_MUTED, linewidth = 0.7
   ) +
   geom_line(
     data = mode_data,
@@ -109,8 +110,17 @@ p <- ggplot() +
     values = setNames(IMPRINT_PALETTE, mode_levels)
   ) +
   scale_shape_manual(
-    name   = "",
+    name   = "Resonance",
     values = c("Critical Speed" = 18)
+  ) +
+  scale_linetype_manual(
+    name   = "Excitation",
+    values = c("Engine order (1x, 2x, 3x)" = "dashed")
+  ) +
+  guides(
+    colour   = guide_legend(order = 1),
+    linetype = guide_legend(order = 2),
+    shape    = guide_legend(order = 3)
   ) +
   scale_x_continuous(
     name   = "Rotational Speed (RPM)",
@@ -133,8 +143,7 @@ p <- ggplot() +
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK,      size = 12, face = "bold"),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                     linewidth = 0.3),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK,      size = 10),
     legend.position   = "right",
