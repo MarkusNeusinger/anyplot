@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-impurity-comparison: Gini Impurity vs Entropy Comparison
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -25,8 +25,7 @@ ENTROPY_COLOR = "#C475FD"  # Imprint position 2 — lavender
 # Data
 p = np.linspace(0, 1, 200)
 
-gini_raw = 2 * p * (1 - p)
-gini = gini_raw / gini_raw.max()
+gini = 2 * p * (1 - p)
 
 entropy_raw = np.where((p == 0) | (p == 1), 0.0, -p * np.log2(p) - (1 - p) * np.log2(1 - p))
 entropy = entropy_raw / entropy_raw.max()
@@ -56,8 +55,8 @@ fig.add_trace(
         x=p,
         y=gini,
         mode="lines",
-        name="Gini: 2p(1−p) [scaled]",
-        line={"color": GINI_COLOR, "width": 3.5},
+        name="Gini: 2p(1−p)",
+        line={"color": GINI_COLOR, "width": 3.5, "simplify": False},
         hovertemplate="p = %{x:.2f}<br>Gini = %{y:.3f}<extra></extra>",
     )
 )
@@ -69,23 +68,42 @@ fig.add_trace(
         y=entropy,
         mode="lines",
         name="Entropy: −p log₂p − (1−p) log₂(1−p)",
-        line={"color": ENTROPY_COLOR, "width": 3.5, "dash": "dash"},
+        line={"color": ENTROPY_COLOR, "width": 3.5, "dash": "dash", "simplify": False},
         hovertemplate="p = %{x:.2f}<br>Entropy = %{y:.3f}<extra></extra>",
     )
 )
 
-# Annotation at p=0.5 maximum
+# Annotations at the p = 0.5 maximum of each curve
+peak_idx = int(np.argmax(entropy))
 fig.add_annotation(
-    x=0.5,
-    y=1.0,
-    text="<b>Peak:</b> both measures = 1.0 at p = 0.5",
+    x=p[peak_idx],
+    y=entropy[peak_idx],
+    text=f"<b>Entropy peak:</b> {entropy[peak_idx]:.1f} at p = {p[peak_idx]:.1f}",
     showarrow=True,
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2,
     arrowcolor=INK_SOFT,
-    ax=80,
-    ay=-55,
+    ax=95,
+    ay=-40,
+    font={"size": 14, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=7,
+)
+gini_peak_idx = int(np.argmax(gini))
+fig.add_annotation(
+    x=p[gini_peak_idx],
+    y=gini[gini_peak_idx],
+    text=f"<b>Gini peak:</b> {gini[gini_peak_idx]:.1f} at p = {p[gini_peak_idx]:.1f}",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1.5,
+    arrowwidth=2,
+    arrowcolor=INK_SOFT,
+    ax=0,
+    ay=52,
     font={"size": 14, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
@@ -99,13 +117,7 @@ fig.add_annotation(
     x=p[max_diff_idx],
     y=(entropy[max_diff_idx] + gini[max_diff_idx]) / 2,
     text="<b>Divergence region</b><br>Entropy is wider than Gini",
-    showarrow=True,
-    arrowhead=2,
-    arrowsize=1.2,
-    arrowwidth=2,
-    arrowcolor=INK_SOFT,
-    ax=160,
-    ay=-35,
+    showarrow=False,
     font={"size": 13, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
@@ -114,7 +126,7 @@ fig.add_annotation(
 )
 
 # Vertical reference line at p=0.5
-fig.add_vline(x=0.5, line_width=1.5, line_dash="dot", line_color=INK_SOFT, opacity=0.3)
+fig.add_vline(x=p[peak_idx], line_width=1.5, line_dash="dot", line_color=INK_SOFT, opacity=0.3)
 
 # Style
 fig.update_layout(
@@ -135,7 +147,7 @@ fig.update_layout(
         "mirror": False,
     },
     yaxis={
-        "title": {"text": "Impurity Measure (normalized)", "font": {"size": 12, "color": INK}},
+        "title": {"text": "Impurity (entropy normalized to 1)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [-0.02, 1.08],
         "dtick": 0.2,
