@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -60,7 +60,13 @@ fig.add_trace(
         x=scores,
         y=np.zeros(len(scores)),
         mode="markers",
-        marker={"symbol": "line-ns", "size": 10, "color": INK_SOFT, "opacity": 0.5, "line": {"width": 1}},
+        marker={
+            "symbol": "line-ns",
+            "size": 10,
+            "color": INK_SOFT,
+            "opacity": 0.5 if THEME == "light" else 0.8,
+            "line": {"width": 1},
+        },
         name="Observations",
         hovertemplate="Score: %{x:.0f}<extra></extra>",
     )
