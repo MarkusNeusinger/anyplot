@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 band-basic: Basic Band Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-29
@@ -16,6 +16,7 @@ sys.path = [p for p in sys.path if p != "" and os.path.normpath(p) != os.path.no
 del _impl_dir
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -29,14 +30,22 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 BAND_FILL = "rgba(0,158,115,0.25)" if THEME == "light" else "rgba(0,158,115,0.4)"
 
-# Data
-hours = np.linspace(0, 48, 100)
-# Sensor temperature reading with slight oscillation
-temperature = 20 + 0.15 * hours + 1.5 * np.sin(hours * 0.3)
-# Measurement uncertainty grows over time (sensor drift)
-uncertainty = 0.4 + 0.02 * hours
-temp_lower = temperature - 1.96 * uncertainty
-temp_upper = temperature + 1.96 * uncertainty
+# Columns: set these to your table's column names
+MINUTES = "Time since meal (min)"  # role: x
+LOWER = "Lower 95% bound (mmol/L)"  # role: y_lower
+UPPER = "Upper 95% bound (mmol/L)"  # role: y_upper
+GLUCOSE = "Blood glucose (mmol/L)"  # role: y_center
+
+# Data: replace this block with your own table, for example df = pd.read_csv("glucose.csv")
+# Mean blood glucose after a meal: a rise to a peak near 45 min, then a decay toward baseline,
+# with a 95% interval that is widest around the peak.
+minutes = np.linspace(0, 180, 90)
+rise = (minutes / 45) * np.exp(1 - minutes / 45)
+mean_glucose = 5.0 + 3.2 * rise
+half_width = 1.96 * (0.2 + 0.35 * rise)
+df = pd.DataFrame(
+    {MINUTES: minutes, LOWER: mean_glucose - half_width, UPPER: mean_glucose + half_width, GLUCOSE: mean_glucose}
+)
 
 # Plot
 fig = go.Figure()
@@ -44,8 +53,8 @@ fig = go.Figure()
 # Band (fill between lower and upper bounds using concat/toself pattern)
 fig.add_trace(
     go.Scatter(
-        x=np.concatenate([hours, hours[::-1]]),
-        y=np.concatenate([temp_upper, temp_lower[::-1]]),
+        x=np.concatenate([df[MINUTES], df[MINUTES][::-1]]),
+        y=np.concatenate([df[UPPER], df[LOWER][::-1]]),
         fill="toself",
         fillcolor=BAND_FILL,
         line={"width": 0},
@@ -55,19 +64,19 @@ fig.add_trace(
     )
 )
 
-# Central trend line with custom hover showing confidence bounds
+# Central line with custom hover showing confidence bounds
 fig.add_trace(
     go.Scatter(
-        x=hours,
-        y=temperature,
+        x=df[MINUTES],
+        y=df[GLUCOSE],
         mode="lines",
         line={"color": BRAND, "width": 3},
-        name="Measured Temperature",
-        customdata=np.stack([temp_lower, temp_upper], axis=-1),
+        name="Mean Blood Glucose",
+        customdata=df[[LOWER, UPPER]].to_numpy(),
         hovertemplate=(
-            "<b>Hour:</b> %{x:.1f} h<br>"
-            "<b>Temp:</b> %{y:.1f} °C<br>"
-            "<b>CI:</b> [%{customdata[0]:.1f}, %{customdata[1]:.1f}] °C"
+            "<b>Time:</b> %{x:.0f} min<br>"
+            "<b>Glucose:</b> %{y:.1f} mmol/L<br>"
+            "<b>CI:</b> [%{customdata[0]:.1f}, %{customdata[1]:.1f}] mmol/L"
             "<extra></extra>"
         ),
     )
@@ -83,10 +92,8 @@ fig.update_layout(
     font={"color": INK},
     title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Elapsed Time (hours)", "font": {"size": 12, "color": INK}},
+        "title": {"text": MINUTES, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "gridcolor": GRID,
-        "gridwidth": 1,
         "zeroline": False,
         "linecolor": INK_SOFT,
         "showline": True,
@@ -94,7 +101,7 @@ fig.update_layout(
         "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
+        "title": {"text": GLUCOSE, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
@@ -111,8 +118,8 @@ fig.update_layout(
         "font": {"size": 10, "color": INK_SOFT},
         "yanchor": "top",
         "y": 0.99,
-        "xanchor": "left",
-        "x": 0.01,
+        "xanchor": "right",
+        "x": 0.99,
     },
     margin={"l": 80, "r": 60, "t": 80, "b": 60},
     hoverlabel={"font": {"size": 14}},
