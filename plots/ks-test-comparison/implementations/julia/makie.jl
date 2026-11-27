@@ -77,7 +77,7 @@ y_bad_fill  = [searchsortedlast(sorted_bad,  x) / n_bad  for x in x_fill]
 
 # Title
 title_str  = "ks-test-comparison · julia · makie · anyplot.ai"
-title_size = max(14, round(Int, 20 * min(1.0, 67.0 / length(title_str))))
+title_size = max(18, round(Int, 26 * min(1.0, 67.0 / length(title_str))))
 
 # Plot
 fig = Figure(
@@ -93,10 +93,10 @@ ax = Axis(
     titlecolor        = INK,
     xlabel            = "Credit Score",
     ylabel            = "Cumulative Proportion",
-    xlabelsize        = 14,
-    ylabelsize        = 14,
-    xticklabelsize    = 12,
-    yticklabelsize    = 12,
+    xlabelsize        = 20,
+    ylabelsize        = 20,
+    xticklabelsize    = 16,
+    yticklabelsize    = 16,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
     xticklabelcolor   = INK_SOFT,
@@ -127,7 +127,7 @@ lines!(ax, xs_bad, ys_bad;
     color = IMPRINT_PALETTE[2], linewidth = 2.5, label = "Bad Customers")
 
 # KS statistic: dashed vertical marker + filled gap segment
-vlines!(ax, [ks_x]; color = IMPRINT_PALETTE[5], linewidth = 1.2, linestyle = :dash)
+vlines!(ax, [ks_x]; color = IMPRINT_PALETTE[5], linewidth = 1.5, linestyle = :dash)
 lines!(ax, [ks_x, ks_x], [y_lo, y_hi];
     color = IMPRINT_PALETTE[5], linewidth = 4.0)
 
@@ -138,12 +138,12 @@ text!(ax,
     position = Point2f(ks_x + 8.0, (y_lo + y_hi) / 2.0),
     align    = (:left, :center),
     color    = INK,
-    fontsize = 16,
+    fontsize = 22,
 )
 
 axislegend(ax;
     position        = :rb,
-    labelsize       = 12,
+    labelsize       = 16,
     framevisible    = true,
     framecolor      = INK_SOFT,
     backgroundcolor = ELEVATED_BG,
