@@ -45,7 +45,7 @@ IMPURITY = "Impurity measure (normalized)"  # role: extra
 MEASURE = "Splitting criterion"  # role: extra
 
 # Data
-p = np.linspace(0, 1, 200)
+p = np.linspace(0, 1, 201)
 gini = 2 * p * (1 - p)
 entropy = np.where((p > 0) & (p < 1), -p * np.log2(p) - (1 - p) * np.log2(1 - p), 0.0)
 
