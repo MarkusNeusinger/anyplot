@@ -1,20 +1,14 @@
 """ anyplot.ai
 heatmap-basic: Basic Heatmap
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-28
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-27
 """
 
-import base64
-import io
+import math
 import os
-import sys
 import time
+from itertools import pairwise
 from pathlib import Path
-
-
-# Remove this script's directory from sys.path so "bokeh.py" doesn't shadow the bokeh package
-_this_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
 
 import numpy as np
 import pandas as pd
@@ -22,7 +16,6 @@ from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure
 from bokeh.transform import linear_cmap
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -34,64 +27,77 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Imprint diverging colormap — 256-stop ramp, theme-adaptive midpoint (red → neutral → blue)
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02X}{g:02X}{b:02X}"
+# Imprint diverging ramp for fields (colored cells that fill the plot): red -> page color -> blue
+DIV_FIELDS = [(0.0, "#AE3030"), (0.5, PAGE_BG), (1.0, "#4467A3")]
 
 
-_mid = "#FAF8F1" if THEME == "light" else "#1A1A17"
-IMPRINT_DIV256 = [_lerp_hex("#AE3030", _mid, t / 127.0) for t in range(128)] + [
-    _lerp_hex(_mid, "#4467A3", t / 127.0) for t in range(128)
-]
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"  # a missing value draws nothing, never the low end
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
 
-# Data — monthly temperature anomalies (°C) for 7 cities across all 12 months
+
+IMPRINT_DIV256 = [ramp_color(DIV_FIELDS, k / 255) for k in range(256)]
+
+# Columns: set these to your table's column names
+MONTH = "Month (2024)"  # role: x
+CITY = "City"  # role: y
+ANOMALY = "Anomaly (°C)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("anomalies.csv")
 np.random.seed(42)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 cities = ["Oslo", "Berlin", "Madrid", "Cairo", "Mumbai", "Tokyo", "Sydney"]
+seasonal = np.sin(np.linspace(-np.pi / 2, 3 * np.pi / 2, len(months)))
+offsets = {
+    "Oslo": seasonal * 1.5 - 0.3,
+    "Berlin": seasonal * 1.5 - 0.3,
+    "Madrid": seasonal * 1.2 + 0.4,
+    "Cairo": seasonal * 1.2 + 0.4,
+    "Mumbai": np.full(len(months), 0.8),
+    "Tokyo": seasonal * 0.7,
+    "Sydney": -seasonal * 0.9,
+}
+noise = np.random.randn(len(cities), len(months)) * 0.6
+anomalies = np.round(noise + np.array([offsets[city] for city in cities]), 1)
+df = pd.DataFrame({MONTH: months * len(cities), CITY: np.repeat(cities, len(months)), ANOMALY: anomalies.ravel()})
 
-base_anomalies = np.random.randn(len(cities), len(months)) * 0.6
-for i, city in enumerate(cities):
-    seasonal = np.sin(np.linspace(-np.pi / 2, 3 * np.pi / 2, len(months)))
-    if city in ("Oslo", "Berlin"):
-        base_anomalies[i] += seasonal * 1.5 - 0.3
-    elif city in ("Madrid", "Cairo"):
-        base_anomalies[i] += seasonal * 1.2 + 0.4
-    elif city == "Mumbai":
-        base_anomalies[i] += 0.8
-    elif city == "Sydney":
-        base_anomalies[i] -= seasonal * 0.9
-    elif city == "Tokyo":
-        base_anomalies[i] += seasonal * 0.7
+# Plot: reads only df and the constants above
+limit = df[ANOMALY].abs().max()
+df["label"] = df[ANOMALY].map(lambda v: f"{v:+.1f}")
 
-values = np.round(base_anomalies, 1)
 
-records = []
-for i, city in enumerate(cities):
-    for j, month in enumerate(months):
-        val = values[i, j]
-        # Light theme: dark text on near-zero (cream) cells, light text on deep red/blue cells
-        tc = ("#F0EFE8" if abs(val) > 1.0 else "#1A1A17") if THEME == "light" else "#F0EFE8"
-        records.append({"month": month, "city": city, "anomaly": val, "label": f"{val:+.1f}", "text_color": tc})
+def luminance(hex_color):
+    """Approximate relative luminance (0 to 1) of a #RRGGBB color."""
+    if not hex_color.startswith("#"):
+        return 1.0  # an undrawn cell has the page behind it
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
-source = ColumnDataSource(pd.DataFrame(records))
 
-# Color mapping — Imprint diverging palette
-cmap = linear_cmap("anomaly", IMPRINT_DIV256, low=-2.5, high=2.5)
+# Label ink follows the fill it sits on: light ink on dark fills, dark ink on light fills
+fills = [ramp_color(DIV_FIELDS, (v + limit) / (2 * limit)) for v in df[ANOMALY]]
+df["text_color"] = ["#F0EFE8" if luminance(f) < 0.5 else "#1A1A17" for f in fills]
+source = ColumnDataSource(df)
+cmap = linear_cmap(ANOMALY, IMPRINT_DIV256, low=-limit, high=limit)
 
-# Figure — square canvas for symmetric grid
-title = "heatmap-basic · python · bokeh · anyplot.ai"
 p = figure(
     width=2400,
     height=2400,
-    x_range=months,
-    y_range=list(reversed(cities)),
-    title=title,
-    x_axis_label="Month (2024)",
-    y_axis_label="City",
+    x_range=list(df[MONTH].dropna().unique()),
+    y_range=list(reversed(df[CITY].dropna().unique())),
+    title="heatmap-basic · python · bokeh · anyplot.ai",
+    x_axis_label=MONTH,
+    y_axis_label=CITY,
     toolbar_location=None,
     tools="",
     min_border_bottom=160,
@@ -100,32 +106,21 @@ p = figure(
     min_border_right=300,
 )
 
-# Heatmap rectangles
-r = p.rect(x="month", y="city", width=1, height=1, source=source, fill_color=cmap, line_color="white", line_width=2)
+r = p.rect(x=MONTH, y=CITY, width=1, height=1, source=source, fill_color=cmap, line_color=PAGE_BG, line_width=2)
 
-# Cell value annotations
-labels = LabelSet(
-    x="month",
-    y="city",
-    text="label",
-    text_color="text_color",
-    source=source,
-    text_align="center",
-    text_baseline="middle",
-    text_font_size="26pt",
-)
-p.add_layout(labels)
-
-# Storytelling callout: highlight the most extreme anomaly cell with a bold border + label
-extreme_idx = np.unravel_index(np.argmax(np.abs(values)), values.shape)
-extreme_city = cities[extreme_idx[0]]
-extreme_month = months[extreme_idx[1]]
-extreme_val = values[extreme_idx[0], extreme_idx[1]]
-p.rect(
-    x=[extreme_month], y=[extreme_city], width=1, height=1, fill_color=None, fill_alpha=0, line_color=INK, line_width=8
+p.add_layout(
+    LabelSet(
+        x=MONTH,
+        y=CITY,
+        text="label",
+        text_color="text_color",
+        source=source,
+        text_align="center",
+        text_baseline="middle",
+        text_font_size="28pt",
+    )
 )
 
-# Color bar (construct from renderer — idiomatic Bokeh)
 color_bar = r.construct_color_bar(
     width=50,
     ticker=BasicTicker(desired_num_ticks=10),
@@ -134,7 +129,7 @@ color_bar = r.construct_color_bar(
     major_label_text_color=INK_SOFT,
     border_line_color=None,
     padding=20,
-    title="Anomaly (°C)",
+    title=ANOMALY,
     title_text_font_size="34pt",
     title_text_color=INK,
     title_standoff=20,
@@ -142,11 +137,13 @@ color_bar = r.construct_color_bar(
 )
 p.add_layout(color_bar, "right")
 
-# HoverTool for interactive HTML
-hover = HoverTool(tooltips=[("City", "@city"), ("Month", "@month"), ("Anomaly", "@anomaly{+0.0} °C")], renderers=[r])
-p.add_tools(hover)
+p.add_tools(
+    HoverTool(
+        tooltips=[(CITY, f"@{{{CITY}}}"), (MONTH, f"@{{{MONTH}}}"), (ANOMALY, f"@{{{ANOMALY}}}{{+0.0}}")], renderers=[r]
+    )
+)
 
-# Theme-adaptive chrome
+# Style
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
@@ -171,11 +168,10 @@ p.yaxis.major_tick_line_color = None
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
 
-# Save interactive HTML
+# Save interactive HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Save PNG via headless Chrome (Selenium — export_png unavailable in this env)
 W, H = 2400, 2400
 opts = Options()
 for arg in (
@@ -190,7 +186,12 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
-screenshot = driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(base64.b64decode(screenshot["data"]))).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
