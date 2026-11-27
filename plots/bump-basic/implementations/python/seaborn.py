@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bump-basic: Basic Bump Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-29
@@ -17,28 +17,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ANYPLOT_AMBER = "#DDCC77"
 
 # Imprint palette — 8 hues, canonical order, first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-
-# Data — Tech company market cap rankings by quarter (2022–2023)
-companies = ["Apple", "Microsoft", "Amazon", "Alphabet", "Nvidia"]
-quarters = ["Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23"]
-
-ranks_data = {
-    "Apple": [1, 1, 1, 1, 1, 1, 2, 2],
-    "Microsoft": [2, 2, 2, 2, 2, 2, 1, 1],
-    "Amazon": [3, 3, 4, 4, 4, 5, 5, 5],
-    "Alphabet": [4, 4, 3, 3, 3, 3, 4, 4],
-    "Nvidia": [5, 5, 5, 5, 5, 4, 3, 3],
-}
-
-rows = []
-for company, r_list in ranks_data.items():
-    for q, r in zip(quarters, r_list, strict=False):
-        rows.append({"Company": company, "Quarter": q, "Rank": r})
-df = pd.DataFrame(rows)
 
 # Theme-adaptive seaborn setup
 sns.set_theme(
@@ -58,17 +39,41 @@ sns.set_theme(
     },
 )
 
-palette = IMPRINT_PALETTE[: len(companies)]
-markers = {"Apple": "o", "Microsoft": "s", "Amazon": "D", "Alphabet": "^", "Nvidia": "P"}
+# Columns: set these to your table's column names
+COMPANY = "Company"  # role: entity
+QUARTER = "Quarter"  # role: period
+RANK = "Market cap rank"  # role: rank
 
-# Figure-level relplot — leverages seaborn's FacetGrid API for layout control
+# Data: replace this block with your own table, for example df = pd.read_csv("ranks.csv")
+quarters = ["Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23"]
+ranks_data = {
+    "Apple": [1, 1, 1, 1, 1, 1, 2, 2],
+    "Microsoft": [2, 2, 2, 2, 2, 2, 1, 1],
+    "Amazon": [3, 3, 4, 4, 4, 5, 5, 5],
+    "Alphabet": [4, 4, 3, 3, 3, 3, 4, 4],
+    "Nvidia": [5, 5, 5, 5, 5, 4, 3, 3],
+}
+df = pd.DataFrame(
+    [
+        {COMPANY: company, QUARTER: quarter, RANK: rank}
+        for company, company_ranks in ranks_data.items()
+        for quarter, rank in zip(quarters, company_ranks, strict=True)
+    ]
+)
+
+# Plot: reads only df and the constants above
+companies = list(df[COMPANY].unique())
+n_companies = len(companies)
+palette = IMPRINT_PALETTE[:n_companies]
+
+# Figure-level relplot: hue + style give each company a color and a marker shape
 g = sns.relplot(
     data=df,
-    x="Quarter",
-    y="Rank",
-    hue="Company",
-    style="Company",
-    markers=markers,
+    x=QUARTER,
+    y=RANK,
+    hue=COMPANY,
+    style=COMPANY,
+    markers=True,
     dashes=False,
     markersize=14,
     linewidth=3,
@@ -81,68 +86,39 @@ g = sns.relplot(
     legend=False,
 )
 g.figure.set_dpi(400)
-g.figure.set_facecolor(PAGE_BG)
-
+g.figure.set_size_inches(8, 4.5)
 ax = g.axes[0, 0]
-ax.set_facecolor(PAGE_BG)
 
-# Rank 1 at top
+# Rank 1 at the top, ticks at whole-number ranks only
 ax.invert_yaxis()
-ax.set_yticks([1, 2, 3, 4, 5])
+ax.set_yticks(range(int(df[RANK].min()), int(df[RANK].max()) + 1))
 ax.xaxis.grid(False)
 ax.yaxis.grid(True)
 sns.despine(ax=ax)
 
-# Alpha hierarchy — de-emphasize lower final-ranked companies
-final_ranks = {c: ranks_data[c][-1] for c in companies}
-for line in ax.get_lines():
-    label = line.get_label()
-    if label in final_ranks:
-        fr = final_ranks[label]
-        line.set_alpha(1.0 if fr <= 2 else (0.75 if fr == 3 else 0.55))
-
-# Crossing highlight — Apple/Microsoft overtake between Q2'23 (idx 5) and Q3'23 (idx 6)
-# Categorical x-axis maps quarters to integer positions 0–7
-CROSSING_X = 5.5
-ax.axvline(x=CROSSING_X, color=ANYPLOT_AMBER, alpha=0.45, linewidth=1.5, linestyle="--", zorder=0)
-# Label near rank 1 (top of inverted y-axis) where Apple/Microsoft cross
-# ax.get_xaxis_transform(): x=data coords, y=axes fraction (1=top of display)
-ax.text(
-    CROSSING_X,
-    0.90,
-    "overtake",
-    fontsize=7,
-    color=ANYPLOT_AMBER,
-    ha="center",
-    va="bottom",
-    style="italic",
-    transform=ax.get_xaxis_transform(),
-)
-
-# Style
-title = "bump-basic · python · seaborn · anyplot.ai"
-ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
-ax.set_xlabel("Quarter", fontsize=10, color=INK)
-ax.set_ylabel("Market Cap Rank", fontsize=10, color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
-
-# End-of-line labels replacing legend
-n_quarters = len(quarters)
+# End-of-line labels replace the legend
+period_order = list(df[QUARTER].unique())
+ends = df.dropna(subset=[RANK]).groupby(COMPANY, sort=False).tail(1).set_index(COMPANY)
 for i, company in enumerate(companies):
-    rank = ranks_data[company][-1]
-    fr = rank
-    alpha_val = 1.0 if fr <= 2 else (0.75 if fr == 3 else 0.55)
+    if company not in ends.index:
+        continue
     ax.annotate(
         company,
-        xy=(n_quarters - 1, rank),
-        xytext=(10, 0),
+        xy=(period_order.index(ends.loc[company, QUARTER]), ends.loc[company, RANK]),
+        xytext=(18, 0),
         textcoords="offset points",
-        fontsize=8,
-        fontweight="bold" if rank <= 2 else "normal",
+        fontsize=9,
+        fontweight="bold",
         color=palette[i],
         va="center",
-        alpha=alpha_val,
     )
 
-g.figure.subplots_adjust(left=0.09, right=0.87, top=0.90, bottom=0.13)
+# Style
+ax.set_title("bump-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_xlabel(QUARTER, fontsize=10, color=INK)
+ax.set_ylabel(RANK, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+
+g.figure.canvas.draw()
+g.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
