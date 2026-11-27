@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -76,14 +76,14 @@ sector_colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(n_sect
 
 # Ring geometry: a wider innermost ring holds the crowded nearest horizon
 R_MAX = 390
-core = 140
+core = 190
 ring_outer = [core + (R_MAX - core) / (n_rings - 1) * k for k in range(n_rings)]
 ring_inner = [0, *ring_outer[:-1]]
 ring_mid = [(i + o) / 2 for i, o in zip(ring_inner, ring_outer, strict=True)]
 
 # Visual hierarchy: near-term items are larger/bolder
 ring_marker_sizes = np.linspace(28, 14, n_rings)
-label_offsets = np.linspace(26, 13, n_rings)
+label_offsets = np.linspace(15, 11, n_rings)
 
 # 270-degree layout; gap in upper-right holds ring labels and legend
 total_angle = 3 * np.pi / 2
@@ -99,8 +99,8 @@ p = figure(
     width=W,
     height=H,
     title="radar-innovation-timeline · python · bokeh · anyplot.ai",
-    x_range=(-R_MAX * 1.2, R_MAX * 1.2),
-    y_range=(-R_MAX * 1.18, R_MAX * 1.23),
+    x_range=(-R_MAX * 1.42, R_MAX * 1.2),
+    y_range=(-R_MAX * 1.31, R_MAX * 1.31),
     tools="",
     toolbar_location=None,  # omit toolbar so PNG height matches H exactly
     min_border_top=120,
@@ -188,7 +188,7 @@ for ring_idx, ring_name in enumerate(rings):
             x=r * np.cos(label_angle),
             y=r * np.sin(label_angle),
             text=ring_name,
-            text_font_size="22pt",
+            text_font_size="30pt",
             text_color=INK_SOFT,
             text_font_style="bold",
             text_align="center",
@@ -255,8 +255,8 @@ for idx, (name, ring_name, sector_name) in enumerate(df[[NAME, RING, SECTOR]].it
     xs.append(x)
     ys.append(y)
 
-    # Label placement: alternate inward/outward in crowded inner rings
-    direction = -1 if ring_idx == 0 and n_in_group > 1 and pos_in_group % 2 else 1
+    # Label placement: always radially outward, away from the apex where sectors converge
+    direction = 1
     label_r_offset = label_offsets[ring_idx] * direction
 
     lx = x + label_r_offset * np.cos(angle)
@@ -273,7 +273,7 @@ for idx, (name, ring_name, sector_name) in enumerate(df[[NAME, RING, SECTOR]].it
             x=lx,
             y=ly,
             text=name,
-            text_font_size="16pt",
+            text_font_size="24pt",
             text_color=INK,
             text_align=text_align,
             text_baseline=text_baseline,
@@ -312,10 +312,10 @@ p.add_tools(hover)
 legend = Legend(
     items=legend_items_list,
     location="top_right",
-    label_text_font_size="22pt",
+    label_text_font_size="30pt",
     label_text_color=INK_SOFT,
-    glyph_height=32,
-    glyph_width=32,
+    glyph_height=40,
+    glyph_width=40,
     spacing=16,
     padding=22,
     background_fill_color=ELEVATED_BG,
