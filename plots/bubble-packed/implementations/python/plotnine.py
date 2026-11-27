@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -24,6 +24,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_color_identity,
     scale_fill_manual,
     theme,
     theme_void,
@@ -41,10 +42,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
-MIN_RADIUS = 0.22  # radius of the smallest circle, relative to the largest (radius 1)
 GAP = 0.03  # space kept between neighbouring circles
 LARGE_SHARE = 0.5  # circles at or above this share of the largest value carry name and value
-MEDIUM_SHARE = 0.22  # circles at or above this share carry name and value in a smaller size
+MEDIUM_SHARE = 0.3  # circles at or above this share carry name and value in a smaller size
 
 # Columns: set these to your table's column names
 LABEL = "Item"  # role: label
@@ -66,10 +66,10 @@ df = pd.DataFrame(
             "Displays",
             "Peripherals",
             "Consulting",
-            "Tech Svc",
+            "IT Services",
             "Training",
-            "Managed",
-            "APIs",
+            "Managed Services",
+            "API Platforms",
             "Mobile",
             "Gaming",
             "Streaming",
@@ -82,14 +82,14 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-RADIUS, X, Y, CIRCLE, VALUE_TEXT = "radius", "x", "y", "circle_id", "value_text"
+RADIUS, X, Y, CIRCLE, VALUE_TEXT, LABEL_COLOR = "radius", "x", "y", "circle_id", "value_text", "label_color"
 
 items = df.dropna(subset=[VALUE]).reset_index(drop=True)
 groups = items[GROUP].dropna().unique().tolist()
 group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
 
 # Area-based radius: circle area is proportional to value
-items[RADIUS] = MIN_RADIUS + (1 - MIN_RADIUS) * np.sqrt(items[VALUE] / items[VALUE].max())
+items[RADIUS] = np.sqrt(items[VALUE] / items[VALUE].max())
 
 # Circle packing: greedy placement with vectorized collision detection
 n = len(items)
@@ -125,9 +125,10 @@ for i in range(1, n):
 tri = np.triu(np.ones((n, n), dtype=bool), k=1)
 min_dists = sorted_radii[:, np.newaxis] + sorted_radii[np.newaxis, :] + GAP
 
-for _ in range(2000):
-    x_pos *= 0.997
-    y_pos *= 0.997
+for step in range(3000):
+    if step < 2000:
+        x_pos *= 0.997
+        y_pos *= 0.997
 
     dx = x_pos[:, np.newaxis] - x_pos[np.newaxis, :]
     dy = y_pos[:, np.newaxis] - y_pos[np.newaxis, :]
@@ -160,7 +161,18 @@ circles = pd.DataFrame(
 )
 circles[GROUP] = pd.Categorical(circles[GROUP], categories=groups)
 
-# Labels: name and value per bubble, tiered by bubble size
+
+# Labels: name and value per bubble, tiered by bubble size; ink color chosen by fill luminance
+def luminance(hex_color):
+    rgb = np.array([int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5)])
+    rgb = np.where(rgb <= 0.03928, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
+    return float(rgb @ [0.2126, 0.7152, 0.0722])
+
+
+LABEL_INK = "#1A1A17"
+items[LABEL_COLOR] = items[GROUP].map(
+    lambda g: LABEL_INK if luminance(group_colors.get(g, IMPRINT_PALETTE[0])) > 0.2 else "white"
+)
 items[VALUE_TEXT] = items[VALUE].map(lambda v: f"${v:g}B")
 share = items[VALUE] / items[VALUE].max()
 large = items[share >= LARGE_SHARE]
@@ -190,17 +202,16 @@ plot = (
     + geom_polygon(data=circles, mapping=aes(x=X, y=Y, fill=GROUP, group=CIRCLE), color=PAGE_BG, size=0.6)
     # Name labels per size tier
     + geom_text(
-        data=large, mapping=aes(x=X, y=Y, label=LABEL), size=3.5, color="white", fontweight="bold", nudge_y=0.09
+        data=large, mapping=aes(x=X, y=Y, label=LABEL, color=LABEL_COLOR), size=3.5, fontweight="bold", nudge_y=0.09
     )
     + geom_text(
-        data=medium, mapping=aes(x=X, y=Y, label=LABEL), size=3.0, color="white", fontweight="bold", nudge_y=0.06
+        data=medium, mapping=aes(x=X, y=Y, label=LABEL, color=LABEL_COLOR), size=3.0, fontweight="bold", nudge_y=0.06
     )
-    + geom_text(data=small, mapping=aes(x=X, y=Y, label=LABEL), size=2.5, color="white", fontweight="bold")
+    + geom_text(data=small, mapping=aes(x=X, y=Y, label=LABEL, color=LABEL_COLOR), size=2.5, fontweight="bold")
     # Value labels for large and medium bubbles
-    + geom_text(data=large, mapping=aes(x=X, y=Y, label=VALUE_TEXT), size=3.0, color="white", alpha=0.9, nudge_y=-0.12)
-    + geom_text(
-        data=medium, mapping=aes(x=X, y=Y, label=VALUE_TEXT), size=2.5, color="white", alpha=0.85, nudge_y=-0.09
-    )
+    + geom_text(data=large, mapping=aes(x=X, y=Y, label=VALUE_TEXT, color=LABEL_COLOR), size=3.0, nudge_y=-0.12)
+    + geom_text(data=medium, mapping=aes(x=X, y=Y, label=VALUE_TEXT, color=LABEL_COLOR), size=2.5, nudge_y=-0.09)
+    + scale_color_identity()
     + scale_fill_manual(values=group_colors, limits=groups, name=GROUP)
     + coord_fixed(xlim=(cx_mid - half_span, cx_mid + half_span), ylim=(cy_mid - half_span, cy_mid + half_span))
     + labs(title=title, subtitle=subtitle_text)
@@ -209,13 +220,14 @@ plot = (
         figure_size=(6, 6),
         plot_title=element_text(size=title_fontsize, ha="center", weight="bold", color=INK, margin={"b": 4}),
         plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT, margin={"t": 3, "b": 8}),
-        legend_title=element_text(size=9, weight="bold", color=INK),
+        legend_title=element_text(size=8, weight="bold", color=INK, margin={"b": 4}),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
         legend_direction="vertical",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_key_size=12,
+        legend_box_margin=6,
         plot_background=element_rect(fill=PAGE_BG, color="none"),
         plot_margin=0.02,
     )
