@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -54,14 +54,9 @@ sns.kdeplot(data=df, x=BATTERY_LIFE, ax=ax, fill=True, alpha=0.35, color=BRAND, 
 # Rug plot showing individual observations
 sns.rugplot(data=df, x=BATTERY_LIFE, ax=ax, color=BRAND, alpha=0.3, height=0.04)
 
-title = "density-basic · python · seaborn · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = max(8, round(12 * ratio))
-
 ax.set_ylabel("Density", fontsize=10, color=INK)
 ax.set_xlabel(BATTERY_LIFE, fontsize=10, color=INK)
-ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.set_title("density-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
