@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bubble-packed: Basic Packed Bubble Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-05-29
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 80/100 | Updated: 2026-11-27
 
 library(ggplot2)
 library(dplyr)
@@ -77,7 +77,6 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
 
   # Iterative overlap resolution with centroid + sector gravity
   for (it in seq_len(n_iter)) {
-    any_mv <- FALSE
     for (i in seq_len(n - 1)) {
       for (j in (i + 1):n) {
         dx   <- px[i] - px[j]
@@ -86,7 +85,6 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
         dmin <- r[i] + r[j] + 2e-3
 
         if (d < dmin) {
-          any_mv <- TRUE
           if (d < 1e-9) {
             px[j] <- px[j] + 1e-3 * runif(1, -1, 1)
             next
@@ -121,7 +119,6 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
       }
     }
 
-    if (!any_mv) break
   }
 
   # Final tightening: nudge each circle toward nearest non-overlapping neighbor
@@ -158,6 +155,21 @@ pack_circles <- function(r, sectors = NULL, n_iter = 1500) {
     }
   }
 
+  # Overlap-only passes so the final layout has no crossing circles
+  for (pass in seq_len(300)) {
+    for (i in seq_len(n - 1)) {
+      for (j in (i + 1):n) {
+        dx <- px[i] - px[j]; dy <- py[i] - py[j]
+        d  <- sqrt(dx^2 + dy^2); dmin <- r[i] + r[j] + 2e-3
+        if (d < dmin && d > 1e-9) {
+          push  <- (dmin - d) * 0.55; ux <- dx / d; uy <- dy / d
+          px[i] <- px[i] + push * ux; py[i] <- py[i] + push * uy
+          px[j] <- px[j] - push * ux; py[j] <- py[j] - push * uy
+        }
+      }
+    }
+  }
+
   list(x = px - mean(px), y = py - mean(py))
 }
 
@@ -179,7 +191,16 @@ circle_polys <- bind_rows(lapply(seq_len(n_segs), function(i) {
   mutate(sector = factor(sector, levels = sector_levels))
 
 # Labels only for circles large enough to hold text
-label_df <- segments |> filter(radius >= 0.24)
+label_df <- segments |>
+  filter(radius >= 0.24) |>
+  mutate(
+    # White text on the dark blue and red fills, theme ink elsewhere (light theme)
+    label_color = if (THEME == "light") {
+      ifelse(sector %in% c("Enterprise", "Emerging"), "#FFFFFF", INK)
+    } else {
+      LABEL_COLOR
+    }
+  )
 
 # Title — square canvas, no scaling needed (42 chars < 67)
 plot_title <- "bubble-packed · r · ggplot2 · anyplot.ai"
@@ -196,11 +217,11 @@ p <- ggplot() +
   ) +
   geom_text(
     data     = label_df,
-    aes(x = x, y = y, label = label),
-    color    = LABEL_COLOR,
-    size     = 2.2,
+    aes(x = x, y = y, label = label, color = label_color),
+    size     = 2.7,
     fontface = "bold"
   ) +
+  scale_color_identity() +
   scale_fill_manual(
     values = setNames(IMPRINT_PALETTE, sector_levels),
     name   = "Sector"
@@ -219,7 +240,8 @@ p <- ggplot() +
       margin = margin(t = 14, b = 10)
     ),
     plot.title.position = "plot",
-    legend.position   = "right",
+    legend.position   = "bottom",
+    legend.direction  = "horizontal",
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK,      size = 10),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
