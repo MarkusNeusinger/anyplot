@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 density-basic: Basic Density Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import pygal
 from pygal.style import Style
+from scipy.stats import gaussian_kde
 
 
 # Theme tokens — Imprint palette, theme-adaptive chrome
@@ -39,11 +40,10 @@ df = pd.DataFrame({RENT: np.round(rng.lognormal(mean=6.9, sigma=0.35, size=260))
 
 # Plot: KDE with Gaussian kernel and Scott's rule bandwidth
 rents = df[RENT].dropna().to_numpy(dtype=float)
-n = len(rents)
-bandwidth = n ** (-1 / 5) * np.std(rents, ddof=1)
+kde = gaussian_kde(rents, bw_method="scott")
+bandwidth = kde.factor * np.std(rents, ddof=1)
 x_grid = np.linspace(rents.min() - 2 * bandwidth, rents.max() + 2 * bandwidth, 400)
-density = np.exp(-0.5 * ((x_grid[:, None] - rents[None, :]) / bandwidth) ** 2).sum(axis=1)
-density /= n * bandwidth * np.sqrt(2 * np.pi)
+density = kde(x_grid)
 
 # Imprint palette style — theme-adaptive chrome
 custom_style = Style(
