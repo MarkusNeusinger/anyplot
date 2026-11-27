@@ -22,7 +22,7 @@ BULL_COLOR <- "#009E73"  # bullish / gain
 BEAR_COLOR <- "#AE3030"  # bearish / loss
 
 # --- Data --------------------------------------------------------------------
-# NovaTech Corp (NVTK) — 40 trading days, Jan–Mar 2024
+# NovaTech Corp (NVTK) — 40 trading days, Jan–Feb 2024
 all_dates   <- seq(as.Date("2024-01-02"), by = "day", length.out = 60)
 trade_dates <- all_dates[!weekdays(all_dates) %in% c("Saturday", "Sunday")]
 trade_dates <- head(trade_dates, 40)
