@@ -12,102 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 80
 review:
   strengths:
-  - Custom greedy circle-packing algorithm produces a clean, non-overlapping layout
-    with circles tightly grouped around the center
-  - Adaptive label sizing (5–10pt based on bubble radius) is a well-thought-out design
-    decision — large bubbles show name + value, small ones show name only
-  - Accent rings (thick edge) on sector leaders create a clear focal point and guide
-    the viewer's eye to dominant companies per sector
-  - 'Correct Imprint palette with Technology (green #009E73) as first series; all
-    four sector colors are properly mapped in canonical order'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes render cleanly with fully adaptive
-    chrome tokens — no dark-on-dark or light-on-light failures
-  - Square canvas (2400×2400) is the right choice for a symmetric packed bubble chart
-  - Code is deterministic (no random generation), clean, and follows KISS structure
-    throughout
+  - Custom greedy packing gives one compact, non-overlapping cluster, and radius =
+    sqrt(value) keeps area proportional to market cap
+  - Data-unit radii are converted to scatter points² after canvas.draw(), so seaborn's
+    size mapping draws exactly the packed circles
+  - Heavy ink ring on each sector's largest company creates a focal point per color
+    group, and the ring color flips with the theme
+  - Two-level labels (bold name over softer value) tiered by circle size; smallest
+    circles show names only
+  - 'Idiomatic seaborn: scatterplot with hue/hue_order/palette dict/size, set_theme
+    rc tokens, move_legend for the sector legend'
+  - 'Both themes fully adaptive: correct #FAF8F1 / #1A1A17 surfaces, light-on-dark
+    chrome, no dark-on-dark text'
   weaknesses:
-  - Very small bubbles (Goldman Sachs, Pfizer, Target, Costco) display at 5pt fontsize
-    — barely readable at full resolution and essentially invisible when the image
-    is scaled to mobile width (~400px). Either omit labels for bubbles below a minimum
-    radius threshold or increase the minimum font size to 6–7pt.
-  - 'LM-02 low: seaborn contributes sns.scatterplot, sns.set_theme, and sns.move_legend,
-    but the core bubble-packing algorithm is all custom numpy/matplotlib. The library''s
-    distinctive value is limited to styling and legend management.'
-  - 'DE-01 moderate: the accent-ring design is a nice touch, but overall the aesthetic
-    is ''well-configured'' rather than publication-ready — could benefit from a size
-    legend (mapping bubble radius to market cap value) or a brief subtitle annotation
-    to strengthen storytelling.'
+  - 'VQ-01 (both): the value labels of the eight medium circles render at 6 pt and
+    the smallest name (Target) at 5 pt, below the style guide''s 8 pt, and read small
+    — weakest in white on the lavender #C475FD Finance fill → names at 8 pt and values
+    at 6–7 pt or larger where the circle holds them (+2 pt). Likely cause: the label
+    tiers `fs_name = 8` / `6` / `5` and `fontsize=fs_name - 2`.'
+  - 'SC-02 (both): the 8 pt bold names ''Mastercard'' and ''UnitedHealth'' are wider
+    than their circles and spill past the outline, so the first and last letters sit
+    white on the page or the neighbouring circle (C5: labels only in circles large
+    enough to hold them) → a font size that fits the circle diameter, or a shorter
+    label (about −1 pt). Likely cause: the size tiers keyed on the radius alone, not
+    on the text width.'
+  - 'VQ-07 (both): the circles are filled at alpha=0.90, so each Imprint color blends
+    with the page and differs between the light and the dark render (Technology reads
+    lighter than #009E73 on the light page) → opaque fills (alpha 1.0); the circles
+    do not overlap, so translucency buys nothing. Likely cause: `alpha=0.90` in sns.scatterplot.'
+  - 'DQ-02 (both): real company names (Apple, Microsoft, NVIDIA, JPMorgan, …) carry
+    invented market caps → either real, sourced figures or fictional company names.
+    Likely cause: the label and value lists of the data block.'
+  - 'DQ-03 (both): Apple is shown at $180B and Microsoft at $160B, roughly a twentieth
+    of their real market caps of about $3,000B → values on the real scale (about +2,800B
+    for Apple) or fictional names. Likely cause: the MARKET_CAP list.'
+  - 'Suggestion: packing each sector as its own cluster with spacing between groups
+    (the grouping the Notes allow) would let the colors read as groups instead of
+    being interleaved.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white.
-      Chrome: Two-line title "Market Capitalization by Sector / bubble-packed · python · seaborn · anyplot.ai" in dark ink, fully readable. No axes (axis off — appropriate). Legend at bottom shows 4 sectors in 4-column horizontal layout with dark text on elevated background, readable.
-      Data: 17 company bubbles packed in a circular cluster. Technology (green #009E73): Apple, Microsoft, Google, NVIDIA, Meta. Finance (lavender #C475FD): JPMorgan, Visa, Mastercard, Goldman S. Healthcare (blue #4467A3): UnitedHealth, J&J, Merck, Pfizer. Retail (ochre #BD8233): Amazon, Walmart, Costco, Target. Accent rings (thick INK-colored edge) mark sector leaders: Apple, Visa, UnitedHealth, Amazon. White text labels + dollar values inside larger bubbles; name-only in smaller bubbles; very small bubbles (Pfizer, Goldman S., Target, Costco) have 5pt text that is borderline readable at full resolution.
-      Legibility verdict: PASS (all major labels readable; tiny 5pt labels on smallest bubbles are borderline but visible at 2400×2400)
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: two-line title 'Market Capitalization by Sector / bubble-packed · python · seaborn · anyplot.ai' in dark ink; axis off; framed 'Sector' legend at the bottom with four entries — all readable.
+      Data: 17 circles in one packed cluster, Technology #009E73, Finance lavender, Healthcare blue, Retail ochre; heavy ink rings on the largest company per sector (Apple, Amazon, JPMorgan, UnitedHealth). White bold names and values: the five largest at 10/8 pt, medium circles at 8/6 pt, smallest names at 6 pt and Target at 5 pt. 'Mastercard' and 'UnitedHealth' are wider than their circles and spill past the outline.
+      Legibility verdict: PASS (small labels below reference; spilled letters white on the page)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title text appears in light cream (#F0EFE8), clearly readable against the near-black background. Legend "Sector" title and category labels are in #B8B7B0 (INK_SOFT dark), readable. No dark-on-dark failures observed.
-      Data: Data colors are IDENTICAL to the light render — same green, lavender, blue, and ochre bubbles in the same positions. White text labels inside bubbles remain readable on the colored bubbles in both themes. Accent rings appear in cream/light color (INK in dark theme = #F0EFE8), still clearly visible.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements readable against the dark background.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title cream, legend text light grey on a dark panel — no dark-on-dark text.
+      Data: same layout and hues; outlines and rings cream. Fills at alpha 0.90 shift slightly against each page. White labels readable on all fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout; large/medium bubble labels
-          are well-sized, but minimum 5pt on the smallest bubbles is borderline for
-          mobile readability
+        comment: Title, legend and big-circle labels readable; Target at 5 pt and
+          eight value labels at 6 pt sit below the 8 pt reference and read small,
+          weakest in white on the lavender Finance fill (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Greedy packing algorithm prevents all circle overlap; no label collision
-          observed
+        comment: No text collides with other text; circles do not cross each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 17 bubbles clearly visible with distinct colors; accent rings
-          add visual hierarchy
+        comment: All 17 circles clearly visible with thin outlines in both themes;
+          legend glyphs match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hue families; CVD-safe palette selection
+        comment: Four well-separated Imprint hues, no red-green pair; color is backed
+          by the legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas; bubble cluster fills canvas well; legend
-          fits within frame; subplots_adjust reserves proper margins
+        comment: Square 2400x2400 canvas; the cluster, the two-line title and the
+          legend fit with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed; descriptive first-line title 'Market Capitalization
-          by Sector' provides full context
+        comment: N/A for axes (packed layout, axis off); descriptive first title line
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Technology (first) = #009E73; Finance=#C475FD; Healthcare=#4467A3;
-          Retail=#BD8233; both backgrounds correct; chrome fully adaptive'
+        comment: 'Imprint palette in canonical order, Technology = #009E73, correct
+          backgrounds — but fills drawn at alpha 0.90 so the categorical colors differ
+          between the themes (defect line)'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,26 +127,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Accent rings on sector leaders and adaptive label sizing show genuine
-          design thought; above 'well-configured default' but not yet publication-ready
+        comment: 'Above baseline: two-level type hierarchy inside the circles (bold
+          name over a softer value), tiered by circle size, elevated legend panel'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Axis fully off for a clean canvas; edge highlighting on all bubbles;
-          alpha=0.90; elevated legend frame; generous margins — good refinement above
-          defaults
+        comment: Thin ink outline on every circle that flips with the theme; legend
+          centred under the cluster; label tiers chosen for this chart
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Accent rings guide the eye to dominant companies per sector; size
-          immediately encodes value; color groups sectors; labels with dollar amounts
-          add context
+        comment: 'Focal points chosen by the implementation: a heavy ink ring on each
+          sector''s largest company (Apple, Amazon, JPMorgan, UnitedHealth) gives
+          every color group a leader'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,31 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with physics-based (greedy) packing algorithm
+        comment: Correct packed bubble chart; spec is not a -basic id
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Area-scaled bubbles, packing without overlap, labels inside circles,
-          color encoding by group
+        comment: 'C5 missed: ''Mastercard'' and ''UnitedHealth'' at 8 pt are wider
+          than their circles and spill past the outline (defect line); other features
+          met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: No positional axes (correct for packed bubble); all 17 items displayed;
-          size correctly encodes value
+        comment: Area ~ value (radius = sqrt(value)); position from the packing only,
+          no axes; all 17 items shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Two-line title: ''Market Capitalization by Sector\nbubble-packed
-          · python · seaborn · anyplot.ai'' — correct format; sector legend labels
-          match data'
+        comment: Title carries the descriptive prefix and the mandated spec-id · python
+          · seaborn · anyplot.ai line; legend titled 'Sector' with the four sectors
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -174,22 +185,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of bubble sizes, 4 color groups, labels with values,
-          accent highlights — all aspects of packed bubble chart covered
+        comment: Wide size range, four groups, value labels on the larger circles,
+          small unlabeled-value circles
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Tech company market cap by sector — real-world business scenario,
-          neutral, plausible
+        comment: Neutral business scenario, but real company names carry invented
+          market caps (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Values in billions USD; relative magnitudes (Apple 180B > Microsoft
-          160B > Amazon 140B) are reasonable
+        comment: Values are self-consistent but far below the real market caps of
+          the named companies (defect line); spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -199,34 +210,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes; clean sequential: data definition → packing
-          algorithm → plot → save'
+        comment: Reads top to bottom (imports, data, packing, plot, save); no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random generation; packing algorithm is
-          deterministic given sorted input
+        comment: 'Deterministic: fixed data and deterministic greedy packing'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom packing loop is verbose but necessary for this chart type;
-          no over-engineering or fake functionality
+        comment: Greedy packing is hand-written but no installed package computes
+          circle packing; data-to-points² conversion keeps sizes exact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; dpi=400 correct
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
       score: 6
       max: 10
@@ -236,18 +247,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with hue/size/palette dict, sns.set_theme with
-          full RC dict, sns.move_legend — idiomatic where seaborn applies; bubble
-          packing requires custom numpy code
+        comment: sns.scatterplot with hue, hue_order, palette dict and size mapping;
+          sns.set_theme rc dict for theme tokens
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: sns.move_legend and sns.set_theme style system are seaborn-specific,
-          but the core visualization algorithm is pure matplotlib/numpy — seaborn's
-          distinctive value is limited to theming and legend management
+        comment: sns.move_legend to reposition the seaborn-built legend; otherwise
+          the drawing is custom
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  last_kept:
+    pr: 15002
+    code: regression
+    note: '#15002 was kept because the review found it worse than the live version
+      here: Medium-circle labels shrank: names 8 → 7 pt and values 6 → 5 pt, and NVIDIA
+      dropped from the 10/8 pt tier to 7/5 pt, so nine value labels are now smaller
+      and harder to read (value labels of NVIDIA, Un. Keep these as the live version
+      has them.'
 impl_tags:
   dependencies: []
   techniques:

@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-27
+Quality: 85/100 | Updated: 2026-11-27
 """
 
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, LabelSet
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -130,6 +130,7 @@ p = figure(
 )
 
 renderers = []
+legend_items = []
 for t, tier_name in enumerate(tiers):
     src = ColumnDataSource(circles[circles[TIER] == tier_name])
     r = p.circle(
@@ -141,13 +142,27 @@ for t, tier_name in enumerate(tiers):
         fill_alpha=0.90,
         line_color=PAGE_BG,
         line_width=4,
-        legend_label=str(tier_name),
     )
     renderers.append(r)
+    # Screen-size marker for the legend key; the data-unit circle would draw a speck there
+    key = p.scatter(
+        x=[xr[0] - 10 * half],
+        y=[yr[0] - 10 * half],
+        size=44,
+        marker="circle",
+        fill_color=IMPRINT_PALETTE[t],
+        fill_alpha=0.90,
+        line_color=PAGE_BG,
+    )
+    legend_items.append(LegendItem(label=str(tier_name), renderers=[key]))
 
 # Adaptive label sizes by radius bracket, as shares of the largest radius
 # y_offset is in screen pixels, separating the name (above) and the value (below)
-brackets = [(0.726, float("inf"), "18pt", "14pt", 16), (0.435, 0.726, "14pt", "12pt", 12), (0, 0.435, "12pt", "9pt", 9)]
+brackets = [
+    (0.726, float("inf"), "34pt", "28pt", 24),
+    (0.435, 0.726, "26pt", "22pt", 18),
+    (0, 0.435, "20pt", "16pt", 14),
+]
 
 for lo, hi, name_fs, val_fs, y_off in brackets:
     for t, tier_name in enumerate(tiers):
@@ -202,11 +217,11 @@ p.outline_line_color = INK_SOFT
 p.min_border = 50
 
 # Legend — theme-adaptive styling with improved sizing for 2400px canvas
-p.legend.location = "top_right"
-p.legend.label_text_font_size = "22pt"
+p.add_layout(Legend(items=legend_items, location="top_right"))
+p.legend.label_text_font_size = "34pt"
 p.legend.label_text_color = INK
-p.legend.glyph_height = 40
-p.legend.glyph_width = 40
+p.legend.glyph_height = 48
+p.legend.glyph_width = 48
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.92
 p.legend.border_line_color = INK_SOFT
