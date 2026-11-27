@@ -241,6 +241,8 @@ The six zones of `prompts/adaptable-code.md`, top to bottom:
 
 R, Julia and JavaScript keep the same order in their own syntax; see the "Data block" section of `prompts/library/{library}.md`.
 
+The file reads top to bottom, cell by cell, like a notebook (CQ-01). A short helper function is fine; `prompts/adaptable-code.md` → "Short helpers" says which zone it goes in.
+
 ### Data Generation Strategy
 
 Choose the appropriate data generation method based on the plot type. Whatever the method, it lives in the one `# Data` block (`prompts/adaptable-code.md`) and obeys these rules:
@@ -364,14 +366,14 @@ The workflow will update `Quality: {score}/100` and add version numbers after re
 Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-criteria.md` (CQ-04 includes the lean-code rule below).
 
 **Forbidden (Python):**
-- Functions or classes
+- A `main()` or other entry-point function, a class (the agent chat's validator refuses every class, a small pygal subclass included), a function that wraps the plot creation or the save (a `build_chart()` holding the figure, a `make_panel()` holding each panel's drawing, or several helpers that hold it together), and a function inside a function below the Data block. Allowed: a short helper defined at the top level above its first use, a few lines for a formula or a step the code uses more than once (`def skew_x(t, p): ...`, an `add_ref(ax, value, label)` for each reference line), and a lambda passed to a call. Draw repeated panels in a loop over their values.
 - `if __name__ == '__main__':`
 - Type hints
-- **Extra** docstrings beyond the required 4-line module header (see "Docstring Format" above). The module header docstring at the top of the file is **mandatory** — `impl-review.yml` rewrites it after review and the catalog renders its metadata from it. Don't add function- or class-level docstrings (there shouldn't be any functions/classes anyway).
+- **Extra** docstrings beyond the required 4-line module header (see "Docstring Format" above). The module header docstring at the top of the file is **mandatory** — `impl-review.yml` rewrites it after review and the catalog renders its metadata from it. A helper may carry a one-line docstring or comment, and that costs nothing; never more than one line.
 - Cross-library workarounds **for plotting** (e.g., using matplotlib plotting functions inside plotnine)
 
 **Forbidden (R / ggplot2):**
-- Wrapping the plot creation in a custom function — keep it top-level top-down
+- Wrapping the plot creation in a custom function — keep it top-level top-down; a short helper above its first use, such as `skew_x <- function(t, p) ...`, is fine (CQ-01), and so are a `ggproto` object and a `function(x)` passed to `lapply` or `sapply`
 - Calling `print(p)` after `ggsave()` — `ggsave` already renders
 - Using a non-`ragg` device for PNG output (Cairo path is not installed in CI)
 - Falling back to base-R `plot()` / `barplot()` when ggplot2 can't express something — return NOT_FEASIBLE instead
@@ -381,7 +383,7 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - Importing `Plots` — Plots.jl is the alternative ecosystem and is out of scope. Use CairoMakie only.
 - Calling `display(fig)` instead of `save(...)` — `display` opens an interactive backend, which CI doesn't have.
 - Using `GLMakie` or `WGLMakie` — interactive backends, out of scope. CairoMakie is the only allowed backend.
-- Wrapping the plot in a Julia function or module — keep it top-level, top-down, mirroring the Python/R rule.
+- Wrapping the plot in a Julia function or module — keep it top-level, top-down, mirroring the Python/R rule. A short helper above its first use, such as `skew_x(t, p) = ...`, is fine (CQ-01).
 - Bare `@show` or expressions at script level that pollute stdout.
 - Falling back to shelling out to Python/R/matplotlib when CairoMakie can't express something — return NOT_FEASIBLE instead.
 - **Extra** `#`-comment blocks beyond the required 4-line header. The Julia equivalent of the Python/R rule: the leading `#` header is **mandatory** (`impl-review.yml` rewrites it); don't insert other multi-line `#` blocks at the top of the file.
@@ -391,6 +393,7 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - `fetch()` / CDN / any network access — the runtime is offline and the emitted HTML must be self-contained.
 - Inline HTML scaffolding or screenshot/Selenium plumbing — the harness owns the page and the Playwright screenshot.
 - Leaving entrance animation on — the static PNG must capture the final frame (`animation: false` for Chart.js/ECharts/Highcharts; `skipAnimation` for MUI X).
+- Hiding the chart in a function the file calls itself (`drawChart()`, a `drawPanel()` that holds each panel) or in a callback that draws the whole chart (Highcharts' `chart.events.load`), and nesting named functions — keep it top-level, top-down (CQ-01). A short helper above its first use is fine. So is what the library or the harness asks for, at any length: the muix default export and a layer component that reads the chart's hooks, a Chart.js plugin object, an ECharts `renderItem` (inline or a named function passed in), a seeded random generator (`lcg()`, a `makeLcg(seed)` closure or an IIFE in the Data block, since JavaScript has none), and an arrow function passed to `.map`, a sort or a formatter.
 
 **Forbidden (React / muix — community surface only):**
 - **`@mui/x-charts-pro` and any MUI X Pro / Premium feature** is strictly forbidden — only the **MIT community** `@mui/x-charts` package is installed and in scope. Importing a Pro/Premium module will fail the build. (You *may* freely add richer chart features when they serve the spec — as long as every one comes from the community `@mui/x-charts` surface.)
@@ -532,7 +535,7 @@ ax.scatter(df[STUDY_HOURS], df[EXAM_SCORE],
 - Compute with the libraries listed under "Available Standard Packages", never by hand. When a call computes it (a KDE, histogram bins, quantiles or box statistics, an FFT or spectrogram, ACF/PACF, a regression or LOESS fit, smoothing, clustering and dendrogram linkage, hulls and Voronoi cells, survival curves, ROC), call it.
 - Write an algorithm out only when nothing available provides it, and keep it short.
 - Aim for the shortest version that reads as well as the longer one: no duplicated blocks, no dead code, no pass without a visible effect, and no code golf.
-- A replacement is a call, a loop over the repeated values, or a removal, never a new helper function (CQ-01). Removing duplicated blocks never justifies one.
+- A replacement is a call, a loop over the repeated values, a short helper above its first use (CQ-01), or a removal. A function that wraps the plot or the save is never a replacement.
 - Installed packages are not "dependencies" to avoid.
 
 ---
@@ -565,7 +568,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — a
 - Tell a story through good data choice and clear visual hierarchy
 - **Annotation restraint (DEFAULT):** Do NOT add text annotations, callout boxes, arrows, or labeled data points unless the specification explicitly asks for them (e.g., spec-id contains "annotated"). Good storytelling comes from visual design — color contrast, size variation, strategic data choice — not text overlays.
 - **When annotations ARE appropriate:** Only when spec-id contains "annotated" or the spec explicitly describes annotations as a required feature. Even then, use sparingly.
-- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, reference lines, highlights, callouts, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
+- **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, reference lines, highlights, callouts, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit. Neither they nor an unasked control that changes what the chart shows (range selector buttons, range sliders, dropdown or button menus, in the PNG or only in the HTML) earn library-mastery credit.
 - **Callout targets come from a rule over the data:** when a callout or highlight is drawn at all (the restraint rules above decide that), choose its target with a rule over `df` — `idxmax`, the latest row, the smallest gap between the two leading groups, the first crossing of a `# Constants` threshold — never by typing a sample value (`categories.index("Q3")`, `peak_month = 7`). Its text is a computed f-string that claims only what the rule guarantees, and a conditional claim (a near-tie, a record) is drawn only when the data meets it. With other data the callout moves to the right place or disappears, instead of pointing at a value that is no longer there. See `prompts/adaptable-code.md`.
 
 ## Output Files

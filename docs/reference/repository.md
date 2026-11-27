@@ -506,8 +506,12 @@ Library: matplotlib 3.10.0 | Python 3.14
 Quality: 92/100 | Created: 2025-01-10
 """
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
 
 # Data
 np.random.seed(42)
@@ -520,7 +524,7 @@ ax.scatter(x, y, alpha=0.7, s=50)
 ax.set_title('Basic Scatter Plot')
 
 plt.tight_layout()
-plt.savefig('plot.png', dpi=300)
+plt.savefig(f'plot-{THEME}.png', dpi=200)
 ```
 
 **Header Format** (4 lines):
@@ -530,7 +534,7 @@ plt.savefig('plot.png', dpi=300)
 4. `Quality: {score}/100 | Created: {date}` - Quality + date
 
 **Rules**:
-- No functions, no classes
+- No `main()`, no class, no function that wraps the plot or the save, no function inside a function; a short helper above its first use is fine (CQ-01 in `prompts/quality-criteria.md`)
 - No `if __name__ == '__main__':`
 - Only imports → data → plot → save
 

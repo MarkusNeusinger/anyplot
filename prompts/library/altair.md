@@ -222,7 +222,8 @@ chart = (
 
 chart.save(f'plot-{THEME}.png', scale_factor=4.0)
 # Apply the inline fit-to-(3200,1800)-or-(2400,2400) block from the
-# "Canvas" section above — MANDATORY, no helper function (KISS / CQ-01).
+# "Canvas" section above — MANDATORY and at the top level: it writes the
+# PNG, so it is part of the save, which no function wraps (CQ-01).
 chart.save(f'plot-{THEME}.html')
 ```
 
