@@ -1,9 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 73/100 | Updated: 2026-05-29
 """
 
+import math
 import os
 import sys
 
@@ -12,6 +13,7 @@ import sys
 _this_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path[:] = [p for p in sys.path if os.path.realpath(p or ".") != _this_dir]
 
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -22,88 +24,175 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Subtle ring zone fill colors — drawn first (positions 0–3 in color_sequence),
-# then Imprint sector colors at positions 4–7.
-# Light theme: warm tints graduating from pale green (Adopt) to off-white (Hold)
-# Dark theme: dark tints graduating from dark green to near-background
-if THEME == "light":
-    zone_colors = ("#C8EBE0", "#E2D8F5", "#D4DCEA", "#EDEAE2")  # Adopt/Trial/Assess/Hold
-else:
-    zone_colors = ("#1A3028", "#26203A", "#1E2430", "#252420")  # Adopt/Trial/Assess/Hold
+# Imprint palette: all eight positions, one per sector in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Imprint palette — first 4 positions mapped to sectors (positions 4–7 in full palette)
-sectors = ["Data Engineering", "Cloud Platforms", "Security", "DevOps"]
-sector_colors_tuple = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
-sector_colors = dict(zip(sectors, sector_colors_tuple, strict=False))
-ring_values = {"Adopt": 1, "Trial": 2, "Assess": 3, "Hold": 4}
-rings_ordered = ["Adopt", "Trial", "Assess", "Hold"]
+# Constants
+RINGS = ["Adopt", "Trial", "Assess", "Hold"]  # time horizons, innermost first
+ARC_SPAN = 270  # degrees covered by the sectors; the rest stays open for the ring names
+OPENING_CENTER = -90  # direction of the open part (straight down)
+HOLE = 0.5  # radius of the empty center
+PLOT_ASPECT = 1.18  # plot-area width / height, so that circles stay circles
+PPU = 185  # pixels per radius unit on the 2400 px canvas
+LABEL_PX = 36  # font size of every label
 
-# Data — 24 innovations across 4 sectors and 4 time-horizon rings
-innovations = [
-    ("dbt Core", "Data Engineering", "Adopt"),
-    ("Apache Iceberg", "Data Engineering", "Adopt"),
-    ("Kafka Streams", "Data Engineering", "Trial"),
-    ("Delta Lake", "Data Engineering", "Trial"),
-    ("Vector Databases", "Data Engineering", "Assess"),
-    ("Arrow Flight RPC", "Data Engineering", "Hold"),
-    ("Service Mesh", "Cloud Platforms", "Adopt"),
-    ("eBPF Monitoring", "Cloud Platforms", "Trial"),
-    ("Green Cloud APIs", "Cloud Platforms", "Trial"),
-    ("Multi-Cloud Orch.", "Cloud Platforms", "Assess"),
-    ("Serverless Edge", "Cloud Platforms", "Assess"),
-    ("Quantum Cloud", "Cloud Platforms", "Hold"),
-    ("Zero Trust Network", "Security", "Adopt"),
-    ("AI-Native SOC", "Security", "Trial"),
-    ("Supply Chain Sec.", "Security", "Trial"),
-    ("Post-Quantum Crypto", "Security", "Assess"),
-    ("Confidential Compute", "Security", "Assess"),
-    ("Homomorphic Encrypt.", "Security", "Hold"),
-    ("Platform Engineering", "DevOps", "Adopt"),
-    ("AI Code Assistants", "DevOps", "Adopt"),
-    ("FinOps Automation", "DevOps", "Trial"),
-    ("Chaos Engineering", "DevOps", "Trial"),
-    ("Internal Dev Portal", "DevOps", "Assess"),
-    ("GitOps at Scale", "DevOps", "Hold"),
-]
+# Columns: set these to your table's column names
+NAME = "Innovation"  # role: name
+RING = "Time horizon"  # role: ring
+SECTOR = "Sector"  # role: sector
 
-# Sort items within each sector by ring (near-term first for visual clarity)
-sector_items = {s: [] for s in sectors}
-for name, sector, ring in innovations:
-    sector_items[sector].append((name, ring))
-for s in sectors:
-    sector_items[s].sort(key=lambda x: ring_values[x[1]])
+# Data: replace this block with your own table, for example df = pd.read_csv("radar.csv")
+df = pd.DataFrame(
+    [
+        ("dbt Core", "Data Engineering", "Adopt"),
+        ("Apache Iceberg", "Data Engineering", "Adopt"),
+        ("Kafka Streams", "Data Engineering", "Trial"),
+        ("Delta Lake", "Data Engineering", "Trial"),
+        ("Vector Databases", "Data Engineering", "Assess"),
+        ("Arrow Flight RPC", "Data Engineering", "Hold"),
+        ("Service Mesh", "Cloud Platforms", "Adopt"),
+        ("eBPF Monitoring", "Cloud Platforms", "Trial"),
+        ("Green Cloud APIs", "Cloud Platforms", "Trial"),
+        ("Multi-Cloud Orchestration", "Cloud Platforms", "Assess"),
+        ("Serverless Edge", "Cloud Platforms", "Assess"),
+        ("Quantum Cloud", "Cloud Platforms", "Hold"),
+        ("Zero Trust Network", "Security", "Adopt"),
+        ("AI-Native SOC", "Security", "Trial"),
+        ("Supply Chain Security", "Security", "Trial"),
+        ("Post-Quantum Crypto", "Security", "Assess"),
+        ("Confidential Compute", "Security", "Assess"),
+        ("Homomorphic Encryption", "Security", "Hold"),
+        ("Platform Engineering", "DevOps", "Adopt"),
+        ("AI Code Assistants", "DevOps", "Adopt"),
+        ("FinOps Automation", "DevOps", "Trial"),
+        ("Chaos Engineering", "DevOps", "Trial"),
+        ("Internal Dev Portal", "DevOps", "Assess"),
+        ("GitOps at Scale", "DevOps", "Hold"),
+    ],
+    columns=[NAME, SECTOR, RING],
+)
 
-# Angular layout: [header_slot, item_slots x6, gap_slot] per sector = 8 slots × 4 = 32
-slots_per_sector = 8
-total_slots = len(sectors) * slots_per_sector
+# Plot: reads only df and the constants above
+sectors = list(df[SECTOR].unique())
+span = ARC_SPAN / len(sectors)
+start = OPENING_CENTER + 180 - ARC_SPAN / 2 + ARC_SPAN  # first sector begins here and runs clockwise
+outer = HOLE + len(RINGS)
+y_lo, y_hi = -(outer + 0.2), outer + 1.0
+half_x = (y_hi - y_lo) / 2 * PLOT_ASPECT
 
-x_labels = []
-item_placements = []
-for sector_idx, sector in enumerate(sectors):
-    start_slot = sector_idx * slots_per_sector
-    x_labels.append(sector)  # Sector header shown as major label
-    for i, (name, ring) in enumerate(sector_items[sector]):
-        x_labels.append(name)
-        item_placements.append((name, sector, ring, start_slot + 1 + i))
-    x_labels.append("")  # Gap slot between sectors
 
-# Build series: one per sector, None for positions belonging to other sectors
-series_data = {s: [None] * total_slots for s in sectors}
-for name, sector, ring, slot in item_placements:
-    series_data[sector][slot] = {"value": ring_values[ring], "label": name}
+def polar(radius, angle_deg):
+    """Cartesian point for a radius and an angle in degrees."""
+    return (radius * math.cos(math.radians(angle_deg)), radius * math.sin(math.radians(angle_deg)))
 
-# Ring zone background fill series — all spokes set to ring boundary value.
-# Drawn outermost-first (Hold=4) so each inner fill layers on top, creating
-# distinct concentric bands: Hold → Assess → Trial → Adopt from outer to inner.
-ring_zone_data = {ring: [ring_values[ring]] * total_slots for ring in rings_ordered}
 
-# Full color sequence: zone fills first (4), then sector data colors (4)
-color_sequence = zone_colors + sector_colors_tuple
+def arc(radius, a0, a1, steps=90):
+    """Points along a circle arc from angle a0 to a1."""
+    return [polar(radius, a0 + (a1 - a0) * i / steps) for i in range(steps + 1)]
+
+
+# Sector s covers angles [start - (s + 1) * span, start - s * span]
+sector_angles = {s: (start - (i + 1) * span, start - i * span) for i, s in enumerate(sectors)}
+ring_index = {r: i for i, r in enumerate(RINGS)}
+
+colors = []
+chart_series = []  # (title, points, line width, dash pattern, dot size); width 0 draws no line, dots None none
+
+# Ring boundaries and sector dividers, drawn as thin guide lines
+GUIDE = (2.5, "10,10")  # ring boundaries inside the plot
+EDGE = (4, "none")  # outer edges and sector dividers
+a_lo, a_hi = start - len(sectors) * span, start
+for j in range(len(RINGS) + 1):
+    radius = HOLE + j
+    width, dash = EDGE if j in (0, len(RINGS)) else GUIDE
+    chart_series.append((None, arc(radius, a_lo, a_lo + 360, 180), width, dash, None))
+    colors.append(INK_MUTED)
+for k in range(len(sectors) + 1):
+    angle = a_hi - k * span
+    chart_series.append((None, [polar(HOLE, angle), polar(outer, angle)], *EDGE, None))
+    colors.append(INK_MUTED)
+
+CHAR_W = 0.602 * LABEL_PX  # monospace advance of the label font
+MARKER_R = 18  # marker radius in pixels
+
+
+def text_box(left, center_y, text):
+    """Pixel box (x0, y0, x1, y1) of a label whose text starts at left and is centered on center_y."""
+    return (left, center_y - 0.6 * LABEL_PX, left + CHAR_W * len(text), center_y + 0.6 * LABEL_PX)
+
+
+def clash(box, others, pad=6):
+    """True when box comes within pad pixels of any box in others."""
+    return any(
+        box[0] < o[2] + pad and o[0] < box[2] + pad and box[1] < o[3] + pad and o[1] < box[3] + pad for o in others
+    )
+
+
+# Every box already taken on the canvas, in pixels around the center: ring names in the open part
+# of the circle, sector headers along the outer edge, the center hole.
+taken = [(-HOLE * PPU, -HOLE * PPU, HOLE * PPU, HOLE * PPU)]
+texts = []  # (left, center_y, text) in pixels
+for i, ring in enumerate(RINGS):
+    cx, cy = (v * PPU for v in polar(HOLE + i + 0.5, OPENING_CENTER))
+    left = cx - CHAR_W * len(ring) / 2
+    texts.append((left, cy, ring))
+    taken.append(text_box(left, cy, ring))
+for sector in sectors:
+    cx, cy = (v * PPU for v in polar(outer + 0.45, sum(sector_angles[sector]) / 2))
+    left = cx - CHAR_W * len(sector) / 2
+    texts.append((left, cy, sector.upper()))
+    taken.append(text_box(left, cy, sector.upper()))
+
+# Items: a marker goes anywhere inside its own sector and ring band (layout, not data). Candidates
+# near the sector's evenly spread slot come first; the first one whose label clears everything wins.
+limit = half_x * PPU - 20
+marks = {}
+for sector in sectors:
+    items = df[df[SECTOR] == sector].copy()
+    items["band"] = items[RING].map(ring_index)
+    items = items.sort_values("band", kind="stable")
+    a0, a1 = sector_angles[sector]
+    points = []
+    for slot, (_, row) in enumerate(items.iterrows()):
+        ideal = a1 - (slot + 0.5) * span / len(items)
+        candidates = [
+            (abs(a - ideal) / span + 0.5 * abs(dr), a, HOLE + row["band"] + 0.5 + dr, right)
+            for a in (a0 + 4 + k * (span - 8) / 15 for k in range(16))
+            for dr in (-0.3, -0.15, 0.0, 0.15, 0.3)
+            for right in (True, False)
+        ]
+        width = CHAR_W * len(row[NAME])
+        options = []
+        for cost, angle, radius, right in candidates:
+            mx, my = (v * PPU for v in polar(radius, angle))
+            marker = (mx - MARKER_R, my - MARKER_R, mx + MARKER_R, my + MARKER_R)
+            left = mx + MARKER_R + 8 if right else mx - MARKER_R - 8 - width
+            box = text_box(left, my, row[NAME])
+            # a label should stay inside its sector and the plot and clear of everything placed so far
+            inside = all(
+                (math.degrees(math.atan2(y, x)) - a0 - 1) % 360 <= span - 2
+                for x, y in ((box[0], box[1]), (box[0], box[3]), (box[2], box[1]), (box[2], box[3]))
+            )
+            fits = abs(box[0]) < limit and abs(box[2]) < limit
+            blocked = clash(box, taken) or clash(marker, taken, 2)
+            options.append((blocked or not fits, not inside, cost, mx, my, left, box, marker))
+        *_, mx, my, left, box, marker = min(options, key=lambda o: o[0:3])
+        taken += [box, marker]
+        texts.append((left, my, row[NAME]))
+        points.append((mx / PPU, my / PPU))
+    marks[sector] = points
+
+# Labels are drawn by pygal at (x + value_font_size, y + value_font_size) from an invisible point,
+# so each text gets a point shifted back by that offset
+label_points = [{"value": ((left - LABEL_PX) / PPU, (cy + LABEL_PX) / PPU), "label": text} for left, cy, text in texts]
+chart_series.append((None, label_points, 0, "none", 0))
+colors.append(INK)
+for i, sector in enumerate(sectors):
+    chart_series.append((sector, marks[sector], 0, "none", MARKER_R))
+    colors.append(IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])
 
 title_str = "radar-innovation-timeline · python · pygal · anyplot.ai"
-n_chars = len(title_str)
-title_font_size = round(66 * 67 / n_chars) if n_chars > 67 else 66
-title_font_size = max(title_font_size, 44)
+title_font_size = max(round(66 * 67 / len(title_str)) if len(title_str) > 67 else 66, 44)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -111,59 +200,47 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=color_sequence,
+    colors=tuple(colors),
     title_font_size=title_font_size,
-    label_font_size=56,
-    major_label_font_size=56,
-    legend_font_size=44,
-    value_font_size=36,
-    opacity=0.35,  # Low opacity so zone fills are subtle background tints
-    opacity_hover=0.7,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=48,
+    value_font_size=LABEL_PX,
+    value_label_font_size=LABEL_PX,
+    value_colors=tuple(INK for _ in colors),
     stroke_width=2.5,
+    opacity=1,
+    opacity_hover=1,
 )
 
-chart = pygal.Radar(
+chart = pygal.XY(
     width=2400,
     height=2400,
     style=custom_style,
     title=title_str,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=30,
-    fill=True,  # fill=True enables zone fills; sector series dots still show on top
-    stroke=False,
-    show_dots=True,
-    dots_size=22,
-    show_y_guides=True,
+    legend_at_bottom_columns=len(sectors),
+    legend_box_size=36,
     show_x_guides=False,
-    range=(0, 5),
-    inner_radius=0.12,
-    y_labels=[
-        {"value": 1, "label": "Adopt"},
-        {"value": 2, "label": "Trial"},
-        {"value": 3, "label": "Assess"},
-        {"value": 4, "label": "Hold"},
-    ],
-    show_minor_x_labels=True,
-    x_labels_major=sectors,
-    x_label_rotation=0,
-    margin_bottom=80,
-    margin_left=80,
-    margin_right=80,
-    margin_top=60,
-    truncate_label=12,
+    show_y_guides=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    xrange=(-half_x, half_x),
+    range=(y_lo, y_hi),
+    print_labels=True,
+    margin=40,
 )
 
-chart.x_labels = x_labels
-
-# Add ring zone fills first (drawn behind sector data) — outermost (Hold) to innermost (Adopt)
-for ring in reversed(rings_ordered):
-    chart.add(ring, ring_zone_data[ring])
-
-# Add sector data series on top of zone fills
-for sector in sectors:
-    chart.add(sector, series_data[sector])
+for title, points, width, dash, dots in chart_series:
+    chart.add(
+        title,
+        points,
+        stroke=width > 0,
+        stroke_style={"width": width, "dasharray": dash},
+        show_dots=dots is not None,
+        dots_size=dots or 0,
+    )
 
 chart.render_to_png(f"plot-{THEME}.png")
 chart.render_to_file(f"plot-{THEME}.html")
