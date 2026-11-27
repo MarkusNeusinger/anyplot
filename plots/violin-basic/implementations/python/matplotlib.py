@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-basic: Basic Violin Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-29
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-27
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens — Imprint palette chrome layer
@@ -19,28 +20,36 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — positions 1→4 for four categories
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette — all eight positions in canonical order, one per category
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 ANYPLOT_AMBER = "#DDCC77"  # semantic anchor — used for median line emphasis
 
-# Data — test scores (0-100) across four schools with distinct distribution shapes
+# Columns: set these to your table's column names
+SCHOOL = "School"  # role: category
+SCORE = "Test Score (points)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-categories = ["Lincoln HS", "Roosevelt Acad.", "Jefferson HS", "Hamilton Prep"]
-data = [
-    np.clip(np.random.normal(75, 10, 150), 0, 100),  # Lincoln: normal, centered ~75
-    np.clip(np.random.normal(85, 6, 150), 0, 100),  # Roosevelt: high, tight cluster
-    np.clip(np.random.normal(62, 15, 150), 0, 100),  # Jefferson: lower, wide spread
-    np.clip(
-        np.concatenate([np.random.normal(70, 5, 80), np.random.normal(88, 4, 70)]), 0, 100
-    ),  # Hamilton: bimodal (two subgroups)
-]
+lincoln = np.clip(np.random.normal(75, 10, 150), 0, 100)  # normal, centered ~75
+roosevelt = np.clip(np.random.normal(85, 6, 150), 0, 100)  # high, tight cluster
+jefferson = np.clip(np.random.normal(62, 15, 150), 0, 100)  # lower, wide spread
+hamilton = np.clip(np.concatenate([np.random.normal(70, 5, 80), np.random.normal(88, 4, 70)]), 0, 100)  # bimodal
+df = pd.DataFrame(
+    {
+        SCHOOL: ["Lincoln HS"] * 150 + ["Roosevelt Acad."] * 150 + ["Jefferson HS"] * 150 + ["Hamilton Prep"] * 150,
+        SCORE: np.concatenate([lincoln, roosevelt, jefferson, hamilton]),
+    }
+)
 
 # Plot
+groups = [rows[SCORE].dropna().to_numpy() for _, rows in df.groupby(SCHOOL, sort=False)]
+categories = list(df[SCHOOL].drop_duplicates())
+
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 parts = ax.violinplot(
-    data,
+    groups,
     positions=range(len(categories)),
     quantiles=[[0.25, 0.5, 0.75]] * len(categories),
     showmeans=False,
@@ -52,7 +61,7 @@ parts = ax.violinplot(
 
 # Style each violin body with Imprint palette colors
 for i, pc in enumerate(parts["bodies"]):
-    pc.set_facecolor(IMPRINT_PALETTE[i])
+    pc.set_facecolor(IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])
     pc.set_edgecolor(INK_SOFT)
     pc.set_alpha(0.8)
     pc.set_linewidth(1.5)
@@ -70,8 +79,8 @@ title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
 ax.set_xticks(range(len(categories)))
 ax.set_xticklabels(categories)
-ax.set_xlabel("School", fontsize=10, color=INK)
-ax.set_ylabel("Test Score (points)", fontsize=10, color=INK)
+ax.set_xlabel(SCHOOL, fontsize=10, color=INK)
+ax.set_ylabel(SCORE, fontsize=10, color=INK)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
@@ -81,18 +90,6 @@ for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-
-# Annotation highlighting Hamilton Prep's bimodal distribution
-ax.annotate(
-    "Two distinct\nperformance groups",
-    xy=(3, 75),
-    xytext=(3, 42),
-    fontsize=8,
-    color="#BD8233",
-    fontstyle="italic",
-    ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#BD8233", "lw": 1.5},
-)
 
 fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.13)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
