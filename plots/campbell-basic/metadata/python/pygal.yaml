@@ -12,136 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Correct Imprint palette across all 9 series (5 mode curves + 3 EO lines + amber
-    critical speed anchor)
-  - Semantic amber (#DDCC77) for critical speed markers — correctly uses the warning/caution
-    semantic anchor outside the categorical pool
-  - Solid vs. dashed linestyle hierarchy clearly distinguishes natural frequency curves
-    from engine order excitation lines
-  - Three distinct dash patterns for the three engine order lines provide additional
-    redundant encoding
-  - Thick mode lines (width=7) vs. medium EO lines (width=6) reinforce the visual
-    hierarchy
-  - 'Correct gyroscopic behavior: modes 1, 2, 5 increase with speed; modes 3, 4 decrease
-    — physically realistic'
-  - Cubic interpolation on mode curves produces smooth, natural-looking frequency
-    curves
-  - Critical speed intersections computed correctly via sign-change detection with
-    linear interpolation
-  - Both light and dark themes fully readable — no dark-on-dark or light-on-light
-    issues
-  - Clean sys.path workaround for the self-import naming conflict (file is named pygal.py)
+  - Imprint palette in canonical order for modes and EO lines, amber warning anchor
+    for the critical speeds
+  - Solid mode curves against three distinct dash patterns for the engine order lines
+  - Critical speeds computed by sign-change detection with linear interpolation, each
+    marker on its crossing
+  - Both themes fully readable
   weaknesses:
-  - Engine order and mode curve labels are tooltip-only in pygal (dict label format)
-    — they appear as interactive tooltips in the HTML but are invisible in the PNG;
-    direct line labels near each series would improve readability in the static image
-  - No optional shading around critical speed zones (mentioned as optional in spec)
-    — amber dot markers alone are sufficient but shaded zones would add storytelling
-    depth
-  - Pygal's default box frame (all four spines) is retained — cannot remove top/right
-    spines in pygal without SVG post-processing, so this is a library limitation rather
-    than a code deficiency
+  - 'VQ-01 (both): y-axis tick labels render in two sizes - the major ticks 100.0,
+    50.0 and 0.0 at 44 px, the others at 56 px -> one tick size (44 for both). Likely
+    cause: label_font_size=56 vs major_label_font_size=44.'
+  - 'VQ-03 (both): mode curves and engine order lines are about 2 px wide on the 3200
+    px canvas and the dashed EO lines read as hairlines -> about 6 px (+4 px). Likely
+    cause: Style stroke_width=2.5 overriding the per-series stroke_style width.'
+  - 'DQ-01 (both): 14 critical-speed markers against the spec''s 6-10 -> 6-10 crossings
+    (-4 or more). Likely cause: five modes all crossed by all three orders below 6000
+    RPM.'
+  - 'Suggestion: a small gap between the legend swatches and their labels would make
+    the legend read cleaner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "campbell-basic · python · pygal · anyplot.ai" in dark ink, centered, ~60% of canvas width — fully readable. Y-axis label "Frequency (Hz)" and X-axis label "Rotational Speed (RPM)" in dark text, clearly legible. Tick labels on both axes (0–130 Hz; 0–6,000 RPM in comma-formatted integers) in dark secondary ink — all readable. Dashed grid lines subtle and non-dominant.
-      Data: Five solid mode-frequency curves in green (#009E73 — 1st Bending), lavender (#C475FD — 2nd Bending), blue (#4467A3 — 1st Torsional), ochre (#BD8233 — Axial), and red (#AE3030 — 2nd Torsional). Three dashed engine order lines in cyan (#2ABCCD — 1×), rose (#954477 — 2×), and lime (#99B314 — 3×) with distinct dash patterns. Amber (#DDCC77) circular critical speed markers clearly visible at all intersections. Bottom legend 3-column layout labels all 9 series.
-      Legibility verdict: PASS — all text clearly readable on light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'campbell-basic · python · pygal · anyplot.ai' centered in dark ink; axis titles with units; y ticks 0.0-130.0 where 100.0, 50.0 and 0.0 render smaller than the other y ticks; x ticks 0-6,000 large; dotted grid subtle
+      Data: five thin (~2 px) jagged mode curves - 1st Bending #009E73 (25->43 Hz), 2nd Bending lavender (48->78), 1st Torsional blue (62->56), Axial ochre (78->66), 2nd Torsional red (92->116); thin dashed EO lines 1x cyan, 2x rose, 3x lime; 14 amber critical-speed dots on the crossings; three-column bottom legend
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream ink, fully readable against dark background. Y-axis and X-axis labels in light text — readable. Tick labels in light secondary ink — readable, no dark-on-dark issues detected. Dashed grid lines visible but subtle on dark background.
-      Data: All series colors are identical to the light render — green 1st Bending, lavender 2nd Bending, blue 1st Torsional, ochre Axial, red 2nd Torsional, cyan 1× EO, rose 2× EO, lime 3× EO, amber critical speed dots. Data palette is theme-invariant as required. Bottom legend text appears in light color against the dark background — legible.
-      Legibility verdict: PASS — all text clearly readable on dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: all text in light ink and readable; same mixed y-tick sizes
+      Data: series colors identical to light; thin lines still visible but faint, the hairline dashed EO lines most of all
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Title ~60% of canvas width. Both themes fully readable. No proportionality
-          issues.
+        passed: false
+        comment: 'y-axis tick labels come in two sizes: 100.0, 50.0 and 0.0 render
+          smaller than the other ticks (defect line); otherwise readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlaps. Legend at bottom well-organized
-          in 3 columns. Lines are distinguishable.
+        comment: No text collisions; the bunched markers near 4100-4200 RPM are permitted
+          by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Mode curves stroke_width=7 and EO lines stroke_width=6 clearly visible.
-          Critical speed amber dots at dots_size=15 prominent. All 9 series distinguishable.
+        passed: false
+        comment: Mode curves and EO lines drawn about 2 px wide on the 3200 px canvas
+          read thin; the dashed EO lines are hairlines (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Redundant linestyle encoding (solid
-          vs. 3 different dash patterns) provides non-color distinction for EO vs
-          mode curves.
+        comment: Imprint hues plus amber anchor; markers distinguishable from every
+          line
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape. Canvas well utilized. Margins set (bottom=80,
-          left=100, right=60, top=50). No content cut off. Legend positioned at bottom
-          without crowding.
+        comment: Plot area fills the landscape canvas; bottom legend in three columns,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Rotational Speed (RPM)'', Y: ''Frequency (Hz)'' — both descriptive
-          with units.'
+        comment: Rotational Speed (RPM) / Frequency (Hz), both with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73 green) correct. Full 9-color sequence follows
-          Imprint palette positions 1-8 plus amber semantic anchor for critical speeds.
-          Light bg #FAF8F1, dark bg #1A1A17. Chrome adapts correctly in both renders.'
+        comment: 'First series #009E73, Imprint 1-8 in canonical order, amber #DDCC77
+          for critical speeds as warning anchor; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: semantic amber for critical speeds,
-          linestyle differentiation, distinct dash patterns per EO line. Not quite
-          FiveThirtyEight-level but clearly thoughtful design.'
+        comment: Style-guide baseline; semantic amber for resonance points is a sound
+          choice but typography and hierarchy stay at the default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Grid customized with dashed guide strokes (guide_stroke_dasharray).
-          Margins adjusted. Pygal's default box frame retained (library limitation
-          — spine removal requires SVG post-processing). Some refinement evident.
+        comment: Default pygal frame and dashed grid; legend swatches butt against
+          their labels; nothing beyond baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Amber critical speed markers create clear focal points at resonance
-          intersections. Solid-vs-dashed line hierarchy guides reader to distinguish
-          mode behavior from excitation. Visual hierarchy above default.
+        comment: Critical speeds are the focal points the Notes already prescribe;
+          no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -151,60 +132,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Campbell Diagram structure: XY line plot with mode curves,
-          diagonal EO excitation lines, and critical speed intersection markers.'
+        comment: 'Correct Campbell diagram: mode curves, EO diagonals from the origin,
+          critical-speed markers; no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: '5 modes (spec: 4-5), 3 EO lines (1x/2x/3x), critical speed markers,
-          mode shape labels, EO labels, legend. Realistic gyroscopic effects. All
-          required features present.'
+        comment: '5 named modes, 3 dashed EO lines distinct from solid modes, markers,
+          legend: all features present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: RPM 0-6000, Y: Hz 0-130. EO lines from origin with correct slope
-          (order/60). Mode frequencies start at spec-matching values (25-92 Hz) and
-          vary correctly with speed.'
+        comment: RPM on x, Hz on y; EO slopes order/60; markers at the computed crossings;
+          axes from zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''campbell-basic · python · pygal · anyplot.ai'' — exact
-          correct format. Legend labels: 1st Bending, 2nd Bending, 1st Torsional,
-          Axial, 2nd Torsional, 1× EO, 2× EO, 3× EO, Critical Speeds.'
+        comment: Mandated title exact; legend labels mode shape names and '1x/2x/3x
+          EO', telling curves from excitation lines
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 'All Campbell Diagram elements: 5 modes with varying slopes, 3 EO
-          lines, critical speed intersections across multiple mode/order combinations.
-          Some modes increase, some decrease with speed — full behavioral coverage.'
+        passed: false
+        comment: Rising and falling modes with crossings; 14 critical-speed markers
+          against the spec's 6-10 (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Rotor dynamics / turbomachinery engineering context. Natural frequency
-          analysis of a rotating shaft system — genuine real-world engineering application.
-          Neutral, science-domain data.
+        comment: Rotor with bending, torsional and axial modes; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-6000 RPM operating range typical for turbomachinery. Frequencies
-          25-130 Hz plausible for this speed range. Gyroscopic slope magnitudes (±0.001-0.005
-          Hz/RPM) physically realistic.
+        comment: 25-116 Hz modes over 0-6000 RPM plausible; EO slopes checked against
+          order/60
     code_quality:
       score: 10
       max: 10
@@ -214,57 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: sys.path fix → imports → data → chart config → series →
-          save. No functions or classes. Clean.'
+        comment: Linear script; sys.path guard, data, chart, series, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before synthetic data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys (used for path manipulation), numpy, pygal, pygal.style.Style
-          — all used, none unused.
+        comment: os, sys, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic use of zip(..., strict=True). sys.path workaround is legitimate
-          and well-commented. Appropriate complexity for the visualization.
+        comment: Compact sign-change intersection search; nothing redundant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for pygal
-          (interactive library). Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: pygal.XY is the correct chart type. Style object used properly with
-          all relevant parameters. chart.add() with dict-based data points for tooltip
-          labels follows pygal conventions.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive HTML export alongside PNG (pygal's core distinctive capability).
-          Cubic interpolation (pygal-specific). Custom stroke_style with dasharray
-          patterns. Dict-based point labels for interactive tooltips. Good range of
-          pygal-specific features.
+        comment: pygal.XY with a full Style object, per-series stroke_style, dict-valued
+          points for tooltip labels
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Cubic interpolation and per-point tooltip labels in the HTML; beyond
+          that, standard pygal usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  last_kept:
+    pr: 14763
+    code: regression
+    note: '#14763 was kept because the review found it worse than the live version
+      here: 3x EO line lost its dashes: round linecaps fill the gaps, so it reads
+      as a solid line like the mode curves (C2 line-style distinction partly lost)
+      (3x EO lime diagonal, both renders). Keep these as the live version has them.'
 impl_tags:
   dependencies: []
   techniques:
