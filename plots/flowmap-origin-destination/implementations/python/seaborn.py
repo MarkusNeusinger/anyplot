@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-26
@@ -24,9 +24,9 @@ BRAND = "#009E73"  # Imprint palette position 1: the city nodes are one series
 
 # Imprint sequential ramp for marks (the arcs sit on the page), low to high flow
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_MARKS)
 
@@ -163,6 +163,7 @@ ax.axvline(0, color=INK_SOFT, linestyle="--", linewidth=0.5, alpha=0.4, zorder=0
 
 # Quadratic Bezier arcs: ends on the two cities, control point bowed sideways of the midpoint
 t = np.linspace(0, 1, 50)
+arc_points = []
 for (_, row), lw in zip(df.iterrows(), linewidths, strict=True):
     x0, y0, x2, y2 = row[ORIGIN_LON], row[ORIGIN_LAT], row[DEST_LON], row[DEST_LAT]
     dx, dy = x2 - x0, y2 - y0
@@ -171,6 +172,7 @@ for (_, row), lw in zip(df.iterrows(), linewidths, strict=True):
     ctrl_y = (y0 + y2) / 2 + dx / length * length * ARC_BEND
     x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x2
     y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y2
+    arc_points.append(np.column_stack([x, y]))
     ax.plot(
         x, y, color=imprint_seq(flow_norm(row[FLOW])), linewidth=lw, alpha=ARC_ALPHA, solid_capstyle="round", zorder=1
     )
@@ -224,15 +226,17 @@ cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 plt.tight_layout()
 
-# City labels: try the right of the node first, then other sides, and take the first spot clear of
-# the labels already placed and of every node
+# City labels: score every side of the node and keep the best one: no overlap with the labels already
+# placed, no neighbouring node close to the label (so it reads as its own city's), as few arcs as possible
 fig.canvas.draw()
 renderer = fig.canvas.get_renderer()
 node_xy = ax.transData.transform(nodes[["lon", "lat"]].to_numpy())
+arc_xy = ax.transData.transform(np.vstack(arc_points))
+NODE_CLEARANCE = 60  # pixels of free space between a label and any other city's node
 placed = []
 candidates = [(7, 5), (7, -14), (-7, 5), (-7, -14), (7, 16), (-7, 16), (7, -26), (-7, -26)]
-for _, city in nodes.iterrows():
-    best = None
+for i, city in nodes.iterrows():
+    options = []
     for dx, dy in candidates:
         label = ax.annotate(
             city["city"],
@@ -243,27 +247,27 @@ for _, city in nodes.iterrows():
             fontsize=8,
             fontweight="bold",
             color=INK,
+            arrowprops={"arrowstyle": "-", "color": INK, "linewidth": 0.7, "shrinkA": 1, "shrinkB": 5},
             zorder=4,
         )
         box = label.get_window_extent(renderer).expanded(1.08, 1.2)
-        clear = not any(box.overlaps(other) for other in placed) and not any(box.contains(nx, ny) for nx, ny in node_xy)
         inside = ax.bbox.x0 <= box.x0 and box.x1 <= ax.bbox.x1 and ax.bbox.y0 <= box.y0 and box.y1 <= ax.bbox.y1
-        if clear and inside:
-            best = box
-            break
-        label.remove()
-    if best is None:  # no free spot: keep the default one
-        label = ax.annotate(
-            city["city"],
-            (city["lon"], city["lat"]),
-            xytext=candidates[0],
-            textcoords="offset points",
-            fontsize=8,
-            fontweight="bold",
-            color=INK,
-            zorder=4,
+        label_hits = sum(box.overlaps(other) for other in placed)
+        near_nodes = sum(
+            box.x0 - NODE_CLEARANCE <= nx <= box.x1 + NODE_CLEARANCE
+            and box.y0 - NODE_CLEARANCE <= ny <= box.y1 + NODE_CLEARANCE
+            for j, (nx, ny) in enumerate(node_xy)
+            if j != i
         )
-        best = label.get_window_extent(renderer)
-    placed.append(best)
+        arc_hits = np.sum(
+            (arc_xy[:, 0] >= box.x0) & (arc_xy[:, 0] <= box.x1) & (arc_xy[:, 1] >= box.y0) & (arc_xy[:, 1] <= box.y1)
+        )
+        score = 1e6 * (not inside) + 1e4 * label_hits + 1e3 * near_nodes + arc_hits
+        options.append((score, label, box))
+    score, best_label, best_box = min(options, key=lambda option: option[0])
+    for _, label, _ in options:
+        if label is not best_label:
+            label.remove()
+    placed.append(best_box)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
