@@ -2,9 +2,9 @@ library: plotly
 language: python
 specification_id: hexbin-map-geographic
 created: '2026-01-20T21:16:12Z'
-updated: '2026-11-26T15:39:09Z'
+updated: '2026-11-27T16:53:59Z'
 generated_by: claude-sonnet
-workflow_run: 45849837401
+workflow_run: 46036302799
 issue: 3767
 language_version: 3.14.10
 library_version: 7.1.0
@@ -12,37 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Map view fitted to the extent of all hexagon corners (center and Web Mercator
-    zoom computed from the ring bounds), so every binned cell is in frame
-  - Per-cluster fare levels make the mean-fare colour show a real spatial pattern
-    across the pickup clusters
-  - Vectorized axial (cube-rounded) hex binning and GeoJSON polygon construction on
-    the current MapLibre choropleth_map API
-  - Imprint sequential field ramp with per-theme stops; title, colorbar box, ticks
-    and the CARTO basemap all flip with the theme
-  - Library-native hover tooltips with $-formatted mean and total fare and comma-formatted
-    trip counts in the HTML
+  - Hexagonal binning computed with vectorized axial/cube rounding and drawn as a
+    GeoJSON choropleth on the current MapLibre choropleth_map API
+  - imprint_seq fields ramp with the exact per-theme stops and a colorbar that names
+    the statistic (Avg Fare, $ ticks)
+  - Theme-matched base map (carto-positron / carto-darkmatter) with theme-adapted
+    hexagon outlines; map view fitted to the hexagon extent
+  - Pickup hotspots placed on real NYC neighbourhoods give a clear fare pattern at
+    a balanced ~0.3 km cell size
+  - Hover shows trips, mean and total fare with d3 formats and the hex id suppressed
   weaknesses:
-  - 'DQ-02 (both): a contiguous band of pickup cells lies over the Hudson River between
-    Fort Lee/North Bergen and Manhattan, where no taxi pickup can occur → keep the
-    generated pickup points on land. Likely cause: cluster centers drawn uniformly
-    within ±0.10° lon of Times Square with 0.02° lon spread, ignoring the river.'
   - 'Suggestion: the MapLibre attribution box keeps its light-grey default in the
     dark render; a theme-matched attribution would sit more quietly on the dark page.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page around a carto-positron street basemap (Clifton, Newark, Fort Lee, North Bergen, Union City, New York labels).
-      Chrome: title 'NYC Taxi Fares · hexbin-map-geographic · python · plotly · anyplot.ai' centered in dark ink; colorbar 'Avg Fare ($)' with $10–$50 ticks on an elevated warm-white box with a soft border — all readable.
-      Data: ~300 pointy-top hexagons at opacity 0.75 with dark 1.5 px borders, all in frame, colored with the light Imprint field ramp (#66E2B2 → #009E73 → #4467A3 → #002850): a blue high-fare cluster in the west, mint low-fare cells in the north, teal mid-range cells to the south; streets show through.
+      Background: warm off-white #FAF8F1 page; carto-positron base map of NYC/Hudson County fills the area below the title
+      Chrome: title 'NYC Taxi Fares · hexbin-map-geographic · python · plotly · anyplot.ai' dark ink, centered; colorbar 'Avg Fare ($)' with $15-$40 ticks in an elevated box at right; OSM/CARTO attribution bottom right — all readable
+      Data: ~190 equal pointy-top hexagons over Manhattan, Long Island City/Williamsburg and Downtown Brooklyn, opacity 0.75 with dark outlines; imprint_seq light fields ramp pale mint → brand green #009E73 → deep blue → dark violet; high-fare clusters (Upper West Side/Midtown west, Williamsburg/East Village) dark blue-violet, low-fare north and Queens side pale mint
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page around a carto-darkmatter basemap with light place labels.
-      Chrome: title in light ink, colorbar box in #242420 with light ticks and title — no dark-on-dark text.
-      Data: same hexagons with light translucent borders, colored with the dark field stops (#00573D → #009E73 → #CDD9FF) as the continuous ramp should; high-fare west cluster now pale blue; brand green present.
+      Background: warm near-black #1A1A17 page; carto-darkmatter base map
+      Chrome: title and colorbar title in light ink, ticks in soft light grey, colorbar box on #242420 with light border — all readable, no dark-on-dark
+      Data: same hexagons and values with light outlines; dark fields ramp dark olive → brand green → pale blue, so high-fare cells are pale blue and low-fare cells dark olive, standing out against the dark map; attribution box keeps a light-grey background
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,51 +49,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16 px, colorbar title 12 px, ticks 10 px (x4 scale) — all readable
-          in both themes; basemap place names legible through the cells
+        comment: Title 16 px, colorbar title 12 px and ticks 10 px set explicitly;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text; colorbar sits clear of the map;
-          attribution box in the map corner away from the cells
+        comment: No text collisions; base-map place labels sit under translucent cells
+          by design
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexagons with 1.5 px theme-adaptive borders clearly visible in both
-          renders; cell size suits ~300 cells over 5,000 points
+        comment: Hexagons with 1.5 px theme-adapted outlines clearly visible in both
+          themes; colorbar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue Imprint ramp is CVD-safe; no red-green signal
+        comment: Lightness-ordered sequential ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Map view fitted to the cell extent: the grid fills the map height
-          and nothing is cut off; colorbar balanced at the right'
+        comment: Map fills the canvas below the title, view fitted to the hexagon
+          extent, colorbar at right, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes on a map; colorbar title 'Avg Fare ($)' names the statistic
-          and unit
+        comment: Colorbar titled 'Avg Fare ($)' with unit; no axes on a map
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential field ramp with per-theme stops (SEQ_FIELDS);
-          backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
+        comment: 'imprint_seq fields stops exactly per theme (light #66E2B2→#009E73→#024582→#351E45,
+          dark #404C02→#009E73→#CDD9FF); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -106,21 +100,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Style-guide baseline: theme tokens, elevated colorbar box, theme-matched
-          basemap — nothing beyond'
+        comment: 'Style-guide baseline: Imprint ramp, theme tokens, clean typography;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Colorbar box and borders follow the theme; no refinement beyond the
-          baseline
+        comment: Theme-matched base map (carto-positron / carto-darkmatter) with theme-adapted
+          hex outlines and an elevated colorbar box, chosen for this map beyond the
+          style-guide chrome rules
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Cells displayed uniformly; no hierarchy chosen beyond the Notes
+        comment: Data displayed; the fare contrast between clusters comes from the
+          data, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,30 +126,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexagonal bins as GeoJSON polygons on a tiled base map
+        comment: 'Hexagonal binning over a geographic base map: correct type'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Configurable HEX_SIZE, count/sum/mean in the hover, sequential ramp
-          with colorbar, base map, opacity 0.75; C1–C4 all shown
+        comment: Configurable HEX_SIZE, count/sum/mean aggregated and shown in hover,
+          sequential colormap with legend, base map, opacity 0.75, hover tooltips;
+          C1-C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Every cell in frame: zoom and center derived from the extent of
-          all hexagon corners; cells sit over their points'
+        comment: Cells computed by axial binning sit over their points; view fitted
+          to all hexagon corners; colorbar ticks readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'NYC Taxi Fares · hexbin-map-geographic · python · plotly ·
-          anyplot.ai' matches the format; colorbar labelled
+          anyplot.ai' matches the format; colorbar names the statistic (Avg Fare)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Per-cluster fare levels give a visible spatial pattern (high-fare
-          west cluster, low-fare north, mid-range south) at a balanced cell size (C2)
+        comment: Per-cluster fare levels give a visible spatial pattern at a balanced
+          cell size (C2), with gaps and dark/pale cells
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: NYC taxi fares is neutral, but a contiguous band of pickup cells
-          lies over the Hudson River (defect line)
+        passed: true
+        comment: NYC taxi fares, neutral; pickup hotspots placed on Manhattan, Brooklyn
+          and Long Island City, only edge cells spill over the shoreline (permitted)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NYC coordinates (~40.76°N, -73.99°W), cluster mean fares $12–45 with
-          lognormal spread, colorbar $10–55 — plausible; no Check values in the spec
+        comment: NYC coordinates (~40.75N, -73.97W), fares $12-45 per cluster with
+          lognormal spread; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -198,7 +195,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.express — all used
+        comment: os, numpy, pandas, plotly.express all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -206,7 +203,7 @@ review:
         passed: true
         comment: Vectorized axial hex binning and polygon construction; plotly's hexbin
           helper only targets the deprecated mapbox traces, so the hand-roll keeps
-          the current map API; the zoom fit is ~8 lines with a visible effect
+          the current map API
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,32 +220,33 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: px.choropleth_map with a custom GeoJSON FeatureCollection keyed by
-          feature id and a tidy aggregated frame — idiomatic plotly express
+        comment: 'px.choropleth_map over a custom GeoJSON FeatureCollection keyed
+          by feature id from a tidy aggregated frame, map_style tiles per theme: idiomatic
+          plotly express'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
         comment: hover_data with d3 format strings ($.2f, $,.0f, comma counts) and
-          the hex id suppressed — plotly-native hover formatting beyond the required
-          tooltip
+          the hex id suppressed — plotly-native hover formatting
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-52df7d232a.lib-3ee145f960
-  rendered_at: '2026-11-26T15:35:13Z'
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-27T16:50:15Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - hover-tooltips
   - html-export
+  - custom-colormap
   patterns:
   - data-generation
-  - groupby-aggregation
+  - matrix-construction
   dataprep:
   - binning
+  - groupby-aggregation
   styling:
-  - custom-colormap
   - alpha-blending
   - edge-highlighting
