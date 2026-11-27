@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: violin-basic
 created: '2025-12-23T00:36:10Z'
-updated: '2026-11-27T20:08:01Z'
+updated: '2026-11-27T20:16:32Z'
 generated_by: claude-sonnet
-workflow_run: 46060432135
+workflow_run: 46061639987
 issue: 722
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
   - 'All required violin features: mirrored scipy KDE per department, IQR box, bold
@@ -24,23 +24,18 @@ review:
   - HoverTool bound to each IQR box reports median, Q1, Q3 and N in the HTML; NumeralTickFormatter
     gives a currency y axis
   - 'Full theme adaptation: Imprint canonical order, correct page colors, INK/INK_SOFT/ELEVATED_BG
-    tokens throughout, page background painted to avoid the anti-aliased edge line'
+    tokens throughout'
   - Tails end at each category's data range and the shared y axis is fitted to the
     data, so every violin sits fully inside the plot
   weaknesses:
-  - 'CQ-04 (code): the unused INK_MUTED token and `p.xaxis.major_tick_line_color =
-    INK_SOFT` / `p.yaxis.major_tick_line_color = INK_SOFT`, which `p.axis.major_tick_line_color
-    = None` overrides two lines later, have no effect on either render → delete the
-    three lines. Likely cause: theme block copied from the library prompt and tick
-    removal added afterwards.'
   - 'Suggestion: the flat cut at each violin''s data extreme (most visible at the
     wide Sales base at $45k) could be softened by letting the KDE grid run a few percent
     past the extremes, as long as the tails stay near the data range.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 across canvas and plot area, not pure white.
-      Chrome: Bold dark title "violin-basic · python · bokeh · anyplot.ai" top-left; italic axis titles "Annual Salary (USD)" and "Department" in dark ink; y ticks $40,000-$140,000 and department names in soft dark ink; solid subtle horizontal grid; no tick marks, no outline. All readable.
-      Data: Four mirrored violins — Engineering #009E73, Marketing #C475FD, Sales #4467A3, Support #BD8233 — at 0.7 alpha with matching outlines; each has a near-white IQR box with dark outline, bold dark median line and whiskers with caps. Sales right-skewed with a long upper tail to ~$137k and a flat base at $45k; Support bimodal. Tails end at each data range.
+      Chrome: Bold dark title "violin-basic · python · bokeh · anyplot.ai" top-left; italic axis titles "Annual Salary (USD)" and "Department" in dark ink; y ticks $40,000-$140,000 and department names in soft dark ink; subtle horizontal grid; no tick marks, no plot outline. All readable.
+      Data: Four mirrored violins — Engineering #009E73, Marketing #C475FD, Sales #4467A3, Support #BD8233 — at 0.7 alpha with matching outlines; each holds a near-white IQR box with dark outline, a bold dark median line and whiskers with caps. Sales is right-skewed with a long upper tail to ~$137k and a flat base at $45k; Support is bimodal. Tails end at each data range.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -59,13 +54,13 @@ review:
         max: 8
         passed: true
         comment: Title 50pt, axis titles 42pt, ticks 34pt (library-prompt values);
-          all text readable in both themes, INK/INK_SOFT tokens threaded through
+          all text readable in both themes via INK/INK_SOFT
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; violins separated on the categorical axis
+        comment: No text collisions; violins well separated on the categorical axis
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -97,7 +92,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering #009E73, then Imprint canonical order; #FAF8F1 / #1A1A17
+        comment: 'Engineering #009E73 then Imprint canonical order; #FAF8F1 / #1A1A17
           backgrounds; data colors identical across themes'
     design_excellence:
       score: 10
@@ -115,15 +110,15 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond spine/grid rules: major and minor tick marks removed, x-grid
-          dropped for the categorical axis, plot outline removed'
+        comment: 'Beyond spine/grid rules: tick marks removed, x-grid dropped for
+          the categorical axis, plot outline removed'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: 'Default: data displayed, the varied distribution shapes carry the
-          comparison; no hierarchy chosen beyond that'
+        comment: 'Default: the varied distribution shapes carry the comparison; no
+          hierarchy chosen beyond that'
     spec_compliance:
       score: 15
       max: 15
@@ -180,7 +175,7 @@ review:
         comment: Salaries ~$27k-$137k plausible per department; spec has no Check
           values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -204,11 +199,10 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dead code: unused INK_MUTED token and tick colors set then overwritten
-          (defect line)'
+        passed: true
+        comment: No dead code; scipy gaussian_kde for the density
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,8 +219,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Categorical offset tuples ((cat, offset)) to place mirrored patches,
-          quads and segments on the factor axis
+        comment: Categorical offset tuples ((cat, offset)) place mirrored patches,
+          quads and segments directly on the factor axis
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -237,24 +231,22 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
-  rendered_at: '2026-11-27T20:04:19Z'
+  rendered_at: '2026-11-27T20:13:45Z'
 impl_tags:
   dependencies:
   - scipy
   - selenium
   - pillow
   techniques:
+  - patches
   - hover-tooltips
   - html-export
-  - layer-composition
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   - columndatasource
   dataprep:
   - kde
-  - quartiles
   styling:
   - alpha-blending
   - minimal-chrome
