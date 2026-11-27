@@ -1,7 +1,7 @@
 """ anyplot.ai
 ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 86/100 | Updated: 2026-11-27
 """
 
 import importlib.util
@@ -119,8 +119,8 @@ custom_style = Style(
     label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=42,
-    value_label_font_size=42,
+    value_font_size=62,
+    value_label_font_size=62,
     tooltip_font_size=32,
     font_family=_font,
     label_font_family=_font,
@@ -152,7 +152,7 @@ chart = pygal.XY(
     print_zeroes=False,
     margin=60,
     margin_top=80,
-    margin_bottom=160,
+    margin_bottom=60,
     margin_left=150,
     margin_right=80,
     x_value_formatter=lambda x: f"{x:.0f}",
