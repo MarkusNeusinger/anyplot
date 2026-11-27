@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: ks-test-comparison
 created: '2026-02-17T20:11:57Z'
-updated: '2026-11-27T18:08:01Z'
+updated: '2026-11-27T18:15:48Z'
 generated_by: claude-sonnet
-workflow_run: 46046229527
+workflow_run: 46047258358
 issue: 4130
 language_version: 3.14.10
 library_version: 3.10.2
@@ -12,45 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
   - Green Good / red Bad follows the Imprint semantic exception, and the solid-vs-dashed
     line style gives a second cue, so both ECDFs can be told apart in both themes
     and under CVD
-  - A Bokeh Band model shades the gap between the two ECDFs around the maximum divergence,
-    and diamond markers cap the blue K-S segment, so the D the statistic reports is
-    easy to find
-  - D and p come from scipy.stats.ks_2samp and are formatted in an f-string; the annotation
-    sits on an elevated, theme-adaptive background clear of both curves
-  - 'Theme-adaptive chrome is complete: INK/INK_SOFT text, an ELEVATED_BG legend and
-    annotation box, and a 0.15-alpha grid that reads in both renders'
-  - Column constants and a df-based Data block let the plot section read only df,
-    so the file can be adapted to a user's table
+  - A Bokeh Band model shades the gap between the ECDFs around the maximum divergence,
+    and diamond markers cap the blue K-S segment, so the reported D is easy to locate
+  - D, p and the max-gap location all come from scipy.stats.ks_2samp (statistic_location);
+    the annotation sits on an elevated, theme-adaptive background clear of both curves
+  - Native p.step(mode='after') on ColumnDataSources draws the ECDFs without hand-built
+    step arrays
+  - 'Theme-adaptive chrome is complete: INK/INK_SOFT text, ELEVATED_BG legend and
+    annotation boxes, and a 0.15-alpha grid that reads in both renders'
   - A HoverTool scoped to the two ECDF renderers gives exact score/proportion readouts
     in the HTML artifact
   weaknesses:
-  - 'CQ-04 (code): lines 87–90 interleave repeated x/y arrays by hand to draw the
-    steps, and lines 78–84 recompute both ECDFs on the pooled values to locate the
-    maximum gap → draw each ECDF with Bokeh''s `p.step(..., mode="after")` on the
-    sorted values, and read the location from `ks_2samp(...).statistic_location`.
-    Likely cause: hand-built step arrays and a hand-written argmax over pooled ECDFs.'
   - 'Suggestion: the dotted Span at max_x (line_alpha=0.12) is almost invisible beside
-    the solid K-S segment; dropping it or giving it a clearly visible alpha would
-    remove an element that adds nothing.'
+    the solid K-S segment; dropping it would remove an element that adds nothing.'
   - 'Suggestion: a second line under the D/p annotation saying what it means (for
     example ''distributions differ'') would give the statistic a reading for non-statisticians.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, with a thin INK_SOFT frame around the plot area.
-      Chrome: bold dark title "ks-test-comparison · python · bokeh · anyplot.ai" at about half the width; italic axis titles "Credit Score" and "Cumulative Proportion"; INK_SOFT tick labels 300–900 and 0.0–1.0; a subtle grid; a legend top-left on an elevated box. All readable.
-      Data: a solid green #009E73 ECDF for Good Customers (about 485–885) and a dashed red #AE3030 ECDF for Bad Customers (about 305–780), both stair-step functions from 0 to 1; a blue #4467A3 vertical K-S segment at about 593 from y≈0.08 to y≈0.81 with diamond caps; a faint blue band between the curves around the segment; a bold blue "D = 0.737,  p < 0.001" label on an elevated box at y≈0.44, clear of both curves.
+      Background: warm off-white #FAF8F1 with a thin INK_SOFT frame around the plot area.
+      Chrome: bold dark title "ks-test-comparison · python · bokeh · anyplot.ai" at about half the width; italic axis titles "Credit Score" and "Cumulative Proportion"; INK_SOFT tick labels 300–900 and 0.0–1.0; subtle grid; legend top-left on an elevated box with three entries. All readable.
+      Data: solid green #009E73 ECDF for Good Customers (about 485–885) and dashed red #AE3030 ECDF for Bad Customers (about 305–780), both stair steps from 0 to 1; blue #4467A3 vertical K-S segment at x≈593 from y≈0.08 to y≈0.81 with diamond caps; a faint blue band between the curves around the segment; bold blue "D = 0.737,  p < 0.001" label on an elevated box at y≈0.44, clear of both curves.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and axis titles in light #F0EFE8; tick and legend labels in light INK_SOFT #B8B7B0; the legend and annotation boxes on dark elevated #242420; the grid subtle but visible. No dark-on-dark text.
-      Data: green, red and blue are identical to the light render; the band is fainter but still visible as a darker-blue patch; brand green reads well.
+      Chrome: title and axis titles in light #F0EFE8; tick and legend labels in INK_SOFT #B8B7B0; legend and annotation boxes on elevated #242420; grid subtle but visible. No dark-on-dark text.
+      Data: green, red and blue identical to the light render; the band is fainter but visible as a darker-blue patch; brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,50 +55,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set to bokeh.md values (title 50pt, axis titles 42pt, ticks
-          and legend 34pt, annotation 32pt bold); readable in both themes
+        comment: Sizes set per bokeh.md (title 50pt, axis titles 42pt, ticks and legend
+          34pt, annotation 32pt bold); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the legend sits top-left in empty data space
-          and the D/p label sits clear of both curves
+        comment: No text collisions; legend sits top-left in empty space; the D/p
+          label is clear of both curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5 px step lines suit 400/350 points; the 7 px K-S segment and size-26
-          diamonds stand out; legend glyphs match the lines in both themes
+        comment: 5 px step lines suit 400/350 points; 7 px K-S segment with size-26
+          diamonds stands out; legend glyphs match the lines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red semantic pair also differs as solid vs dashed, so it is
-          CVD-safe
+        comment: Green/red pair is doubled by solid vs dashed line style, so it does
+          not rely on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: The plot area fills the 3200x1800 canvas with balanced margins; nothing
-          is cut off; canvas gate passed
+        comment: Plot fills the 3200x1800 canvas with balanced margins; nothing cut
+          off; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Credit Score'' and ''Cumulative Proportion'' are descriptive (the
-          score is unitless)'
+        comment: '''Credit Score'' and ''Cumulative Proportion'' are descriptive (score
+          is unitless)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Good is #009E73, Bad is #AE3030 under the semantic exception, K-S
-          is #4467A3; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive'
+        comment: 'Good #009E73, Bad #AE3030 (semantic exception), K-S #4467A3; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-adaptive'
     design_excellence:
       score: 12
       max: 20
@@ -115,25 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above the baseline: the semantic color pair doubled by line style,
-          and a bold accent-colored statistic on an elevated box set a clear typographic
+        comment: 'Above baseline: semantic color pair doubled by line style, and a
+          bold accent-colored statistic on an elevated box sets a clear typographic
           hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Above the baseline: the annotation box uses the elevated theme surface
-          and is offset clear of both curves, and the legend is padded inside empty
-          data space'
+        comment: 'Above baseline: the annotation box uses the elevated theme surface
+          offset clear of both curves; the legend is padded inside empty data space'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The Band shading, chosen by the implementation and beyond the Notes'
-          line-or-annotation, together with the diamond-capped segment, makes the
-          maximum gap the focal point
+        comment: The Band shading around the maximum gap plus the diamond-capped segment,
+          chosen beyond the Notes' line-or-annotation, make the maximum divergence
+          the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -149,15 +141,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Steps, prominent D, max-distance vertical segment, p-value, legend
-          and a 0–1 y axis are all present; C1–C4 are met
+        comment: Steps, prominent D, vertical max-distance segment, p-value, legend
+          and 0–1 y axis all present; C1–C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Steps rise only at each sample's values; the segment sits at the
-          pooled-ECDF argmax (x≈593) and spans exactly D
+        comment: Steps rise only at each sample's values; segment at ks_2samp statistic_location
+          (x≈593) spans exactly D
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -174,8 +166,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two clearly separated distributions of unequal size (400 vs 350)
-          show the steps, the gap and the inference
+        comment: Two separated distributions of unequal size (400 vs 350) show steps,
+          the gap and the inference
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -188,11 +180,10 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Scores span 300–900 like FICO; D=0.737 and p<0.001 are computed by
-          ks_2samp and agree with the segment drawn from about 0.08 to 0.81 (spec
-          has no Check values)
+        comment: Scores span 300–900 like FICO; D=0.737 and p<0.001 computed by ks_2samp
+          and match the drawn segment from about 0.08 to 0.81 (spec has no Check values)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -217,12 +208,11 @@ review:
           bokeh self-import fix
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Steps are built by hand where p.step(mode='after') draws them, and
-          the max-gap location is recomputed where ks_2samp().statistic_location gives
-          it (defect line)
+        passed: true
+        comment: Native p.step(mode='after') draws the ECDFs and ks_2samp().statistic_location
+          gives the max-gap location; pooled ECDFs are kept only for the Band
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,19 +220,19 @@ review:
         passed: true
         comment: Saves plot-{THEME}.html and plot-{THEME}.png with the current API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Default: ColumnDataSource and explicit models are used, but the
-          step glyph is hand-built instead of the native p.step'
+        comment: 'Above default: native p.step glyph with mode=''after'', ColumnDataSource-driven
+          glyphs, and Legend/LegendItem models'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
         comment: Band model for the gap region and a HoverTool scoped to the ECDF
@@ -250,7 +240,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
-  rendered_at: '2026-11-27T18:04:33Z'
+  rendered_at: '2026-11-27T18:12:44Z'
 impl_tags:
   dependencies:
   - scipy
@@ -258,14 +248,16 @@ impl_tags:
   - pillow
   techniques:
   - annotations
+  - custom-legend
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   - columndatasource
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
