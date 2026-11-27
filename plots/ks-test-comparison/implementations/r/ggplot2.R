@@ -115,7 +115,7 @@ p <- ggplot(df_scores, aes(x = score, color = group, linetype = group)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG,     color = NA),
-    panel.grid.major  = element_line(color = INK_SOFT,   linewidth = 0.2),
+    panel.grid.major  = element_line(color = alpha(INK, 0.15), linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
     axis.title        = element_text(color = INK,        size = 10),
