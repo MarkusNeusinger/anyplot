@@ -218,7 +218,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. A related but different form (a donut for a pie) is partial SC-01 on any spec. |
+| SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, highlight bands, annotation layers) are the wrong variant (partial SC-01) and earn no DE-03, LM-01 or LM-02 credit. A related but different form (a donut for a pie) is partial SC-01 on any spec. |
 | SC-02 | Required Features | 4 | All spec features present? Check each Notes bullet and each `A good version shows:` bullet against the render, and name any missed one in the note. (Its `Expected, not a defect:` bullets are permissions, not features.) |
 | SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks? Displacement deducts in proportion to how far marks move relative to the axis range, and is never a strength. Changing the generated data, marker size or alpha is fine. A smoothed curve that swings past the values it connects (spline overshoot) shows values the data does not have — deduct in proportion. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds, packed circles), and any jitter, dodge or offset the spec's Data or Notes ask for. Axes fitted to the data, with zero where the mark's length is the value (bars, areas) or a needed reference, and ticks a reader can read a value off, color bars included (`quality-criteria.md` → SC-03)? |
 | SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels correct? Every color, line style, marker or shading a reader must tell apart has a key or a direct label (`quality-criteria.md` → SC-04)? |
@@ -247,7 +247,7 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| CQ-01 | KISS Structure | 3 | No functions/classes? |
+| CQ-01 | KISS Structure | 3 | Reads top to bottom, cell by cell? No `main()`, Python class, function or callback that holds the plot or the save, or function inside a function outside the Data block? (A short helper above its first use costs nothing, and CQ-01 does not score what the library or the harness asks for: score by the 3/2/1/0 rows of `quality-criteria.md` → CQ-01.) |
 | CQ-02 | Reproducibility | 2 | Fixed seed or deterministic? |
 | CQ-03 | Clean Imports | 2 | Only used imports? (data utilities count as used) |
 | CQ-04 | Code Elegance | 2 | Appropriate complexity? No fake UI elements? No over-engineering? No algorithm written out that an available call computes (`quality-criteria.md` → CQ-04 → Available to compute with)? |
@@ -265,6 +265,7 @@ Only award full points (5/5) for real, neutral contexts, or a comprehensible fic
 **Scoring defaults (start here, adjust up only with evidence beyond what the spec's Notes require and the library prompt mandates):**
 - LM-01 = 3 (correct usage). Raise to 5 only if expertly using high-level API.
 - LM-02 = 1 (generic usage). Raise only if using distinctive features.
+- A feature that is itself an addition the spec's variant excludes, such as range selector buttons or a range slider on a `-basic` spec that does not ask for them, raises neither (`quality-criteria.md` → LM-02 → "No credit for what the variant excludes").
 
 ### Step 7: Apply Score Caps
 
@@ -311,7 +312,7 @@ Both have ~5.76M pixels, so font size recommendations apply equally.
 - Crossfiltering
 - Animations
 
-These features **add significant value** in the HTML output. The PNG is just a static preview.
+These features **add significant value** in the HTML output. The PNG is just a static preview. The exception is a control that changes what the chart shows (range selector buttons, range sliders, dropdown or button menus) on a `-basic` spec that does not ask for it: it is an excluded addition, in the PNG or only in the HTML, and earns no LM credit (`quality-criteria.md` → LM-02); hover, tooltips, spike lines, zoom, interactive legends and the default toolbar stay strengths.
 
 **Only criticize** if:
 - Interactive features break the static rendering
