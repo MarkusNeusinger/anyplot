@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tile-background: Map with Tile Background
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-26
@@ -30,9 +30,9 @@ BRAND = "#009E73"
 
 # Imprint sequential ramp for colored marks, per theme
 SEQ_MARKS = (
-    [[0.0, "#009E73"], [0.338, "#4467A3"], [1.0, "#002850"]]
+    [[0.0, "#009E73"], [0.687, "#024582"], [1.0, "#351E45"]]
     if THEME == "light"
-    else [[0.0, "#007755"], [0.32, "#009E73"], [1.0, "#CDD9FF"]]
+    else [[0.0, "#6F7E20"], [0.21, "#009E73"], [1.0, "#CDD9FF"]]
 )
 
 # Theme-adaptive map tile style (tile providers do not follow the page colors)
