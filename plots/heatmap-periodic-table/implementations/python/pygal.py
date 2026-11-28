@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-periodic-table: Periodic Table Property Heatmap
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-06-15
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 75/100 | Updated: 2026-11-28
 """
 
 import os
@@ -10,6 +10,7 @@ import sys
 
 sys.path.pop(0)  # prevent this file shadowing the installed pygal package
 
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -23,17 +24,28 @@ GREY_TILE = "#CCCBC3" if THEME == "light" else "#3A3A36"
 
 FONT = "DejaVu Sans, Helvetica, Arial, sans-serif"
 
+# Imprint palette (all eight positions, canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Imprint sequential colormap: brand green → blue (single-polarity continuous data)
 SEQ_START = "#009E73"
 SEQ_END = "#4467A3"
 
-# Element data: (symbol, atomic_number, grid_col[1-18], grid_row[1-9], en_or_None)
+# Columns: set these to your table's column names
+SYMBOL = "Symbol"  # role: symbol
+ATOMIC_NUMBER = "Atomic number"  # role: atomic_number
+GROUP = "Group"  # role: group
+PERIOD = "Period"  # role: period
+ELECTRONEGATIVITY = "Pauling Electronegativity"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("elements.csv")
+# Element data: (symbol, atomic_number, group[1-18], period/row[1-9], en_or_None)
 # grid_row 1-7 = periods 1-7 in the main 18-column table
 # grid_row 8   = lanthanide f-block row (Ce-Lu at cols 4-17)
 # grid_row 9   = actinide  f-block row (Th-Lr at cols 4-17)
 # La sits at (col=3, row=6) and Ac at (col=3, row=7) in the main table;
 # Ce-Lu and Th-Lr are detached below following the standard IUPAC layout.
-ELEMENTS = [
+elements = [
     # Period 1
     ("H", 1, 1, 1, 2.20),
     ("He", 2, 18, 1, None),
@@ -163,9 +175,11 @@ ELEMENTS = [
     ("Lr", 103, 17, 9, 1.30),
 ]
 
-en_values = [e[4] for e in ELEMENTS if e[4] is not None]
-EN_MIN = min(en_values)  # 0.70  (Fr)
-EN_MAX = max(en_values)  # 3.98  (F)
+df = pd.DataFrame(elements, columns=[SYMBOL, ATOMIC_NUMBER, GROUP, PERIOD, ELECTRONEGATIVITY])
+
+# Plot: reads only df and the constants above
+EN_MIN = df[ELECTRONEGATIVITY].min()  # 0.70  (Fr)
+EN_MAX = df[ELECTRONEGATIVITY].max()  # 3.98  (F)
 
 
 def lerp_hex(c0, c1, t):
@@ -178,7 +192,7 @@ def lerp_hex(c0, c1, t):
 
 
 def tile_color(en):
-    if en is None:
+    if pd.isna(en):
         return GREY_TILE
     t = (en - EN_MIN) / (EN_MAX - EN_MIN)
     return lerp_hex(SEQ_START, SEQ_END, t)
@@ -214,7 +228,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"),
+    colors=tuple(IMPRINT_PALETTE),
     title_font_size=66,
     label_font_size=44,
     major_label_font_size=44,
@@ -334,7 +348,9 @@ class PeriodicHeatmap(pygal.Bar):
             )
 
         # Element tiles
-        for sym, an, col, row, en in ELEMENTS:
+        for sym, an, col, row, en in df[[SYMBOL, ATOMIC_NUMBER, GROUP, PERIOD, ELECTRONEGATIVITY]].itertuples(
+            index=False
+        ):
             x, y = tile_xy(col, row)
             fill = tile_color(en)
             ink = ink_for_tile(fill)
@@ -362,7 +378,7 @@ class PeriodicHeatmap(pygal.Bar):
             n.text = sym
 
             # EN value — bottom-centre, small (only when known)
-            if en is not None:
+            if pd.notna(en):
                 n = self.svg.node(
                     root,
                     "text",
@@ -404,7 +420,7 @@ class PeriodicHeatmap(pygal.Bar):
                 "style": f"font-size:32px;font-family:{FONT}",
             },
         )
-        n.text = "Pauling Electronegativity"
+        n.text = ELECTRONEGATIVITY
 
         # Colorbar gradient rectangle
         self.svg.node(

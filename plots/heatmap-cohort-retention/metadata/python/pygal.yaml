@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:46:42Z'
-updated: '2026-11-28T12:02:07Z'
+updated: '2026-11-28T12:10:15Z'
 generated_by: claude-sonnet
-workflow_run: 46142158273
+workflow_run: 46142746471
 issue: 4570
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,50 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Triangular staircase drawn with empty positions left blank, 10 cohorts with the
-    100 % signup column
-  - 'imprint_seq fields ramp with the theme''s own stops: mint->violet on light, olive->pale
-    blue on dark'
+  - Triangular staircase with the positions beyond each cohort's last month left empty,
+    and the 100 % signup column for every cohort
+  - 'imprint_seq fields ramp with each theme''s own stops: mint->violet on light,
+    olive->pale blue on dark'
   - Per-cell ink picked by WCAG contrast against the fill, so every percentage reads
     in both themes
   - Cohort sizes typeset as a muted italic n= line under each bold cohort label
-  - Hover tooltips on every cell in the HTML output (cohort, month, exact %)
+  - Color bar with round 40/60/80/100 % ticks and hover titles on every cell in the
+    HTML output
   weaknesses:
-  - 'VQ-01 (both): column headers at 26 px, axis titles at 30 px and color-bar ticks
-    at 28 px sit well below the 44 px tick reference and read small beside the 38-40
-    px row and cell text -> about 40 px headers and ticks, 44 px axis titles (+14
-    to +18 px). Likely cause: col_fs = min(26, cw*0.34) and cb_ls = 28.'
-  - 'VQ-05 (both): an empty band of about 250 px separates the title from the ''Months
-    Since Signup'' header, and the rotated ''Signup Cohort'' title sits ~120 px left
-    of the row labels -> start the grid closer under the title and bring the y title
-    next to the labels. Likely cause: margin_top=200 plus lm_t=130, and ytx = x0 -
-    355.'
-  - 'SC-03 (both): color-bar ticks at 100 %, 80 %, 61 %, 41 %, 21 % are min-max quarters,
-    not round values -> round ticks such as 20, 40, 60, 80, 100 %. Likely cause: the
-    tick loop takes max_val - span*frac.'
-  - 'CQ-01 (code): line 97 `class CohortRetentionHeatmap(Graph)` holds the whole drawing
-    in `_plot` -> draw at the top level (or render the cells as SVG without a subclass).
-    Likely cause: a pygal Graph subclass for a type pygal lacks.'
-  - 'Suggestion: emphasise the Month 1 column (the steepest drop) with a slightly
-    heavier cell outline to anchor the reader.'
+  - 'VQ-01 (both): the ''Month 0''-''Month 9'' column headers at 32 px sit below the
+    44 px tick reference and read small beside the 40 px cell values and 44 px axis
+    titles -> about 40 px (+8 px), e.g. by stacking ''Month'' over the number on two
+    lines so it fits the 163 px column. Likely cause: svg_text(..., 32, INK, f"Month
+    {period}") on line 117.'
+  - 'Suggestion: give the ''Retention %'' color-bar title a little more room from
+    the Jan 2024 Month 9 cell (about 10 px apart now).'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1.
-      Chrome: mandated title in dark ink at top; 'Months Since Signup' header and 'Month 0'-'Month 9' column labels above the grid; bold cohort labels Jan-Oct 2024 with muted italic n= sizes; rotated 'Signup Cohort' title at left; color bar at right titled 'Retention %' with ticks 100/80/61/41/21 %. All readable, column labels and ticks on the small side.
-      Data: 10-row triangular heatmap, Jan with 10 cells down to Oct with 1; signup column dark violet (100 %), Month 1 deep blue/teal, later months fading to pale mint - light for low, dark for high. Light ink on dark cells, dark ink on mint/green cells. 'Retention %' clear of the Month 9 cell.
+      Chrome: mandated title in dark ink at top; 'Months Since Signup' header and bold 'Month 0'-'Month 9' column labels directly above the grid; bold cohort labels Jan-Oct 2024 with muted italic n= sizes; rotated 'Signup Cohort' title close to the row labels; color bar at right titled 'Retention %' with round ticks 40/60/80/100 %. All readable; column headers somewhat smaller than the other text.
+      Data: 10-row triangular heatmap, Jan with 10 cells down to Oct with 1; signup column dark violet (100 %), Month 1 deep blue/teal, later months fading to pale mint - light for low, dark for high. Light ink on dark cells, dark ink on green/mint cells. Empty lower-right triangle left as page.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: all text in light ink (title, labels, color-bar ticks), muted sizes in grey; no dark-on-dark.
-      Data: same layout and values; the ramp takes the dark fields stops - pale blue for 100 %, teal/green mid, dark olive for low retention, so high stands out from the page. Dark ink on pale cells, light ink on olive cells - all readable.
+      Chrome: title, labels, column headers and color-bar ticks in light ink, n= sizes in muted grey; no dark-on-dark.
+      Data: same layout and values; the ramp takes the dark fields stops - pale blue for 100 %, teal/green mid, dark olive for low retention, so high values stand out from the page. Dark ink on pale/teal cells, light ink on olive cells - all readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,24 +54,24 @@ review:
         score: 7
         max: 8
         passed: false
-        comment: All sizes explicitly set and every label readable in both themes,
-          cell text takes light or dark ink per fill; but column headers (26 px),
-          axis titles (30 px) and color-bar ticks (28 px) sit well below the 44 px
-          tick reference and read small beside the 38-40 px cell and row text (defect
+        comment: All sizes set explicitly and readable in both themes; cell ink picked
+          per fill by contrast. Axis titles 44 px, cell values 40 px, color-bar ticks
+          40 px, row labels 38 px; but the 'Month N' column headers at 32 px sit below
+          the 44 px tick reference and read small beside the 40 px cell text (defect
           line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides; the 'Retention %' header sits right of the Month
-          9 cell, clear of it
+        comment: No text collides; 'Retention %' sits right of the Month 9 cell, clear
+          of it
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells large and clear, color bar clearly visible in both themes
+        comment: Large cells with 4 px gaps, color bar clearly visible on both pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,13 +80,12 @@ review:
         comment: Lightness ramp plus a number in every cell; no hue-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Square canvas fits the triangle, but an empty band of about 200 px
-          sits between the title and the column header block, and the rotated 'Signup
-          Cohort' title floats ~100 px from the row labels (defect line); the empty
-          lower-right triangle is permitted (C6)
+        passed: true
+        comment: 'Square canvas well used: grid starts right under the title, y title
+          beside the row labels, color bar to the right; empty lower-right triangle
+          is permitted (C6)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,8 +98,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq with the fields stops of each theme (SEQ_FIELDS); backgrounds
-          #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'imprint_seq with the fields stops per theme (SEQ_FIELDS): mint->violet
+          on light, olive->pale blue on dark; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -119,24 +110,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Beyond baseline: rounded cells with page-tone gaps, bold cohort
-          label over a muted italic n=size line, per-cell ink chosen by contrast'
+        comment: 'Beyond baseline: rounded cells separated by page-tone gaps, bold
+          cohort label over a muted italic n= line, per-cell ink chosen by WCAG contrast'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: No grid or spines, consistent cell gaps, cohort sizes typeset under
-          their labels, color bar aligned to the grid
+        comment: No grid or spines; consistent cell gaps, color bar centered on the
+          grid, axis titles placed close to their labels
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Data choice makes the weaker Apr 2024 cohort and the gradual improvement
-          of later cohorts readable in the color field
+        comment: The data makes the weaker Apr 2024 cohort and the steadily better
+          later cohorts readable in the color field
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,16 +142,15 @@ review:
         max: 4
         passed: true
         comment: Triangle, 100 % signup column, light-low/dark-high ramp (dark->bright
-          in dark), % in every cell, n= sizes by the labels, 'Month N' labels, color
-          bar - all present
+          on dark), % in every cell, n= sizes by the labels, 'Month N' labels, color
+          bar - all present (C1-C5)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
+        passed: true
         comment: Rows = cohorts, columns = months since signup, color = retention;
-          but the color-bar ticks sit at 100/80/61/41/21 % - min-max quarters, not
-          round values (defect line)
+          color-bar ticks at round 40/60/80/100 %
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -178,7 +168,7 @@ review:
         max: 6
         passed: true
         comment: 10 cohorts x up to 10 months, 100 % signup column, steep then slow
-          decline, cohorts that differ in level
+          decline, cohorts differing in level
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -190,19 +180,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: period 0 is 100 % for every cohort (render and code line
-          rate=100.0); Month 1 61-78 %, Month 9 22 % - plausible SaaS decay'
+        comment: 'Checked: period 0 reads 100 % for every cohort (render; code sets
+          rate = 100.0 for j == 0); Month 1 61-78 %, Month 9 22 % - plausible SaaS
+          decay. The spec has no Check values'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: A Python class (CohortRetentionHeatmap, a pygal Graph subclass) holds
-          the whole drawing in _plot (defect line)
+        passed: true
+        comment: Top to bottom; ramp_color, lum, contrast, text_on and svg_text are
+          short helpers above their first use
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,19 +205,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: math, os, sys, pairwise, numpy, pandas, Graph, Style - all used
+        comment: math, os, sys, pairwise, numpy, pandas, cairosvg, pygal, Style -
+          all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate; nothing an available call replaces
+        comment: Appropriate; nothing an available call replaces (pygal has no heatmap
+          type)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, .svg and .html with the current pygal 3 API
+        comment: Saves plot-{THEME}.png (cairosvg, as pygal itself does), .svg and
+          .html with the pygal 3 API
     library_mastery:
       score: 4
       max: 10
@@ -236,19 +230,19 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Style tokens used as the library prompt mandates; the class earns
-          no LM credit
+        comment: 'Default: Style tokens as the library prompt mandates; pygal supplies
+          page and title only, the cells are hand-built SVG'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: 'Default: the SVG gradient color bar and tooltips live inside the
-          class, which earns no LM credit'
+        comment: 'Default: SVG gradient color bar and <title> hover tooltips are plain
+          SVG, not pygal features'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
-  rendered_at: '2026-11-28T11:58:40Z'
+  rendered_at: '2026-11-28T12:06:20Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -256,9 +250,10 @@ impl_tags:
   - annotations
   - html-export
   - hover-tooltips
-  - manual-ticks
+  - patches
   patterns:
   - data-generation
+  - iteration-over-groups
   - matrix-construction
   dataprep:
   - long-to-wide

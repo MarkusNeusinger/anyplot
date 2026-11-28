@@ -2,122 +2,142 @@ library: pygal
 language: python
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:48Z'
-updated: '2026-06-03T10:23:08Z'
+updated: '2026-11-28T12:10:44Z'
 generated_by: claude-sonnet
-workflow_run: 26877222614
+workflow_run: 46142640818
 issue: 4581
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Complete spec compliance: all 8 required features implemented in both themes'
-  - Imprint sequential colormap correctly implemented with manual interpolation for
-    a library without native cmap support
-  - Color-adaptive per-cell text (luminance-based) prevents unreadable text on any
-    cell in either theme
-  - SVG-native features (linearGradient colorbar, pattern hatching) are distinctive
-    to pygal and well-executed
-  - Realistic insurance data with authentic development patterns and seed-controlled
-    noise
+  - imprint_seq field ramp with the theme's own stops (light and dark), sampled through
+    the library prompt's ramp_color helper
+  - Evaluation-date line follows the cell edges as a staircase, so it marks the observed/projected
+    boundary without crossing any value
+  - Projected cells stay opaque with hatching, a dashed inner border and italic text,
+    so color intensity stays readable in the IBNR region
+  - Per-cell text ink chosen by WCAG contrast keeps every value legible in both themes
+  - Development factors sit on the boundary between the two periods they link
+  - Native SVG defs (pattern hatching, linearGradient colorbar) and _tooltip_data
+    hover tooltips in the HTML
+  - Data block ends in one tidy df with column constants; pivots and factors derive
+    from it
   weaknesses:
-  - 'CQ-01: Class with multiple helper methods (_lerp_color, _value_to_color, _ink_for_bg,
-    _plot, _compute) departs from KISS flat structure — could be partially flattened'
-  - 'VQ-02/legend: Three-part bottom legend cramped within fixed 610px width; Evaluation
-    Date text may clip on smaller renders — increase lgw_total or reduce lgf'
-  - 'DE-02: Dev factor labels placed at column position j (0-indexed) rather than
-    between columns j and j+1 — offset by cw/2 + gap/2 for correct alignment'
+  - 'VQ-01 (both): chrome text sits far below pygal''s style-guide references and
+    reads small beside the 66 px title - axis titles 26-34 px (reference 56), row
+    and column labels 30 px (reference 44), legend 24 px (reference 44), development
+    factors 24 px and colorbar ticks 22 px → axis titles about 56 px, labels, legend,
+    factors and colorbar ticks about 40-44 px (+14 to +22 px), shrinking the cell
+    grid as needed. Likely cause: the hf/cf/ff clamps (max 34/30/24) and the fixed
+    22/24 px colorbar and legend sizes in _plot.'
+  - 'VQ-02 (both): the colorbar title ''Cumulative ($k)'' is centered on the 32 px
+    bar, so its first letters start about 45 px inside the 2016 / period 10 cell →
+    keep it clear of the grid (left edge at least 10 px right of the last column,
+    about +55 px), e.g. anchor it at the bar''s left edge with text-anchor start or
+    wrap it. Likely cause: put(CUMULATIVE, cbx + cbw / 2, ...) with anchor middle.'
+  - 'Suggestion: the band between the title and the ''Development Period (Years)''
+    header is about 230 px tall; larger chrome text would use it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface.
-      Chrome: Title 'heatmap-loss-triangle · python · pygal · anyplot.ai' in dark ink — fully readable. Column header 'Development Period (Years)' and rotated row title 'Accident Year' both clear. Row labels (2015-2024) and column labels (1-10) in dark INK — readable. Colorbar label 'Cumulative ($k)' and tick values (6,951 / 5,173 / 3,795 / 2,217 / ~639) readable. Dev factor values (2.345, 1.464, 1.256, etc.) legible. Legend items 'Actual (Observed)', 'Projected (IBNR)', 'Evaluation Date' compact but readable.
-      Data: Imprint sequential colormap (#009E73 green → #4467A3 blue) used for continuous cumulative amounts. Actual cells opaque; projected cells 52% opacity with diagonal hatching and dashed border. Dashed evaluation-date diagonal clearly marks the boundary. Cell value annotations in comma-formatted integers, color-adaptive (dark text on light cells, light text on dark cells). Colorbar gradient matches cell colors.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'heatmap-loss-triangle · python · pygal · anyplot.ai' in dark ink at the top; 'Development Period (Years)' header over column labels 1-10; rotated 'Accident Year' with row labels 2015-2024; 'Dev Factor' row below the grid; colorbar 'Cumulative ($k)' 639-6,951 on the right; legend Actual (Observed) / Projected (IBNR) / Evaluation Date centered underneath. All readable, though axis titles, factors, colorbar ticks and legend are small. The colorbar title's first letters run onto the 2016 / period 10 cell.
+      Data: 10x10 grid on the light imprint_seq field ramp (mint #66E2B2 -> #009E73 -> navy #024582 -> aubergine #351E45). Observed upper-left cells have bold upright values; projected lower-right cells are opaque with diagonal hatching, a dashed inner border and italic values. A thick dashed dark staircase follows the cell edges along the evaluation diagonal. Every value has a thousands separator, with dark or light ink by contrast. Factors 2.345 ... 1.041 sit between columns.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title in near-white (#F0EFE8) — readable against dark background. Axis headers, row/column labels, colorbar labels, dev factor labels all light-colored — no dark-on-dark failures. Legend text and swatch borders use INK_SOFT (#B8B7B0) — visible.
-      Data: Colors identical to light render (imprint_seq green→blue unchanged). Hatch pattern uses INK_MUTED (#A8A79F) strokes at 40% opacity — visible. Dashed diagonal in INK (#F0EFE8) — clearly visible. Brand green #009E73 reads well against near-black. Per-cell luminance-based text adaptation ensures correct light text on dark blended cells throughout.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: same layout with light ink (title #F0EFE8, headers and labels light, factors and colorbar ticks soft grey). No dark-on-dark text. The colorbar title overlaps the same cell edge.
+      Data: the dark imprint_seq field stops (olive #404C02 -> #009E73 -> pale blue #CDD9FF), so the ramp flips as continuous ramps should. Hatching and dashed borders switch ink with the cell. The staircase evaluation line is light dashed. Values stay readable on every cell.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; all text readable in both themes;
-          legend slightly compact
+        passed: false
+        comment: All text readable in both themes and cell inks picked by WCAG contrast,
+          but the chrome sits far below pygal's references (axis titles 26-34 px vs
+          56, row/column labels 30 px vs 44, legend 24 px vs 44, dev factors 24 px,
+          colorbar ticks 22 px) and reads small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant collisions; three-part bottom legend slightly snug
+        comment: The colorbar title 'Cumulative ($k)' starts about 45 px inside the
+          2016 / period 10 cell (defect line); nothing else collides, the evaluation
+          line runs along cell edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells, gradient, hatching, diagonal all clearly visible
+        comment: Cells, hatching, dashed inner borders, the stepped evaluation line
+          and all three legend glyphs are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq cmap; luminance-based text adaptation; no red-green sole
-          signal
+        comment: Single-hue-family sequential ramp, lightness-ordered; actual vs projected
+          told apart by hatching and italics, not by color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 appropriate; well-balanced margins; no canvas gate
-          failure
+        comment: Square 2400x2400 canvas, gate passed; the triangle, factors row,
+          colorbar and legend fill the canvas with nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Cumulative $k)
+        comment: '''Development Period (Years)'', ''Accident Year'', ''Cumulative
+          ($k)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq correctly used; correct backgrounds; data colors identical
-          across themes
+        comment: 'imprint_seq field stops per theme (light #66E2B2->#009E73->#024582->#351E45,
+          dark #404C02->#009E73->#CDD9FF); backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: SVG gradient colorbar, pattern hatching, per-cell
-          luminance text, rounded corners, font scaling'
+        comment: 'Typographic hierarchy chosen for the data: bold upright observed
+          values vs light italic projected values, per-cell ink picked by WCAG contrast,
+          rounded cells'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: rounded cells, subtle separator, gradient colorbar; dev factor
-          alignment slightly off'
+        comment: Evaluation line stepped along the cell edges, factors centered on
+          the column boundaries they link, a rule separating the factor row, legend
+          widths derived from text
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Evaluation diagonal and hatching tell the chain-ladder story clearly
+        comment: Weight and italic contrast puts the observed triangle in front and
+          the projected IBNR region behind, beyond what the Notes prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap
+        comment: Loss development triangle heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 8 required features present
+        comment: 'All Notes and C1-C5 met: actual/projected styling with legend, stepped
+          evaluation diagonal, every cell annotated with thousands separators, color
+          by magnitude readable under hatching, factors between the periods they link'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct row/column/color mapping
+        comment: Every cell at its year and period; colorbar ticks 639-6,951 readable
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Mandated title; legend names Actual (Observed), Projected (IBNR),
+          Evaluation Date
     data_quality:
       score: 15
       max: 15
@@ -155,84 +178,95 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: actual, projected, diagonal, dev factors, colorbar'
+        comment: 55 observed + 45 projected cells, single observed cell for 2024,
+          factors that flatten out
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic actuarial loss development triangle context
+        comment: Cumulative paid claims in $k, accident years 2015-2024 - neutral
+          insurance context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic base ultimates and development patterns
+        comment: No Check values in the Notes; factors computed volume-weighted from
+          observed cells (2.345 for 1->2 down to ~1.0), consistent with the dev pattern
+          0.15->1.00
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Class with 5 methods violates flat KISS structure; necessary for
-          pygal but could be flattened
+        passed: true
+        comment: 'Imports -> constants -> data -> derived tables -> Graph subclass
+          (what pygal asks for a custom chart: _compute, _plot plus a one-line text
+          helper) -> save; color helpers are short top-level formulas'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, numpy, pandas, Graph, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path fix justified; complexity appropriate; no fake UI
+        comment: Pivot tables and a vectorized factor computation; ramp_color is the
+          library prompt's helper; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal Graph extension correctly; heavy SVG manipulation is low-level
+        comment: Extends pygal's Graph with _compute/_plot, draws through self.svg.node/self.svg.line
+          and uses value_formatter for every number
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG linearGradient, pattern hatching, _tooltip_data, dual PNG+HTML
-          output — SVG-native features
+        comment: SVG <pattern> hatching and <linearGradient> colorbar in pygal's defs,
+          _tooltip_data for per-cell hover tooltips in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-28T12:06:07Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - pivot-table
   styling:
+  - publication-ready
   - custom-colormap
-  - alpha-blending
-  - gradient-fill
