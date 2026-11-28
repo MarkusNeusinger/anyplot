@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-02
@@ -7,8 +7,10 @@ Quality: 88/100 | Updated: 2026-06-02
 import math
 import os
 import sys
+from itertools import pairwise
 
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens — Imprint palette chrome
@@ -19,16 +21,16 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint sequential colormap: brand-green → blue (single-polarity continuous data)
-N_CMAP = 16
-IMPRINT_SEQ = [
-    "#{:02X}{:02X}{:02X}".format(
-        round(0x00 + (0x44 - 0x00) * i / (N_CMAP - 1)),
-        round(0x9E + (0x67 - 0x9E) * i / (N_CMAP - 1)),
-        round(0x73 + (0xA3 - 0x73) * i / (N_CMAP - 1)),
-    )
-    for i in range(N_CMAP)
-]
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+AMBER = "#DDCC77"  # Imprint amber anchor, outside the categorical pool
+
+# Imprint sequential ramp for filled cells (fields stops, per theme)
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
 # This file shares its name with the pygal package; temporarily remove the
 # current directory from sys.path so the real package is found first.
@@ -40,12 +42,53 @@ from pygal.style import Style  # noqa: E402
 sys.path.insert(0, _saved_path)
 
 
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# Columns: set these to your table's column names
+AMPLITUDE = "Stress Amplitude (MPa)"  # role: amplitude
+MEAN = "Mean Stress (MPa)"  # role: mean
+COUNT = "Cycle Count"  # role: count
+
+# Data: replace this block with your own table, for example df = pd.read_csv("rainflow.csv")
+# Wind turbine blade root fatigue loading (variable-amplitude spectrum), one row per bin
+np.random.seed(42)
+n_bins = 20
+amp_edges = np.linspace(0, 200, n_bins + 1)
+mean_edges = np.linspace(-50, 250, n_bins + 1)
+amp_centers = (amp_edges[:-1] + amp_edges[1:]) / 2
+mean_centers = (mean_edges[:-1] + mean_edges[1:]) / 2
+
+rows = []
+for amp in amp_centers:
+    for mean_val in mean_centers:
+        primary = np.exp(-amp / 28) * np.exp(-((mean_val - 100) ** 2) / (2 * 55**2))
+        vibration = 0.5 * np.exp(-amp / 10) * np.exp(-((mean_val - 55) ** 2) / (2 * 20**2))
+        base = 9000 * (primary + vibration) * (1 + 0.2 * np.random.randn())
+        empty = amp + abs(mean_val - 100) > 220 or base < 2
+        rows.append((float(amp), float(mean_val), 0 if empty else int(round(max(0, base)))))
+df = pd.DataFrame(rows, columns=[AMPLITUDE, MEAN, COUNT])
+
+# Plot: reads only df and the constants above
+table = df.pivot_table(index=AMPLITUDE, columns=MEAN, values=COUNT, sort=False, dropna=False)
+table = table.iloc[::-1]  # high amplitude at the top, the fatigue-matrix convention
+values = table.to_numpy(dtype=float)
+matrix = values.tolist()
+vmax = float(np.nanmax(values))
+
+
 class RainflowHeatmap(Graph):
     def __init__(self, *args, **kwargs):
         self.matrix_data = kwargs.pop("matrix_data", [])
         self.row_labels = kwargs.pop("row_labels", [])
         self.col_labels = kwargs.pop("col_labels", [])
-        self.colormap = kwargs.pop("colormap", [])
         self.vmax = kwargs.pop("vmax", 1)
         self.x_axis_title = kwargs.pop("x_axis_title", "")
         self.y_axis_title = kwargs.pop("y_axis_title", "")
@@ -57,18 +100,7 @@ class RainflowHeatmap(Graph):
         if not self.matrix_data:
             return
 
-        cmap = self.colormap
         log_max = math.log10(self.vmax + 1)
-
-        def color_at(t):
-            t = max(0.0, min(1.0, t))
-            pos = t * (len(cmap) - 1)
-            lo = int(pos)
-            hi = min(lo + 1, len(cmap) - 1)
-            f = pos - lo
-            c1, c2 = cmap[lo], cmap[hi]
-            rgb = tuple(int(int(c1[k : k + 2], 16) * (1 - f) + int(c2[k : k + 2], 16) * f) for k in (1, 3, 5))
-            return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
         def log_norm(value):
             if value <= 0:
@@ -155,50 +187,33 @@ class RainflowHeatmap(Graph):
         if self.x_axis_title:
             svg_text(g, x0 + gw / 2, y0 + gh + int(ph * 0.07), self.x_axis_title, 46, bold=True, fill=INK)
 
-        # Top 3 peak cells for emphasis and annotation
+        # Absolute peak cell: the one annotated, with an amber halo
         cell_values = [
-            (self.matrix_data[i][j], i, j) for i in range(nr) for j in range(nc) if self.matrix_data[i][j] > 0
+            (self.matrix_data[i][j], i, j)
+            for i in range(nr)
+            for j in range(nc)
+            if not math.isnan(self.matrix_data[i][j]) and self.matrix_data[i][j] > 0
         ]
-        cell_values.sort(reverse=True)
-        top_peaks = {(i, j) for _, i, j in cell_values[:3]}
-        peak_cell = (cell_values[0][1], cell_values[0][2]) if cell_values else None
+        peak_cell = max(cell_values)[1:] if cell_values else None
 
-        # Stagger pill vertical positions to prevent overlap when peaks share a row
-        _row_peak_cols: dict = {}
-        for _pi, _pj in top_peaks:
-            _row_peak_cols.setdefault(_pi, []).append(_pj)
-        _pill_v_off: dict = {}
-        _sv = 45.0  # stagger amount in SVG px
-        for _ri, _cs in _row_peak_cols.items():
-            _sorted = sorted(_cs)
-            _n = len(_sorted)
-            if _n == 1:
-                _pill_v_off[(_ri, _sorted[0])] = 0.0
-            elif _n == 2:
-                _pill_v_off[(_ri, _sorted[0])] = -_sv
-                _pill_v_off[(_ri, _sorted[1])] = _sv
-            else:
-                _pill_v_off[(_ri, _sorted[0])] = -_sv
-                _pill_v_off[(_ri, _sorted[1])] = 0.0
-                _pill_v_off[(_ri, _sorted[2])] = _sv
-
-        # Draw heatmap cells
+        # Draw heatmap cells; a missing value draws nothing
         for i in range(nr):
             for j in range(nc):
                 val = self.matrix_data[i][j]
+                if math.isnan(val):
+                    continue
                 cx = x0 + j * (cw + gap)
                 cy = y0 + i * (ch + gap)
                 norm = log_norm(val)
 
-                fill = PAGE_BG if norm < 0 else color_at(norm)
+                fill = PAGE_BG if norm < 0 else ramp_color(SEQ_FIELDS, norm)
                 stroke = INK_MUTED if norm < 0 else "none"
                 sw = "0.5"
 
-                # Amber glow halo on absolute peak cell — Imprint amber (#DDCC77)
                 if (i, j) == peak_cell:
                     glow = self.svg.node(g, "rect", x=cx - 4, y=cy - 4, width=cw + 8, height=ch + 8, rx=5, ry=5)
                     glow.set("fill", "none")
-                    glow.set("stroke", "#DDCC77")
+                    glow.set("stroke", AMBER)
                     glow.set("stroke-width", "5")
                     glow.set("opacity", "0.7")
                     stroke = INK
@@ -209,17 +224,14 @@ class RainflowHeatmap(Graph):
                 rect.set("stroke", stroke)
                 rect.set("stroke-width", sw)
 
-                # Annotate top 3 peaks with a background pill for legibility
-                if (i, j) in top_peaks:
-                    v_off = _pill_v_off.get((i, j), 0.0)
+                # Peak value on a page-colored pill so it reads on any cell color
+                if (i, j) == peak_cell:
                     txt = f"{int(val):,}"
                     sz = min(int(ch * 0.36), 30)
-                    ink_color = "#ffffff" if norm > 0.45 else INK
-
                     pill_w = len(txt) * sz * 0.6 + 14
                     pill_h = sz + 10
                     pill_cx = cx + cw / 2
-                    pill_cy = cy + ch / 2 + v_off
+                    pill_cy = cy + ch / 2
                     pill = self.svg.node(
                         g,
                         "rect",
@@ -230,10 +242,9 @@ class RainflowHeatmap(Graph):
                         rx=pill_h / 2,
                         ry=pill_h / 2,
                     )
-                    pill.set("fill", "#000000" if norm > 0.45 else PAGE_BG)
-                    pill.set("fill-opacity", "0.3" if norm > 0.45 else "0.75")
-
-                    svg_text(g, pill_cx, pill_cy + sz * 0.35, txt, sz, fill=ink_color, bold=True)
+                    pill.set("fill", PAGE_BG)
+                    pill.set("fill-opacity", "0.9")
+                    svg_text(g, pill_cx, pill_cy + sz * 0.35, txt, sz, fill=INK, bold=True)
 
         # Smooth gradient colorbar (120-segment approximation)
         cb_w = int(pw * 0.016)
@@ -245,7 +256,9 @@ class RainflowHeatmap(Graph):
 
         for si in range(n_seg):
             t = 1 - si / (n_seg - 1)
-            self.svg.node(g, "rect", x=cb_x, y=cb_y + si * seg_h, width=cb_w, height=seg_h + 1, fill=color_at(t))
+            self.svg.node(
+                g, "rect", x=cb_x, y=cb_y + si * seg_h, width=cb_w, height=seg_h + 1, fill=ramp_color(SEQ_FIELDS, t)
+            )
 
         # Colorbar border
         border = self.svg.node(g, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, rx=3, ry=3)
@@ -254,7 +267,7 @@ class RainflowHeatmap(Graph):
         border.set("stroke-width", "1.5")
 
         # Colorbar ticks (log scale: 0, 1, 10, 100, 1000, ...)
-        max_pow = int(math.log10(self.vmax)) if self.vmax > 0 else 0
+        max_pow = int(math.log10(self.vmax)) if self.vmax >= 1 else 0
         for tv in [0] + [10**p for p in range(max_pow + 1)]:
             t = 0 if tv == 0 else math.log10(tv + 1) / log_max
             ty = cb_y + cb_h * (1 - t)
@@ -273,45 +286,17 @@ class RainflowHeatmap(Graph):
         self._box.ymin, self._box.ymax = 0, nr
 
 
-# Data: wind turbine blade root fatigue loading (variable-amplitude spectrum)
-np.random.seed(42)
-
-n_amp_bins = 20
-n_mean_bins = 20
-
-amp_edges = np.linspace(0, 200, n_amp_bins + 1)
-mean_edges = np.linspace(-50, 250, n_mean_bins + 1)
-amp_centers = (amp_edges[:-1] + amp_edges[1:]) / 2
-mean_centers = (mean_edges[:-1] + mean_edges[1:]) / 2
-
-counts = np.zeros((n_amp_bins, n_mean_bins))
-for i in range(n_amp_bins):
-    for j in range(n_mean_bins):
-        amp, mean_val = amp_centers[i], mean_centers[j]
-        primary = np.exp(-amp / 28) * np.exp(-((mean_val - 100) ** 2) / (2 * 55**2))
-        vibration = 0.5 * np.exp(-amp / 10) * np.exp(-((mean_val - 55) ** 2) / (2 * 20**2))
-        base = 9000 * (primary + vibration) * (1 + 0.2 * np.random.randn())
-        if amp + abs(mean_val - 100) > 220 or base < 2:
-            counts[i][j] = 0
-        else:
-            counts[i][j] = int(round(max(0, base)))
-
-# Flip so high amplitude is at top (fatigue matrix y-axis convention)
-matrix = counts[::-1].tolist()
-vmax = int(np.max(counts))
-
-# Imprint palette for Style — first series is brand green
-IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
-
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT_PALETTE,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -325,9 +310,8 @@ chart = RainflowHeatmap(
     title="heatmap-rainflow · python · pygal · anyplot.ai",
     subtitle_text="Wind Turbine Blade Root — Variable Amplitude Fatigue Spectrum",
     matrix_data=matrix,
-    row_labels=[f"{v:.0f}" for v in amp_centers[::-1]],
-    col_labels=[f"{v:.0f}" for v in mean_centers],
-    colormap=IMPRINT_SEQ,
+    row_labels=[f"{v:.0f}" for v in table.index],
+    col_labels=[f"{v:.0f}" for v in table.columns],
     vmax=vmax,
     show_legend=False,
     margin=80,
@@ -335,9 +319,9 @@ chart = RainflowHeatmap(
     margin_bottom=60,
     show_x_labels=False,
     show_y_labels=False,
-    x_axis_title="Mean Stress (MPa)",
-    y_axis_title="Stress Amplitude (MPa)",
-    colorbar_title="Cycle Count",
+    x_axis_title=MEAN,
+    y_axis_title=AMPLITUDE,
+    colorbar_title=COUNT,
     explicit_size=True,
     pretty_print=True,
 )
