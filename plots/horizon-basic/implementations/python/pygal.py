@@ -1,7 +1,7 @@
 """ anyplot.ai
 horizon-basic: Horizon Chart
-Library: pygal 3.1.3 | Python 3.13.15
-Quality: 93/100 | Updated: 2026-08-18
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-28
 """
 
 import os
@@ -50,10 +50,10 @@ def _lerp_hex(c0, c1, t):
 
 
 class HorizonChart(Graph):
-    """Custom Horizon Chart for pygal — folds signed deviations into
-    imprint_div color bands. Pygal has no native horizon chart type, so this
-    subclasses Graph and draws directly onto the SVG canvas (the documented
-    pygal mechanism for a chart type outside the stock catalog)."""
+    """Horizon chart: folds signed deviations into imprint_div bands.
+
+    pygal has no native horizon type, so this subclasses Graph and draws SVG.
+    """
 
     def __init__(self, *args, **kwargs):
         self.series_data = kwargs.pop("series_data", {})
@@ -81,7 +81,7 @@ class HorizonChart(Graph):
         margin_left = 520
         margin_right = 50
         margin_top = 140
-        margin_bottom = 130
+        margin_bottom = 160
 
         available_width = plot_width - margin_left - margin_right
         available_height = plot_height - margin_top - margin_bottom
@@ -100,7 +100,7 @@ class HorizonChart(Graph):
         # Global min/max drives the fold — every row shares one scale so
         # band color intensity is comparable sector-to-sector.
         all_values = [v for values in self.series_data.values() for v in values]
-        global_max = max(abs(v) for v in all_values)
+        global_max = np.nanmax(np.abs(all_values))
         band_size = global_max / self.n_bands
 
         label_font_size = min(34, int(actual_row_height * 0.34))
@@ -129,6 +129,8 @@ class HorizonChart(Graph):
             # Horizon bands, one folded stack per time point
             for j, value in enumerate(values):
                 cell_x = x_offset + j * cell_width
+                if np.isnan(value):
+                    continue
                 is_positive = value >= 0
                 remaining = abs(value)
 
@@ -167,11 +169,11 @@ class HorizonChart(Graph):
             line.set("stroke-dasharray", "4,4")
 
         # X-axis tick labels
-        x_label_font_size = 30
+        x_label_font_size = 40
         label_interval = max(1, n_points // 12)
         for j in range(0, n_points, label_interval):
             label_x = x_offset + j * cell_width + cell_width / 2
-            label_y = y_offset + n_series * row_height + 42
+            label_y = y_offset + n_series * row_height + 50
 
             text_node = self.svg.node(horizon_group, "text", x=label_x, y=label_y)
             text_node.set("text-anchor", "middle")
@@ -182,12 +184,12 @@ class HorizonChart(Graph):
         # X-axis title
         x_title_font_size = 40
         text_node = self.svg.node(
-            horizon_group, "text", x=x_offset + available_width / 2, y=y_offset + n_series * row_height + 95
+            horizon_group, "text", x=x_offset + available_width / 2, y=y_offset + n_series * row_height + 115
         )
         text_node.set("text-anchor", "middle")
         text_node.set("fill", INK_SOFT)
         text_node.set("style", f"font-size:{x_title_font_size}px;font-weight:600;font-family:sans-serif")
-        text_node.text = "Trading Day (2024)"
+        text_node.text = DAY
 
         # Diverging color-scale legend (imprint_div): a single compact strip
         # from full red (strong underperformance) through the neutral
@@ -243,18 +245,21 @@ class HorizonChart(Graph):
         self._box.ymax = n_series
 
 
-# Data: cumulative sector performance vs. a market benchmark over one
-# trading quarter (realistic, non-controversial finance scenario; a
-# different time window and domain than the sibling 24h/seed-42 server
-# metrics used elsewhere in the catalog).
+# Imprint palette: all eight positions, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+N_BANDS = 3  # folded bands per polarity
+
+# Columns: set these to your table's column names
+DAY = "Trading day (2024)"  # role: date
+EXCESS = "Excess return vs benchmark (pp)"  # role: value
+SECTOR = "Sector"  # role: series
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sectors.csv")
 np.random.seed(42)
-
 trading_days = pd.bdate_range("2024-01-02", periods=126)
-time_labels = [d.strftime("%b %d") for d in trading_days]
-n_points = len(time_labels)
-
-# (sector, daily drift pp, daily volatility pp) — each sector's cumulative
-# excess return vs. the benchmark is a drifted random walk.
+# (sector, daily drift pp, daily volatility pp): cumulative excess return is a drifted random walk
 sector_params = [
     ("Technology", 0.14, 1.3),
     ("Consumer Discretionary", 0.09, 1.1),
@@ -265,22 +270,33 @@ sector_params = [
     ("Real Estate", -0.06, 1.0),
     ("Energy", -0.08, 1.4),
 ]
+df = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                DAY: trading_days,
+                EXCESS: np.cumsum(np.random.normal(drift, volatility, len(trading_days))),
+                SECTOR: sector,
+            }
+        )
+        for sector, drift, volatility in sector_params
+    ],
+    ignore_index=True,
+)
 
-sector_returns = {}
-for sector_name, drift, volatility in sector_params:
-    daily_excess_return = np.random.normal(drift, volatility, n_points)
-    sector_returns[sector_name] = np.cumsum(daily_excess_return).tolist()
+# Plot
+table = df.pivot_table(index=DAY, columns=SECTOR, values=EXCESS, sort=False)
+time_labels = [d.strftime("%b %d") for d in table.index]
 
-# Rank rows by final cumulative excess return (best performer on top) so the
-# chart reads as a leaderboard — a clearer focal point than declaration order.
-sector_returns = dict(sorted(sector_returns.items(), key=lambda kv: kv[1][-1], reverse=True))
+# Rank rows by final cumulative excess return (best performer on top)
+ranked = table.ffill().iloc[-1].sort_values(ascending=False).index
+sector_returns = {sector: table[sector].tolist() for sector in ranked}
 
-n_bands = 3
-pos_colors = [_lerp_hex(DIV_MIDPOINT, DIV_POSITIVE, (i + 1) / n_bands) for i in range(n_bands)]
-neg_colors = [_lerp_hex(DIV_MIDPOINT, DIV_NEGATIVE, (i + 1) / n_bands) for i in range(n_bands)]
+# Band colors: from a visible first step (never the bare page color) to the full endpoint
+pos_colors = [_lerp_hex(DIV_MIDPOINT, DIV_POSITIVE, 0.4 + 0.6 * i / max(1, N_BANDS - 1)) for i in range(N_BANDS)]
+neg_colors = [_lerp_hex(DIV_MIDPOINT, DIV_NEGATIVE, 0.4 + 0.6 * i / max(1, N_BANDS - 1)) for i in range(N_BANDS)]
 
-# Title — scale fontsize down if the descriptive prefix pushes past the
-# 67-char baseline the style guide's default (66) is tuned for.
+# Title: scale fontsize down if the descriptive prefix pushes past the 67-char baseline
 title = "Sector Performance vs Benchmark · horizon-basic · python · pygal · anyplot.ai"
 title_font_size = round(66 * min(1.0, 67 / len(title)))
 
@@ -290,7 +306,9 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(DIV_POSITIVE,),
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
+    colors=IMPRINT_PALETTE,
     title_font_size=title_font_size,
     legend_font_size=44,
     label_font_size=56,
@@ -306,7 +324,7 @@ chart = HorizonChart(
     title=title,
     series_data=sector_returns,
     time_labels=time_labels,
-    n_bands=n_bands,
+    n_bands=N_BANDS,
     pos_colors=pos_colors,
     neg_colors=neg_colors,
     show_legend=False,
