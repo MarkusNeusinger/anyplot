@@ -2,132 +2,138 @@ library: pygal
 language: python
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T13:50:55Z'
-updated: '2026-05-30T11:27:19Z'
+updated: '2026-11-28T00:51:22Z'
 generated_by: claude-sonnet
-workflow_run: 26681930034
+workflow_run: 46089533088
 issue: 4431
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 77
 review:
   strengths:
-  - Sophisticated custom Graph subclass hooks into pygal rendering pipeline via _plot
-    override, demonstrating deep internal API knowledge
-  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) applied as a manually-interpolated
-    LUT for the continuous escape-time data'
-  - Full theme adaptation with INK/INK_SOFT/INK_MUTED tokens applied to all SVG text
-    nodes, both renders pass legibility checks
-  - Smooth coloring via log-normalized iteration count eliminates discrete banding
-    at the fractal boundary
-  - Mathematical formula subtitle in italic serif, Im=0 reference hairline, and Period-2
-    bulb annotation add genuine storytelling value
-  - Deterministic 1400×1000 Mandelbrot computation with bailout=256 smooth coloring
-    formula is correct and produces clean fractal detail
+  - Correct imprint_seq fields ramp per theme (mint → green → deep blue → violet light;
+    olive → green → pale blue dark) sampled through np.interp into a 1024-entry LUT
+  - Smooth normalized-iteration coloring with bailout 256 removes stepped bands; log
+    scaling puts the color change onto the boundary
+  - Equal Re/Im scale computed from the ranges, so the set is not stretched; coordinate
+    ticks with i suffix on the imaginary axis
+  - Vectorized NumPy escape-time iteration over a 1400×1000 grid resolves filaments
+    and minibrots cleanly
+  - Theme tokens threaded to every text node; both renders fully readable
   weaknesses:
-  - 'In-set legend swatch (filled #000000 rect) is nearly invisible in dark render
-    because fill matches the #1A1A17 background — use a contrasting outline color
-    or switch fill to a theme-visible dark tone like #2A2A27 on dark'
-  - X-axis and Y-axis tick labels are manually drawn at 34px SVG units; style guide
-    recommends 44px for pygal tick labels — increase to improve mobile readability
+  - 'VQ-01 (both): colorbar tick labels at 34 px, the ''In set'' legend label at 32
+    px and the ''Im = 0'' / ''Period-2 bulb'' annotations at 25 px sit below the 44
+    px legend and 36 px value references beside 44 px ticks → colorbar ticks and legend
+    44 px (+10/+12 px), annotations 36 px (+11 px). Likely cause: hard-coded font-size
+    values in the colorbar, legend and annotation svg.node calls.'
+  - 'VQ-05 (both): the 1.4:1 complex-plane field fills only about the middle 55 %
+    of the 2400×2400 canvas height, with empty bands of roughly 330 px above and 480
+    px below → use the 3200×1800 landscape canvas so the equal-scale field fills it.
+    Likely cause: width=2400, height=2400 with the aspect-preserving plot_h.'
+  - 'CQ-01 (code): line 93 `def _draw_heatmap_overlay(self)` holds the whole drawing
+    (image, axes, ticks, colorbar, legend) and runs as the `_plot` method of the `_HeatmapGraph`
+    class at line 291 → draw at the top level and drop the class. Likely cause: hooking
+    the drawing into pygal''s Graph pipeline.'
+  - 'LM-01 (code): pygal itself draws nothing: `_HeatmapGraph` stubs the private `_compute*`
+    methods with lambdas and every axis, tick and legend is hand-written `svg.node`
+    → keep to pygal''s public chart API for chrome where it can, and do not override
+    private Graph internals. Likely cause: forcing a raster heatmap through pygal''s
+    private rendering pipeline.'
+  - 'Suggestion: the Im = 0 hairline label could move to the right edge, away from
+    the -2.5 tick column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, clearly not pure white.
-      Chrome: Title "heatmap-mandelbrot · python · pygal · anyplot.ai" in dark ink (~66px) spans ~70% of canvas width — proportional and unclipped. Subtitle "zₙ₊₁ = zₙ² + c · escape time, smooth coloring" in italic serif above the plot. Y-axis title "Imaginary Axis (Im)" rotated 90°, X-axis title "Real Axis (Re)" — both in bold dark ink at ~44px, balanced. Tick labels in INK_SOFT (#4A4A44) at 34px — readable but slightly below recommended 44px. "Iterations" colorbar label at top-right in bold ink, with tick values 5/10/25/50/100 in INK_SOFT. "In set" black swatch with label in INK_SOFT visible against off-white margin.
-      Data: Exterior colored with Imprint sequential colormap #009E73 (bright green, fast-escape regions) → #4467A3 (blue, slow-escape regions near boundary). Interior (convergent set) is solid black. Gradient variation visible at the fractal boundary. Cardioid and period-2 bulb clearly identifiable. Period-2 bulb annotation with leader line and Im=0 dashed reference hairline present and readable.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "heatmap-mandelbrot · python · pygal · anyplot.ai" in dark ink at the top; italic serif formula subtitle above the plot frame; "Real Axis (Re)" and "Imaginary Axis (Im)" bold dark; ticks at 44 px in INK_SOFT; "Iterations" colorbar at right with log-placed ticks 5-100; "In set" black swatch with ink outline below. Wide empty bands above and below the 1.4:1 field. All text readable.
+      Data: exterior on imprint_seq fields light stops — pale mint far from the set, through brand green to deep blue/violet at the boundary; interior solid black. Cardioid, period-2 bulb, secondary bulbs, filaments and the antenna to -2 are clearly resolved. Im = 0 dashed hairline and "Period-2 bulb" annotation (small text).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, clearly not pure black.
-      Chrome: Title and subtitle in light ink (#F0EFE8) — clearly readable against dark background. Axis titles and tick labels in INK_SOFT (#B8B7B0) — readable against dark background. Colorbar "Iterations" label and tick values in light ink. Period-2 bulb annotation and Im=0 label use INK (#F0EFE8) — readable against the green heatmap background.
-      Data: Data colors IDENTICAL to light render — same green (#009E73) → blue (#4467A3) exterior gradient, same black interior. Only chrome flips. Minor issue: "In set" legend swatch is filled #000000 — nearly invisible against the #1A1A17 background; the INK_SOFT stroke outline provides minimal visual separation. Text label "In set" remains readable.
-      Legibility verdict: PASS with minor note — all primary text readable; "In set" swatch has very low contrast in dark mode but text is still visible.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles and ticks in light tokens, all readable; no dark-on-dark text. Colorbar frame and ticks light.
+      Data: imprint_seq fields dark stops — dark olive far exterior, brand green mid, pale blue at the boundary, so the filaments glow; interior black, clearly apart from the exterior. "In set" swatch has a visible 3 px light outline.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title/axis labels/colorbar labels
-          well-proportioned in both themes. Minor deduction: manual tick labels at
-          34px SVG vs recommended 44px.'
+        comment: Ticks and axis titles at the 44 px reference; colorbar ticks (34
+          px), 'In set' legend (32 px) and the two annotations (25 px) are below the
+          44 px legend / 36 px value references (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap anywhere — annotations positioned in open exterior
-          space.
+        comment: No text collides with text or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Fractal and colorbar clearly visible. Minor deduction: In-set legend
-          swatch (black fill) is near-invisible against #1A1A17 dark background.'
+        comment: Fractal, filaments and colorbar clear; 'In set' swatch has a 3 px
+          ink outline visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is CVD-safe; black interior vs green
-          exterior provides high contrast.
+        comment: Lightness-monotonic ramp, black interior apart from every exterior
+          color
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 2400×2400 square canvas appropriate for symmetric fractal. Canvas
-          gate passed. Good proportions and margins.
+        passed: false
+        comment: 1.4:1 plot on a square canvas leaves wide empty bands above and below
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (Re) and Imaginary Axis (Im) are descriptive with mathematical
-          notation.
+        comment: Real Axis (Re) / Imaginary Axis (Im), colorbar 'Iterations'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential (#009E73 → #4467A3) for continuous escape-time
-          data. Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across
-          themes.'
+        comment: imprint_seq fields stops per theme, correct page backgrounds
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: mathematical formula subtitle in italic serif, custom
-          SVG rendering pipeline, Period-2 bulb annotation with leader line, intentional
-          visual hierarchy. Exterior gradient inherently subtle but correct.'
+        comment: Italic serif formula subtitle under the title adds a typographic
+          hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: No default grid, custom tick rendering, plot border stroke, clean
-          margins. Above default of 2.
+        passed: false
+        comment: Custom outward tick marks, framed plot and colorbar, no grid chosen
+          for an image field
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Im=0 hairline, Period-2 bulb annotation, and mathematical formula
-          subtitle guide interpretation of the fractal structure. Clearly above default
-          of 2.
+        passed: false
+        comment: Log-scaled iteration mapping puts the color variation onto the boundary,
+          which becomes the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +143,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mandelbrot fractal heatmap visualization.
+        comment: Escape-time Mandelbrot heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: escape-time coloring, smooth coloring,
-          cardioid+period-2 bulb visible, axis labels, black interior, aspect ratio
-          preserved.'
+        comment: Smooth coloring, black interior, full set with bulbs and filaments
+          (C1), equal axis scale (C4), 1400×1000 grid (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x range -2.5..1.0, y range -1.25..1.25. Axes labeled with
-          coordinate values.
+        comment: Re -2.5..1.0, Im -1.25..1.25 at equal scale; readable colorbar ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-mandelbrot · python · pygal · anyplot.ai' correct.
-          In-set legend and Iterations colorbar label present.
+        comment: Mandated title; colorbar and 'In set' key
     data_quality:
       score: 15
       max: 15
@@ -169,84 +172,83 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: High-resolution 1400×1000 computation, smooth coloring via bailout=256
-          log normalization, full domain coverage.
+        comment: Cardioid, period-2 bulb, secondary bulbs, filaments, antenna to -2
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard Mandelbrot parameters; neutral mathematical/educational
-          content.
+        comment: Standard mathematical parameters, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: max_iter=200 (above spec default of 100 for greater detail), standard
-          complex plane domain.
+        comment: 'Checked: spec default ranges on both axes, max_iter 200 >= 100,
+          grid 1400×1000 >= 800×600'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Function and minimal class are necessary for pygal pipeline integration;
-          overall structure is as KISS as possible for this approach.
+        passed: false
+        comment: The whole drawing sits in _draw_heatmap_overlay, run as the _plot
+          method of a Graph subclass (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mandelbrot computation is fully deterministic.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (base64, os, sys, BytesIO, Path, numpy, PIL, pygal) are
-          used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Code is clean, Pythonic, and appropriate for the complexity.
+        comment: Vectorized escape-time loop, np.interp LUT
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 9
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: 'Expert use of pygal internals: Graph subclass, _plot override, svg.node()
-          API, Style object, render_to_png/render().'
+        passed: false
+        comment: 'pygal draws nothing: a Graph subclass stubs the private _compute*
+          methods and every element is hand-written svg.node (defect line)'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Custom Graph subclass integrating rasterized data-URI image into
-          pygal's SVG pipeline is genuinely pygal-distinctive. Interactive HTML export
-          via render().
+        passed: false
+        comment: Nothing beyond the mandated Style and render_to_png
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-28T00:47:42Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - colorbar
   - annotations
+  - custom-legend
   - html-export
   patterns:
   - data-generation
@@ -255,3 +257,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - minimal-chrome
