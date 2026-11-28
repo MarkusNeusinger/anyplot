@@ -2,51 +2,47 @@ library: bokeh
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:42Z'
-updated: '2026-06-02T03:35:17Z'
+updated: '2026-11-28T02:06:19Z'
 generated_by: claude-sonnet
-workflow_run: 26796257317
+workflow_run: 46095608363
 issue: 4426
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/bokeh/plot-dark.html
-quality_score: 93
+quality_score: 87
 review:
   strengths:
-  - 'Complete spec implementation: all four required features (daily stacked bars,
-    case classification, intervention lines, cumulative secondary axis) present and
-    correct.'
-  - Excellent Imprint palette usage with semantically appropriate color assignment
-    — matte red (#AE3030) for 'source' event matches the error-anchor role, INK_SOFT
-    for 'intervention' correctly uses a neutral tone.
-  - Idiomatic Bokeh API usage throughout (vbar_stack, Span, extra_y_ranges, HoverTool)
-    with genuine interactive HTML artifact.
-  - Clean, reproducible code with correct min_border_* reservations preventing axis
-    label clipping.
-  - Both themes pass legibility — chrome fully adaptive, data colors identical across
-    renders.
+  - vbar_stack over one ColumnDataSource stacks Confirmed/Probable/Suspect in the
+    same order in every daily bin, with the bin width derived from the data so bars
+    sit edge to edge
+  - Cumulative burden on its own labeled secondary axis (extra_y_ranges + LinearAxis),
+    drawn as a muted ink line that cannot be mistaken for the daily counts and stays
+    clear of the legend
+  - Intervention events as dashed Spans with bold Labels, the source event in matte
+    red and the response in neutral ink, visible in both themes
+  - 'Theme chrome threaded through every element: both renders readable, data colors
+    identical across themes'
+  - HoverTool in vline mode shows date, daily total and running cumulative in the
+    HTML artifact
   weaknesses:
-  - 'DE-03 storytelling could be strengthened: the chart lacks an annotation of the
-    peak case count or a label for the outbreak pattern type (e.g., ''Point-source
-    + propagated wave'' caption).'
-  - DE-01 is held from 8 by annotation labels (28pt bold) being slightly heavy relative
-    to the overall composition — reducing to 22pt would improve polish.
-  - 'LM-02 minor gap: the CDP viewport override is a technical workaround rather than
-    a Bokeh visualization feature; a BoxAnnotation or Band for the inter-wave period
-    would be a more Bokeh-native storytelling enhancement.'
+  - 'Suggestion: a slightly heavier cumulative line (line_width about 4–5) would give
+    the secondary series more presence at full canvas size.'
+  - 'Suggestion: concrete event labels (for example the implicated venue closed) would
+    tell more than the generic ''Intervention Began''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "histogram-epidemic · python · bokeh · anyplot.ai" in bold dark ink (~60% width). Left y-axis label "New Cases (per day)" and x-axis label "Date of Symptom Onset" in dark ink, italic. Right y-axis label "Cumulative Cases" rotated vertical, dark ink. Tick labels (Jan 15, Feb 01, Feb 15, etc.; 20/40/60/80 on left; 200/400/600/800/1000/1200 on right) in INK_SOFT. All text clearly readable against the light background.
-      Data: Stacked bars — Confirmed (#009E73 brand green, first series), Probable (#C475FD lavender), Suspect (#4467A3 blue). Primary wave peaks ~Jan 28 at ~75 cases; secondary wave peaks ~Feb 20 at ~39 cases. Two dashed vertical lines: red (#AE3030) for "Source Identified" (~Jan 27), gray (INK_SOFT) for "Intervention Began" (~Feb 05). Thin dark cumulative burden line on secondary y-axis, reaching 1,126 total.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold title 'histogram-epidemic · python · bokeh · anyplot.ai' at about 55 % width; italic axis titles 'Date of symptom onset', 'New cases (per day)', 'Cumulative cases' (right); date ticks Jan 15 … Apr 15 with 2024, count ticks 0–80, cumulative ticks 0–1,500; legend panel titled 'Case classification' top right. All dark text, readable.
+      Data: 90 adjacent daily stacked bars, Confirmed #009E73 (first), Probable #C475FD, Suspect #4467A3, separated by a page-colored hairline; first wave peaks at 74 around Jan 26, second wave about 39 around Feb 22, thin tail into April. Red dashed line 'Source Identified' (Jan 27) and grey dashed 'Intervention Began' (Feb 05). Muted dark cumulative line rising to 1,126, flattening at mid-height, clear of the legend.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
-      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis labels in near-white, readable. Tick labels in #B8B7B0 (soft gray), readable. Legend box uses elevated dark fill #242420 with light text. "Intervention Began" annotation in #B8B7B0 is readable against dark background. No dark-on-dark failures detected.
-      Data: Confirmed (#009E73), Probable (#C475FD), Suspect (#4467A3) — identical colors to light render, only chrome flipped. Cumulative line now renders as light cream (#F0EFE8), clearly visible on dark surface.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in near-white, ticks in soft grey, legend on elevated #242420 panel with light text; no dark-on-dark text.
+      Data: identical categorical colors to the light render; bar hairlines in the dark page color; cumulative line in light ink; red and grey event lines and labels visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,73 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set (50pt title, 42pt axis labels, 34pt ticks).
-          Well-proportioned, readable in both themes.
+        comment: Title 50pt, axis labels 42pt, ticks 34pt, legend 34pt, event labels
+          28pt bold; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions.
+        comment: No text collisions; the cumulative line stays clear of the legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars, intervention lines, and cumulative line all clearly
-          visible.
+        comment: Stacked bars, both dashed event lines and the cumulative line visible
+          on both surfaces; legend swatches match the bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Stacking provides additional disambiguation.
+        comment: Imprint green/lavender/blue are CVD-distinguishable; stacking order
+          adds a second cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins (min_border_* explicitly set),
-          no clipping.
+        comment: 3200x1800, plot fills the canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: New Cases (per day), Date of Symptom Onset, Cumulative Cases — all
-          descriptive with units.
+        comment: Descriptive axis titles with unit (per day) on both y-axes and the
+          date axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Confirmed=#009E73, Probable=#C475FD, Suspect=#4467A3. Backgrounds
-          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
+        comment: 'Confirmed #009E73, Probable #C475FD, Suspect #4467A3; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design above defaults: Imprint palette, explicit typography,
-          styled legend, semantic intervention colors. Not quite publication-ready.'
+        comment: Semantic color choice for events (matte red for the source, neutral
+          ink for the response) and an elevated legend panel lift it above the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Figure outline removed, x-grid hidden, y-grid subtle (15% alpha),
-          minor ticks suppressed, generous whitespace.
+        comment: Bars separated by a page-colored hairline, x-grid dropped for a date
+          axis, minor ticks removed on both y-axes
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Two-wave epidemic shape is clear focal point, intervention markers
-          contextualize response. No peak annotation reduces immediate narrative impact.
+        comment: Red source event versus neutral intervention gives a focal hierarchy;
+          outbreak total surfaced in the legend entry
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct epi curve as stacked histogram with daily bins.
+        comment: Stacked epidemic curve on a date axis with daily bins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Daily bins, stacked case classification bars, annotated vertical
-          intervention lines, cumulative secondary y-axis — all present.
+        comment: 'Daily adjacent bins, stacked classification with legend, annotated
+          event lines, cumulative line on a labeled secondary axis: all Notes and
+          C1-C5 met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=onset date, Y-left=new cases/day, Y-right=cumulative cases. All
-          correct.
+        comment: Onset date on x, daily counts from zero on the left axis, cumulative
+          on the right; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. Legend labels Confirmed/Probable/Suspect/Cumulative
-          are correct.
+        comment: Title in the required format; legend names every case class and the
+          cumulative line
     data_quality:
       score: 15
       max: 15
@@ -165,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates point-source primary wave, propagated secondary wave,
-          and endemic tail — all three canonical epi curve shapes.
+        comment: Point-source peak, propagated second wave, long thin tail, empty
+          days, three classes, two events
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Foodborne illness outbreak with confirmed/probable/suspect classifications
-          — neutral, real-world epidemiological scenario.
+        comment: Neutral foodborne-style outbreak with confirmed/probable/suspect
+          classification
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~75 cases/day, 90-day duration, 1,126 cumulative cases — consistent
-          with a moderate foodborne outbreak.
+        comment: 'Peak about 74 cases/day, 90 days, 1,126 cumulative cases: plausible
+          for a moderate outbreak; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -190,54 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes.
+        comment: Imports, Data, Plot, Save top to bottom; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. sys.path fix is legitimate workaround. PIL resize
-          is reasonable safety net. HoverTool is genuine interactivity.
+        comment: pivot_table plus cumsum, bin width derived from the data; no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly via canonical
-          Selenium approach.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via the Selenium pattern;
+          Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: vbar_stack, ColumnDataSource, HoverTool mode=vline, Span, extra_y_ranges,
-          LinearAxis, LegendItem, NumeralTickFormatter — comprehensive idiomatic Bokeh
-          API.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'vbar_stack (non-trivial to replicate elsewhere), HoverTool with
-          vline mode, Span overlay lines, dual y-axis via extra_y_ranges. Minor deduction:
-          CDP override is infrastructure, not a Bokeh viz feature.'
+        comment: vbar_stack over a ColumnDataSource, extra_y_ranges with a second
+          LinearAxis, Span and Label layouts
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: HoverTool in vline mode reporting daily total and running cumulative
+          in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-28T02:02:54Z'
 impl_tags:
   dependencies:
   - selenium
@@ -251,10 +249,10 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
+  - long-to-wide
   dataprep:
-  - time-series
   - cumulative-sum
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
