@@ -170,11 +170,16 @@ def scan_side(code: str, *, spec_id: str, library: str) -> dict:
     ``findings`` counts how often each SECURITY rule fires. The verdict compares keys only, so a rule that fires
     more often than before is no regression; the count is in the record for whoever reads it later.
     """
-    return _scan(code, spec_id=spec_id, library=library).side
+    return _scan(code, spec_id=spec_id, library=library, with_lines=False).side
 
 
-def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
-    """``scan_side`` with the reasons the session's check prints; the record and the check share this one path."""
+def _scan(code: str, *, spec_id: str, library: str, with_lines: bool = True) -> _Scan:
+    """``scan_side`` with the reasons the session's check prints; the record and the check share this one path.
+
+    ``with_lines`` maps the reasons' line numbers back to the scanned file, which only the session's check prints.
+    The map is a sequence match whose time grows with the square of repeated lines, so the record, which keeps
+    no reason, skips it: a long refused file must not time the review's own scan out.
+    """
     normalise_module, readiness, validate, spec_roles, utils = _validator()
     if library not in normalise_module.SUPPORTED_LIBRARIES:
         return _Scan(_side("unsupported"))
@@ -193,8 +198,10 @@ def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
     # The validator read the normalised text; the session edits the file as it wrote it. Two steps, because a
     # line whose noqa comment was stripped no longer matches its original, and a run of such lines beside a
     # removed guard would map as one replaced region.
-    to_stripped, to_code = utils.line_map(stripped, normalised), utils.line_map(code, stripped)
-    lines = {line: to_code.get(middle, middle) for line, middle in to_stripped.items()}
+    lines: dict[int, int] = {}
+    if with_lines:
+        to_stripped, to_code = utils.line_map(stripped, normalised), utils.line_map(code, stripped)
+        lines = {line: to_code.get(middle, middle) for line, middle in to_stripped.items()}
     keys = categories - {"map-spec", "security"}
     reasons = [
         _relined(reason, lines)

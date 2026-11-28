@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Read a staged readiness record against the code under review (rule step P2b).
+"""Read a readiness record against the code under review (rule step P2b).
 
-``impl-generate.yml`` and ``impl-repair.yml`` stage ``adapt/readiness.json``,
-the record of ``readiness_scan.py``: what the agent chat's validator refuses in
-the new implementation and in its predecessor. ``impl-review.yml`` reads it
-here before anything keys a decision on it:
+A record of ``readiness_scan.py`` says what the agent chat's validator refuses
+in the new implementation and in its predecessor. ``impl-review.yml`` scans
+both itself in its "Readiness check" step, before any model session of that
+job, and reads its own record here; only when that scan cannot run does it read
+the record ``impl-generate.yml`` or ``impl-repair.yml`` staged
+(``adapt/readiness.json``). Either way the record is read here before anything
+keys a decision on it:
 
 - The record must be the scanner's: its version, this pair, identifiers only.
 - It must be about this code: ``new_sha256`` is the code hash of the
@@ -33,12 +36,12 @@ removed, CQ-01 up), never on the verdict alone. Every other status leaves the
 pipeline as it is, so a lost upload, a push after the scan or a scan that
 could not run never refuses anything.
 
-What the checks do not cover: the record's refusal keys themselves. They come
-from the generate or repair runner, where a model session had a shell, so a
-forged record can hide a regression or claim one. Claiming one only keeps the
-live implementation, and hiding one is where the pipeline stood before this
-check. A reader that does not trust that runner would have to run the
-validator in impl-review itself::
+What the checks do not cover: a record's refusal keys themselves. That is why
+impl-review scans for itself: a staged record comes from the generate or repair
+runner, where a model session had a shell, so a forged one could hide a
+regression or claim a gain. When impl-review falls back to it, the step drops
+a ``none`` verdict, so the staged record can still keep the live
+implementation but never let a new one in. The call::
 
     readiness_record.py check --record adapt/readiness.json --new IMPL_AT_HEAD --prev IMPL_ON_MAIN \\
         --spec-id S --library B [--out VERDICT.json]
@@ -286,13 +289,25 @@ def _append(env_var: str, text: str) -> None:
             handle.write(text)
 
 
+# A scan of this code that started and did not finish (a crash, a timeout) is something the code can cause, so it
+# reads as a refusal the predecessor did not have: the live implementation stays.
+SCAN_FAILED_KEY = "error:scan-failed"
+
+
 def cmd_check(args: argparse.Namespace) -> int:
-    verdict = check(
-        args.record, spec_id=args.spec_id, library=args.library, head=_bytes(args.new), main=_bytes(args.prev)
-    )
+    if args.scan_failed:
+        verdict = Verdict(REGRESSION, new="error", prev=NO_SIDE, added=(SCAN_FAILED_KEY,))
+    else:
+        verdict = check(
+            args.record, spec_id=args.spec_id, library=args.library, head=_bytes(args.new), main=_bytes(args.prev)
+        )
     print(log_line(verdict, spec_id=args.spec_id, library=args.library))
     _append("GITHUB_STEP_SUMMARY", summary_line(verdict) + "\n")
     _append("GITHUB_OUTPUT", f"status={verdict.status}\n")
+    if args.keep_only and verdict.status != REGRESSION:
+        # A record from a runner a model session had a shell on may keep the live implementation, never let one in.
+        print(f"::notice::readiness_check: the staged record's {verdict.status} verdict is not used (keep only)")
+        return 0
     if args.out:
         Path(args.out).write_text(json.dumps(verdict.to_json(), sort_keys=True) + "\n", encoding="utf-8")
     return 0
@@ -308,6 +323,12 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--spec-id", required=True)
     check_parser.add_argument("--library", required=True)
     check_parser.add_argument("--out", help="write the verdict as one JSON line")
+    check_parser.add_argument(
+        "--keep-only", action="store_true", help="write the verdict only when it is a regression (a staged record)"
+    )
+    check_parser.add_argument(
+        "--scan-failed", action="store_true", help=f"the own scan did not finish: a regression for {SCAN_FAILED_KEY}"
+    )
     check_parser.set_defaults(func=cmd_check)
     args = parser.parse_args(argv)
     return args.func(args)

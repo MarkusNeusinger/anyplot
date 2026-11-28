@@ -1,12 +1,16 @@
 """The readiness check in impl-review.yml and its way into the regen gate (P2b).
 
-"Readiness check" reads the staged `adapt/readiness.json` against the
-implementation at the PR head and the one on origin/main
-(automation/scripts/readiness_record.py, the workflow-ref copy) and leaves its
-verdict in `$RUNNER_TEMP/readiness-verdict.json`. "Regen gate" hands that file
-to `regen_gate.py decide --readiness`, where a regression keeps the live
-implementation. The step never fails the job and leaves no copy of either
-source behind (the predecessor's header holds the stored score).
+"Readiness check" scans the implementation at the PR head and the one on
+origin/main itself (readiness_scan.py with the validator and interpreter that
+"Checkout PR code" and "Prepare the readiness scan" leave) and reads its own
+record (automation/scripts/readiness_record.py, the workflow-ref copy); without
+that interpreter it reads the staged `adapt/readiness.json` with --keep-only,
+so only a regression from it is written; a scan that started and did not
+finish writes a regression for `error:scan-failed`. The verdict goes to `$RUNNER_TEMP/readiness-verdict.json`.
+"Regen gate" hands that file to `regen_gate.py decide --readiness`, where a
+regression keeps the live implementation. The step never fails the job and
+leaves no copy of either source behind (the predecessor's header holds the
+stored score). The tests without `_self_scan` run the fallback.
 
 The step script runs here under `bash -e` and `bash -eo pipefail` against the
 scratch origin of test_render_hash_steps, whose main holds the file as
@@ -18,6 +22,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from typing import Any
 
 import pytest
@@ -34,6 +39,39 @@ ADAPT = "Adaptability check (record-only)"
 KEY = "security:banned-attribute"
 MAIN = CODE.format(score="pending", x=1)
 HEAD = CODE.format(score="72/100", x=1)  # the same code under the review's header: one hash
+
+
+ROOT = TOOLS.parents[1]
+SCAN_TREE = (
+    "agents/anyplot/code",
+    "agents/anyplot/schemas.py",
+    "agents/anyplot/language.py",
+    "core",
+    "automation/scripts/readiness_scan.py",
+    "automation/scripts/readiness_record.py",
+)
+
+
+def _self_scan(repo: Repo, *, interpreter: str | None = None) -> None:
+    """What "Checkout PR code" and "Prepare the readiness scan" leave: the validator tree and an interpreter.
+
+    The tree is copied from this checkout's files, so the tests run the code under test. The interpreter is this
+    test's (it has pydantic) unless ``interpreter`` replaces the wrapper's body.
+    """
+    tools = repo.runner / "readiness-tools"
+    for path in SCAN_TREE:
+        source, target = ROOT / path, tools / path
+        if source.is_dir():
+            shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__"))
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(source, target)
+    (tools / "agents" / "__init__.py").write_text("", encoding="utf-8")
+    (tools / "agents" / "anyplot" / "__init__.py").write_text("", encoding="utf-8")
+    python = repo.runner / "readiness-venv" / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    python.write_text(interpreter or f'#!/bin/sh\nexec "{sys.executable}" "$@"\n', encoding="utf-8")
+    python.chmod(0o755)
 
 
 def _repo(tmp_path) -> Repo:
@@ -67,6 +105,14 @@ def _stage(repo: Repo, *, new: str = HEAD, prev: str | None = MAIN, **overrides:
     }
     (repo.runner / "adapt").mkdir(exist_ok=True)
     (repo.runner / "adapt" / "readiness.json").write_text(json.dumps(record), encoding="utf-8")
+
+
+def _claim_a_gain(repo: Repo) -> None:
+    """Rewrite the staged record to claim the predecessor was refused and the new file is clean."""
+    path = repo.runner / "adapt" / "readiness.json"
+    record = json.loads(path.read_text(encoding="utf-8"))
+    record.update(verdict="none", new=_side("clean"), prev=_side("blocked", [KEY]), added=[], removed=[KEY])
+    path.write_text(json.dumps(record), encoding="utf-8")
 
 
 def _run(repo: Repo, shell: list[str], **env: str) -> subprocess.CompletedProcess[str]:
@@ -128,14 +174,16 @@ class TestReadinessCheckStep:
         result = _run(repo, shell)
         assert result.returncode == 0, result.stdout + result.stderr
         assert "status=stale new=blocked prev=coupled added=none removed=none why=head" in result.stdout
-        assert _verdict(repo)["status"] == "stale" and _verdict(repo)["added"] == []
+        # Without the own scan a staged record counts only to keep, so a stale one leaves no verdict.
+        assert "the staged record's stale verdict is not used (keep only)" in result.stdout
+        assert _verdict(repo) is None
 
     def test_no_staged_record_is_missing(self, tmp_path, shell):
         repo = _repo(tmp_path)
         result = _run(repo, shell)
         assert result.returncode == 0, result.stdout + result.stderr
         assert "::notice::readiness_check" in result.stdout and "status=missing" in result.stdout
-        assert _verdict(repo)["status"] == "missing"
+        assert _verdict(repo) is None
 
     def test_a_first_generation_has_no_predecessor(self, tmp_path, shell):
         repo = _repo(tmp_path)
@@ -147,6 +195,9 @@ class TestReadinessCheckStep:
         result = _run(repo, shell, SPEC_ID="line-basic")
         assert result.returncode == 0, result.stdout + result.stderr
         assert repo.read("summary") == "**Readiness check:** first generation (new blocked)\n"
+        assert _verdict(repo) is None
+        _self_scan(repo)
+        result = _run(repo, shell, SPEC_ID="line-basic")
         assert _verdict(repo)["status"] == "first_generation"
 
     def test_a_verdict_of_an_earlier_run_never_stands_in(self, tmp_path, shell):
@@ -167,6 +218,109 @@ class TestReadinessCheckStep:
         assert result.returncode == 0, result.stdout + result.stderr
         assert sorted(p.name for p in repo.runner.iterdir()) == ["adapt", "readiness-verdict.json", "regen-tools"]
 
+    def test_the_step_scans_itself_and_a_forged_record_counts_for_nothing(self, tmp_path, shell):
+        """The staged record comes from a runner a model had a shell on; it claims a clean file that adds a refusal."""
+        repo = _repo(tmp_path)
+        _self_scan(repo)
+        regenerated = HEAD + "import socket\n"
+        repo.commit({IMPL: regenerated}, "feat: regenerate")
+        repo.push()
+        _stage(repo, new=regenerated)
+        _claim_a_gain(repo)
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "self-scan did not run" not in result.stdout
+        verdict = _verdict(repo)
+        assert verdict["status"] == "regression" and verdict["added"] == ["security:banned-import"]
+        assert sorted(p.name for p in repo.runner.iterdir()) == [
+            "adapt",
+            "readiness-tools",
+            "readiness-venv",
+            "readiness-verdict.json",
+            "regen-tools",
+        ]
+
+    def test_the_own_scan_needs_no_staged_record(self, tmp_path, shell):
+        repo = _repo(tmp_path)
+        _self_scan(repo)
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _verdict(repo)["status"] == "none"
+
+    def test_without_the_interpreter_a_staged_none_is_dropped_and_a_regression_kept(self, tmp_path, shell):
+        """A failed install falls back to the staged record, which may then keep a file but never let one in."""
+        repo = _repo(tmp_path)
+        _stage(repo)
+        _claim_a_gain(repo)
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "::notice::readiness self-scan did not run; the staged record counts only to keep" in result.stdout
+        assert "status=none" in result.stdout
+        assert _verdict(repo) is None
+        _stage(repo)
+        result = _run(repo, shell)
+        assert _verdict(repo)["status"] == "regression"
+
+    def test_a_scan_that_does_not_finish_keeps_the_live_implementation(self, tmp_path, shell):
+        """The code under review can crash or stall the scan; a forged staged `none` must not stand in for it."""
+        repo = _repo(tmp_path)
+        _self_scan(repo, interpreter="#!/bin/sh\nexit 3\n")
+        _stage(repo)
+        _claim_a_gain(repo)
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "::warning::the readiness self-scan did not finish on this code; the live implementation stays" in (
+            result.stdout
+        )
+        assert _verdict(repo) == {
+            "version": 1,
+            "status": "regression",
+            "new": "error",
+            "prev": "n/a",
+            "added": ["error:scan-failed"],
+            "removed": [],
+        }
+        assert regen_gate.load_readiness(str(repo.runner / "readiness-verdict.json")).regression
+
+    def test_the_scan_writes_nothing_into_this_jobs_summary_or_outputs(self, tmp_path, shell):
+        repo = _repo(tmp_path)
+        _self_scan(repo)
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Readiness (record-only)" not in repo.read("summary")
+        assert repo.read("summary").startswith("**Readiness check:**")
+
+
+def test_the_scan_imports_nothing_beyond_the_standard_library_pydantic_and_its_tree(tmp_path):
+    """Production installs only pydantic: a new third-party import would make every review fall back silently."""
+    repo = Repo(tmp_path)
+    _self_scan(repo)
+    tools = repo.runner / "readiness-tools"
+    source = tmp_path / "new.py"
+    source.write_text(MAIN + "import socket\n", encoding="utf-8")
+    listing = tmp_path / "modules.txt"
+    probe = (
+        "import runpy, sys\n"
+        "before = {name.split('.')[0] for name in sys.modules}\n"  # the interpreter's own start-up modules
+        f"sys.argv = ['readiness_scan.py', 'scan', '--new', {str(source)!r}, '--prev', {str(source)!r},"
+        f" '--spec-id', {SPEC!r}, '--library', {LIB!r}, '--out', {str(tmp_path / 'rec.json')!r}]\n"
+        "try:\n"
+        f"    runpy.run_path({str(tools / 'automation/scripts/readiness_scan.py')!r}, run_name='__main__')\n"
+        "except SystemExit:\n"
+        "    pass\n"
+        "after = {name.split('.')[0] for name in sys.modules}\n"
+        f"open({str(listing)!r}, 'w').write(' '.join(sorted(after - before)))\n"
+    )
+    subprocess.run([sys.executable, "-I", "-c", probe], capture_output=True, text=True, check=True)
+    loaded = set(listing.read_text(encoding="utf-8").split())
+    allowed = set(sys.stdlib_module_names) | {"pydantic", "pydantic_core", "annotated_types", "typing_extensions"}
+    allowed |= {"typing_inspection", "agents", "core", "readiness_record"}
+    # The interpreter's build configuration (sysconfig's data module) is part of the standard library too.
+    loaded = {name for name in loaded if not name.startswith("_sysconfigdata")}
+    assert (tmp_path / "rec.json").exists()
+    assert "pydantic" in loaded  # the probe saw the validator's imports at all
+    assert loaded - allowed == set(), sorted(loaded - allowed)
+
 
 # --- wiring ------------------------------------------------------------------------------------
 
@@ -182,7 +336,9 @@ def test_the_step_never_gates_by_itself_and_follows_the_download_of_the_adapt_fo
     assert names.index(STEP) < names.index("Hide the previous review") < names.index("Run AI Quality Review")
     # Python only, like the scan; and not after a render hash mismatch, which runs no review.
     assert step["if"] == "steps.lang.outputs.language == 'python' && steps.render_stop.outputs.stopped != 'true'"
-    assert step["continue-on-error"] is True and step["timeout-minutes"] == 2
+    # The own scan has 90 seconds inside the step's limit, so a stalled scan ends as a keep, not as a killed step.
+    assert step["continue-on-error"] is True and step["timeout-minutes"] == 3
+    assert "timeout 90 env -u GITHUB_STEP_SUMMARY -u GITHUB_OUTPUT" in str(step["run"])
     assert "id" not in step  # its only way into a decision is the verdict file the gate reads
     assert "exit 1" not in str(step["run"])
     assert step["env"]["HEAD_SHA"] == "${{ steps.pr.outputs.head_sha }}"
@@ -192,15 +348,46 @@ def test_the_reviewer_cannot_read_the_verdict_or_the_sources():
     """`.claude/settings.json` allows the reviewer's Read tool on /tmp/* only."""
     script = str(_step("impl-review.yml", STEP)["run"])
     assert "/tmp/" not in script
-    for name in ("readiness-head-source", "readiness-main-source", "readiness-verdict.json"):
+    for name in ("readiness-head-source", "readiness-main-source", "readiness-verdict.json", "readiness-review.json"):
         assert f'"$RUNNER_TEMP/{name}"' in script
-    assert script.rstrip().endswith('rm -f "$NEW" "$PREV"')
+    assert script.rstrip().endswith('rm -f "$NEW" "$PREV" "$OWN"')
 
 
 def test_the_reader_is_the_workflow_refs_copy():
     """Copied before the checkout of the PR head, so the head cannot choose how its record is read."""
     checkout = str(_step("impl-review.yml", "Checkout PR code")["run"])
     assert checkout.index("automation/scripts/readiness_record.py") < checkout.index("git checkout")
+
+
+def test_the_scanner_and_its_pin_come_from_the_workflow_ref_and_run_isolated():
+    """The PR head is in the workspace from the checkout on: it must choose neither the validator nor its imports."""
+    checkout = str(_step("impl-review.yml", "Checkout PR code")["run"])
+    archive = checkout.index('git archive "$GITHUB_SHA" agents/anyplot/code')
+    pin = checkout.index('git show "$GITHUB_SHA:uv.lock"')
+    assert archive < pin < checkout.index('awk \'/^name = "pydantic"$/') < checkout.index("git checkout")
+    for path in SCAN_TREE:
+        assert path in checkout[archive : checkout.index("tar -x")]
+    names = [s.get("name") for s in _steps("impl-review.yml")]
+    assert names[names.index("Checkout PR code") + 1] == "Prepare the readiness scan"
+    prepare = _step("impl-review.yml", "Prepare the readiness scan")
+    assert prepare["if"] == "steps.lang.outputs.language == 'python'" and prepare["continue-on-error"] is True
+    script = str(prepare["run"])
+    assert script.index('cd "$RUNNER_TEMP"') < script.index("python3 -I -m venv")
+    assert '"$VENV/bin/python" -I -m pip install --isolated --only-binary :all:' in script
+    assert '"pydantic==${PIN}"' in script
+    step = str(_step("impl-review.yml", STEP)["run"])
+    assert 'env -u GITHUB_STEP_SUMMARY -u GITHUB_OUTPUT "$PY" -I' in step
+    assert '"$RT/automation/scripts/readiness_scan.py" scan' in step
+
+
+def test_the_pin_is_the_locks_pydantic():
+    """The awk line of "Checkout PR code" against the real uv.lock: one version, the one the project runs."""
+    checkout = str(_step("impl-review.yml", "Checkout PR code")["run"])
+    line = next(row for row in checkout.splitlines() if "| awk '" in row)
+    program = line.split("'")[1]
+    pin = subprocess.run(["awk", program, str(ROOT / "uv.lock")], capture_output=True, text=True, check=True).stdout
+    lock = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    assert pin.strip() and f'name = "pydantic"\nversion = "{pin.strip()}"' in lock
 
 
 def test_the_gate_gets_the_verdict_only_when_there_is_one():

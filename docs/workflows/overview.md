@@ -144,7 +144,7 @@ impl-review.yml
   |-- Checks that both theme renders sit on the same canonical canvas (a miss forces VQ-05 to 0)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
-  |-- Python: readiness check of the staged scan record against the PR head and main
+  |-- Python: readiness check, its own scan of the PR head and main (the staged record as a keep-only fallback)
   |-- AI evaluates code + image
   |-- Posts review comment with score
   |-- Updates metadata/{language}/{library}.yaml (quality_score, review feedback)
@@ -223,7 +223,7 @@ The scan's own copy still comes from the workspace's `.git` and runs with the wo
 
 #### Readiness check and the readiness regression
 
-`impl-review.yml` runs "Readiness check" for Python implementations, right after the adaptability check has downloaded staging's `adapt/` folder. The step runs `automation/scripts/readiness_record.py`, the copy from the workflow's own ref, on the staged `adapt/readiness.json`. A record counts only when it is about the code under review:
+`impl-review.yml` runs "Readiness check" for Python implementations, right after the adaptability check has downloaded staging's `adapt/` folder. The step scans the implementation at the PR head and the file on `origin/main` itself with `readiness_scan.py`, before any model session of the job runs. The validator tree and the pydantic pin come from the workflow's own ref ("Checkout PR code"), and "Prepare the readiness scan" installs that pydantic into a venv of its own; both run isolated from the PR head in the workspace. The step then runs `automation/scripts/readiness_record.py`, the copy from the workflow's own ref, on its own record. A scan that starts on this code and doesn't finish within 90 seconds, or crashes, keeps the live implementation (`regression` for `error:scan-failed`), since the code under review can cause that. When the scan can't run at all (no interpreter, a failed copy), the step reads the staged `adapt/readiness.json` with `--keep-only`: only a `regression` from it is written, because the staged record comes from the generate or repair runner, where a model session had a shell, so it may keep the live implementation but never let a new one in. A record counts only when it is about the code under review:
 
 - It's the scanner's record: its version, this spec and library, identifiers only.
 - `new_sha256` is the code hash of the implementation at the PR head, and `prev_sha256` that of the file on `origin/main`. The hash leaves the header out, so a re-review after the review's own header commit still finds its record.
@@ -664,12 +664,12 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
 
    **Readiness path.** When no improvement fixes a defect and the code path counts nothing, a regeneration still replaces the live implementation when it removes a Python class that made the agent chat's validator refuse the predecessor. The path exists for a pygal subclass: its removal changes neither the picture nor the adaptability check, so neither a carrier nor the adapt route can count it, yet it is what lets the chat serve the file. All of these must hold:
    - impl-review's "Readiness check" step (`decide --readiness`) reports the status `none` (no new refusal), the predecessor's side `blocked`, and the new source's side `clean` or `coupled`;
-   - the gate confirms that claim on what it read itself, because the verdict's sides come from the generate or repair runner, where a model session had a shell: the predecessor's source defines a class, the new source parses and defines none, and the new review scores CQ-01 higher than the re-score did;
+   - the gate confirms the class removal on what it read itself: the predecessor's source defines a class, the new source parses and defines none, and the new review scores CQ-01 higher than the re-score did;
    - the data scenario and the encodings are unchanged, on any spec.
 
    The score tolerance, the criterion floor, and the regression rule apply as above. The reason starts with `readiness path:` and names the refusals the predecessor had; a gain the gate can't confirm is named in the keep reason.
 
-   What the gate does not confirm is that nothing else is refused: that the new side is served is still the runner's word. A forged record could merge a confirmed class removal while another refusal remains. The file is then as blocked as its predecessor, with a real CQ-01 fix, and a forged record can already hide a new refusal on any merge with a carrier. Running the validator in impl-review itself, as `readiness_record.py` describes, would close both.
+   The readiness verdict is impl-review's own: its "Readiness check" step scans both sources with the agent chat's validator before any model session of that job runs, with the validator and its pinned pydantic from the workflow's ref ("Prepare the readiness scan"). The record impl-generate or impl-repair staged comes from a runner where a model session had a shell, so it counts only when that scan can't run, and then only for a regression (`--keep-only`): a staged record can keep the live implementation but never let a new one in. A scan that started and didn't finish keeps the live implementation too.
 
    **Adapt route.** A Python regeneration that converts the implementation to the adaptable-code convention ([Adaptable catalogue code](../concepts/adaptable-code.md)) changes the code but not the picture, so it has no visible improvement to carry it. It replaces the live implementation on render identity instead, when all of these hold:
    - the predecessor fails the adaptability check (the static check or the smoke run) and the new source passes both;

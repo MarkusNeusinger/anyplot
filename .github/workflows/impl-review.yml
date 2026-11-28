@@ -409,8 +409,45 @@ jobs:
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
           cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
+          # "Readiness check" scans both sources with the agent chat's
+          # validator itself, as impl-generate does: the validator tree and the
+          # pydantic pin come from this ref too, and the empty package files
+          # keep the bare tree from importing the agent runtime. A failed copy
+          # leaves the check on the staged record, which then counts only for
+          # a regression.
+          RT="$RUNNER_TEMP/readiness-tools"
+          rm -rf "$RT"; mkdir -p "$RT"
+          if ! { git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                   core automation/scripts/readiness_scan.py automation/scripts/readiness_record.py | tar -x -C "$RT" \
+                 && : > "$RT/agents/__init__.py" && : > "$RT/agents/anyplot/__init__.py" \
+                 && git show "$GITHUB_SHA:uv.lock" \
+                    | awk '/^name = "pydantic"$/ { getline; gsub(/[^0-9.]/, "", $3); print $3; exit }' > "$RT/pydantic.version"; }; then
+            echo "::warning::could not copy the readiness validator; the readiness check reads the staged record only"
+            rm -rf "$RT"
+          fi
           git fetch origin "$HEAD_SHA"
           git checkout "$HEAD_SHA"
+
+      # The interpreter for the readiness self-scan: a venv of its own with only
+      # the pinned pydantic, the validator's one package beyond the standard
+      # library. Isolated mode (-I) and the runner's temp directory keep the PR
+      # head, now in the workspace, off every import path. A failed install
+      # leaves no interpreter, and the check falls back to the staged record.
+      - name: Prepare the readiness scan
+        if: steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: |
+          RT="$RUNNER_TEMP/readiness-tools"; VENV="$RUNNER_TEMP/readiness-venv"
+          rm -rf "$VENV"
+          PIN=$(cat "$RT/pydantic.version" 2>/dev/null || true)
+          cd "$RUNNER_TEMP"
+          if [ -z "$PIN" ] || ! python3 -I -m venv "$VENV" \
+             || ! "$VENV/bin/python" -I -m pip install --isolated --only-binary :all: --quiet \
+                  --disable-pip-version-check "pydantic==${PIN}"; then
+            echo "::warning::readiness scan interpreter not ready; the readiness check reads the staged record only"
+            rm -rf "$VENV"
+          fi
 
       # Pre-merge test hook (impl-generate.yml dispatches the review on its own
       # ref when run from a feature branch): review with that branch's
@@ -1347,26 +1384,28 @@ jobs:
           # Last write of the step (see above).
           echo "review_skipped=${REVIEW_SKIPPED}" >> "$GITHUB_OUTPUT"
 
-      # The readiness record impl-generate or impl-repair staged
-      # (adapt/readiness.json, which the step above downloaded): what the
-      # agent chat's validator refuses in the new file and in its predecessor
-      # (automation/scripts/readiness_scan.py). This step reads it against the
-      # code under review (readiness_record.py): the record must name the
-      # hash of the implementation at the PR head and of the one on
-      # origin/main, and the regression is recomputed from its refusal keys.
-      # The verdict goes to $RUNNER_TEMP/readiness-verdict.json, where only
-      # the regen gate reads it: on a gated regeneration the status
-      # `regression` keeps the live implementation (readiness_regression).
-      # Every other status changes nothing: a missing, stale or malformed
-      # record never refuses, and outside the regen gate the line is a record
-      # only. Never a raw `exit 1` (see "Canvas dimension gate"). Python only,
-      # like the scan. The predecessor's header holds its stored score, so
-      # both copies live under $RUNNER_TEMP, outside the reviewer's /tmp/*
-      # reads, and go right after the check.
+      # What the agent chat's validator refuses in the new file and in its
+      # predecessor (automation/scripts/readiness_scan.py). This step scans
+      # both itself, with the workflow ref's validator and the interpreter of
+      # "Prepare the readiness scan", and reads its own record against the
+      # code under review (readiness_record.py): the record must name the hash
+      # of the implementation at the PR head and of the one on origin/main,
+      # and the regression is recomputed from its refusal keys. Without that
+      # interpreter it reads the record impl-generate or impl-repair staged
+      # (adapt/readiness.json, which the step above downloaded) with
+      # --keep-only, so only a regression from it is written. The verdict goes to
+      # $RUNNER_TEMP/readiness-verdict.json, where only the regen gate reads
+      # it: on a gated regeneration `regression` keeps the live implementation
+      # (readiness_regression), and `none` from blocked to served opens the
+      # readiness path once the gate has confirmed a class removal. Every
+      # other status changes nothing. Never a raw `exit 1` (see "Canvas
+      # dimension gate"). Python only, like the scan. The predecessor's header
+      # holds its stored score, so both copies live under $RUNNER_TEMP,
+      # outside the reviewer's /tmp/* reads, and go right after the check.
       - name: Readiness check
         if: steps.lang.outputs.language == 'python' && steps.render_stop.outputs.stopped != 'true'
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         env:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1377,16 +1416,40 @@ jobs:
           VERDICT="$RUNNER_TEMP/readiness-verdict.json"
           # A verdict of an earlier run must never stand in for this one's.
           rm -f "$NEW" "$PREV" "$VERDICT"
+          OWN="$RUNNER_TEMP/readiness-review.json"
+          RT="$RUNNER_TEMP/readiness-tools"; PY="$RUNNER_TEMP/readiness-venv/bin/python"
+          rm -f "$OWN"
           IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
           git show "${HEAD_SHA}:${IMPL}" > "$NEW" 2>/dev/null || rm -f "$NEW"
           git show "origin/main:${IMPL}" > "$PREV" 2>/dev/null || rm -f "$PREV"
-          if ! python3 "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
-               --record "$RUNNER_TEMP/adapt/readiness.json" --new "$NEW" --prev "$PREV" \
-               --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT"; then
+          # The scan runs here, where no model session has run yet: the staged
+          # record comes from the generate or repair runner, where one had a
+          # shell, so a forged one could hide a regression or claim a file the
+          # chat refused is now served. A scan that starts on this code and
+          # does not finish (a crash, the time limit) keeps the live
+          # implementation, since the code can cause that. Only without the
+          # interpreter does the staged record count, and then only to keep.
+          # The scan's own summary and output lines stay out of this job's.
+          RECORD="$RUNNER_TEMP/adapt/readiness.json"; MODE=(--keep-only)
+          if [ -x "$PY" ] && [ -f "$RT/automation/scripts/readiness_scan.py" ]; then
+            if timeout 90 env -u GITHUB_STEP_SUMMARY -u GITHUB_OUTPUT "$PY" -I \
+                 "$RT/automation/scripts/readiness_scan.py" scan --new "$NEW" --prev "$PREV" \
+                 --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$OWN" > /dev/null && [ -s "$OWN" ]; then
+              RECORD="$OWN"; MODE=()
+            else
+              echo "::warning::the readiness self-scan did not finish on this code; the live implementation stays"
+              MODE=(--scan-failed)
+            fi
+          else
+            echo "::notice::readiness self-scan did not run; the staged record counts only to keep"
+          fi
+          if ! python3 -I "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
+               --record "$RECORD" --new "$NEW" --prev "$PREV" \
+               --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT" "${MODE[@]}"; then
             echo "::warning::readiness check did not run; the regen gate decides without it"
             rm -f "$VERDICT"
           fi
-          rm -f "$NEW" "$PREV"
+          rm -f "$NEW" "$PREV" "$OWN"
 
       - name: React with eyes emoji
         if: steps.render_stop.outputs.stopped != 'true'

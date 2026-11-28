@@ -1512,10 +1512,10 @@ def adapt_summary_line(adapt: AdaptAssessment) -> str:
 # Readiness regression (rule step P2b)
 # ---------------------------------------------------------------------------
 
-# impl-review's "Readiness check" step reads the staged readiness record
-# against the implementation at the PR head and the one on origin/main
-# (``readiness_record.py``) and writes a verdict file, which ``decide
-# --readiness`` loads. The statuses and the key grammar are that module's,
+# impl-review's "Readiness check" step scans the implementation at the PR
+# head and the one on origin/main itself, reads its own record
+# (``readiness_record.py``; the staged one only to keep, when the scan
+# cannot run) and writes a verdict file, which ``decide --readiness`` loads. The statuses and the key grammar are that module's,
 # kept here as well because this file runs alone
 # (``tests/unit/automation/scripts/test_readiness_record.py`` holds the two
 # together). A key never has two hyphens in a row, so a record with keys still
@@ -1619,10 +1619,11 @@ READY_SIDES = ("clean", "coupled")
 def readiness_gain(readiness: Readiness) -> bool:
     """The readiness verdict says the chat's validator refused the predecessor and accepts the new source.
 
-    The verdict's sides come from the generate or repair runner, where a model
-    session had a shell (``readiness_record.py``), so this claim alone never
-    merges: ``readiness_path_problem`` confirms it on the two sources and the
-    review before the readiness path counts it.
+    impl-review scans both sources itself before any model session of its job,
+    and a ``none`` verdict never comes from the runner's staged record
+    (``readiness_record.py``). Even so this claim alone never merges:
+    ``readiness_path_problem`` confirms a class removal on the two sources and
+    the review before the readiness path counts it.
     """
     return readiness.status == READINESS_NONE and readiness.prev == "blocked" and readiness.new in READY_SIDES
 
