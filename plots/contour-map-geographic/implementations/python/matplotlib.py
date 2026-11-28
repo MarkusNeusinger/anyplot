@@ -1,7 +1,7 @@
 """ anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-28
+Quality: 87/100 | Updated: 2026-11-28
 """
 
 import os
@@ -52,7 +52,7 @@ elevation -= 700 * np.exp(-((lon_grid - 11.0) ** 2) / 20) * np.exp(-((lat_grid -
 # Notable peaks with their real heights; a narrow summit raises the field to that height
 peaks = [
     {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83, "height": 4808, "dx": -0.1, "dy": -0.6},
-    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98, "height": 4478, "dx": -1.0, "dy": 0.8},
+    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98, "height": 4478, "dx": 1.5, "dy": -1.0},
     {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07, "height": 3798, "dx": 0.25, "dy": -0.5},
 ]
 for peak in peaks:
@@ -69,7 +69,7 @@ elevation = np.clip(elevation, 0, None)
 borders = [
     {"lons": [5.5, 6.5, 7.0, 7.5], "lats": [47.5, 47.5, 46.0, 45.8]},
     {"lons": [6.8, 8.0, 10.0, 12.5, 13.8], "lats": [45.8, 45.9, 46.0, 46.3, 46.5]},
-    {"lons": [8.0, 9.5, 10.5, 12.0, 13.0, 15.0, 17.0], "lats": [47.7, 47.6, 47.7, 47.8, 48.0, 48.5, 48.5]},
+    {"lons": [8.0, 9.5, 10.5, 12.0, 13.0, 15.0, 17.0], "lats": [47.7, 47.6, 47.7, 48.1, 48.35, 48.5, 48.5]},
     {"lons": [13.5, 14.5, 15.5, 16.5], "lats": [46.5, 46.3, 46.0, 45.8]},
 ]
 
