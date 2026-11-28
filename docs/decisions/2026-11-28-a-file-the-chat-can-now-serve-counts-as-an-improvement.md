@@ -15,4 +15,4 @@
   picture stays the same, and the score tolerance, the criterion floor and the regression rule
   still apply to it. A Python class earns no library-mastery credit, in the re-score of the live
   file as in the review of the new one.
-- Where: `automation/scripts/regen_gate.py`, `prompts/quality-criteria.md`
+- Where: #15152

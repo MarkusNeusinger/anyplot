@@ -6,3 +6,4 @@
   regression rule still apply. The review no longer credits a Python class as library mastery,
   since the code-quality rule deducts it and the chat refuses it. In the batch of 2026-11-27 the
   gate kept two pygal files whose class removal would have made them usable in the chat.
+  (#15152)
