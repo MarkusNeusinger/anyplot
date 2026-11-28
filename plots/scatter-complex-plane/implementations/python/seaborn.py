@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-28
@@ -42,6 +42,8 @@ sns.set_theme(
 
 # Constants
 MARKER_CYCLE = ["D", "X", "o", "s", "^", "v", "P", "*"]  # one marker per category, in order
+MARKER_AREA = 260  # marker area in pt², the same for every category so each legend glyph carries the mark's weight
+MARKER_RADIUS = np.sqrt(MARKER_AREA / np.pi) + 2  # pt, plus the edge: arrows stop here so their heads show
 UNIT_TOLERANCE = 0.01  # a point within this of modulus 1 counts as lying on the unit circle
 
 # Columns: set these to your table's column names
@@ -83,15 +85,14 @@ g.figure.patch.set_facecolor(PAGE_BG)
 ax = g.ax_joint
 ax.set_facecolor(PAGE_BG)
 
-# Main scatter with hue, style, and size encoding
+# Main scatter with hue and style encoding
 sns.scatterplot(
     data=df,
     x=REAL,
     y=IMAGINARY,
     hue=CATEGORY,
     style=CATEGORY,
-    size=MAGNITUDE,
-    sizes=(150, 450),
+    s=MARKER_AREA,
     markers=[MARKER_CYCLE[i % len(MARKER_CYCLE)] for i in range(len(categories))],
     palette=colors,
     edgecolor=PAGE_BG,
@@ -123,11 +124,21 @@ g.ax_marg_y.set_facecolor(PAGE_BG)
 
 # Vectors from origin to each point
 for _, row in df.iterrows():
+    if np.hypot(row[REAL], row[IMAGINARY]) <= UNIT_TOLERANCE:
+        continue  # a zero vector has no direction to draw
     ax.annotate(
         "",
         xy=(row[REAL], row[IMAGINARY]),
         xytext=(0, 0),
-        arrowprops={"arrowstyle": "->", "color": cat_colors[row[CATEGORY]], "lw": 1.8, "alpha": 0.5},
+        arrowprops={
+            "arrowstyle": "-|>,head_length=0.6,head_width=0.3",
+            "color": cat_colors[row[CATEGORY]],
+            "lw": 1.8,
+            "alpha": 0.75,
+            "shrinkA": 0,
+            "shrinkB": MARKER_RADIUS,
+        },
+        zorder=4,
     )
 
 # Annotations with rectangular form — each box sits beyond its arrow tip, along the vector's direction
@@ -136,11 +147,12 @@ for _, row in df.iterrows():
     sign = "-" if im_part < 0 else "+"
     rect_form = f"{re_part:.1f}{sign}{abs(im_part):.1f}i".replace("-0.0", "0.0").replace("+-", "-")
     modulus = np.hypot(re_part, im_part)
-    ux, uy = (re_part / modulus, im_part / modulus) if modulus > UNIT_TOLERANCE else (0.7, -0.7)
-    if (
-        abs(modulus - 1) < UNIT_TOLERANCE
-    ):  # unit-circle points: turn the label 45° off the ray, clear of the outer points
-        ux, uy = (ux - uy) / np.sqrt(2), (ux + uy) / np.sqrt(2)
+    ux, uy = (re_part / modulus, im_part / modulus) if modulus > UNIT_TOLERANCE else (-0.98, 0.2)
+    if abs(modulus - 1) < UNIT_TOLERANCE:
+        # unit-circle points: turn the label off the ray, clockwise in the lower half, counter-clockwise above,
+        # so it clears the arrows of the outer points
+        turn = np.radians(-40 if im_part <= UNIT_TOLERANCE else 45)
+        ux, uy = ux * np.cos(turn) - uy * np.sin(turn), ux * np.sin(turn) + uy * np.cos(turn)
     ax.annotate(
         f"{row[LABEL]}\n{rect_form}",
         xy=(re_part, im_part),
@@ -194,14 +206,14 @@ sns.despine(ax=g.ax_marg_y, left=True, bottom=True)
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-limit = max(df[REAL].abs().max(), df[IMAGINARY].abs().max(), 1.0) * 1.6
+limit = max(df[REAL].abs().max(), df[IMAGINARY].abs().max(), 1.0) * 1.5
 ax.set_xlim(-limit, limit)
 ax.set_ylim(-limit, limit)
 
 ax.set_xlabel(REAL, fontsize=10, labelpad=8, color=INK)
 ax.set_ylabel(IMAGINARY, fontsize=10, labelpad=8, color=INK)
 
-# Legend — keep category + unit circle entries, drop the magnitude size entries
+# Legend — category entries plus the unit circle
 handles, leg_labels = ax.get_legend_handles_labels()
 wanted = set(categories) | {"Unit Circle"}
 keep = [(h, lbl) for h, lbl in zip(handles, leg_labels, strict=False) if lbl in wanted]
