@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-28
@@ -29,7 +29,7 @@ VECTOR_DOTS = [20, 16, 22]  # dot size of the tip, per category in order
 VECTOR_STROKES = [  # stroke per category in order; a dashed stroke marks a computed result
     {"width": 5, "linecap": "round", "opacity": 0.88},
     {"width": 3.5, "linecap": "round", "opacity": 0.75},
-    {"width": 6, "dasharray": "10, 5", "linecap": "round", "opacity": 0.92},
+    {"width": 6, "dasharray": "26, 16", "linecap": "round", "opacity": 0.92},
 ]
 
 # Columns: set these to your table's column names
@@ -39,8 +39,8 @@ LABEL = "Annotation"  # role: label
 CATEGORY = "Category"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("complex_numbers.csv")
-roots = [np.exp(2j * np.pi * k / 3) for k in range(3)]
-samples = [2.5 + 1.0j, -1.8 + 1.5j, 1.0 - 2.0j, -0.5 - 1.5j]
+roots = [np.exp(1j * (np.radians(15) + 2 * np.pi * k / 3)) for k in range(3)]
+samples = [2.5 + 1.0j, -1.5 + 0.2j, 1.0 - 2.0j, -2.0 - 1.0j]
 numbers = roots + samples + [samples[0] + samples[1]]  # the last one is the vector sum z1 + z2
 names = [f"ω{k}" for k in range(len(roots))] + [f"z{k + 1}" for k in range(len(samples))] + ["z1+z2"]
 categories = ["Roots of Unity (3rd)"] * len(roots) + ["Sample Points"] * len(samples) + ["z1+z2 (Vector Sum)"]
@@ -54,7 +54,7 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-extent = np.ceil(max(df[REAL].abs().max(), df[IMAGINARY].abs().max())) + 0.5
+extent = np.ceil(max(df[REAL].abs().max(), df[IMAGINARY].abs().max())) + 0.3
 
 title = "scatter-complex-plane · python · pygal · anyplot.ai"
 title_fs = max(44, round(66 * 67 / max(len(title), 67)))
@@ -77,7 +77,7 @@ custom_style = Style(
     legend_font_size=44,
     value_font_size=36,
     value_label_font_size=36,
-    stroke_width=2.5,
+    stroke_width=6,
     opacity=0.94,
     opacity_hover=1.0,
 )
@@ -101,7 +101,7 @@ chart = pygal.XY(
     truncate_legend=-1,
     margin_bottom=140,
     margin_left=100,
-    margin_right=80,
+    margin_right=253,
     margin_top=100,
     range=(-extent, extent),
     xrange=(-extent, extent),
@@ -146,7 +146,7 @@ chart.add(
     stroke=True,
     show_dots=False,
     fill=False,
-    stroke_style={"width": 2.5, "dasharray": "6, 6", "opacity": 0.6},
+    stroke_style={"width": 2.5, "dasharray": "10, 14", "opacity": 0.6},
 )
 
 # Origin: drawn last so it sits on top of all vectors
