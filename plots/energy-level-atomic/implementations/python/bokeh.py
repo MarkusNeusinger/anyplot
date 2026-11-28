@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -31,7 +31,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Spectral region of a transition: (upper wavelength bound in nm, Imprint color), shortest first
 SPECTRAL_COLORS = [
     (400, IMPRINT_PALETTE[1]),  # ultraviolet
-    (450, IMPRINT_PALETTE[6]),  # violet
+    (450, IMPRINT_PALETTE[1]),  # violet, the lighter Imprint violet stays legible on the dark page
     (495, IMPRINT_PALETTE[2]),  # blue
     (700, IMPRINT_PALETTE[4]),  # red end of the visible range
     (float("inf"), IMPRINT_PALETTE[3]),  # infrared
@@ -147,6 +147,21 @@ p.add_tools(
         tooltips=[("Level", "@quantum_n"), ("Energy", "@energy"), ("Degeneracy", "@degeneracy")],
     )
 )
+
+# Faint level guides under the arrow columns, so each arrow starts and ends on its level;
+# the stretch under the level labels stays free
+guide_left = (x_cursor[series_names[0]] - 0.3, level_x0)
+guide_right = (level_x1 + 1.5, x_next - 0.4)
+for gx0, gx1 in (guide_left, guide_right):
+    p.segment(
+        x0=[gx0] * len(levels),
+        y0=levels["vy"],
+        x1=[gx1] * len(levels),
+        y1=levels["vy"],
+        line_width=3,
+        line_color=IMPRINT_PALETTE[0],
+        line_alpha=0.4,
+    )
 
 # Level labels right of the level lines
 for n, e, vy in zip(levels["n"], levels["energy"], levels["vy"], strict=True):
