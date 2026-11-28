@@ -1,13 +1,14 @@
 """ anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-28
+Quality: 88/100 | Updated: 2026-11-28
 """
 
 import os
 
 import matplotlib.dates as mdates
 import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -107,7 +108,8 @@ sns.histplot(
     legend=True,
     ax=ax,
 )
-y_max = ax.get_ylim()[1]
+# Headroom above bars and line: the intervention labels sit in this band
+ax.set_ylim(0, ax.get_ylim()[1] * 1.25)
 
 # Peak period: the weeks holding at least 75 % of the busiest week's cases
 weekly = df.groupby(pd.cut(df[ONSET_DATE], week_starts, right=False, labels=week_starts[:-1]), observed=False)[
@@ -115,11 +117,14 @@ weekly = df.groupby(pd.cut(df[ONSET_DATE], week_starts, right=False, labels=week
 ].sum()
 peak_weeks = weekly.index[weekly >= 0.75 * weekly.max()]
 ax.axvspan(peak_weeks.min(), peak_weeks.max() + pd.Timedelta(days=7), alpha=0.13, color=ANYPLOT_AMBER, zorder=0)
+peak_handle = mpatches.Patch(facecolor=ANYPLOT_AMBER, alpha=0.3, edgecolor="none")
 
 # Cumulative cases on a secondary axis
 daily_total = df.groupby(ONSET_DATE)[CASE_COUNT].sum()
 ax2 = ax.twinx()
-ax2.plot(daily_total.index, daily_total.cumsum(), color=INK_SOFT, linewidth=2.0, alpha=0.75, zorder=3)
+cumulative = daily_total.cumsum()
+ax2.plot(cumulative.index, cumulative, color=INK_SOFT, linewidth=2.0, alpha=0.75, zorder=3)
+ax2.set_ylim(0, cumulative.max() * 1.25)
 ax2.set_ylabel("Cumulative Cases", fontsize=10, color=INK_SOFT, labelpad=8)
 ax2.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
 ax2.spines["right"].set_color(INK_SOFT)
@@ -131,7 +136,8 @@ for date, label in interventions.itertuples(index=False):
     ax.axvline(date, color=INK_MUTED, linewidth=1.4, linestyle="--", alpha=0.85, zorder=5)
     ax.annotate(
         label,
-        xy=(date, y_max * 0.86),
+        xy=(mdates.date2num(date), 0.985),
+        xycoords=ax.get_xaxis_transform(),
         xytext=(4, 0),
         textcoords="offset points",
         fontsize=8,
@@ -169,6 +175,8 @@ labels = [t.get_text() for t in legend.get_texts()]
 legend.remove()
 handles.append(mlines.Line2D([], [], color=INK_SOFT, linewidth=2.0, alpha=0.75))
 labels.append("Cumulative Cases")
+handles.append(peak_handle)
+labels.append("Peak period")
 ax.legend(
     handles=handles, labels=labels, fontsize=8, loc="upper left", framealpha=0.92, edgecolor=INK_SOFT, fancybox=False
 )
