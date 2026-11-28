@@ -12,112 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 74
 review:
   strengths:
-  - Full Imprint palette compliance — Confirmed (#009E73), Probable (#C475FD), Suspect
-    (#4467A3), Cumulative (#BD8233) follow canonical order; theme-adaptive chrome
-    is correctly implemented in both renders
-  - 'All required spec features present: stacked bars by case classification, weekly
-    bins, secondary y-axis cumulative line, and two annotated intervention lines with
-    labeled annotation boxes'
-  - Excellent data storytelling — two distinct seasonal flu waves with endemic baseline,
-    realistic case classification ratios (58:30:12), and vaccine rollout events that
-    contextualise the epidemiological narrative
-  - 'Plotly-distinctive features used: hovermode=''x unified'', spikemode=''across'',
-    secondary y-axis, HTML export alongside PNG, and hovertemplate customisation per
-    trace'
-  - 'Clean KISS code structure: linear flow with no functions/classes, reproducible
-    seed (17), and correct output filenames for both themes'
+  - Right-axis title and ticks colored to match the ochre cumulative line
+  - Imprint palette in canonical order with theme-correct chrome in both renders
+  - Idiomatic Plotly stacked bars with a yaxis2 overlay and paper-referenced intervention
+    shapes and annotations
+  - hovermode='x unified' with spike lines and per-trace hovertemplates in the HTML
+  - Realistic, seeded two-season ILI surveillance data with weekly bins
   weaknesses:
-  - Rotated x-axis tick labels (tickangle=-30) cause leading characters to be partially
-    obscured by adjacent labels at ~5 of the 8 quarterly tick positions ('Apr 2023'
-    reading as 'pr 2023', 'Jul 2023' as 'ul 2023', etc.) — tighten spacing or use
-    tickangle=-45 with right-anchor to prevent overlap
-  - Legend with y=1.02, yanchor='bottom' is rendering at the bottom of the chart area
-    rather than above the plot, forcing 'Week of Symptom Onset' x-axis title into
-    tight proximity with the legend box bottom edge — fix by positioning legend above
-    plot (y=1.0, yanchor='bottom') and increasing bottom margin (b=120) or shifting
-    the legend to inside the chart area
+  - 'VQ-02, VQ-05 (both): the horizontal legend box sits over the x-axis area, covering
+    the middle date tick labels and the x-axis title ''Week of Symptom Onset'' → place
+    the legend above the plot (yanchor=''bottom'', y≥1.02 with matching top margin)
+    so the axis is clear. Likely cause: legend placement interacts with the bottom
+    margin and rotated ticks.'
+  - 'VQ-02 (both): the left ''Flu vaccine rollout'' annotation box covers the tops
+    of the tallest first-season bars → keep it clear of the data with case-axis headroom
+    or a label above the plot area. Likely cause: annotation y=0.85 paper while the
+    bars reach the plot top.'
+  - 'VQ-01, SC-02 (both): five of eight rotated quarterly date ticks lose their leading
+    letters (''pr 2023'', ''ul 2023''), so the date axis is crowded and partly unreadable
+    (C2) → horizontal ticks (tickangle=0) clear of the legend. Likely cause: tickangle=-30
+    under the legend box.'
+  - 'VQ-05 (both): a wide empty band separates the title from the plot area → let
+    the plot start just under the title. Likely cause: margin t=90 with the title
+    at y=0.93 and the legend moved below.'
+  - 'SC-02 (both): the weekly bars are separated by visible gaps, so the curve reads
+    as a bar chart rather than adjacent bins (C1) → bargap=0. Likely cause: bargap=0.15.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "histogram-epidemic · python · plotly · anyplot.ai" centered in dark ink, ~70% canvas width, fully readable. Left y-axis label "Weekly New Cases" and right y-axis label "Cumulative Cases" (in ochre) are clear. X-axis label "Week of Symptom Onset" is readable at bottom, in close proximity to the legend box. Tick labels (size 10) are in muted dark (#4A4A44); quarterly ticks rotated at -30° with ~5 of 8 labels showing leading-character occlusion from adjacent label overlap (e.g. "Apr 2023" appears as "pr 2023"). Subtle y-axis grid lines only.
-      Data: Confirmed bars in brand green (#009E73), Probable in lavender (#C475FD), Suspect in blue (#4467A3) — stacked, showing two seasonal flu peaks (Jan 2023, Jan 2024). Cumulative ochre line (#BD8233) on secondary right axis rising from 0 to ~15k. Two dashed intervention lines in matte red (#AE3030) and cyan (#2ABCCD) with labeled annotation boxes. All data elements clearly visible and distinguishable.
-      Legibility verdict: PASS — all text readable, minor tick label rotation overlap reduces polish but does not make content unreadable.
+      Background: warm off-white #FAF8F1 — correct.
+      Chrome: centered dark title 'histogram-epidemic · python · plotly · anyplot.ai'; left axis 'Weekly New Cases' 0–350, right ochre axis 'Cumulative Cases' 0/5k/10k/15k; quarterly date ticks rotated -30°. The boxed horizontal legend sits at the bottom over the x-axis area: it covers the middle date tick labels ('pr 2023', 'ul 2023', 'ct 2023', 'an 2024', 'pr 2024' remain) and the x-axis title 'Week of Symptom Onset' runs through its lower edge. A wide empty band separates the title from the plot.
+      Data: 104 weekly stacked bars with small gaps, Confirmed #009E73, Probable #C475FD, Suspect #4467A3; two winter waves (~370 and ~330); ochre #BD8233 cumulative line rising to ~16k; red #AE3030 and cyan #2ABCCD dash-dot vaccine-rollout lines with boxed labels, the left box covering the tops of the tallest first-season bars.
+      Legibility verdict: FAIL — several date tick labels and the x-axis title are partly hidden by the legend.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in cream-white, clearly readable against dark background. Left and right axis labels in light color, readable. Tick labels in muted light (#B8B7B0), readable. Legend box has dark elevated (#242420) background with colored text entries — all readable. Annotation boxes have dark background with colored borders, text readable. "Week of Symptom Onset" x-axis label visible in light color.
-      Data: Data colors identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3) bars, ochre (#BD8233) cumulative line. Same rotation overlap issue on tick labels present. No dark-on-dark failures detected — no near-black text on near-black background anywhere.
-      Legibility verdict: PASS — both themes correctly implemented; no dark-on-dark failures; same minor tick label rotation overlap as light render.
+      Background: warm near-black #1A1A17 — correct.
+      Chrome: light title, axis titles and ticks; legend on dark elevated fill; no dark-on-dark text. Same legend collision with tick labels and x-axis title as the light render.
+      Data: categorical colors identical to the light render; same annotation box over the first-season peak bars.
+      Legibility verdict: FAIL — same occluded tick labels and x-axis title.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 6
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10).
-          Title, axis labels, and legend text readable in both themes. Minor deduction:
-          ~5 of 8 rotated x-axis tick labels show leading-character overlap from -30°
-          rotation; x-axis title is in tight proximity to legend box.'
+        passed: false
+        comment: Five of eight date tick labels lose their leading letters under the
+          legend
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Multiple quarterly x-axis tick labels (Apr 2023, Jul 2023, Jan 2024,
-          Apr 2024, Jul 2024) have leading characters obscured by adjacent rotated-label
-          overlap. The x-axis title 'Week of Symptom Onset' is in very close proximity
-          to the bottom edge of the legend box. Main content is readable but multiple
-          overlap issues exist.
+        comment: Legend box covers x tick labels and the x-axis title; left annotation
+          box covers peak bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars well-defined with appropriate bargap=0.15. Cumulative
-          ochre line clearly visible. Intervention dashed lines clearly distinguishable.
-          All 104 weekly bars visible; bar width well-adapted to data density.
+        comment: Bars, line and event lines clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides good CVD-safe contrast between stacked categories.
-          Green/purple/blue series distinguishable under deuteranopia. No red-green
-          sole-signal encoding for critical data.
+        comment: CVD-distinct stack colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: 'Good overall canvas utilization. Plot fills majority of canvas.
-          Minor deduction: legend position causes x-axis label to be pushed below
-          the legend in tight proximity, indicating a bottom-margin layout tension.'
+        passed: false
+        comment: Legend placed in the x-axis area, empty band between title and plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Left y-axis: ''Weekly New Cases''. Right y-axis: ''Cumulative Cases''.
-          X-axis: ''Week of Symptom Onset''. Title: ''histogram-epidemic · python
-          · plotly · anyplot.ai''. All descriptive with temporal/unit context.'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Confirmed) = #009E73 (brand green). Subsequent: #C475FD,
-          #4467A3, #BD8233 in canonical Imprint order. Intervention lines use #AE3030
-          and #2ABCCD (palette slots 5 and 6). Light bg=#FAF8F1, dark bg=#1A1A17.
-          Theme-adaptive chrome correct in both renders.'
+        comment: Imprint canonical order, correct backgrounds and chrome
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -125,32 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear design intent: custom Imprint palette throughout, theme-adaptive
-          chrome, no default Plotly template, secondary y-axis with color-coded labels,
-          intervention annotation boxes with colored borders. Goes beyond configured
-          defaults. Slight deduction for layout tension (legend/x-axis overlap) and
-          missing fine-tuning that would characterise truly publication-ready output.'
+        comment: Right axis title and ticks colored to match the cumulative line
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Good refinement: x-axis grid disabled, y-axis grid subtle (15% opacity),
-          no spine lines (showline=False), thin bar separation lines using page background
-          color. Legend has visible border. Layout imperfection (x-axis label proximity
-          to legend) is a refinement miss.'
+        comment: Baseline spine and grid rules; legend collision undercuts the segment-outline
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear epidemiological narrative: two distinct seasonal flu waves
-          visible, case classification stack shows confirmed/probable/suspect breakdown,
-          cumulative burden line adds context for total impact, intervention annotations
-          contextualise the timing of vaccine rollouts relative to peaks. The viewer
-          can immediately read the seasonal pattern and intervention story.'
+        comment: Data displayed; spec-required elements only
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -158,32 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: stacked bar histogram (epi curve) with weekly
-          bins appropriate for a 104-week (>3 month) outbreak dataset.'
+        comment: Stacked weekly epi curve
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All spec features: weekly bins, stacked bars by case classification
-          (confirmed/probable/suspect), annotated vertical intervention lines (vaccine
-          rollouts), date x-axis with appropriate tick intervals, secondary y-axis
-          cumulative line.'
+        passed: false
+        comment: C1 missed (gaps between bars); C2 broken (date ticks crowded and
+          occluded)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: onset date (weekly). Left y-axis: weekly new cases. Right
-          y-axis: cumulative total. All 104 weeks of data displayed across full range.'
+        comment: Zero-based axes, round ticks on both y axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''histogram-epidemic · python · plotly · anyplot.ai'' — exact
-          required format. Legend labels: Confirmed, Probable, Suspect, Cumulative
-          — match data categories.'
+        comment: Exact title, legend names all series
     data_quality:
       score: 15
       max: 15
@@ -193,26 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all epi curve features: two distinct seasonal peaks, endemic
-          baseline between peaks, three case classification stacks, cumulative burden
-          overlay, and intervention timing events.'
+        comment: Two waves, baseline, three classes, cumulative, interventions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral epidemiological scenario: Influenza-Like Illness (ILI)
-          surveillance over two flu seasons (2022-2024). Seasonal winter peaks, three-way
-          case classification, and flu vaccine rollout timing are all standard public
-          health surveillance concepts. No controversial content.'
+        comment: Neutral ILI surveillance
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weekly peak cases ~320-370 cases plausible for regional ILI surveillance.
-          Confirmed:Probable:Suspect ratio (58:30:12) realistic for surveillance systems.
-          Cumulative ~15,000 over 2 years appropriate for described context.
+        comment: Plausible weekly peaks and cumulative total; cumulative never falls
     code_quality:
       score: 10
       max: 10
@@ -222,36 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → constants → data → traces → layout → save. No
-          functions or classes.'
+        comment: Linear, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(17) set before data generation.
+        comment: Seeded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pandas, plotly.graph_objects — all used.
+        comment: All used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Loop over intervention events is appropriate.
-          No over-engineering.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
-          explicit width/height. Current Plotly API.
+        comment: PNG and HTML per theme
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -259,19 +218,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic go.Bar + go.Scatter pattern, yaxis2 with overlaying='y',
-          add_shape + add_annotation for events, hovertemplate per trace, barmode='stack'.
-          Good Plotly patterns throughout.
+        comment: Stacked go.Bar, yaxis2 overlay, paper-referenced shapes and annotations
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: hovermode='x unified' for coordinated hover, spikemode='across' for
-          crosshair indicator, HTML-formatted annotation text with <b> tags, secondary
-          y-axis with color-coded labels, write_html() alongside write_image(). Distinctively
-          Plotly features not replicable in static libraries.
+        comment: x unified hover with spike lines
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  last_kept:
+    pr: 15130
+    code: regression
+    note: '#15130 was kept because the review found it worse than the live version
+      here: Cumulative Cases axis ticks changed from round 0/5k/10k/15k to non-round
+      2.09k, 4.18k … 14.64k (right y-axis, both renders). Keep these as the live version
+      has them.'
 impl_tags:
   dependencies: []
   techniques:
