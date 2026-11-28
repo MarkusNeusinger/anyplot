@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-28
@@ -6,6 +6,7 @@ Quality: 88/100 | Updated: 2026-05-28
 
 import os
 
+import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
@@ -37,28 +38,37 @@ ANYPLOT_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # anyplot categorical palette — first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Global smartphone market share (2024)
-data = {
-    "company": ["Apple", "Samsung", "Xiaomi", "OPPO", "Others"],
-    "share": [23.1, 19.4, 13.7, 8.8, 35.0],
-    "explode": [0.0, 0.0, 0.0, 0.08, 0.0],
-}
+# Constants
+REST = "Others"  # the rest category takes the muted tone, not a palette position
 
-# Colors: anyplot positions 1–4, muted for "Others" (rest category)
-colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], IMPRINT_PALETTE[2], IMPRINT_PALETTE[3], ANYPLOT_MUTED]
+# Columns: set these to your table's column names
+COMPANY = "company"  # role: category
+SHARE = "share"  # role: value
 
-# Title — minimal required format
+# Data: replace this block with your own table, for example df = pd.read_csv("shares.csv")
+# Global smartphone market share (2024)
+df = pd.DataFrame({COMPANY: ["Apple", "Samsung", "Xiaomi", "OPPO", REST], SHARE: [23.1, 19.4, 13.7, 8.8, 35.0]})
+
+# Plot — square canvas (600×600 × scale=4 = 2400×2400 px)
 title = "pie-basic · python · letsplot · anyplot.ai"
 title_size = 16
 
-# Rich HTML tooltips — letsplot-specific interactivity
-pie_tooltips = layer_tooltips().title("@company").format("@share", "{.1f}%").line("Market share|@share")
+# Colors: Imprint positions in data order, muted for the rest category
+is_rest = df[COMPANY].eq(REST).fillna(False).tolist()
+colors = [ANYPLOT_MUTED if rest else IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, rest in enumerate(is_rest)]
 
-# Plot — square canvas (600×600 × scale=4 = 2400×2400 px)
+# Explode the smallest slice; the subtitle names it from the data
+smallest = df[SHARE].idxmin()
+df = df.assign(explode=[0.08 if i == smallest else 0.0 for i in df.index], label=[f"{v:.1f}%" for v in df[SHARE]])
+subtitle = f"{df[COMPANY][smallest]}'s {df[SHARE][smallest]}% slice is the smallest — '{df[COMPANY][df[SHARE].idxmax()]}' dominate at {df[SHARE].max():g}%"
+
+# Rich HTML tooltips — letsplot-specific interactivity
+pie_tooltips = layer_tooltips().title(f"@{COMPANY}").line("Market share|@label")
+
 plot = (
-    ggplot(data)
+    ggplot(df)
     + geom_pie(
-        aes(slice="share", fill="company", explode="explode"),
+        aes(slice=SHARE, fill=COMPANY, explode="explode"),
         stat="identity",
         size=40,
         hole=0,
@@ -67,16 +77,11 @@ plot = (
         color=PAGE_BG,
         spacer_width=1.0,
         spacer_color=PAGE_BG,
-        labels=layer_labels().line("@{share}").format("share", "{.1f}%").size(11),
+        labels=layer_labels().line("@label").size(11),
         tooltips=pie_tooltips,
     )
     + scale_fill_manual(values=colors)
-    + labs(
-        title=title,
-        subtitle="OPPO's 8.8% slice is the smallest — 'Others' dominate at 35%",
-        fill="Brand",
-        caption="Global smartphone market share, 2024",
-    )
+    + labs(title=title, subtitle=subtitle, fill="Brand", caption="Global smartphone market share, 2024")
     + ggsize(600, 600)
     + theme_void()
     + theme(
