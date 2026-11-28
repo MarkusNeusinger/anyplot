@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-30
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-28
 """
 
 import base64
@@ -26,17 +26,21 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3)
-_SEQ_START = (0, 158, 115)  # #009E73
-_SEQ_END = (68, 103, 163)  # #4467A3
+# Imprint sequential ramp (fields: colored cells fill the plot), low → high escape time
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-# Data — Mandelbrot set on the complex plane
+# Data: generated — named parameters of the complex plane and the iteration
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 max_iter = 200
 bailout = 256
 grid_w, grid_h = 1400, 1000
 
+# Plot
 real = np.linspace(x_min, x_max, grid_w)
 imag = np.linspace(y_max, y_min, grid_h)
 c = real[np.newaxis, :] + 1j * imag[:, np.newaxis]
@@ -55,12 +59,12 @@ for i in range(max_iter):
 
 exterior = escape_iter < max_iter
 
-# Imprint sequential LUT: #009E73 → #4467A3 (1024 stops)
+# Imprint sequential LUT along the theme's fields stops (1024 entries)
 lut_size = 1024
 t_vals = np.linspace(0, 1, lut_size)
-lut = np.zeros((lut_size, 3), dtype=np.uint8)
-for ch, (s, e) in enumerate(zip(_SEQ_START, _SEQ_END, strict=True)):
-    lut[:, ch] = np.round(s + (e - s) * t_vals).astype(np.uint8)
+stop_pos = [p for p, _ in SEQ_FIELDS]
+stop_rgb = np.array([[int(h[i : i + 2], 16) for i in (1, 3, 5)] for _, h in SEQ_FIELDS], dtype=float)
+lut = np.stack([np.interp(t_vals, stop_pos, stop_rgb[:, ch]) for ch in range(3)], axis=1).round().astype(np.uint8)
 
 # Log-normalized color mapping (exterior = Imprint seq; interior = black)
 cell_colors = np.zeros((*c.shape, 3), dtype=np.uint8)
@@ -90,8 +94,8 @@ def _draw_heatmap_overlay(self):
     gw = self.view.width
     gh = self.view.height
 
-    pad_left, pad_top = 200, 80
-    pad_right, pad_bottom = 200, 100
+    pad_left, pad_top = 240, 80
+    pad_right, pad_bottom = 220, 150
     x_span = self._x_range[1] - self._x_range[0]
     y_span = self._y_range[1] - self._y_range[0]
 
@@ -104,7 +108,7 @@ def _draw_heatmap_overlay(self):
         plot_w = avail_w
         plot_h = plot_w * y_span / x_span
 
-    px, py = pad_left, pad_top
+    px, py = pad_left, pad_top + 0.4 * (avail_h - plot_h)  # drop the plot toward the middle of the free height
     root = self.svg.node(self.nodes["plot"], class_="mandelbrot-heatmap")
 
     # Embedded heatmap image
@@ -182,7 +186,7 @@ def _draw_heatmap_overlay(self):
         ty = py + plot_h
         self.svg.node(root, "line", x1=tx, y1=ty, x2=tx, y2=ty + 14, style=f"stroke:{INK_SOFT};stroke-width:2")
         lbl = self.svg.node(
-            root, "text", x=tx, y=ty + 52, style=f"font-size:34px;font-family:sans-serif;fill:{INK_SOFT}"
+            root, "text", x=tx, y=ty + 62, style=f"font-size:44px;font-family:sans-serif;fill:{INK_SOFT}"
         )
         lbl.text = f"{val:.1f}"
         lbl.attrib["text-anchor"] = "middle"
@@ -192,7 +196,7 @@ def _draw_heatmap_overlay(self):
         root,
         "text",
         x=px + plot_w / 2,
-        y=py + plot_h + 90,
+        y=py + plot_h + 125,
         style=f"font-size:44px;font-weight:600;font-family:sans-serif;fill:{INK}",
     )
     xl.text = "Real Axis (Re)"
@@ -205,13 +209,13 @@ def _draw_heatmap_overlay(self):
         self.svg.node(root, "line", x1=px - 14, y1=ty, x2=px, y2=ty, style=f"stroke:{INK_SOFT};stroke-width:2")
         label = f"{val:+.1f}i" if val != 0 else "0.0i"
         lbl = self.svg.node(
-            root, "text", x=px - 24, y=ty + 12, style=f"font-size:34px;font-family:sans-serif;fill:{INK_SOFT}"
+            root, "text", x=px - 24, y=ty + 15, style=f"font-size:44px;font-family:sans-serif;fill:{INK_SOFT}"
         )
         lbl.text = label
         lbl.attrib["text-anchor"] = "end"
 
     # Y-axis title (rotated)
-    ylx = px - 170
+    ylx = px - 205
     yly = py + plot_h / 2
     yl = self.svg.node(
         root, "text", x=ylx, y=yly, style=f"font-size:44px;font-weight:600;font-family:sans-serif;fill:{INK}"
@@ -259,7 +263,7 @@ def _draw_heatmap_overlay(self):
             root, "line", x1=cb_x + cb_w, y1=ty, x2=cb_x + cb_w + 8, y2=ty, style=f"stroke:{INK_SOFT};stroke-width:1.5"
         )
         lbl = self.svg.node(
-            root, "text", x=cb_x + cb_w + 14, y=ty + 10, style=f"font-size:28px;font-family:sans-serif;fill:{INK_SOFT}"
+            root, "text", x=cb_x + cb_w + 14, y=ty + 12, style=f"font-size:34px;font-family:sans-serif;fill:{INK_SOFT}"
         )
         lbl.text = str(iter_val)
 
@@ -269,18 +273,16 @@ def _draw_heatmap_overlay(self):
         "text",
         x=cb_x - 5,
         y=cb_top - 18,
-        style=f"font-size:32px;font-weight:600;font-family:sans-serif;fill:{INK}",
+        style=f"font-size:36px;font-weight:600;font-family:sans-serif;fill:{INK}",
     )
     cbt.text = "Iterations"
     cbt.attrib["text-anchor"] = "start"
 
     # In-set legend
-    lg_y = cb_top + cb_h + 38
-    self.svg.node(
-        root, "rect", x=cb_x, y=lg_y, width=26, height=26, style=f"fill:#000000;stroke:{INK_SOFT};stroke-width:1"
-    )
+    lg_y = py + plot_h + 80
+    self.svg.node(root, "rect", x=cb_x, y=lg_y, width=30, height=30, style=f"fill:#000000;stroke:{INK};stroke-width:3")
     lg = self.svg.node(
-        root, "text", x=cb_x + 38, y=lg_y + 20, style=f"font-size:26px;font-family:sans-serif;fill:{INK_SOFT}"
+        root, "text", x=cb_x + 38, y=lg_y + 24, style=f"font-size:32px;font-family:sans-serif;fill:{INK_SOFT}"
     )
     lg.text = "In set"
 
