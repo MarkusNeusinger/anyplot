@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -195,9 +195,9 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowcolor=POINT_COLOR,
-    ax=40,
-    ay=-35 * flip,
-    font={"size": 12, "color": POINT_COLOR},
+    ax=20,
+    ay=-40 * flip,
+    font={"size": 12, "color": INK},
 )
 fig.add_annotation(
     x=point_b[0],
@@ -208,17 +208,17 @@ fig.add_annotation(
     arrowcolor=POINT_COLOR,
     ax=-40,
     ay=35 * flip,
-    font={"size": 12, "color": POINT_COLOR},
+    font={"size": 12, "color": INK},
 )
 fig.add_annotation(
-    x=sigma_1,
+    x=max(sigma_1, 0),
     y=0,
     text=f"σ₁ = {sigma_1:.1f}",
     showarrow=False,
     xanchor="left",
-    xshift=22,
+    xshift=8,
     yshift=20,
-    font={"size": 12, "color": SIGMA_COLOR},
+    font={"size": 12, "color": INK},
 )
 fig.add_annotation(
     x=sigma_2,
@@ -228,7 +228,7 @@ fig.add_annotation(
     xanchor="right",
     xshift=-22,
     yshift=20,
-    font={"size": 12, "color": SIGMA_COLOR},
+    font={"size": 12, "color": INK},
 )
 fig.add_annotation(
     x=center, y=tau_max, text=f"τmax = {tau_max:.1f}", showarrow=False, yshift=18, font={"size": 12, "color": TAU_COLOR}
@@ -282,6 +282,7 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "scaleanchor": "y",
         "scaleratio": 1,
+        "range": [sigma_2 - radius * 0.85, max(sigma_1, 0) + radius * 0.8],
     },
     yaxis={
         "title": {"text": "Shear Stress τ (MPa)", "font": {"size": 12, "color": INK}},
