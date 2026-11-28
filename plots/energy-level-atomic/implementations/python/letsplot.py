@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-27
+Quality: 89/100 | Updated: 2026-11-28
 """
 
 import os
