@@ -38,6 +38,7 @@ from tests.unit.automation.scripts.test_regen_gate import (
     _adapt,
     _adapt_inp,
     _checklist_json,
+    _code_inp,
     _inp,
     _outputs,
     _regen,
@@ -346,6 +347,112 @@ def test_the_adapt_routes_merge_is_kept_too():
 def test_the_adapt_regression_comes_first_when_both_hold():
     inp = _adapt_inp(regen=_regen(), adapt=_adapt(prev="pass", new="fail"), readiness=REGRESSION)
     assert decide(inp).code == "adapt_regression"
+
+
+# --- the gate: the readiness path ------------------------------------------------------------------
+
+GAIN = Readiness(status="none", new="clean", prev="blocked", removed=("security:banned-statement", "security:dunder"))
+# A pygal subclass and the same chart drawn without one: the class removal the readiness path exists for.
+CLASS_SOURCE = "import pygal\n\n\nclass Waffle(pygal.graph.graph.Graph):\n    def _plot(self):\n        pass\n"
+PLAIN_SOURCE = "import pygal\n\nchart = pygal.XY()\nchart.render_to_png('plot.png')\n"
+
+
+def _ready_regen(**overrides) -> dict:
+    """No improvement; the re-score deducts CQ-01 for the class (0 of 3), the new review gives it full marks."""
+    return _regen(**{"improvements": [], "prev_checklist": {**_regen()["prev_checklist"], "CQ-01": 0}, **overrides})
+
+
+def _ready_inp(score: int = 85, **overrides):
+    fields = {"regen": _ready_regen(), "readiness": GAIN, "prev_source": CLASS_SOURCE, "new_source": PLAIN_SOURCE}
+    fields.update(overrides)
+    return _inp(score, **fields)
+
+
+def test_a_class_the_chat_refused_removed_merges_without_a_visible_improvement():
+    """A pygal subclass removed with the drawing unchanged: the adaptability check sees nothing, the validator does."""
+    assert decide(_ready_inp(readiness=Readiness())).code == "no_visible_improvement"
+    result = decide(_ready_inp())
+    assert (result.verdict, result.code) == (MERGE, "merge")
+    assert result.reason == (
+        "readiness path: the agent chat's validator refused the predecessor (security:banned-statement, "
+        "security:dunder) and accepts the new source (clean), a class removed and CQ-01 up, no carrier, "
+        "no regressions, new score 85 >= re-scored predecessor 85 - 1"
+    )
+
+
+def test_a_coupled_file_counts_and_a_visible_suggestion_rides_along():
+    """The chat serves a coupled file too; an improvement that carries nothing on its own does not stop the path."""
+    regen = _ready_regen(
+        improvements=[{"ref": "P1", "rule": "DE-02", "what": "fonts aligned", "where_visible": "both renders"}]
+    )
+    assert decide(_ready_inp(regen=regen, readiness=Readiness())).code == "no_defect_improvement"
+    result = decide(_ready_inp(regen=regen, readiness=Readiness(status="none", new="coupled", prev="blocked")))
+    assert (result.verdict, result.code) == (MERGE, "merge")
+    assert result.reason.startswith("readiness path: the agent chat's validator refused the predecessor (no key named)")
+
+
+def test_a_carrier_and_the_code_path_keep_their_own_reasons():
+    result = decide(_inp(readiness=GAIN, prev_source=CLASS_SOURCE, new_source=PLAIN_SOURCE))
+    assert result.verdict == MERGE and result.reason.startswith("1 visible improvement(s), 1 carrying (W2)")
+    result = decide(_code_inp(readiness=GAIN))
+    assert result.verdict == MERGE and result.reason.startswith("code path: W1 (CQ-04, fix) fixed")
+
+
+@pytest.mark.parametrize(
+    "readiness",
+    [
+        Readiness(),
+        Readiness(status="stale", new="clean", prev="blocked"),
+        Readiness(status="excluded", new="clean", prev="blocked"),
+        Readiness(status="first_generation", new="clean", prev="n/a"),
+        Readiness(status="invalid"),
+        Readiness(status="none", new="blocked", prev="blocked"),
+        Readiness(status="none", new="error", prev="blocked"),
+        Readiness(status="none", new="clean", prev="coupled"),
+        Readiness(status="none", new="clean", prev="n/a"),
+    ],
+    ids=lambda readiness: f"{readiness.status}:{readiness.prev}>{readiness.new}",
+)
+def test_only_a_judged_step_from_blocked_to_served_counts(readiness):
+    result = decide(_ready_inp(readiness=readiness))
+    assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+    assert "readiness path" not in result.reason
+
+
+@pytest.mark.parametrize(
+    ("overrides", "why"),
+    [
+        ({"prev_source": PLAIN_SOURCE}, "the two sources show no class removed"),
+        ({"new_source": CLASS_SOURCE}, "the two sources show no class removed"),
+        ({"prev_source": None}, "the two sources show no class removed"),
+        ({"new_source": "chart = (\n"}, "the two sources show no class removed"),
+        ({"regen": _ready_regen(prev_checklist=_regen()["prev_checklist"])}, "CQ-01 does not score higher"),
+        ({"regen": _ready_regen(scenario_changed=True)}, "the data scenario changed or encodings were added"),
+        ({"regen": _ready_regen(encodings_added=["size by revenue"])}, "the data scenario changed or encodings"),
+    ],
+    ids=["no-class-before", "class-after", "no-source", "unparsable", "cq01-flat", "scenario", "encodings"],
+)
+def test_the_gate_confirms_the_claim_on_what_it_read(overrides, why):
+    """The verdict's sides come from the runner a model had a shell on, so the claim alone never merges."""
+    result = decide(_ready_inp(**overrides))
+    assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+    assert f"(readiness path: not counted — {why}" in result.reason
+
+
+@pytest.mark.parametrize(
+    ("overrides", "code"),
+    [
+        ({"score": 83}, "below_tolerance"),
+        ({"new_checklist": {**NEW_CHECKLIST, "LM-02": 1}}, "criterion_below"),
+        ({"regen": _ready_regen(regressions=[{"what": "legend lost", "where_visible": "both renders"}])}, "regression"),
+    ],
+    ids=["tolerance", "floor", "regression"],
+)
+def test_the_tolerance_the_floor_and_the_regression_rule_still_apply(overrides, code):
+    fields = dict(overrides)
+    score = fields.pop("score", 85)
+    result = decide(_ready_inp(score, **fields))
+    assert (result.verdict, result.code) == (KEEP, code)
 
 
 def test_the_keep_returns_within_a_window_like_a_regression():

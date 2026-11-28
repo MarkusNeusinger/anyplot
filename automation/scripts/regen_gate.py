@@ -41,7 +41,13 @@ Merge requires ALL of:
    carrier, by a counted *code improvement* (``classify_code_improvements``):
    a previous CQ-04 ``(code)`` defect line the re-score classed ``defect``,
    fixed with the named call or removal in a shorter source, with the data
-   scenario and encodings unchanged (``decide --prev-impl/--new-impl``);
+   scenario and encodings unchanged (``decide --prev-impl/--new-impl``), or
+   by a *readiness gain* (``readiness_gain``): the readiness verdict says the
+   agent chat's validator refused the predecessor and accepts the new source
+   (``decide --readiness``), and the gate confirms it on what it read itself
+   (``readiness_path_problem``): the predecessor defines a class, the new
+   source defines none, CQ-01 scores higher than in the re-score, and the
+   data scenario and encodings are unchanged;
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them;
 8. no criterion below its re-score (``criterion_floor``): each of the 24
@@ -191,6 +197,7 @@ check: one line per problem, exit 1 when there is any (``--warn-only``:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import math
 import os
@@ -1604,6 +1611,63 @@ def readiness_regression_text(readiness: Readiness) -> str:
     return f"the agent chat's validator refuses the new source for {keys}, which it did not refuse the predecessor for"
 
 
+# The side statuses of a file the agent chat can serve: ``coupled`` is served
+# too, with its data coupled to the drawing.
+READY_SIDES = ("clean", "coupled")
+
+
+def readiness_gain(readiness: Readiness) -> bool:
+    """The readiness verdict says the chat's validator refused the predecessor and accepts the new source.
+
+    The verdict's sides come from the generate or repair runner, where a model
+    session had a shell (``readiness_record.py``), so this claim alone never
+    merges: ``readiness_path_problem`` confirms it on the two sources and the
+    review before the readiness path counts it.
+    """
+    return readiness.status == READINESS_NONE and readiness.prev == "blocked" and readiness.new in READY_SIDES
+
+
+def defines_class(source: str | None) -> bool | None:
+    """Whether a Python source defines a class anywhere, or None when it is missing or does not parse."""
+    if source is None:
+        return None
+    try:
+        tree = ast.parse(source)
+    except SyntaxError, ValueError:
+        return None
+    return any(isinstance(node, ast.ClassDef) for node in ast.walk(tree))
+
+
+def readiness_path_problem(inp: GateInput, payload: Mapping[str, Any], result: GateResult) -> str | None:
+    """Why a readiness gain does not count, or None when the readiness path carries.
+
+    The path exists for the construct only the validator refuses and every
+    class is: a pygal subclass, whose removal changes neither the render nor
+    the adaptability check. The gate confirms that removal itself on what it
+    read, never on the runner's claim: the predecessor defines a class, the
+    new source parses and defines none, and the new review scores CQ-01, which
+    deducts every class, higher than the re-score did. The data scenario and
+    the encodings stay unchanged, on any spec.
+    """
+    if result.scenario_changed or result.encodings_added:
+        return "the data scenario changed or encodings were added"
+    if defines_class(inp.prev_source) is not True or defines_class(inp.new_source) is not False:
+        return "the two sources show no class removed"
+    prev, new = flat_scores(payload.get("prev_checklist")).get("CQ-01"), inp.new_checklist.get("CQ-01")
+    if not (_is_int(prev) and _is_int(new) and new > prev):
+        return "CQ-01 does not score higher than in the re-score"
+    return None
+
+
+def readiness_gain_text(readiness: Readiness) -> str:
+    """What the readiness path rests on: the refusals the predecessor had and the new source's status."""
+    keys = ", ".join(readiness.removed) or "no key named"
+    return (
+        f"the agent chat's validator refused the predecessor ({keys}) and accepts the new source "
+        f"({readiness.new}), a class removed and CQ-01 up"
+    )
+
+
 def readiness_summary_line(readiness: Readiness) -> str:
     """``**Readiness:** …`` for the PR comment; fixed text and validator identifiers only."""
     if readiness.regression:
@@ -2335,14 +2399,23 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
     if result.code_improvements and not code_counted:
         why = "; ".join(f"{c['ref'] or '?'}: {c['why']}" for c in result.code_improvements)
         code_note = f" (code path: nothing counted — {why})"
+    # The readiness path: with no carrier and no counted code fix, a validator
+    # that refused the predecessor and accepts the new source still carries,
+    # once the gate has confirmed the class removal itself
+    # (``readiness_path_problem``). The tolerance and the floor below apply
+    # to it as to any merge.
+    ready_why = readiness_path_problem(inp, payload, result) if readiness_gain(inp.readiness) else None
+    ready = readiness_gain(inp.readiness) and ready_why is None
+    if ready_why:
+        code_note += f" (readiness path: not counted — {ready_why})"
 
-    if not visible and not code_counted:
+    if not visible and not code_counted and not ready:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""
         result.code = "no_visible_improvement"
         result.reason = f"no visible improvement{detail}{note}{code_note}"
         return _adapt_instead(result, adapt)
 
-    if not carriers and not code_counted:
+    if not carriers and not code_counted and not ready:
         kinds = [
             (sum(1 for i in visible if i["basis"] == basis), label)
             for basis, label in (
@@ -2388,11 +2461,16 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
             f"({', '.join(i['ref'] for i in carriers)}), no regressions, new score {inp.score} >= "
             f"re-scored predecessor {prev_rescored} - 1{note}"
         )
-    else:
+    elif code_counted:
         fixed = ", ".join(f"{c['ref']} ({CODE_RULE}, {c['kind']})" for c in code_counted)
         result.reason = (
             f"code path: {fixed} fixed, {result.prev_lines} → {result.new_lines} lines, no carrier, "
             f"no regressions, new score {inp.score} >= re-scored predecessor {prev_rescored} - 1{note}"
+        )
+    else:
+        result.reason = (
+            f"readiness path: {readiness_gain_text(inp.readiness)}, no carrier, no regressions, "
+            f"new score {inp.score} >= re-scored predecessor {prev_rescored} - 1{note}"
         )
     return result
 

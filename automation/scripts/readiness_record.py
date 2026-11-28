@@ -24,10 +24,14 @@ The status, first match wins:
 - ``unreadable``, ``excluded``, ``first_generation``, ``regression`` and
   ``none``: as ``readiness_scan.py`` defines them.
 
-Only ``regression`` ever changes a decision: on a gated regeneration
-``regen_gate.py`` keeps the live implementation (``readiness_regression``).
-Every other status leaves the pipeline as it is, so a lost upload, a push
-after the scan or a scan that could not run never refuses anything.
+Only ``regression`` changes a decision on the verdict alone: on a gated
+regeneration ``regen_gate.py`` keeps the live implementation
+(``readiness_regression``). A ``none`` verdict whose predecessor side is
+``blocked`` and whose new side is served counts on the gate's readiness path
+only once the gate has confirmed it on the two sources and the review (a class
+removed, CQ-01 up), never on the verdict alone. Every other status leaves the
+pipeline as it is, so a lost upload, a push after the scan or a scan that
+could not run never refuses anything.
 
 What the checks do not cover: the record's refusal keys themselves. They come
 from the generate or repair runner, where a model session had a shell, so a
