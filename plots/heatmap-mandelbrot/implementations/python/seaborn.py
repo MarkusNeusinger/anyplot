@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-30
@@ -23,8 +23,13 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Interior (never-escaping) points: near-black per spec, consistent across themes
 INTERIOR_BG = "#0A0A08"
 
-# Imprint sequential colormap — reversed so high iteration count (boundary) glows in brand green
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#4467A3", "#009E73"])
+# Imprint sequential ramp for filled cells (style guide, "Continuous Data"), per theme
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", SEQ_FIELDS)
 
 sns.set_theme(
     style="ticks",
