@@ -22,8 +22,8 @@ SEQ_FIELDS <- if (THEME == "light") {
 
 # Mandelbrot parameters
 MAX_ITER <- 200
-NX       <- 800
-NY       <- 572  # maintains 3.5 : 2.5 complex-plane aspect ratio
+NX       <- 840
+NY       <- 600  # 3.5 : 2.5 complex-plane aspect ratio
 
 x_seq <- seq(-2.5,  1.0,  length.out = NX)
 y_seq <- seq(-1.25, 1.25, length.out = NY)
@@ -62,12 +62,11 @@ for (i in seq_len(MAX_ITER)) {
 # Smooth escape count — eliminates integer banding at iteration boundaries
 # escape + 1 - log2(log2(|z|)) : fractional part interpolates between iterations
 escape_smooth <- escape + 1.0 - log_mag  # NA (interior) passes through as NA
-escape_vis    <- sqrt(pmax(escape_smooth, 0.0))  # sqrt spreads boundary detail
 
 df <- data.frame(
     real = real_vec,
     imag = imag_vec,
-    esc  = escape_vis
+    esc  = pmax(escape_smooth, 1.0)
 )
 
 TITLE <- "heatmap-mandelbrot · r · ggplot2 · anyplot.ai"
@@ -78,7 +77,9 @@ p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
         colours  = SEQ_FIELDS$colours,
         values   = SEQ_FIELDS$values,
         na.value = "#050503",  # fixed dark interior independent of theme
-        name     = "Escape (√)",
+        name     = "Escape iterations",
+        trans    = "sqrt",  # spreads boundary detail while the bar reads in iterations
+        breaks   = c(10, 50, 100, 200),
         guide    = guide_colorbar(title.position = "top")
     ) +
     coord_fixed(ratio = 1) +
@@ -106,13 +107,13 @@ p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
         plot.margin       = margin(12, 12, 12, 12)
     )
 
-# Save — square canvas: width = 6, height = 6, dpi = 400 → 2400 × 2400 px
+# Save — landscape canvas: width = 8, height = 4.5, dpi = 400 → 3200 × 1800 px
 ggsave(
     filename = sprintf("plot-%s.png", THEME),
     plot     = p,
     device   = ragg::agg_png,
-    width    = 6,
-    height   = 6,
+    width    = 8,
+    height   = 4.5,
     units    = "in",
     dpi      = 400
 )
