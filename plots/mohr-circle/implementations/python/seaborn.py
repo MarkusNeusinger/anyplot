@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-30
@@ -46,10 +46,29 @@ sns.set_theme(
     },
 )
 
-# Data — stress state for a shaft under combined torsion and bending
-sigma_x = 70
-sigma_y = -50
-tau_xy = 35
+# Constants
+STATE_LABEL = "Stress State (A, B)"
+PRINCIPAL_LABEL = "Principal Stress (σ₁, σ₂)"
+SHEAR_LABEL = "Max Shear (τmax)"
+ELEMENT_MARKERS = {STATE_LABEL: "o", PRINCIPAL_LABEL: "D", SHEAR_LABEL: "s"}
+ELEMENT_COLORS = {STATE_LABEL: COLOR_STATE, PRINCIPAL_LABEL: COLOR_SIGMA, SHEAR_LABEL: COLOR_SHEAR}
+
+# Column constants
+SIGMA_X = "σx (MPa)"  # role: sigma_x
+SIGMA_Y = "σy (MPa)"  # role: sigma_y
+TAU_XY = "τxy (MPa)"  # role: tau_xy
+NORMAL = "Normal Stress σ (MPa)"  # role: extra
+SHEAR = "Shear Stress τ (MPa)"  # role: extra
+ELEMENT = "Element"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stress.csv")
+# Stress state for a shaft under combined torsion and bending
+df = pd.DataFrame({SIGMA_X: [70], SIGMA_Y: [-50], TAU_XY: [35]})
+
+# Plot
+sigma_x = df[SIGMA_X].iloc[0]
+sigma_y = df[SIGMA_Y].iloc[0]
+tau_xy = df[TAU_XY].iloc[0]
 
 # Mohr's circle parameters
 center = (sigma_x + sigma_y) / 2
@@ -64,30 +83,16 @@ theta = np.linspace(0, 2 * np.pi, 360)
 circle_sigma = center + radius * np.cos(theta)
 circle_tau = radius * np.sin(theta)
 
-# Key points DataFrame for seaborn semantic mapping
+# Key points table for seaborn semantic mapping
 points_df = pd.DataFrame(
     {
-        "sigma": [sigma_x, sigma_y, sigma_1, sigma_2, center, center],
-        "tau": [tau_xy, -tau_xy, 0, 0, tau_max, -tau_max],
-        "Element": [
-            "Stress State (A, B)",
-            "Stress State (A, B)",
-            "Principal Stress (σ₁, σ₂)",
-            "Principal Stress (σ₁, σ₂)",
-            "Max Shear (τmax)",
-            "Max Shear (τmax)",
-        ],
+        NORMAL: [sigma_x, sigma_y, sigma_1, sigma_2, center, center],
+        SHEAR: [tau_xy, -tau_xy, 0, 0, tau_max, -tau_max],
+        ELEMENT: [STATE_LABEL, STATE_LABEL, PRINCIPAL_LABEL, PRINCIPAL_LABEL, SHEAR_LABEL, SHEAR_LABEL],
     }
 )
 
-element_palette = {
-    "Stress State (A, B)": COLOR_STATE,
-    "Principal Stress (σ₁, σ₂)": COLOR_SIGMA,
-    "Max Shear (τmax)": COLOR_SHEAR,
-}
-element_markers = {"Stress State (A, B)": "o", "Principal Stress (σ₁, σ₂)": "D", "Max Shear (τmax)": "s"}
-
-# Plot — square canvas for equal-aspect Mohr's circle (2400×2400 px)
+# Figure — square canvas for equal-aspect Mohr's circle (2400×2400 px)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
@@ -105,12 +110,12 @@ ax.plot([sigma_x, sigma_y], [tau_xy, -tau_xy], color=COLOR_STATE, linewidth=1.5,
 # Key points via seaborn scatterplot with hue + style semantic mapping
 sns.scatterplot(
     data=points_df,
-    x="sigma",
-    y="tau",
-    hue="Element",
-    style="Element",
-    markers=element_markers,
-    palette=element_palette,
+    x=NORMAL,
+    y=SHEAR,
+    hue=ELEMENT,
+    style=ELEMENT,
+    markers=ELEMENT_MARKERS,
+    palette=ELEMENT_COLORS,
     s=220,
     edgecolor=PAGE_BG,
     linewidth=1.5,
@@ -131,7 +136,7 @@ ax.text(
     0.98,
     info_text,
     transform=ax.transAxes,
-    fontsize=7,
+    fontsize=8,
     verticalalignment="top",
     horizontalalignment="right",
     family="monospace",
@@ -145,7 +150,7 @@ ax.annotate(
     f"C ({center:.0f}, 0)",
     xy=(center, 0),
     xytext=(center - 6, -radius * 0.26),
-    fontsize=7,
+    fontsize=8,
     color=INK_SOFT,
     ha="right",
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.0},
@@ -169,7 +174,7 @@ ax.annotate(
 ax.annotate(
     f"B ({sigma_y}, {-tau_xy})",
     xy=(sigma_y, -tau_xy),
-    xytext=(sigma_y - 12, -tau_xy - 18),
+    xytext=(sigma_y - 6, -tau_xy - 14),
     fontsize=8,
     fontweight="bold",
     color=COLOR_STATE,
@@ -209,7 +214,8 @@ ax.annotate(
 ax.annotate(
     f"τmax = {tau_max:.1f} MPa",
     xy=(center, tau_max),
-    xytext=(center + radius * 0.52, tau_max + 6),
+    xytext=(center - radius * 0.3, tau_max + 12),
+    ha="right",
     fontsize=8,
     fontweight="bold",
     color=COLOR_SHEAR,
@@ -229,7 +235,7 @@ ax.text(
     center + arc_r * 1.5 * np.cos(mid_angle),
     arc_r * 1.5 * np.sin(mid_angle),
     f"2θp = {two_theta_p:.1f}°",
-    fontsize=7,
+    fontsize=8,
     fontweight="bold",
     color=COLOR_ANGLE,
     ha="left",
@@ -243,52 +249,63 @@ legend_handles = [
         [0],
         [0],
         marker="o",
-        color="w",
+        color="none",
         markerfacecolor=COLOR_STATE,
         markersize=8,
         markeredgecolor=PAGE_BG,
         markeredgewidth=1.2,
-        label="Stress State (A, B)",
+        label=STATE_LABEL,
     ),
     Line2D(
         [0],
         [0],
         marker="D",
-        color="w",
+        color="none",
         markerfacecolor=COLOR_SIGMA,
         markersize=8,
         markeredgecolor=PAGE_BG,
         markeredgewidth=1.2,
-        label="Principal Stress (σ₁, σ₂)",
+        label=PRINCIPAL_LABEL,
     ),
     Line2D(
         [0],
         [0],
         marker="s",
-        color="w",
+        color="none",
         markerfacecolor=COLOR_SHEAR,
         markersize=8,
         markeredgecolor=PAGE_BG,
         markeredgewidth=1.2,
-        label="Max Shear (τmax)",
+        label=SHEAR_LABEL,
     ),
     Line2D([0], [0], color=COLOR_ANGLE, linewidth=2.0, label="Principal Angle (2θp)"),
 ]
-ax.legend(handles=legend_handles, fontsize=7, loc="lower left", framealpha=0.9, edgecolor=INK_SOFT)
+ax.legend(
+    handles=legend_handles,
+    fontsize=8,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.1),
+    ncol=3,
+    framealpha=0.9,
+    edgecolor=INK_SOFT,
+)
 
 # Style
 title = "mohr-circle · python · seaborn · anyplot.ai"
-ax.set_xlabel("Normal Stress σ (MPa)", fontsize=10, color=INK)
-ax.set_ylabel("Shear Stress τ (MPa)", fontsize=10, color=INK)
+ax.set_xlabel(NORMAL, fontsize=10, color=INK)
+ax.set_ylabel(SHEAR, fontsize=10, color=INK)
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_aspect("equal")
+ax.set_xlim(center - radius * 1.4, center + radius * 1.4)
+ax.set_ylim(-radius * 1.2, radius * 1.2)
 
 # Grid — both axes for this engineering coordinate diagram
 ax.yaxis.grid(True, alpha=0.12, linewidth=0.7, color=INK)
 ax.xaxis.grid(True, alpha=0.12, linewidth=0.7, color=INK)
 sns.despine(ax=ax)
 
+plt.tight_layout()
 # Save — no bbox_inches to preserve exact 2400×2400 canvas
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
