@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -20,8 +20,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-ON_BAR = "#F0EFE8"  # label color on the red and blue segments
-ON_NEUTRAL = "#1A1A17" if THEME == "dark" else "#F0EFE8"  # the muted neutral grey is light in the dark theme
+ON_BAR = "#F0EFE8"  # label color on every segment; it keeps 4.5:1 on all five steps
+DIV_MID_MARKS = "#6B6A63" if THEME == "light" else "#686762"  # imprint_div midpoint for marks
 
 # Imprint palette (full list) and the diverging ends of imprint_div
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -37,8 +37,13 @@ def blend(c0, c1, share):
 
 # Constants
 # Likert levels, ordered from the disagree end to the agree end; the middle one is the neutral level
-LEVEL_COLORS = [NEG_STRONG, blend(NEG_STRONG, INK_MUTED, 0.5), INK_MUTED, blend(INK_MUTED, POS_STRONG, 0.5), POS_STRONG]
-LABEL_COLORS = [ON_BAR, ON_BAR, ON_NEUTRAL, ON_BAR, ON_BAR]
+LEVEL_COLORS = [
+    NEG_STRONG,
+    blend(NEG_STRONG, DIV_MID_MARKS, 0.5),
+    DIV_MID_MARKS,
+    blend(DIV_MID_MARKS, POS_STRONG, 0.5),
+    POS_STRONG,
+]
 MIN_LABEL_PCT = 8  # narrower segments stay unlabeled
 TICK_STEP = 20
 
@@ -95,7 +100,7 @@ long["ymin"] = long["row"] - 0.38
 long["ymax"] = long["row"] + 0.38
 long["x_mid"] = (long["xmin"] + long["xmax"]) / 2
 long["label"] = long["pct"].map(lambda v: f"{v:g}%" if pd.notna(v) and v >= MIN_LABEL_PCT else "")
-long["label_color"] = long["level_idx"].map(lambda k: LABEL_COLORS[k])
+long["label_color"] = ON_BAR
 labeled = long[long["label"] != ""]
 
 # Axis range and ticks from the data
@@ -173,7 +178,7 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_border=element_blank(),
+        panel_border=element_rect(color=PAGE_BG, size=1),
         axis_line=element_blank(),
         axis_ticks=element_blank(),
         plot_title=element_text(size=16, face="bold", color=INK),
