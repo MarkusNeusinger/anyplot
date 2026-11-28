@@ -501,7 +501,11 @@ class TestAdaptStepWiring:
         for step in steps:
             for line in _code_only(str(step.get("run", ""))).splitlines():
                 if re.search(r"regen-tools/\w+\.py", line) and "cp " not in line:
-                    assert re.search(r"python3 \S*regen-tools/", line) or "TOOL" in line, (step.get("name"), line)
+                    # Isolated mode (-I) is still the job's python3.
+                    assert re.search(r"python3 (?:-I )?\S*regen-tools/", line) or "TOOL" in line, (
+                        step.get("name"),
+                        line,
+                    )
 
     def test_the_regen_tools_run_from_the_workflow_ref(self):
         script = _step("impl-review.yml", ADAPT)["run"]
