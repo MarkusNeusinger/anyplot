@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-06-02
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 79/100 | Updated: 2026-11-28
 """
 
 import os
