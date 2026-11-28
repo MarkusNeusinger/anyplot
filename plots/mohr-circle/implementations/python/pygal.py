@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -34,12 +34,12 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data — concrete column under eccentric axial load + lateral shear
-# Differentiated stress state from sibling implementations
+# Data: concrete column under eccentric axial load + lateral shear; replace with your own stress state
 sigma_x = 110  # Normal stress in x-direction (MPa) — axial + bending
 sigma_y = -10  # Normal stress in y-direction (MPa) — transverse compression
 tau_xy = 30  # Shear stress on xy-plane (MPa) — lateral force
 
+# Plot: everything below derives from the stress state above
 # Mohr's Circle parameters
 center = (sigma_x + sigma_y) / 2
 radius = np.sqrt(((sigma_x - sigma_y) / 2) ** 2 + tau_xy**2)
@@ -63,10 +63,13 @@ arc_pts = [(float(center + arc_r * np.cos(a)), float(arc_r * np.sin(a))) for a i
 
 # Axis ranges — tight around circle with balanced padding
 padding = 18
-x_min = float(sigma_2 - padding)
-x_max = float(sigma_1 + padding)
 y_min = -(radius + padding)
 y_max = radius + padding
+# pygal's plot area is wider than tall (measured ~1.11:1); scale the x span to match so one MPa spans the same pixels on both axes
+plot_aspect = 1.114
+x_half = (y_max - y_min) / 2 * plot_aspect
+x_min = float(center - x_half)
+x_max = float(center + x_half)
 
 # Reference lines through center (horizontal σ-axis + vertical at center)
 ref_lines = [
@@ -87,10 +90,12 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=custom_colors,
     title_font_size=66,
-    label_font_size=56,
-    major_label_font_size=44,
+    label_font_size=48,
+    major_label_font_size=48,
     legend_font_size=44,
     value_font_size=36,
     tooltip_font_size=30,
