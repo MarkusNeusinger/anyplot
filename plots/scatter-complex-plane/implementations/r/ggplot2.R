@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 83/100 | Updated: 2026-11-28
+#' Quality: pending | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
