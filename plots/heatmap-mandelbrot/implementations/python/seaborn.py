@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-28
@@ -88,13 +88,16 @@ sns.heatmap(
     ax=ax,
 )
 
-# Custom axis ticks for complex plane coordinates
-n_xticks = 8
-n_yticks = 5
-ax.set_xticks(np.linspace(0, grid_w, n_xticks))
-ax.set_xticklabels([f"{v:.1f}" for v in np.linspace(x_min, x_max, n_xticks)], fontsize=8)
-ax.set_yticks(np.linspace(0, grid_h, n_yticks))
-ax.set_yticklabels([f"{v:.1f}" for v in np.linspace(y_max, y_min, n_yticks)], fontsize=8)
+# Axis ticks at round coordinates of the complex plane; equal scale on both axes
+step_x = (x_max - x_min) / (grid_w - 1)
+step_y = (y_max - y_min) / (grid_h - 1)
+x_ticks = np.arange(np.ceil(x_min / 0.5) * 0.5, x_max + 1e-9, 0.5)
+y_ticks = np.arange(np.ceil(y_min / 0.5) * 0.5, y_max + 1e-9, 0.5)
+ax.set_xticks((x_ticks - x_min) / step_x + 0.5)
+ax.set_xticklabels([f"{v:.1f}" for v in x_ticks], fontsize=8, rotation=0)
+ax.set_yticks((y_max - y_ticks) / step_y + 0.5)
+ax.set_yticklabels([f"{v:.1f}" for v in y_ticks], fontsize=8, rotation=0)
+ax.set_aspect("equal")
 
 # Labels and title — title is 50 chars, under the 67-char threshold so no scaling needed
 title = "heatmap-mandelbrot · python · seaborn · anyplot.ai"
@@ -111,7 +114,7 @@ cbar.outline.set_linewidth(0.5)
 
 sns.despine(ax=ax, left=True, bottom=True)
 
-fig.subplots_adjust(left=0.09, right=0.89, top=0.92, bottom=0.11)
+fig.subplots_adjust(left=0.09, right=0.89, top=0.92, bottom=0.14)
 
 # Save — no bbox_inches='tight' (would trim canvas from exact 3200×1800)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
