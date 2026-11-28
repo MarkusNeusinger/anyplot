@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-21
 """
 
 import os
+from itertools import pairwise
 
 import numpy as np
 import pandas as pd
@@ -22,8 +23,12 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette: all eight positions in canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Imprint sequential colormap (single polarity): brand green -> blue
-IMPRINT_SEQ = ["#009E73", "#4467A3"]
+# Imprint sequential ramp (single polarity), fields stops: colored cells fill the plot
+IMPRINT_SEQ = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
 # Columns: set these to your table's labels
 TRUE_LABEL = "True Label"  # role: true_labels
@@ -53,26 +58,21 @@ class ConfusionMatrixChart(Graph):
         super().__init__(*args, **kwargs)
 
     def _interpolate_color(self, value, min_val, max_val):
-        """Interpolate the colormap stops for a value."""
-        normalized = 1.0 if max_val == min_val else (value - min_val) / (max_val - min_val)
-        normalized = max(0.0, min(1.0, normalized))
+        """Blend the (position, hex) stops of the colormap linearly in sRGB."""
+        t = 1.0 if max_val == min_val else (value - min_val) / (max_val - min_val)
+        t = max(0.0, min(1.0, t))
+        (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(self.colormap) if t <= b[0])
+        share = (t - p0) / (p1 - p0)
+        return "#" + "".join(
+            f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02x}" for i in (1, 3, 5)
+        )
 
-        pos = normalized * (len(self.colormap) - 1)
-        idx1 = int(pos)
-        idx2 = min(idx1 + 1, len(self.colormap) - 1)
-        frac = pos - idx1
-
-        c1 = self.colormap[idx1]
-        c2 = self.colormap[idx2]
-
-        r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-        r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-
-        r = round(r1 + (r2 - r1) * frac)
-        g = round(g1 + (g2 - g1) * frac)
-        b = round(b1 + (b2 - b1) * frac)
-
-        return f"#{r:02x}{g:02x}{b:02x}"
+    @staticmethod
+    def _text_on(color):
+        """Dark or white text, whichever contrasts more with the cell color."""
+        lin = [(int(color[i : i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)]
+        luminance = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+        return "#1A1A17" if luminance > 0.3 else "#FFFFFF"
 
     def _text(self, parent, text, x, y, size, fill, anchor="start", weight="normal"):
         node = self.svg.node(parent, "text", x=x, y=y)
@@ -95,10 +95,10 @@ class ConfusionMatrixChart(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        label_margin_left = 270
-        label_margin_bottom = 235
-        label_margin_top = 50
-        label_margin_right = 190
+        label_margin_left = 340
+        label_margin_bottom = 290
+        label_margin_top = 20
+        label_margin_right = 200
 
         available_width = plot_width - label_margin_left - label_margin_right
         available_height = plot_height - label_margin_bottom - label_margin_top
@@ -113,16 +113,16 @@ class ConfusionMatrixChart(Graph):
         cm_group = self.svg.node(self.nodes["plot"], class_="confusion-matrix")
 
         # Axis titles
-        y_title_x = x_offset - 215
+        y_title_x = x_offset - 290
         y_title_y = y_offset + grid_size / 2
-        node = self._text(cm_group, self.y_axis_title, y_title_x, y_title_y, 40, INK, "middle", "bold")
+        node = self._text(cm_group, self.y_axis_title, y_title_x, y_title_y, 56, INK, "middle", "bold")
         node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
         self._text(
-            cm_group, self.x_axis_title, x_offset + grid_size / 2, y_offset + grid_size + 200, 40, INK, "middle", "bold"
+            cm_group, self.x_axis_title, x_offset + grid_size / 2, y_offset + grid_size + 250, 56, INK, "middle", "bold"
         )
 
         # Class labels: rows on the left, columns rotated below the grid
-        tick_size = min(34, int(cell_size * 0.3))
+        tick_size = min(44, int(cell_size * 0.3))
         for i, label in enumerate(row_labels):
             y = y_offset + i * (cell_size + gap) + cell_size / 2
             self._text(cm_group, label, x_offset - 18, y + tick_size * 0.35, tick_size, INK, "end", "600")
@@ -156,7 +156,7 @@ class ConfusionMatrixChart(Graph):
                     x + cell_size / 2,
                     y + cell_size / 2 + value_size * 0.35,
                     value_size,
-                    "#FFFFFF",
+                    self._text_on(color),
                     "middle",
                     "bold",
                 )
@@ -192,7 +192,7 @@ class ConfusionMatrixChart(Graph):
             stroke_width="2",
         )
 
-        cb_label_size = 30
+        cb_label_size = 44
         tick_x = colorbar_x + colorbar_width + 10
         for frac, value in ((0, max_val), (0.5, (min_val + max_val) / 2), (1, min_val)):
             self._text(
@@ -205,7 +205,7 @@ class ConfusionMatrixChart(Graph):
             )
 
         self._text(
-            cm_group, self.value_title, colorbar_x + colorbar_width / 2, colorbar_y - 25, 34, INK, "middle", "bold"
+            cm_group, self.value_title, colorbar_x + colorbar_width / 2, colorbar_y - 45, 44, INK, "middle", "bold"
         )
 
     def _compute(self):
@@ -227,9 +227,12 @@ chart = ConfusionMatrixChart(
         foreground_strong=INK,
         foreground_subtle=INK_MUTED,
         colors=tuple(IMPRINT_PALETTE),
-        title_font_size=52,
+        title_font_size=66,
         legend_font_size=34,
-        label_font_size=34,
+        label_font_size=44,
+        major_label_font_size=44,
+        guide_stroke_color=INK_MUTED,
+        major_guide_stroke_color=INK_MUTED,
         value_font_size=28,
         font_family="sans-serif",
     ),
@@ -241,7 +244,7 @@ chart = ConfusionMatrixChart(
     value_title=COUNT,
     show_legend=False,
     margin=80,
-    margin_top=130,
+    margin_top=40,
     margin_bottom=70,
     show_x_labels=False,
     show_y_labels=False,
