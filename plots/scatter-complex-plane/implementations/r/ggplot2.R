@@ -78,6 +78,10 @@ circle_df <- data.frame(x = cos(theta_seq), y = sin(theta_seq))
 title_str  <- "scatter-complex-plane · r · ggplot2 · anyplot.ai"
 title_size <- max(8, round(12 * 67 / max(nchar(title_str), 67)))
 
+# Limits from the data: the circle, every point and its label, plus room for the label text
+x_limits <- c(min(df$real + df$nx, -1) - 1.35, max(df$real + df$nx, 1) + 1.2)
+y_limits <- c(min(df$imag + df$ny, -1) - 0.25, max(df$imag + df$ny, 1) + 0.3)
+
 category_colors <- c(
     "5th Roots of Unity" = IMPRINT_PALETTE[1],
     "Arbitrary Points"   = IMPRINT_PALETTE[2]
@@ -114,7 +118,7 @@ p <- ggplot() +
         show.legend = FALSE
     ) +
     scale_color_manual(values = category_colors, name = NULL) +
-    coord_equal(xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5)) +
+    coord_equal(xlim = x_limits, ylim = y_limits) +
     labs(
         title = title_str,
         x     = "Real",
@@ -140,8 +144,8 @@ ggsave(
     filename = sprintf("plot-%s.png", THEME),
     plot     = p,
     device   = ragg::agg_png,
-    width    = 6,
-    height   = 6,
+    width    = 8,
+    height   = 4.5,
     units    = "in",
     dpi      = 400
 )
