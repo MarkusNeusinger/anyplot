@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 # Library: makie 0.24.16 | Julia 1.13.4
-# Quality: pending | Updated: 2026-11-28
+# Quality: 86/100 | Updated: 2026-11-28
 
 using CairoMakie
 using Colors
