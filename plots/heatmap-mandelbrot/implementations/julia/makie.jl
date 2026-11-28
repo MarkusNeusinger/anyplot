@@ -13,8 +13,10 @@ const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint sequential colormap: brand green → blue (single-polarity continuous data)
-const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+# Imprint sequential colormap, fields stops (colored cells fill the plot)
+const ANYPLOT_SEQ_FIELDS = THEME == "light" ?
+    cgrad([colorant"#66E2B2", colorant"#009E73", colorant"#024582", colorant"#351E45"], [0.0, 0.369, 0.803, 1.0]) :
+    cgrad([colorant"#404C02", colorant"#009E73", colorant"#CDD9FF"], [0.0, 0.487, 1.0])
 
 # Interior of the Mandelbrot set: near-black (canonical convention, never escapes)
 const INTERIOR_COLOR = colorant"#0A0A0A"
@@ -95,7 +97,7 @@ ax = Axis(
 )
 
 hm = heatmap!(ax, xs, ys, escape;
-    colormap   = ANYPLOT_SEQ,
+    colormap   = ANYPLOT_SEQ_FIELDS,
     nan_color  = INTERIOR_COLOR,
     colorrange = (0.0, 1.0),
 )
@@ -104,7 +106,7 @@ Colorbar(fig[1, 2], hm;
     label          = "Escape speed",
     labelsize      = 12,
     labelcolor     = INK,
-    ticklabelsize  = 10,
+    ticklabelsize  = 12,
     ticklabelcolor = INK_SOFT,
     tickcolor      = INK_SOFT,
     width          = 16,
