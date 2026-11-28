@@ -2,143 +2,139 @@ library: seaborn
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:19Z'
-updated: '2026-06-02T03:39:50Z'
+updated: '2026-11-28T02:08:48Z'
 generated_by: claude-sonnet
-workflow_run: 26796128179
+workflow_run: 46095835673
 issue: 4426
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - Correct stacked histogram (epi curve) with Imprint palette in canonical order
-    — Confirmed=#009E73 first
-  - Secondary y-axis with cumulative case line provides total burden context as specified
-  - Intervention markers (Travel Restrictions, Vaccination Campaign) with annotation
-    boxes contextualize the epidemic story
-  - Amber peak-period shading creates effective focal point without adding label clutter
-  - 'Excellent theme adaptation: warm off-white (#FAF8F1) light background, warm near-black
-    (#1A1A17) dark background, chrome flips correctly'
-  - All main text explicitly sized (title 12pt, labels 10pt, ticks 8pt) with good
-    proportions
-  - Perfect spec compliance — weekly bins for 120-day outbreak, stacked by case type,
-    all required features present
-  - Clean KISS code structure with reproducible seed; no functions, no fake UI elements
+  - sns.histplot reads the tidy table directly with weights=CASE_COUNT, hue and multiple='stack'
+    over explicit weekly date bin edges — no row expansion
+  - Weekly bins start on the first onset date and are derived from the data range;
+    bars adjacent from zero in a consistent Confirmed/Probable/Suspect order
+  - Cumulative line on its own labeled secondary axis in a muted tone, never falling
+    and clearly distinct from the weekly bars
+  - Intervention labels now at 8pt, left-aligned beside their dashed lines and clear
+    of the legend
+  - Theme tokens threaded through all chrome; both renders readable, Imprint colors
+    identical across themes
   weaknesses:
-  - 'Travel Restrictions annotation box partially overlaps with the legend — the ''R''
-    in ''Restrictions'' is cut off by the legend''s right edge. Fix: move annotation
-    to the right by increasing day_offset from 4 to 7, or shrink the legend fontsize
-    slightly to reduce its footprint.'
-  - Annotation fontsize 7pt is borderline small for mobile viewport (~400px scaled).
-    Consider raising to 8pt for better legibility when the plot is scaled down.
-  - 'DE-02: Legend position (upper-left) and annotation (Feb 24) compete for the same
-    area. Consider relocating legend to ''upper right'' or ''center right'' to prevent
-    overlap with early-epidemic annotation.'
-  - 'LM-02: The implementation leans on matplotlib for secondary axis, annotations,
-    and styling — the distinctively seaborn contribution is limited to sns.histplot+multiple=''stack''
-    and sns.set_theme/despine. Consider using more seaborn-specific patterns such
-    as sns.move_legend or figure-level plot features.'
+  - 'VQ-02 (both): the cumulative line runs through the ''aign'' of the ''Vaccination
+    Campaign'' label, and the opaque ''Travel Restrictions'' box covers the body of
+    the Mar 4 peak bar → place each label where neither the cumulative line nor a
+    bar passes (e.g. a label height chosen per event from the line and bar heights
+    at that date). Likely cause: both labels at the fixed height y_max * 0.86, with
+    ax2 (the line) drawn above ax''s annotations.'
+  - 'SC-03 (both): the secondary axis runs down to about -400 cumulative cases, so
+    its 0 sits above the bar baseline and shows impossible negative counts → start
+    it at 0 level with the bar baseline. Likely cause: ax2 keeps matplotlib''s default
+    margins; ax2.set_ylim(bottom=0).'
+  - 'SC-04 (both): the amber peak-period shading has no key and no label, so a reader
+    cannot tell what it marks → add a ''Peak period'' entry to the combined legend
+    (or drop the band). Likely cause: the axvspan has no label and no handle in the
+    legend.'
+  - 'Suggestion: a sns.move_legend call could place the combined legend without rebuilding
+    it by hand.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme chrome.
-      Chrome: Title "histogram-epidemic · python · seaborn · anyplot.ai" at 12pt — clearly readable dark text spanning ~75% of width. X-axis label "Date of Symptom Onset" and Y-axis label "New Cases (Weekly)" both 10pt dark text, clearly readable. Tick labels at 8pt, readable. Right Y-axis label "Cumulative Cases" readable in muted dark tone.
-      Data: Stacked bars in correct Imprint palette order — Confirmed (#009E73 brand green), Probable (#C475FD lavender), Suspect (#4467A3 blue). Cumulative line in muted dark gray. Amber shading visible in peak period (Feb 25–Mar 25). Dashed vertical lines for interventions. Two annotation boxes for "Travel Restrictions" and "Vaccination Campaign" — the Travel Restrictions box partially overlaps with the legend box (right edge of legend clips the leading 'R' from 'Restrictions').
-      Legibility verdict: PASS with minor issue — main text and all key elements readable; annotation overlap with legend is cosmetic.
+      Background: warm off-white #FAF8F1.
+      Chrome: title "histogram-epidemic · python · seaborn · anyplot.ai" in dark ink at ~75 % of the width; x label "Date of Symptom Onset", left y label "New Cases (Weekly)", right y label "Cumulative Cases" in INK_SOFT; 2-week Monday ticks Jan 15 – May 20 rotated 45°; subtle horizontal grid; boxed legend upper left (Confirmed, Probable, Suspect, Cumulative Cases). All readable.
+      Data: 17 adjacent weekly stacked bars — Confirmed #009E73, Probable #C475FD, Suspect #4467A3 — peaking at ~1180 in the week of Mar 4, a second small wave late April. Dark-grey cumulative line to ~8700 on the right axis (which extends to about -400). Faint amber band over the three peak weeks. Dashed grey lines at Feb 20 and Mar 25 with boxed semibold 8pt labels "Travel Restrictions" and "Vaccination Campaign"; the cumulative line crosses the bottom of "Campaign", and the Travel box sits over the Mar 4 bar body.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme chrome.
-      Chrome: Title, axis labels, tick labels all rendered in light (#F0EFE8 / #B8B7B0) tones — clearly readable against the dark background. No dark-on-dark failures. Legend box uses dark elevated background (#242420) with light text — readable. Right Y-axis label in light muted tone.
-      Data: Bar colors identical to light render — Confirmed (#009E73), Probable (#C475FD), Suspect (#4467A3) all clearly distinguishable on dark background. Cumulative line in light gray (#B8B7B0) readable. Amber shading very subtle but present. Annotation boxes use elevated dark background (#242420) with light text — readable.
-      Legibility verdict: PASS — same legend/annotation overlap as light render, but all text is readable in dark theme. No dark-on-dark failures observed.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and ticks in light tones (#F0EFE8 / #B8B7B0); legend and label boxes on the #242420 elevated surface with light text. No dark-on-dark text.
+      Data: bar colors identical to the light render; bar edges in the page color; light-grey cumulative line; amber band reads as a dim olive zone; dashed lines visible against bars. Same line-through-'Campaign' crossing as in light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All main text explicitly set (title 12pt, labels 10pt, ticks 8pt).
-          Annotation at 7pt is borderline small for mobile scaling.
+        comment: Title 12pt, axis labels 10pt, ticks, legend and annotation labels
+          8pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Travel Restrictions annotation box partially overlaps with legend
-          — leading 'R' of 'Restrictions' clipped by legend right edge.
+        comment: Cumulative line crosses the 'Campaign' text of the Vaccination label;
+          the Travel Restrictions box covers part of the Mar 4 peak bar (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars clearly visible with distinct colors. Cumulative line
-          well-sized. All elements appropriately sized.
+        comment: 17 weekly bars, page-colored edges separate stacks; cumulative line
+          2.0 wide; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between green, lavender, and blue. CVD-safe palette.
-          No red-green as sole signal.
+        comment: Green/lavender/blue stack is CVD-safe with good contrast on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout. Plot fills canvas well. subplots_adjust provides
-          good room for rotated x-tick labels and secondary axis. No content cut off.
+        comment: 3200x1800, plot fills the canvas, rotated ticks and right axis title
+          fit; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Date of Symptom Onset'', ''New Cases (Weekly)'',
-          ''Cumulative Cases''. All informative.'
+        comment: '''Date of Symptom Onset'', ''New Cases (Weekly)'', ''Cumulative
+          Cases'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order (green, lavender, blue). Light
-          background #FAF8F1, dark background #1A1A17. Chrome flips correctly between
-          themes.'
+        comment: 'Imprint canonical order with #009E73 first; #FAF8F1 / #1A1A17 backgrounds;
+          chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: Imprint palette correctly applied, amber peak shading
-          adds purposeful accent, intervention markers with styled annotation boxes,
-          secondary axis cumulative overlay. Clearly above defaults.'
+        comment: Elevated-surface label boxes in semibold, cumulative line in a muted
+          INK_SOFT tone that subordinates it to the bars
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: sns.despine removes top/right spines. Subtle y-axis-only grid (alpha=0.15).
-          Clean legend (fancybox=False). Good whitespace with subplots_adjust. Legend/annotation
-          overlap reduces polish slightly.
+        comment: Page-colored bar edges separate the stack segments; one combined
+          legend for bars and line; labels left-aligned beside their lines
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: peak shading creates focal point, intervention
-          markers provide epidemiological context, multi-type stacking shows severity
-          distribution, cumulative line shows burden. Story is clear.'
+        comment: Peak period computed from the data (weeks >= 75 % of the maximum)
+          and shaded as a focal zone between the two interventions
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -146,31 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram (epi curve) with weekly bins for 120-day
-          outbreak.
+        comment: Stacked epi-curve histogram with weekly bins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked bars by case classification, intervention markers with vertical
-          lines, secondary y-axis with cumulative line, weekly bins, date x-axis all
-          present.
+        comment: C1 adjacent equal bins from zero; C2 weekly bins with 2-week ticks;
+          C3 stacked by classification with legend; C4 annotated dashed lines; C5
+          cumulative line on labeled secondary axis
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X=onset_date, Y=case_count, correctly mapped. All 120 days of data
-          visible.
+        passed: false
+        comment: Secondary axis extends to about -400, so cumulative 0 floats above
+          the bar baseline (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''histogram-epidemic · python · seaborn · anyplot.ai'' —
-          exact correct format. Legend: Confirmed, Probable, Suspect, Cumulative Cases
-          — all correct.'
+        passed: false
+        comment: Title correct; the amber peak-period shading has no key or label
+          (defect line)
     data_quality:
       score: 15
       max: 15
@@ -180,24 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all epi curve features: rise, peak, decline, secondary wave.
-          Multiple case types. Intervention events. Cumulative burden.'
+        comment: Rise, peak, decline, second wave, tail, three classifications, two
+          interventions, cumulative burden
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world epidemiological scenario. Disease outbreak with confirmed/probable/suspect
-          classification mirrors actual public health reporting. No controversial
-          content.
+        comment: Regional outbreak with confirmed/probable/suspect classification;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak weekly cases ~1200, cumulative ~8000 over 4 months. Probable
-          ~35% and suspect ~20% of confirmed are plausible proportions for a regional
-          outbreak.
+        comment: Peak ~1180 weekly cases, ~8700 cumulative over 120 days; no Check
+          values in the spec; cumulative line read off the right axis matches the
+          sum of bars
     code_quality:
       score: 10
       max: 10
@@ -207,36 +200,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Clean linear flow: imports → tokens → data
-          → plot → save.'
+        comment: Linear Imports -> tokens -> columns -> data -> plot -> save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the top.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.dates, matplotlib.lines, matplotlib.pyplot,
-          numpy, pandas, seaborn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Appropriate complexity for the visualization.
-          No fake UI elements.
+        comment: Tidy table with weights=; bins and peak computed from the data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current seaborn 0.13.2 API. No bbox_inches='tight'.
+        comment: plot-{THEME}.png, no bbox_inches, seaborn 0.13 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -244,31 +234,36 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.histplot with multiple='stack' and hue_order. sns.set_theme
-          for theming. sns.despine for cleanup. Idiomatic but heavy reliance on matplotlib
-          for secondary axis and annotations.
+        comment: sns.histplot reads the tidy df with weights=CASE_COUNT, hue/hue_order
+          and explicit date bin edges instead of expanding rows
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: true
-        comment: sns.histplot with multiple='stack' is distinctively seaborn. hue_order
-          parameter for controlled stacking order. Integration with matplotlib's twinx
-          is common but effective.
+        comment: multiple='stack' is how seaborn draws what the spec asks; nothing
+          beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
+  rendered_at: '2026-11-28T02:04:29Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
+  - stacked
   - custom-legend
+  - highlight-region
   patterns:
   - data-generation
-  - explicit-figure
+  - tidy-data
   dataprep:
-  - cumulative-sum
+  - binning
   - time-series
+  - cumulative-sum
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - theme-adaptive
