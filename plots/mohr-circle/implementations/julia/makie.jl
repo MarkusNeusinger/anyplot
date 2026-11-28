@@ -1,7 +1,7 @@
 # anyplot.ai
 # mohr-circle: Mohr's Circle for Stress Analysis
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 90/100 | Created: 2026-05-30
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 87/100 | Updated: 2026-11-28
 
 using CairoMakie
 using Colors
@@ -143,32 +143,32 @@ const voff  = radius * 0.07
 text!(ax, sigma1 + nudge, -voff;
     text     = "σ₁ = $(round(Int, sigma1)) MPa",
     color    = INK,
-    fontsize = 12,
+    fontsize = 14,
     align    = (:left, :top))
 text!(ax, sigma2 - nudge, -voff;
     text     = "σ₂ = $(round(Int, sigma2)) MPa",
     color    = INK,
-    fontsize = 12,
+    fontsize = 14,
     align    = (:right, :top))
 text!(ax, center_c + nudge, tau_max + voff;
     text     = "τmax = $(round(Int, tau_max)) MPa",
     color    = INK,
-    fontsize = 12,
+    fontsize = 14,
     align    = (:left, :bottom))
 text!(ax, center_c - nudge, -(tau_max + voff);
     text     = "−τmax",
     color    = INK,
-    fontsize = 12,
+    fontsize = 14,
     align    = (:right, :top))
 text!(ax, sigma_x + nudge, tau_xy;
     text     = "A ($(round(Int, sigma_x)), $(round(Int, tau_xy))) MPa",
     color    = IMPRINT_PALETTE[2],
-    fontsize = 11,
+    fontsize = 13,
     align    = (:left, :center))
 text!(ax, sigma_y - nudge, -tau_xy;
     text     = "B ($(round(Int, sigma_y)), $(round(Int, -tau_xy))) MPa",
     color    = IMPRINT_PALETTE[3],
-    fontsize = 11,
+    fontsize = 13,
     align    = (:right, :center))
 text!(ax, center_c, voff;
     text     = "C",
@@ -181,7 +181,7 @@ const mid_arc = two_theta_p / 2.0
 text!(ax, center_c + arc_r * 1.45 * cos(mid_arc), arc_r * 1.45 * sin(mid_arc);
     text     = "2θₚ ≈ $(round(rad2deg(two_theta_p), digits=1))°",
     color    = IMPRINT_PALETTE[4],
-    fontsize = 11,
+    fontsize = 13,
     align    = (:left, :center))
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
