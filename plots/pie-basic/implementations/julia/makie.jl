@@ -36,7 +36,7 @@ const cum        = cumsum(vcat(0.0, fracs))
 const PIE_OFFSET = Float64(π / 2)
 
 const title_str = "Primary Programming Language · pie-basic · julia · makie · anyplot.ai"
-const title_fs  = round(Int, 20 * min(1.0, 66.0 / length(title_str)))
+const title_fs  = round(Int, 26 * min(1.0, 66.0 / length(title_str)))
 
 fig = Figure(
     size            = (1200, 1200),
@@ -66,45 +66,35 @@ ax = Axis(
     yticklabelsvisible = false,
 )
 
-# High-level Makie pie! recipe — idiomatic slice rendering
-p = pie!(
-    ax, fracs;
-    color       = IMPRINT_PALETTE[1:length(categories)],
-    strokecolor = PAGE_BG,
-    strokewidth = 3,
-    offset      = PIE_OFFSET,
-)
-
-# Explode the dominant slice by translating its child polygon outward
-let θ = PIE_OFFSET + (cum[explode_idx] + fracs[explode_idx] / 2) * 2π
-    translate!(p.plots[explode_idx], Vec3f(explode_r * cos(θ), explode_r * sin(θ), 0))
+# Wedges drawn as polygons so the dominant slice can be pulled out of the circle
+function slice_points(a0, a1, dx, dy; n = 120)
+    ang = range(a0, a1; length = n)
+    pts = vcat([Point2f(dx, dy)], [Point2f(dx + cos(t), dy + sin(t)) for t in ang])
+    return pts
 end
 
-# Percentage labels at arc midpoints; dominant slice gets bolder, larger label
 for i in 1:length(values)
     θ  = PIE_OFFSET + (cum[i] + fracs[i] / 2) * 2π
     ex = i == explode_idx ? explode_r * cos(θ) : 0.0
     ey = i == explode_idx ? explode_r * sin(θ) : 0.0
-    if i == explode_idx
-        text!(ax, ex + 0.62 * cos(θ), ey + 0.62 * sin(θ);
-              text     = @sprintf("%.1f%%", pct[i]),
-              align    = (:center, :center),
-              fontsize = 17,
-              font     = :bold,
-              color    = LABEL_FG,
-        )
-    else
-        text!(ax, ex + 0.62 * cos(θ), ey + 0.62 * sin(θ);
-              text     = @sprintf("%.1f%%", pct[i]),
-              align    = (:center, :center),
-              fontsize = 13,
-              color    = LABEL_FG,
-        )
-    end
+    a0 = PIE_OFFSET + cum[i] * 2π
+    a1 = PIE_OFFSET + cum[i + 1] * 2π
+    poly!(ax, slice_points(a0, a1, ex, ey);
+          color = IMPRINT_PALETTE[i], strokecolor = PAGE_BG, strokewidth = 3)
+    # Thin slices carry their label outside the circle, the others sit inside
+    outside = fracs[i] < 0.08
+    r = outside ? 1.14 : 0.62
+    text!(ax, ex + r * cos(θ), ey + r * sin(θ);
+          text     = @sprintf("%.1f%%", pct[i]),
+          align    = (:center, :center),
+          fontsize = i == explode_idx ? 26 : 22,
+          font     = i == explode_idx ? :bold : :regular,
+          color    = outside ? INK : LABEL_FG,
+    )
 end
 
 # Explicit limits so the translated slice stays fully in view
-limits!(ax, -1.2, 1.2, -1.2, 1.2)
+limits!(ax, -1.25, 1.25, -1.25, 1.3)
 
 legend_entries = [PolyElement(color = IMPRINT_PALETTE[i], strokecolor = :transparent) for i in 1:length(categories)]
 legend_labels  = [@sprintf("%s  %.1f%%", categories[i], pct[i]) for i in 1:length(categories)]
@@ -116,14 +106,15 @@ Legend(
     framevisible    = false,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
-    labelsize       = 14,
-    rowgap          = 14,
+    labelsize       = 20,
+    rowgap          = 18,
+    patchsize       = (34, 34),
     halign          = :left,
     valign          = :center,
     padding         = (16, 16, 16, 16),
 )
 
-colsize!(fig.layout, 1, Relative(0.68))
+colsize!(fig.layout, 1, Relative(0.70))
 colgap!(fig.layout, 1, 20)
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
