@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -58,6 +58,7 @@ LOG_ESCAPE = "Log-scaled escape iterations"  # role: extra
 
 # Constants
 MAX_ITER = 100  # escape iteration limit; the color scale is log-spaced up to this count
+BAILOUT = 2**8  # large escape radius keeps the normalized iteration count continuous across the exterior
 
 # Data: replace this block with your own grid, for example df = pd.read_csv("grid.csv")
 # Mandelbrot set: z(n+1) = z(n)² + c, smooth escape-time coloring
@@ -72,8 +73,8 @@ active = np.ones(c.shape, dtype=bool)
 
 for i in range(MAX_ITER):
     z[active] = z[active] ** 2 + c[active]
-    escaped = active & (np.abs(z) > 2)
-    escape_time[escaped] = i + 1 - np.log2(np.log2(np.abs(z[escaped])))
+    escaped = active & (np.abs(z) > BAILOUT)
+    escape_time[escaped] = i + 1 - np.log2(np.log2(np.abs(z[escaped])) / np.log2(BAILOUT))
     active[escaped] = False
 
 # Interior points (never escape) stay NaN → na_value renders them as INTERIOR_COLOR
@@ -106,14 +107,14 @@ plot = (
     + coord_fixed(ratio=1.0)
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(expand=(0, 0))
-    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=5, alpha=0.85, fontstyle="italic")
+    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=9, alpha=0.85, fontstyle="italic")
     + annotate(
         "text",
         x=-1.0,
         y=0,
         label="Period-2\nBulb",
         color=ANNOT_COLOR,
-        size=5,
+        size=9,
         alpha=0.85,
         fontstyle="italic",
         ha="center",
