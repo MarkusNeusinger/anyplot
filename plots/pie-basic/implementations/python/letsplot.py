@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pie-basic: Basic Pie Chart
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -19,6 +19,7 @@ from lets_plot import (
     labs,
     layer_labels,
     layer_tooltips,
+    scale_color_identity,
     scale_fill_manual,
     theme,
     theme_void,
@@ -59,7 +60,13 @@ colors = [ANYPLOT_MUTED if rest else IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] f
 
 # Explode the smallest slice; the subtitle names it from the data
 smallest = df[SHARE].idxmin()
-df = df.assign(explode=[0.08 if i == smallest else 0.0 for i in df.index], label=[f"{v:.1f}%" for v in df[SHARE]])
+# Label ink follows the fill: dark on the light fills (lavender, and the muted rest slice on the dark page), white elsewhere
+dark_label = {"#C475FD", ANYPLOT_MUTED} if THEME == "dark" else {"#C475FD"}
+df = df.assign(
+    explode=[0.08 if i == smallest else 0.0 for i in df.index],
+    label=[f"{v:.1f}%" for v in df[SHARE]],
+    label_color=["#1A1A17" if c in dark_label else "#FFFFFF" for c in colors],
+)
 subtitle = f"{df[COMPANY][smallest]}'s {df[SHARE][smallest]}% slice is the smallest — '{df[COMPANY][df[SHARE].idxmax()]}' dominate at {df[SHARE].max():g}%"
 
 # Rich HTML tooltips — letsplot-specific interactivity
@@ -68,19 +75,18 @@ pie_tooltips = layer_tooltips().title(f"@{COMPANY}").line("Market share|@label")
 plot = (
     ggplot(df)
     + geom_pie(
-        aes(slice=SHARE, fill=COMPANY, explode="explode"),
+        aes(slice=SHARE, fill=COMPANY, explode="explode", color="label_color"),
         stat="identity",
         size=40,
         hole=0,
-        stroke=1.5,
-        stroke_side="both",
-        color=PAGE_BG,
+        stroke=0,
         spacer_width=1.0,
         spacer_color=PAGE_BG,
-        labels=layer_labels().line("@label").size(11),
+        labels=layer_labels().line("@label").size(11).inherit_color(),
         tooltips=pie_tooltips,
     )
     + scale_fill_manual(values=colors)
+    + scale_color_identity()
     + labs(title=title, subtitle=subtitle, fill="Brand", caption="Global smartphone market share, 2024")
     + ggsize(600, 600)
     + theme_void()
