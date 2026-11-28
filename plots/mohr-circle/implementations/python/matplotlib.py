@@ -1,7 +1,7 @@
 """ anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-28
+Quality: 87/100 | Updated: 2026-11-28
 """
 
 import os
@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Imprint palette — all eight positions, with semantic role assignment for Mohr's circle
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 CLR_GEOM = IMPRINT_PALETTE[0]  # brand green (position 1) — circle outline, center, angle arc
-CLR_INPUT = IMPRINT_PALETTE[4]  # matte red (semantic: applied stress / force) — input points A, B
+CLR_INPUT = IMPRINT_PALETTE[1]  # violet (position 2) — input points A, B
 CLR_DERIVED = IMPRINT_PALETTE[2]  # blue (position 3) — principal stresses σ₁, σ₂, τ_max
 
 # Shared annotation style
@@ -53,7 +53,7 @@ ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
 
 # Axis limits with padding for annotations
-pad = radius * 0.55
+pad = radius * 0.75
 ax.set_xlim(sigma_2 - pad, sigma_1 + pad)
 ax.set_ylim(-tau_max - pad, tau_max + pad)
 
@@ -102,7 +102,7 @@ ax.scatter([sigma_1], [0], color=CLR_DERIVED, s=200, edgecolors=PAGE_BG, linewid
 sigma1_txt = ax.annotate(
     f"σ₁ = {sigma_1:.1f} MPa",
     xy=(sigma_1, 0),
-    xytext=(sigma_1, -30),
+    xytext=(sigma_1 + 14, -tau_max * 0.85),
     fontsize=11,
     color=CLR_DERIVED,
     fontweight="bold",
@@ -112,7 +112,7 @@ sigma1_txt = ax.annotate(
         "boxstyle": "round,pad=0.3",
         "facecolor": ELEVATED_BG,
         "edgecolor": CLR_DERIVED,
-        "alpha": 0.7,
+        "alpha": 1.0,
         "linewidth": 1.2,
     },
 )
@@ -120,11 +120,11 @@ sigma1_txt.set_path_effects(stroke_fx)
 sigma2_txt = ax.annotate(
     f"σ₂ = {sigma_2:.1f} MPa",
     xy=(sigma_2, 0),
-    xytext=(sigma_2, 22),
+    xytext=(sigma_2 - 2, 22),
     fontsize=10,
     color=CLR_DERIVED,
     fontweight="bold",
-    ha="center",
+    ha="right",
     arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
 sigma2_txt.set_path_effects(stroke_fx)
@@ -143,20 +143,22 @@ ax.scatter(
 tmax_txt = ax.annotate(
     f"τ_max = {tau_max:.1f} MPa",
     xy=(center, tau_max),
-    xytext=(center - 38, tau_max + 12),
+    xytext=(center - 10, tau_max + 12),
     fontsize=10,
     color=CLR_DERIVED,
     fontweight="bold",
+    ha="right",
     arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
 tmax_txt.set_path_effects(stroke_fx)
 tmin_txt = ax.annotate(
     f"−τ_max = −{tau_max:.1f} MPa",
     xy=(center, -tau_max),
-    xytext=(center - 38, -tau_max - 12),
+    xytext=(center - 10, -tau_max - 12),
     fontsize=10,
     color=CLR_DERIVED,
     fontweight="bold",
+    ha="right",
     arrowprops={**arrow_kw, "color": CLR_DERIVED},
 )
 tmin_txt.set_path_effects(stroke_fx)
@@ -191,7 +193,7 @@ arc_mid = np.radians(theta_2p / 2)
 arc_txt = ax.annotate(
     f"2θp = {theta_2p:.1f}°",
     xy=(center + arc_radius * np.cos(arc_mid), arc_radius * np.sin(arc_mid)),
-    xytext=(center + arc_radius * 2.8, arc_radius * 0.4),
+    xytext=(center + 8, -16),
     fontsize=10,
     color=CLR_GEOM,
     fontweight="bold",
@@ -204,7 +206,7 @@ ax.plot(center, 0, marker="+", color=CLR_GEOM, markersize=14, markeredgewidth=2.
 center_txt = ax.annotate(
     f"C ({center:.0f}, 0)",
     xy=(center, 0),
-    xytext=(center - 8, -14),
+    xytext=(center - 6, 6),
     fontsize=10,
     color=CLR_GEOM,
     ha="right",

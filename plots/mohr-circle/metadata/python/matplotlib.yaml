@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:10:18Z'
-updated: '2026-11-28T00:16:13Z'
+updated: '2026-11-28T00:23:47Z'
 generated_by: claude-sonnet
-workflow_run: 46086496562
+workflow_run: 46087092159
 issue: 4432
 language_version: 3.14.10
 library_version: 3.11.2
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Three-tier semantic color roles (green geometry, red inputs, blue derived values)
-    with matching marker shapes (circles vs. diamonds) give a clear reading order
-  - Page-colored patheffects.withStroke halos keep every annotation legible over the
-    circle, grid and fill in both themes
-  - σ₁ chosen as the focal engineering result with a larger diamond and a boxed callout
+  - Three-tier semantic color roles in canonical Imprint order (green geometry, violet
+    inputs, blue derived values) with matching marker shapes give a clear reading
+    order
+  - Page-colored patheffects.withStroke halos keep every annotation legible over circle,
+    grid and fill in both themes
+  - σ₁ chosen as the focal engineering result with a larger diamond and an opaque
+    boxed callout
   - 2θp drawn with patches.Arc at the center spanning exactly the computed 26.6°,
     with an arrowhead showing the rotation sense
   - All circle parameters derived from the three input stresses; values verified (C=20,
     R=67.1, σ₁=87.1, σ₂=-47.1 MPa)
   weaknesses:
-  - 'VQ-02 (both): leader and reference lines run through label text — the A-B diameter
-    crosses ''C (20, 0)'', the dashed center line at σ=20 crosses ''67.1'' in both
-    τ_max labels, and the circle outline shows through the alpha-0.7 σ₁ callout box
-    → place each label in clear space off the lines (C label above-left of the center,
-    τ_max labels fully to one side of the center line, σ₁ box below the circle or
-    opaque). Likely cause: xytext offsets (center - 8, -14), (center - 38, tau_max
-    ± 12) and the σ₁ bbox alpha=0.7.'
-  - 'VQ-07 (both): the second color role (stress points A, B) skips to Imprint position
-    5, matte red #AE3030, although ''applied stress'' carries no shared red association;
-    positions 2 and 4 stay unused → use canonical order for the three roles (#009E73,
-    #C475FD, #4467A3). Likely cause: CLR_INPUT = IMPRINT_PALETTE[4].'
-  - 'Suggestion: render τ_max and 2θp with mathtext subscripts ($\tau_{max}$, $2\theta_p$)
-    instead of a literal underscore.'
-  - 'Suggestion: the −τ_max leader arrow is a short stub hidden under its diamond;
-    a slightly longer leader would read better.'
+  - 'CQ-04 (code): the circle is drawn twice, a patches.Circle for the fill (line
+    61) and a hand-parametrised 360-point outline via np.linspace/cos/sin and ax.plot
+    (lines 45-48, 65) → one patches.Circle with facecolor alpha fill and edgecolor=CLR_GEOM,
+    linewidth=2.5. Likely cause: fill and outline written as separate passes.'
+  - 'Suggestion: render τ_max and 2θp with mathtext ($\tau_{max}$, $2\theta_p$) and
+    use the Unicode minus in the σ₂ and A/B labels to match ''−τ_max''.'
+  - 'Suggestion: the 2θp leader arrives almost parallel to the short arc and its arrowhead
+    sits next to the arc''s own tip arrowhead; a leader from the right would separate
+    them.'
+  - 'Suggestion: the σ₁ leader''s arrowhead is hidden under its diamond; ending it
+    at the diamond''s edge would read better.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400.
-      Chrome: title 'mohr-circle · python · matplotlib · anyplot.ai' (~60 % of width), axis titles 'Normal Stress σ (MPa)' and 'Shear Stress τ (MPa)' in dark ink, ticks -75..100 / -100..100 in soft ink; top/right spines removed; light two-axis grid; solid τ=0 axis line and dashed vertical line through the center.
-      Data: #009E73 circle outline with faint green fill centered at C(20, 0), R=67.1; red #AE3030 points A(80, 30) and B(-40, -30) joined by a dashed diameter; blue #4467A3 diamonds at σ₁=87.1 (larger, boxed callout), σ₂=-47.1 and ±τ_max=67.1; green arc from the σ axis to the diameter labeled '2θp = 26.6°'. The diameter crosses the 'C (20, 0)' label and the center line crosses the τ_max labels.
+      Chrome: title 'mohr-circle · python · matplotlib · anyplot.ai' (~60 % of width), axis titles 'Normal Stress σ (MPa)' / 'Shear Stress τ (MPa)' in dark ink, ticks -50..100 / -100..100 in soft ink; top/right spines removed; light grid; solid τ=0 line and dashed vertical line through the center.
+      Data: #009E73 circle outline with faint green fill at C(20, 0), R=67.1; violet #C475FD points A(80, 30) and B(-40, -30) joined by a dashed diameter; blue #4467A3 diamonds at σ₁=87.1 (larger, opaque boxed callout below-right), σ₂=-47.1 and ±τ_max=67.1 (labels left of the center line); small green arc from the σ axis to the diameter labeled '2θp = 26.6°' from below-right. Labels all in clear space.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and ticks in light ink, grid subtle but visible; no dark-on-dark text; σ₁ callout box on the elevated dark fill.
-      Data: identical green, red and blue data colors to the light render; halos switch to the dark page color; circle fill barely visible but the outline is prominent; same line/label crossings as light.
+      Chrome: title, axis titles and ticks in light ink; grid subtle but visible; no dark-on-dark text; σ₁ box on the elevated dark fill.
+      Data: green, violet and blue identical to the light render; halos switch to the dark page color; circle outline prominent.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,12 +64,13 @@ review:
           bold with page-colored halos; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 'Leader and reference lines run through label text: the A-B diameter
-          crosses ''C (20, 0)'', the dashed center line crosses both τ_max labels,
-          the circle outline runs through the semi-transparent σ₁ box (defect line)'
+        passed: true
+        comment: 'Every label sits in clear space: τ_max labels left of the center
+          line, C label above the diameter, σ₂ label outside the circle, σ₁ in an
+          opaque box below-right of the circle; the cluster at the arc is permitted
+          by the spec'
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -84,55 +83,54 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/red Imprint members plus shape redundancy (circles for
-          inputs, diamonds for derived values); no red-green as sole signal
+        comment: Imprint hues plus shape redundancy (circles for inputs, diamonds
+          for derived values)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, circle well centered, nothing clipped; margins
-          from the equal aspect are permitted by the spec
+        comment: Square 2400x2400 canvas, circle centered, nothing clipped; margins
+          hold the labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Normal Stress σ (MPa)'' and ''Shear Stress τ (MPa)'' exactly as
-          the Notes ask; title in mandated format'
+        comment: '''Normal Stress σ (MPa)'' and ''Shear Stress τ (MPa)'' as the Notes
+          ask'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds and chrome theme-correct; circle in #009E73; but the
-          second role skips to position 5 (matte red #AE3030) for A/B with no shared
-          red association (defect line)'
+        passed: true
+        comment: 'Canonical Imprint order for the three roles (#009E73, #C475FD, #4467A3);
+          backgrounds #FAF8F1 / #1A1A17; data colors identical in both themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Three-tier semantic color roles (geometry / inputs / derived) with
-          matching marker shapes and a callout box for σ₁: decided beyond the baseline'
+        passed: false
+        comment: 'Three-tier semantic color roles (geometry / inputs / derived) matched
+          by marker shape, σ₁ boxed: decided beyond the baseline'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Page-colored path-effect halos on every annotation and an alpha 0.06
-          circle fill; held back by label/line collisions
+        passed: false
+        comment: Page-colored patheffects halos on every annotation and an alpha-0.06
+          circle fill
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: σ₁ chosen as the focal result (larger diamond + boxed callout), a
-          hierarchy not prescribed by the Notes
+        passed: false
+        comment: σ₁ chosen as focal result (larger diamond + boxed callout), a hierarchy
+          the Notes do not prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -148,24 +146,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and ''A good version shows'' bullets met: circle (C1),
-          σ₁/σ₂ and ±τ_max at true positions (C2), A/B on a diameter (C3), 2θp arc
-          at the center spanning exactly 26.6° (C4), axis labels, light grid and center
-          reference lines (C5)'
+        comment: C1 circle at C=20 with R=67.1 on equal aspect; C2 σ₁/σ₂ and ±τ_max
+          at true positions; C3 A/B on a diameter; C4 2θp arc at the center spanning
+          exactly 26.6°; C5 axis labels, light grid, reference lines through the center
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: σ horizontal, τ vertical, equal aspect, all marks at their computed
-          coordinates
+        comment: σ horizontal, τ vertical, equal aspect, all marks at computed coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'mohr-circle · python · matplotlib · anyplot.ai' correct; no
-          legend needed, every element directly labeled
+        comment: Title 'mohr-circle · python · matplotlib · anyplot.ai'; every element
+          directly labeled, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -175,24 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows every aspect: circle, inputs, principal stresses, max shear,
-          center, diameter, angle'
+        comment: Circle, inputs, principal stresses, max shear, center, diameter,
+          angle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'σx=80, σy=-40, τxy=30 MPa: plausible structural combined-loading
-          state, neutral'
+        comment: 'σx=80, σy=-40, τxy=30 MPa: plausible combined-loading state, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: C=20, R=√(60²+30²)=67.1, σ₁=87.1, σ₂=-47.1, 2θp=atan2(30,60)=26.6°;
-          all computed in code and read correctly off the axes'
+        comment: 'Checked: C=20, R=√(60²+30²)=67.1, σ₁=87.1, σ₂=-47.1, 2θp=atan2(30,60)=26.6°,
+          computed in code and read correctly off the axes'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -215,11 +210,12 @@ review:
         comment: All five imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Shared arrow_kw and stroke_fx; parameters derived from the stress
-          state; no fake UI
+        passed: false
+        comment: 'Circle drawn twice: a patches.Circle for the fill and a hand-parametrised
+          360-point ax.plot outline (lines 45-48, 65) that the same patch''s edgecolor/linewidth
+          replaces (defect line)'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,27 +223,26 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png at dpi=400, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
+        passed: false
         comment: Axes API throughout, patches.Circle/Arc, ax.annotate with arrowprops
           and bbox
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: patheffects.withStroke halos and patches.Arc for the angle are matplotlib-specific;
-          nothing further
+        passed: false
+        comment: patheffects.withStroke halos and patches.Arc for the angle are matplotlib-specific
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
-  rendered_at: '2026-11-28T00:12:43Z'
+  rendered_at: '2026-11-28T00:20:05Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -259,4 +254,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - minimal-chrome
