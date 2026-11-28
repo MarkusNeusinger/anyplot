@@ -1,16 +1,16 @@
 """ anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-01
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-28
 """
 
 import importlib.util
 import os
 import re
 import sys
-from xml.etree import ElementTree as ET
 
 import cairosvg
+import pandas as pd
 
 
 # Prevent self-import: this file is named pygal.py, so import the installed package explicitly
@@ -34,91 +34,87 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette (canonical order); the diverging Likert scale uses the semantic red and blue anchors
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-def _lerp_hex(c0, c1, t):
+
+# Constants
+def lerp_hex(c0, c1, t):
     r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
     r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    return "#{:02X}{:02X}{:02X}".format(
-        int(round(r0 + (r1 - r0) * t)), int(round(g0 + (g1 - g0) * t)), int(round(b0 + (b1 - b0) * t))
-    )
+    return "#" + "".join(f"{round(a + (b - a) * t):02X}" for a, b in ((r0, r1), (g0, g1), (b0, b1)))
 
 
-# Imprint palette diverging scale for 5 Likert responses
-# Use fixed light-value of INK_MUTED so intermediate colors are theme-invariant
-INK_MUTED_FIXED = "#6B6A63"
-STRONGLY_DISAGREE_C = "#AE3030"
-# t=0.35 (less blending) improves visual separation from the neutral gray
-DISAGREE_C = _lerp_hex("#AE3030", INK_MUTED_FIXED, 0.35)
-NEUTRAL_C = INK_MUTED_FIXED
-AGREE_C = _lerp_hex(INK_MUTED_FIXED, "#4467A3", 0.5)
-STRONGLY_AGREE_C = "#4467A3"
-
-# Colors in series-addition order: N_left, D, SD, N_right, A, SA
-CHART_COLORS = (NEUTRAL_C, DISAGREE_C, STRONGLY_DISAGREE_C, NEUTRAL_C, AGREE_C, STRONGLY_AGREE_C)
+# Theme-invariant neutral so the intermediate blends are identical in both themes
+NEUTRAL_GREY = "#6B6A63"
+SD_COLOR = IMPRINT_PALETTE[4]
+D_COLOR = lerp_hex(SD_COLOR, NEUTRAL_GREY, 0.35)
+N_COLOR = NEUTRAL_GREY
+A_COLOR = lerp_hex(NEUTRAL_GREY, IMPRINT_PALETTE[2], 0.5)
+SA_COLOR = IMPRINT_PALETTE[2]
 
 
-# Data — employee engagement survey (8 questions, 5-point Likert scale)
-questions = [
-    "I feel valued at work",
-    "My manager provides clear direction",
-    "I have opportunities for growth",
-    "Work-life balance is supported",
-    "I receive fair compensation",
-    "Team collaboration is effective",
-    "Company vision is inspiring",
-    "My contributions are recognized",
-]
-
-# Response percentages: (Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree)
-responses = [
-    (5, 10, 15, 40, 30),
-    (8, 15, 20, 35, 22),
-    (12, 22, 18, 30, 18),
-    (6, 12, 22, 38, 22),
-    (22, 30, 18, 20, 10),
-    (3, 7, 10, 42, 38),
-    (18, 28, 22, 22, 10),
-    (7, 14, 16, 38, 25),
-]
-
-# Sort ascending by net agreement (most positive renders at top in horizontal chart)
-net_scores = [(r[3] + r[4]) - (r[0] + r[1]) for r in responses]
-order = sorted(range(len(questions)), key=lambda i: net_scores[i])
-questions = [questions[i] for i in order]
-responses = [responses[i] for i in order]
+# Column constants
+QUESTION = "Survey question"  # role: question
+STRONGLY_DISAGREE = "Strongly Disagree"  # role: strongly_disagree
+DISAGREE = "Disagree"  # role: disagree
+NEUTRAL = "Neutral"  # role: neutral
+AGREE = "Agree"  # role: agree
+STRONGLY_AGREE = "Strongly Agree"  # role: strongly_agree
 
 
-# Style — title scaled for length (79 chars vs 67-char baseline → font size 56)
+# Data: replace this block with your own table, for example df = pd.read_csv("survey.csv")
+# Employee engagement survey: 8 questions, 5-point Likert scale, response percentages per question
+df = pd.DataFrame(
+    {
+        QUESTION: [
+            "I feel valued at work",
+            "My manager provides clear direction",
+            "I have opportunities for growth",
+            "Work-life balance is supported",
+            "I receive fair compensation",
+            "Team collaboration is effective",
+            "Company vision is inspiring",
+            "My contributions are recognized",
+        ],
+        STRONGLY_DISAGREE: [5, 8, 12, 6, 22, 3, 18, 7],
+        DISAGREE: [10, 15, 22, 12, 30, 7, 28, 14],
+        NEUTRAL: [15, 20, 18, 22, 18, 10, 22, 16],
+        AGREE: [40, 35, 30, 38, 20, 42, 22, 38],
+        STRONGLY_AGREE: [30, 22, 18, 22, 10, 38, 10, 25],
+    }
+)
+
+
+# Plot
+# Sort ascending by net agreement (most positive renders at top in a horizontal chart)
+net = df[[AGREE, STRONGLY_AGREE]].sum(axis=1) - df[[STRONGLY_DISAGREE, DISAGREE]].sum(axis=1)
+df = df.loc[net.sort_values(kind="stable").index]
+
+# Title scaled for length (long mandated title)
 title = "Employee Engagement Survey · bar-diverging-likert · python · pygal · anyplot.ai"
 n = len(title)
 title_font_size = max(44, round(66 * 67 / n)) if n > 67 else 66
 
+# Colors in series-addition order: N_left, D, SD, N_right, A, SA
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=CHART_COLORS,
+    colors=(N_COLOR, D_COLOR, SD_COLOR, N_COLOR, A_COLOR, SA_COLOR),
     title_font_size=title_font_size,
-    label_font_size=56,
-    major_label_font_size=44,
+    label_font_size=48,
+    major_label_font_size=48,
     legend_font_size=44,
-    value_font_size=30,
+    value_font_size=36,
     stroke_width=2.5,
+    opacity=1,
+    opacity_hover=1,
+    value_colors=("#F0EFE8",) * 6,
 )
 
-
-# Build diverging series (neutral split evenly at center)
-neutral_left = [-r[2] / 2 for r in responses]
-disagree_vals = [-r[1] for r in responses]
-strongly_disagree_vals = [-r[0] for r in responses]
-neutral_right = [r[2] / 2 for r in responses]
-agree_vals = [r[3] for r in responses]
-strongly_agree_vals = [r[4] for r in responses]
-
-
-# Plot
 chart = pygal.HorizontalStackedBar(
     width=3200,
     height=1800,
@@ -140,14 +136,14 @@ chart = pygal.HorizontalStackedBar(
 )
 
 # Add series in stacking order (center outward); legend shows N, D, SD, A, SA
-chart.add("Neutral", neutral_left)
-chart.add("Disagree", disagree_vals)
-chart.add("Strongly Disagree", strongly_disagree_vals)
-chart.add(None, neutral_right)  # right-half neutral hidden from legend
-chart.add("Agree", agree_vals)
-chart.add("Strongly Agree", strongly_agree_vals)
+chart.add(NEUTRAL, (-df[NEUTRAL] / 2).tolist())
+chart.add(DISAGREE, (-df[DISAGREE]).tolist())
+chart.add(STRONGLY_DISAGREE, (-df[STRONGLY_DISAGREE]).tolist())
+chart.add(None, (df[NEUTRAL] / 2).tolist())  # right-half neutral hidden from legend
+chart.add(AGREE, df[AGREE].tolist())
+chart.add(STRONGLY_AGREE, df[STRONGLY_AGREE].tolist())
 
-chart.x_labels = questions
+chart.x_labels = df[QUESTION].tolist()
 
 
 # SVG post-processing: remove residual guide lines and reorder legend to SD, D, N, A, SA
@@ -155,23 +151,17 @@ svg_content = chart.render().decode("utf-8")
 
 svg_content = re.sub(r'<path [^>]*class="(?:major )?(?:axis major )?guide line"[^/]*/>', "", svg_content)
 
-SVG_NS = "http://www.w3.org/2000/svg"
-ET.register_namespace("", SVG_NS)
-ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
-root = ET.fromstring(svg_content)
-
-# Swap x-positions of serie-0 (Neutral) and serie-2 (Strongly Disagree) legend items
-# so legend reads left-to-right: SD | D | N | A | SA
-serie_0 = root.find(f'.//{{{SVG_NS}}}g[@id="activate-serie-0"]')
-serie_2 = root.find(f'.//{{{SVG_NS}}}g[@id="activate-serie-2"]')
-if serie_0 is not None and serie_2 is not None:
-    for child_0, child_2 in zip(serie_0, serie_2, strict=False):
-        x0, x2 = child_0.get("x"), child_2.get("x")
-        if x0 is not None and x2 is not None:
-            child_0.set("x", x2)
-            child_2.set("x", x0)
-
-svg_content = ET.tostring(root, encoding="unicode")
+# Re-flow the legend entries left to right as SD | D | N | A | SA, spaced by label length
+char_width, swatch, gap = 27, 40, 90
+cursor = 0.0
+for serie, label in ((2, STRONGLY_DISAGREE), (1, DISAGREE), (0, NEUTRAL), (4, AGREE), (5, STRONGLY_AGREE)):
+    entry = re.search(rf'<g id="activate-serie-{serie}".*?</g>', svg_content)
+    if entry is None:
+        continue
+    moved = re.sub(r'(<rect x=")[\d.]+', rf"\g<1>{cursor}", entry.group(0))
+    moved = re.sub(r'(<text x=")[\d.]+', rf"\g<1>{cursor + 17}", moved)
+    svg_content = svg_content.replace(entry.group(0), moved)
+    cursor += swatch + len(label) * char_width + gap
 
 
 # Save
