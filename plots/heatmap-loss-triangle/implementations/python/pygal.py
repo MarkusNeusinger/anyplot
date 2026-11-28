@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-28
+Quality: 89/100 | Updated: 2026-11-28
 """
 
 import os
@@ -120,7 +120,7 @@ class LossTriangleHeatmap(Graph):
 
     def _plot(self):
         # Margins within the view area for the row titles and the colorbar
-        left, right, top, bottom = 200, 195, 90, 10
+        left, right, top, bottom = 215, 290, 110, 10
         aw = self.view.width - left - right
         ah = self.view.height - top - bottom
         cw = aw / n_cols
@@ -149,25 +149,25 @@ class LossTriangleHeatmap(Graph):
             hl.set("stroke-width", "2.5")
             hl.set("opacity", "0.35")
 
-        hf = max(26, min(34, int(cw * 0.15)))  # axis titles
-        cf = max(22, min(30, int(cw * 0.42)))  # column and row labels
+        hf = 56  # axis titles
+        cf = 44  # column and row labels
         vf = max(20, min(32, int(min(cw, ch) * 0.48)))  # cell values
-        ff = max(18, min(24, int(cw * 0.32)))  # development factors
+        ff = 40  # development factors
 
         put = self._put
 
         # Axis titles, column headers and row labels
-        put(DEV_PERIOD, xo + gw / 2, yo - 62, hf, INK_SOFT, "600")
+        put(DEV_PERIOD, xo + gw / 2, yo - 84, hf, INK_SOFT, "600")
         for j, period in enumerate(self.table.columns):
             put(str(period), xo + j * (cw + gap) + cw / 2, yo - 16, cf, INK, "700")
         for i, year in enumerate(self.table.index):
             put(str(year), xo - 16, yo + i * (ch + gap) + ch / 2 + cf * 0.35, cf, INK, "600", "end")
         ty = yo + gh / 2
-        title_node = self.svg.node(pn, "text", x=xo - 148, y=ty)
+        title_node = self.svg.node(pn, "text", x=xo - 168, y=ty)
         title_node.set("text-anchor", "middle")
         title_node.set("fill", INK_SOFT)
         title_node.set("style", f"font-size:{hf}px;font-weight:600;font-family:sans-serif")
-        title_node.set("transform", f"rotate(-90,{xo - 148},{ty})")
+        title_node.set("transform", f"rotate(-90,{xo - 168},{ty})")
         title_node.text = ACCIDENT_YEAR
 
         # Cells: opaque Imprint ramp color; projected cells add hatching, a dashed border, italic text
@@ -219,7 +219,7 @@ class LossTriangleHeatmap(Graph):
             diag.set("stroke-dasharray", "14,7")
 
         # Development factors: one band below the triangle, each between the two periods it links
-        fy = yo + gh + 34
+        fy = yo + gh + 44
         rule = self.svg.node(pn, "line", x1=xo, y1=yo + gh + 12, x2=xo + gw, y2=yo + gh + 12)
         rule.set("stroke", INK_MUTED)
         rule.set("stroke-width", "1.5")
@@ -230,7 +230,7 @@ class LossTriangleHeatmap(Graph):
 
         # Colorbar: SVG gradient along the same ramp, high values on top
         cbw, cbh = 32, gh * 0.6
-        cbx, cby = xo + gw + 44, yo + (gh - cbh) / 2
+        cbx, cby = xo + gw + 36, yo + (gh - cbh) / 2
         grad = self.svg.node(defs, "linearGradient", id="cb-grad", x1="0", y1="0", x2="0", y2="1")
         for step in range(21):
             stop = self.svg.node(grad, "stop", offset=f"{step * 5}%")
@@ -244,35 +244,39 @@ class LossTriangleHeatmap(Graph):
             tick = self.svg.node(pn, "line", x1=cbx + cbw, y1=tick_y, x2=cbx + cbw + 6, y2=tick_y)
             tick.set("stroke", INK_MUTED)
             tick.set("stroke-width", "1.5")
-            put(self.value_formatter(hi - (hi - lo) * share), cbx + cbw + 10, tick_y + 8, 22, INK_SOFT, anchor="start")
-        put(CUMULATIVE, cbx + cbw / 2, cby - 40, 24, INK_SOFT, "600")
+            put(self.value_formatter(hi - (hi - lo) * share), cbx + cbw + 12, tick_y + 14, 40, INK_SOFT, anchor="start")
+        # Title wrapped at the unit, left-aligned with the bar so it stays clear of the grid
+        name, _, unit = CUMULATIVE.partition(" (")
+        put(name, cbx, cby - 84 if unit else cby - 40, 36, INK_SOFT, "600", "start")
+        if unit:
+            put(f"({unit}", cbx, cby - 40, 36, INK_SOFT, "600", "start")
 
         # Legend: three items centered under the triangle, widths from the text lengths
-        lf = 24
+        lf = 40
         items = [("Actual (Observed)", "actual"), ("Projected (IBNR)", "projected"), ("Evaluation Date", "line")]
-        widths = [46 + len(text) * lf * 0.6 for text, _ in items]
+        widths = [60 + len(text) * lf * 0.56 for text, _ in items]
         lx = xo + (gw - sum(widths) - 60 * (len(items) - 1)) / 2
-        ly = fy + ff + 22
+        ly = fy + ff + 18
         mid = ramp_color(SEQ_FIELDS, 0.5)
         for k, (text, kind) in enumerate(items):
             if kind != "line":
-                swatch = self.svg.node(pn, "rect", x=lx, y=ly, width=30, height=22, fill=mid, rx=3, ry=3)
+                swatch = self.svg.node(pn, "rect", x=lx, y=ly, width=44, height=32, fill=mid, rx=3, ry=3)
                 swatch.set("stroke", INK_MUTED)
             if kind == "projected":
-                hatch = self.svg.node(pn, "rect", x=lx, y=ly, width=30, height=22, rx=3, ry=3)
+                hatch = self.svg.node(pn, "rect", x=lx, y=ly, width=44, height=32, rx=3, ry=3)
                 hatch.set("fill", f"url(#hatch-{'dark' if text_on(mid) == DARK_TEXT else 'light'})")
-                border = self.svg.node(pn, "rect", x=lx + 3, y=ly + 3, width=24, height=16, rx=2, ry=2)
+                border = self.svg.node(pn, "rect", x=lx + 4, y=ly + 4, width=36, height=24, rx=2, ry=2)
                 border.set("fill", "none")
                 border.set("stroke", text_on(mid))
                 border.set("stroke-width", "1.5")
                 border.set("stroke-dasharray", "4,3")
                 border.set("opacity", "0.6")
             if kind == "line":
-                key = self.svg.node(pn, "line", x1=lx, y1=ly + 11, x2=lx + 34, y2=ly + 11)
+                key = self.svg.node(pn, "line", x1=lx, y1=ly + 16, x2=lx + 48, y2=ly + 16)
                 key.set("stroke", INK)
                 key.set("stroke-width", "4")
                 key.set("stroke-dasharray", "9,4")
-            put(text, lx + 42, ly + 18, lf, INK, "600", "start")
+            put(text, lx + 58, ly + 28, lf, INK, "600", "start")
             lx += widths[k] + 60
 
 
