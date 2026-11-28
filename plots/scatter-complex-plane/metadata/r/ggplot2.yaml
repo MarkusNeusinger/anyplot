@@ -2,106 +2,109 @@ library: ggplot2
 language: r
 specification_id: scatter-complex-plane
 created: '2026-06-02T01:16:04Z'
-updated: '2026-06-02T01:39:36Z'
+updated: '2026-11-28T01:50:45Z'
 generated_by: claude-sonnet
-workflow_run: 26792068687
+workflow_run: 46094579601
 issue: 4427
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all required Argand diagram features present (axes through
-    origin, dashed unit circle, vector arrows, equal aspect ratio, rectangular-form
-    labels, category colors)'
-  - 'Correct Imprint palette with full theme adaptation — brand green #009E73 for
-    roots of unity, lavender #C475FD for arbitrary points; both themes render cleanly'
-  - Mathematically accurate 5th roots of unity computed from closed-form formula;
-    deterministic and elegant data generation
-  - 'Idiomatic ggplot2 grammar: geom_segment with arrow() and coord_equal is the correct
-    approach for this plot type'
+  - 'Every spec feature present: axes through the origin, dashed unit circle kept
+    circular by coord_equal, an arrow from the origin to each point, a+bi labels,
+    category colors'
+  - 'Label placement driven by data columns: outward nudge along each vector''s angle,
+    direction-dependent hjust mapped as an aesthetic, and a lift for points on the
+    real axis so no label touches a line'
+  - 'Correct Imprint palette (#009E73, #C475FD) identical in both themes, with fully
+    theme-adaptive chrome'
+  - Roots of unity computed from cos/sin(2πk/5), deterministic and exact on the unit
+    circle
   weaknesses:
-  - 'Two annotation labels clipped at right panel boundary: 1.00+0.00i (root at angle=0,
-    label starts at x=1.30, hjust=0) and 1.30+0.70i (arbitrary point, label starts
-    at x~1.56). Fix: widen xlim to c(-2.5, 2.5) or add clip=off to coord_equal with
-    increased right plot.margin'
-  - Annotation labels at size=3.2 scale to ~8px at mobile widths (~400px) — borderline
-    unreadable; increase to size=3.8-4.2 for better mobile legibility
-  - Minor label crowding possible near the cluster of 5 roots of unity; a slightly
-    larger nudge_scale (0.35-0.40) would improve separation
+  - 'SC-03 (both): the axes run to ±2.5 (≈±2.75 with expansion) while the points span
+    Re −0.81…1.30 and Im −1.40…0.95 and the labels reach Re≈2.6, leaving empty bands
+    above Im≈1.2, below Im≈−1.7 and left of Re≈−1.9 → limits a little outside the
+    points and labels (about −0.8 on ylim, −0.6 on the left xlim), derived from the
+    data. Likely cause: coord_equal(xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5)) typed
+    as symmetric constants.'
+  - 'Suggestion: drop the legend box frame (legend.background color = NA), as the
+    style guide''s decoration checklist suggests.'
+  - 'Suggestion: the a+bi formatter lambda is written twice; one shared function would
+    remove the duplicate.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "scatter-complex-plane · r · ggplot2 · anyplot.ai" bold and readable; axis labels "Real" and "Imaginary" clear; tick labels readable; legend text readable
-      Data: Five green (#009E73) vector arrows to 5th roots of unity; two lavender (#C475FD) arrows to arbitrary points; dashed unit circle visible; rectangular-form labels on each point
-      Notable issue: Labels "1.00 + 0.00i" and "1.30 + 0.70i" clipped at right panel boundary (axis limit x=2.1) due to hjust=0 for rightward-pointing vectors
-      Legibility verdict: PASS for title/axes/ticks/legend; PARTIAL FAIL for two clipped annotation labels
+      Background: warm off-white, #FAF8F1 — correct; square 2400x2400 canvas.
+      Chrome: bold title "scatter-complex-plane · r · ggplot2 · anyplot.ai" near the top (~73 % width); axis titles "Real" / "Imaginary" in dark ink; tick labels −2…2 on both axes in INK_SOFT; subtle grid at integer values; dark solid real and imaginary axes through the origin; framed legend below the panel with "5th Roots of Unity" and "Arbitrary Points". All text readable.
+      Data: five #009E73 arrows from the origin to the 5th roots of unity on the dashed unit circle, two #C475FD arrows to 1.30+0.70i and −0.60−1.40i outside it; each point labelled with its a+bi form in its category color, nudged outward; 1.00+0.00i lifted above the real-axis line. Panel limits ±2.5 leave empty bands at top, bottom and left.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all use light-colored text (#F0EFE8/#B8B7B0) — no dark-on-dark failures; legend uses #242420 elevated background with subtle border
-      Data: Colors identical to light render — green #009E73 for roots of unity, lavender #C475FD for arbitrary points; unit circle visible; all arrows present
-      Same two annotation labels clipped at right panel boundary as in light render
-      Legibility verdict: PASS for title/axes/ticks/legend; PARTIAL FAIL for same two clipped annotation labels
+      Background: warm near-black, #1A1A17 — correct.
+      Chrome: title and axis titles light (#F0EFE8), tick labels #B8B7B0, axes through origin light grey, grid subtle, legend on #242420 with light frame. No dark-on-dark text.
+      Data: categorical colors identical to the light render (green roots, lavender arbitrary points); dashed circle light grey and visible; labels readable on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set; annotation labels at size=3.2mm borderline
-          small at mobile scale (~8px when scaled to 400px)
+        comment: All sizes set explicitly (title 12 pt, axis titles 10 pt, ticks and
+          legend 8 pt, annotations size 3.8 mm ≈ 10.8 pt); every label readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels well-separated; slight crowding possible near the 5 closely-clustered
-          unity roots
+        comment: No text collisions; the real-axis label 1.00 + 0.00i is lifted clear
+          of the axis line; arrows meeting at the origin are permitted (C6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 7 sparse points; arrows, markers, and unit circle all clearly visible;
-          size=3.5 appropriate
+        comment: 7 sparse points at size 3.5 with 0.9 linewidth arrows and closed
+          heads, clearly visible; legend glyphs show arrow and point in the marks'
+          colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green + lavender pairing is CVD-safe; arrows provide redundant directional
-          encoding
+        comment: Green vs lavender differ strongly in luminance and hue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Two annotation labels clipped at right panel boundary (x=2.1): ''1.00
-          + 0.00i'' and ''1.30 + 0.70i'' cut off due to hjust=0 with xlim too tight'
+        passed: true
+        comment: Square canvas for an equal-aspect drawing; panel fills the canvas,
+          legend sits directly below, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real and Imaginary are descriptive; title format correct
+        comment: Real / Imaginary name the components; complex parts are unitless
+          (units N/A)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17;
-          chrome fully theme-adaptive'
+        comment: 'Imprint #009E73 first, #C475FD second, identical in both themes;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -109,24 +112,25 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured Imprint palette and clean arrow visualization; at
-          the well-configured-default tier
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: theme_minimal removes spines; grid at alpha=0.12; panel.border removed;
-          legend with elevated background; generous margins
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Arrows effectively convey vector nature; unit circle provides geometric
-          context; above default storytelling
+        comment: 'Label placement decided per point: data-driven hjust by direction,
+          outward nudge along each vector''s angle, and a lift for points on the real
+          axis'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Data displayed; the roots-vs-arbitrary distinction is what the Notes
+          prescribe, no hierarchy chosen beyond it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram with scatter, vectors, and unit circle
+        comment: Argand diagram with points, vectors and unit circle
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: axes through origin, dashed unit circle, arrows, equal
-          aspect ratio, rectangular labels, category colors'
+        comment: Axes through origin, dashed unit circle, arrows to each point (C3),
+          coord_equal (C2), a+bi labels (C4), category colors (C5)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Real on x-axis, imaginary on y-axis; coord_equal preserves circular
-          geometry
+        passed: false
+        comment: Mapping correct and marks at their values, but the ±2.5 limits leave
+          empty bands above Im≈1.2 and below Im≈−1.7 and left of Re≈−1.9 (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: scatter-complex-plane · r · ggplot2 · anyplot.ai; legend:
-          5th Roots of Unity, Arbitrary Points'
+        comment: Title scatter-complex-plane · r · ggplot2 · anyplot.ai; legend entries
+          5th Roots of Unity / Arbitrary Points
     data_quality:
       score: 15
       max: 15
@@ -165,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows roots on unit circle AND arbitrary points outside; vectors,
-          labels, category distinction
+        comment: Unit-modulus roots on the circle, two points outside it, conjugate
+          pair, all four quadrants
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 5th roots of unity mathematically meaningful and neutral; arbitrary
-          points plausible
+        comment: 5th roots of unity plus arbitrary points, the spec's own example
+          scenario; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: xlim/ylim ±2.1 appropriate for points within ±1.5; equal aspect ratio
-          correct
+        comment: 'Checked: roots computed as cos/sin(2πk/5): 0.31±0.95i, −0.81±0.59i,
+          1+0i match cos72°=0.309, sin72°=0.951, cos144°=−0.809, sin144°=0.588; roots
+          lie on the drawn circle'
     code_quality:
       score: 10
       max: 10
@@ -190,33 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential: tokens → data → layers → save'
+        comment: 'Top to bottom: tokens → data → plot → save; only lambdas passed
+          to mapply'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: 5th roots from closed-form formula, no randomness'
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean mapply for labels, clear hjust logic, no over-engineering
+        comment: Appropriate complexity; the repeated a+bi formatter lambda is a few
+          lines (suggestion only)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png with ragg::agg_png; modern linewidth API
+        comment: plot-{THEME}.png via ragg::agg_png; linewidth API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -224,24 +231,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: coord_equal for precision, geom_segment with arrow(), geom_path for
-          circle, scale_color_manual — correct grammar-of-graphics idioms
+        comment: Per-row hjust mapped as an aesthetic from data columns, coord_equal
+          with limits, geom_segment + grid arrow()
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: true
-        comment: coord_equal + arrow() + per-point hjust from data frame columns;
-          these are ggplot2-aware but available in other grammar-of-graphics libs
+        comment: Generic usage; nothing distinctive to ggplot2 beyond what the Notes
+          need
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
+  rendered_at: '2026-11-28T01:46:38Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
