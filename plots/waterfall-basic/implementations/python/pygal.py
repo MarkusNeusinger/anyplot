@@ -1,7 +1,7 @@
 """anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-08-04
+Quality: pending | Updated: 2026-08-04
 """
 
 import os
