@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: mohr-circle
 created: '2026-05-30T09:13:24Z'
-updated: '2026-11-28T00:26:16Z'
+updated: '2026-11-28T00:32:50Z'
 generated_by: claude-sonnet
-workflow_run: 46087301942
+workflow_run: 46087958365
 issue: 4432
 language_version: 3.14.10
 library_version: 0.15.9
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
   - 'All Notes elements present and mathematically correct: σ1 = −20, σ2 = −140, ±τmax
@@ -26,75 +26,63 @@ review:
     clear of the markers
   - Translucent σ2–σ1 band on the σ axis gives the principal-stress span a focal point
   weaknesses:
-  - 'VQ-01 (both): the six point labels and the 2θp label are drawn at about 5 pt
-    (geom_text size 5.0 / 4.8) and read small beside the 8 pt tick labels → about
-    8 pt, the tick-label reference (+3 pt). Likely cause: geom_text size=5.0 and size=4.8.'
-  - 'VQ-02 (both): the last legend label ''Max Shear'' runs into the right edge of
-    the legend frame with no padding, and the keys sit on page-shade tiles inside
-    the elevated legend box → text clear of the frame by a few px, keys on the legend''s
-    fill. Likely cause: legend_key not set to element_rect(fill=ELEVATED_BG, color="none")
-    and no legend box margin.'
-  - 'DQ-02 (code): the data comment calls the state a retaining wall panel, but −120
-    MPa is beyond the roughly 30–50 MPa compressive strength of structural concrete
-    → frame it as a steel member under compression (for example a column flange).
-    Likely cause: the scenario comment in the Data block.'
   - 'Suggestion: label the center point C with its σ value so the circle''s center
     reads off directly.'
+  - 'Suggestion: the view reaches ±1.75 R, leaving empty bands above and below the
+    circle; a tighter vertical reach would enlarge the circle.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400×2400.
-      Chrome: title 'mohr-circle · python · plotnine · anyplot.ai' centered in dark ink; axis titles 'Normal Stress σ (MPa)' / 'Shear Stress τ (MPa)'; ticks −150…0 and −50/0/50 in INK_SOFT; subtle grid; L-shaped axis lines; legend at the bottom in an elevated framed box (keys on page-shade tiles, 'Max Shear' touching the frame edge). All readable.
-      Data: brand-green #009E73 circle centered at σ = −80 with radius 60; dashed reference lines through the center; grey diameter A(−120, 45) → B(−40, −45); lavender stress-state points, blue principal points at σ2 = −140 and σ1 = −20, ochre ±τmax points at ±60; dark center dot; arc from the +σ axis to CA labelled '2θp = 131.6°'; translucent green band between σ2 and σ1. Value labels small (~5 pt) but legible.
+      Chrome: title 'mohr-circle · python · plotnine · anyplot.ai' centered in dark ink; axis titles 'Normal Stress σ (MPa)' / 'Shear Stress τ (MPa)'; ticks −150…0 and −100…100 in INK_SOFT; subtle grid; L-shaped axis lines; legend at the bottom in an elevated framed box with padding, keys on the legend fill. All readable.
+      Data: brand-green #009E73 circle centered at σ = −80 with radius 60; dashed reference lines through the center; grey diameter A(−120, 45) → B(−40, −45); lavender stress-state points, blue principal points at σ2 = −140 and σ1 = −20, ochre ±τmax points at ±60; dark center dot; arc from the +σ axis to CA labelled '2θp = 131.6°'; translucent green band between σ2 and σ1. Value labels at about 8 pt, clear of markers.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles in light ink, ticks and legend text in #B8B7B0, grid faint but visible, legend box on #242420 with light frame. No dark-on-dark text.
-      Data: same Imprint colors as the light render (green circle, lavender/blue/ochre points); center dot flips to light ink; the σ band reads as a dark-green strip; arc and diameter in light grey.
+      Chrome: title and axis titles in light ink, ticks and legend text in #B8B7B0, grid faint but visible, legend box on #242420 with a light frame. No dark-on-dark text.
+      Data: same Imprint colors as the light render (green circle, lavender/blue/ochre points); center dot flips to light ink; the σ band reads as a dark-green strip; arc and diameter in light grey; value labels in light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Axis titles 10 pt, ticks 8 pt, title 12 pt readable in both themes;
-          the six point labels and the 2θp label (geom_text size 5.0/4.8, about 5
-          pt) read small beside the 8 pt ticks (defect line)
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt, value and angle labels
+          at about 8 pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Point labels and the arc label sit clear of markers and lines; the
-          last legend entry 'Max Shear' runs into the legend frame's right edge (defect
-          line)
+        comment: Value labels, 2θp label and legend entries clear of markers, lines
+          and the legend frame
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle at size 1.4 dominates, markers at size 4 clear, reference
-          lines and diameter subordinate; legend glyphs match the markers in both
-          themes
+        comment: Circle at size 1.4 dominates, markers at size 4 clear for 7 key points,
+          reference lines and diameter subordinate; legend glyphs match the markers
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Lavender, blue and ochre markers on a green circle are distinguishable;
-          roles also carry text labels
+        comment: Lavender, blue and ochre markers on a green circle are distinguishable
+          under CVD; each role also carries a text label
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 for a circle, canvas gate passed; view centered
-          on the circle; empty equal-aspect margins are permitted (C6)
+        comment: Square 2400×2400 for a circle; view centered on the circle, nothing
+          cut off; empty equal-aspect margins are permitted (C6)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,7 +98,7 @@ review:
         comment: 'Circle #009E73; the three point roles take Imprint positions 2–4
           in canonical order; backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -118,25 +106,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond the baseline: true minus signs in every value label (fmt
-          helper), a three-level ink hierarchy (INK labels, INK_SOFT arc label and
-          diameter, INK_MUTED dashed references)'
+        comment: 'Beyond baseline: true minus signs in every value label, INK/INK_SOFT/INK_MUTED
+          hierarchy separating values, angle label and references, role-colored points
+          with an elevated legend box'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Labels placed by side-aware alignment so each extends away from its
-          marker; reference lines trimmed to just past the circle instead of spanning
-          the panel
+        comment: Side-aware label alignment (ha chosen from the side of σx) keeps
+          every label off its marker; references dashed and muted under the circle
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: A translucent brand-green band along the σ axis between σ2 and σ1
-          makes the principal-stress span the focal element — a choice beyond the
-          Notes
+        comment: Translucent green band from σ2 to σ1 on the σ axis makes the principal-stress
+          span the focal result
     spec_compliance:
       score: 15
       max: 15
@@ -146,32 +132,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mohr's circle on a σ–τ plane
+        comment: Mohr's circle on the σ–τ plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Circle with correct center/radius, σ1/σ2 at axis crossings, ±τmax
-          at top/bottom, A and B at diameter ends, 2θp arc and label at the center,
-          coord_fixed, labelled axes, light grid, dashed reference lines through the
-          center — every Notes and C1–C5 bullet met
+        comment: 'All Notes bullets and C1–C5 present: circle, σ1/σ2, ±τmax, A and
+          B on a diameter, 2θp arc and label, equal aspect, axis labels, light grid,
+          reference lines through the center'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All marks at their computed values; limits derived from the circle
-          (center ± 1.5 r); ticks every 50 MPa readable
+        comment: Marks at their computed values; coord_fixed keeps the circle true;
+          axes cover the full circle and labels
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'mohr-circle · python · plotnine · anyplot.ai'; legend entries
-          'Stress State', 'Principal Stress', 'Max Shear' in data order
+          Stress State / Principal Stress / Max Shear explain the three point colors
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,23 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Compressive-dominant state with both principal stresses negative
-          shows every aspect, including a 2θp above 90°
+        comment: Shows center, radius, both principal stresses, ±τmax, stress points,
+          diameter and the principal-plane angle
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Compressive stress state is plausible, but the data comment frames
-          −120 MPa as a retaining wall panel, beyond concrete's strength (defect line)
+        comment: 'Steel column flange under biaxial compression with −120/−40/45 MPa:
+          plausible for structural steel, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: center −80, r = √(40²+45²) = 60.2 → σ1 = −19.8 (label −20),
-          σ2 = −140.2 (−140), τmax = 60, 2θp = atan2(45, −40) = 131.6° — all computed,
-          all match the render'
+        comment: 'Checked: center −80, R = √(40²+45²) = 60.2, σ1 = −19.8 (label −20),
+          σ2 = −140.2 (label −140), τmax 60, 2θp = atan2(45, −40) = 131.6° — all computed
+          in code and read correctly off the render'
     code_quality:
       score: 10
       max: 10
@@ -205,8 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → constants → data → derived → layers → save; only
-          a short fmt helper
+        comment: Tokens → constants → data → derived → layers → save, top to bottom;
+          only a short fmt helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -234,17 +219,16 @@ review:
         comment: Saves plot-{THEME}.png at 6×6 in, 400 dpi; current plotnine 0.15
           API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
         comment: Grammar-of-graphics layering with per-layer data=, scale_color_manual
-          with limits to keep data order, coord_fixed carrying the limits, theme()
-          for all chrome
+          with limits; nothing beyond what the library prompt shows
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -254,15 +238,16 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
-  rendered_at: '2026-11-28T00:22:40Z'
+  rendered_at: '2026-11-28T00:29:31Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
