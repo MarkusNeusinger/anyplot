@@ -1512,10 +1512,10 @@ def adapt_summary_line(adapt: AdaptAssessment) -> str:
 # Readiness regression (rule step P2b)
 # ---------------------------------------------------------------------------
 
-# impl-review's "Readiness check" step reads the staged readiness record
-# against the implementation at the PR head and the one on origin/main
-# (``readiness_record.py``) and writes a verdict file, which ``decide
-# --readiness`` loads. The statuses and the key grammar are that module's,
+# impl-review's "Readiness check" step scans the implementation at the PR
+# head and the one on origin/main itself, reads its own record
+# (``readiness_record.py``; the staged one only to keep, when the scan
+# cannot run) and writes a verdict file, which ``decide --readiness`` loads. The statuses and the key grammar are that module's,
 # kept here as well because this file runs alone
 # (``tests/unit/automation/scripts/test_readiness_record.py`` holds the two
 # together). A key never has two hyphens in a row, so a record with keys still

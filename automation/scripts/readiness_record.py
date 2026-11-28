@@ -289,13 +289,25 @@ def _append(env_var: str, text: str) -> None:
             handle.write(text)
 
 
+# A scan of this code that started and did not finish (a crash, a timeout) is something the code can cause, so it
+# reads as a refusal the predecessor did not have: the live implementation stays.
+SCAN_FAILED_KEY = "error:scan-failed"
+
+
 def cmd_check(args: argparse.Namespace) -> int:
-    verdict = check(
-        args.record, spec_id=args.spec_id, library=args.library, head=_bytes(args.new), main=_bytes(args.prev)
-    )
+    if args.scan_failed:
+        verdict = Verdict(REGRESSION, new="error", prev=NO_SIDE, added=(SCAN_FAILED_KEY,))
+    else:
+        verdict = check(
+            args.record, spec_id=args.spec_id, library=args.library, head=_bytes(args.new), main=_bytes(args.prev)
+        )
     print(log_line(verdict, spec_id=args.spec_id, library=args.library))
     _append("GITHUB_STEP_SUMMARY", summary_line(verdict) + "\n")
     _append("GITHUB_OUTPUT", f"status={verdict.status}\n")
+    if args.keep_only and verdict.status != REGRESSION:
+        # A record from a runner a model session had a shell on may keep the live implementation, never let one in.
+        print(f"::notice::readiness_check: the staged record's {verdict.status} verdict is not used (keep only)")
+        return 0
     if args.out:
         Path(args.out).write_text(json.dumps(verdict.to_json(), sort_keys=True) + "\n", encoding="utf-8")
     return 0
@@ -311,6 +323,12 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--spec-id", required=True)
     check_parser.add_argument("--library", required=True)
     check_parser.add_argument("--out", help="write the verdict as one JSON line")
+    check_parser.add_argument(
+        "--keep-only", action="store_true", help="write the verdict only when it is a regression (a staged record)"
+    )
+    check_parser.add_argument(
+        "--scan-failed", action="store_true", help=f"the own scan did not finish: a regression for {SCAN_FAILED_KEY}"
+    )
     check_parser.set_defaults(func=cmd_check)
     args = parser.parse_args(argv)
     return args.func(args)

@@ -356,11 +356,14 @@ that isn't UTF-8 text), and 2 when the check itself can't run. See
 [Readiness self-check](../../docs/workflows/overview.md#readiness-self-check).
 
 ### `readiness_record.py`
-Reads the staged `adapt/readiness.json` against the code under review
-(`impl-review.yml`, "Readiness check"). The record must be the scanner's and
-name the code hash (the source without its header docstring) of the
-implementation at the PR head and of the one on `origin/main`; the regression
-is recomputed from its refusal keys. The script
+Reads a readiness record against the code under review (`impl-review.yml`,
+"Readiness check"): the record of the step's own scan, or, when that scan
+can't run, the staged `adapt/readiness.json` with `--keep-only` (only a
+regression is written). `--scan-failed` writes a regression for
+`error:scan-failed` when the own scan started and didn't finish. The record
+must be the scanner's and name the code hash (the source without its header
+docstring) of the implementation at the PR head and of the one on
+`origin/main`; the regression is recomputed from its refusal keys. The script
 reports `regression`, `none`, `first_generation`, `excluded`, `unreadable`,
 `stale`, `invalid`, or `missing`, prints a `readiness_check` line, and writes
 the verdict file that `regen_gate.py decide --readiness` reads. Stdlib only,

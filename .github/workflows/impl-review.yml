@@ -417,11 +417,11 @@ jobs:
           # a regression.
           RT="$RUNNER_TEMP/readiness-tools"
           rm -rf "$RT"; mkdir -p "$RT"
-          if git archive HEAD agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py core \
-               automation/scripts/readiness_scan.py automation/scripts/readiness_record.py | tar -x -C "$RT"; then
-            : > "$RT/agents/__init__.py"; : > "$RT/agents/anyplot/__init__.py"
-            awk '/^name = "pydantic"$/ { getline; gsub(/[^0-9.]/, "", $3); print $3; exit }' uv.lock > "$RT/pydantic.version"
-          else
+          if ! { git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                   core automation/scripts/readiness_scan.py automation/scripts/readiness_record.py | tar -x -C "$RT" \
+                 && : > "$RT/agents/__init__.py" && : > "$RT/agents/anyplot/__init__.py" \
+                 && git show "$GITHUB_SHA:uv.lock" \
+                    | awk '/^name = "pydantic"$/ { getline; gsub(/[^0-9.]/, "", $3); print $3; exit }' > "$RT/pydantic.version"; }; then
             echo "::warning::could not copy the readiness validator; the readiness check reads the staged record only"
             rm -rf "$RT"
           fi
@@ -443,7 +443,8 @@ jobs:
           PIN=$(cat "$RT/pydantic.version" 2>/dev/null || true)
           cd "$RUNNER_TEMP"
           if [ -z "$PIN" ] || ! python3 -I -m venv "$VENV" \
-             || ! "$VENV/bin/python" -I -m pip install --quiet --disable-pip-version-check "pydantic==${PIN}"; then
+             || ! "$VENV/bin/python" -I -m pip install --isolated --only-binary :all: --quiet \
+                  --disable-pip-version-check "pydantic==${PIN}"; then
             echo "::warning::readiness scan interpreter not ready; the readiness check reads the staged record only"
             rm -rf "$VENV"
           fi
@@ -1391,8 +1392,8 @@ jobs:
       # of the implementation at the PR head and of the one on origin/main,
       # and the regression is recomputed from its refusal keys. Without that
       # interpreter it reads the record impl-generate or impl-repair staged
-      # (adapt/readiness.json, which the step above downloaded) and drops a
-      # `none` verdict from it. The verdict goes to
+      # (adapt/readiness.json, which the step above downloaded) with
+      # --keep-only, so only a regression from it is written. The verdict goes to
       # $RUNNER_TEMP/readiness-verdict.json, where only the regen gate reads
       # it: on a gated regeneration `regression` keeps the live implementation
       # (readiness_regression), and `none` from blocked to served opens the
@@ -1404,7 +1405,7 @@ jobs:
       - name: Readiness check
         if: steps.lang.outputs.language == 'python' && steps.render_stop.outputs.stopped != 'true'
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         env:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1424,25 +1425,28 @@ jobs:
           # The scan runs here, where no model session has run yet: the staged
           # record comes from the generate or repair runner, where one had a
           # shell, so a forged one could hide a regression or claim a file the
-          # chat refused is now served. When the scan cannot run, the staged
-          # record still counts, but a `none` verdict from it is dropped: it
-          # may keep the live implementation, never let one in.
-          RECORD="$RUNNER_TEMP/adapt/readiness.json"; OWN_SCAN=false
-          if [ -x "$PY" ] && [ -f "$RT/automation/scripts/readiness_scan.py" ] \
-             && "$PY" -I "$RT/automation/scripts/readiness_scan.py" scan --new "$NEW" --prev "$PREV" \
-                  --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$OWN" > /dev/null && [ -s "$OWN" ]; then
-            RECORD="$OWN"; OWN_SCAN=true
+          # chat refused is now served. A scan that starts on this code and
+          # does not finish (a crash, the time limit) keeps the live
+          # implementation, since the code can cause that. Only without the
+          # interpreter does the staged record count, and then only to keep.
+          # The scan's own summary and output lines stay out of this job's.
+          RECORD="$RUNNER_TEMP/adapt/readiness.json"; MODE=(--keep-only)
+          if [ -x "$PY" ] && [ -f "$RT/automation/scripts/readiness_scan.py" ]; then
+            if timeout 90 env -u GITHUB_STEP_SUMMARY -u GITHUB_OUTPUT "$PY" -I \
+                 "$RT/automation/scripts/readiness_scan.py" scan --new "$NEW" --prev "$PREV" \
+                 --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$OWN" > /dev/null && [ -s "$OWN" ]; then
+              RECORD="$OWN"; MODE=()
+            else
+              echo "::warning::the readiness self-scan did not finish on this code; the live implementation stays"
+              MODE=(--scan-failed)
+            fi
           else
             echo "::notice::readiness self-scan did not run; the staged record counts only to keep"
           fi
           if ! python3 -I "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
                --record "$RECORD" --new "$NEW" --prev "$PREV" \
-               --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT"; then
+               --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT" "${MODE[@]}"; then
             echo "::warning::readiness check did not run; the regen gate decides without it"
-            rm -f "$VERDICT"
-          fi
-          if [ "$OWN_SCAN" != true ] && [ -s "$VERDICT" ] \
-             && python3 -I -c 'import json, sys; sys.exit(json.load(open(sys.argv[1]))["status"] != "none")' "$VERDICT"; then
             rm -f "$VERDICT"
           fi
           rm -f "$NEW" "$PREV" "$OWN"
