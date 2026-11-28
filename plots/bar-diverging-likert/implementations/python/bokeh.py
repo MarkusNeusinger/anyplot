@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-28
@@ -6,6 +6,7 @@ Quality: 85/100 | Updated: 2026-11-28
 
 import os
 import time
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -29,10 +30,28 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
-# Ordered Likert scale, disagree to agree. Semantic Imprint colors (red = negative, muted = neutral,
-# green = positive) per level position, with the label ink that reads on each fill.
-LEVEL_COLORS = ["#AE3030", "#BD8233", INK_MUTED, "#2ABCCD", "#009E73"]
-LEVEL_INK = ["#F0EFE8", "#F0EFE8", "#F0EFE8", "#1A1A17", "#F0EFE8"]
+# Ordered Likert scale, disagree to agree: five steps of an Imprint diverging marks ramp, red pole for
+# disagree, the ramp's grey midpoint for neutral, brand green pole for agree (semantic exception)
+LIKERT_RAMP = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#009E73")]
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+def label_ink(fill):
+    """Light or dark ink, whichever reads better on the fill (relative luminance)."""
+    r, g, b = (int(fill[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    return "#1A1A17" if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3 else "#F0EFE8"
+
+
+LEVEL_COLORS = [ramp_color(LIKERT_RAMP, k / 4) for k in range(5)]
+LEVEL_INK = [label_ink(c) for c in LEVEL_COLORS]
 MIN_LABEL_PCT = 10  # segments narrower than this share stay unlabeled
 
 # Columns: set these to your table's column names
@@ -151,7 +170,7 @@ for i, level in enumerate(levels):
                 source=label_source,
                 text_align="center",
                 text_baseline="middle",
-                text_font_size="22pt",
+                text_font_size="30pt",
                 text_color=LEVEL_INK[i],
                 text_font_style="bold",
             )
