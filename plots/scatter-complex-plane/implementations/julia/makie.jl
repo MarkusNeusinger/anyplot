@@ -88,8 +88,27 @@ limits!(ax, -span, span, -span, span)
 lines!(ax, cos.(theta), sin.(theta); linestyle = :dash, color = (INK_SOFT, 0.8), linewidth = 2)
 
 # Real and imaginary axes through the origin
-hlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 1)
-vlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 1)
+hlines!(ax, [0.0]; color = (INK_SOFT, 0.7), linewidth = 1.5)
+vlines!(ax, [0.0]; color = (INK_SOFT, 0.7), linewidth = 1.5)
+
+# Labeled tick marks on the origin axes; the frame keeps the grid only
+ax.xticksvisible = false
+ax.yticksvisible = false
+ax.xticklabelsvisible = false
+ax.yticklabelsvisible = false
+ticks = filter(!=(0), collect(-floor(Int, span):floor(Int, span)))
+tick_len = span * 0.015
+linesegments!(ax, vcat([[Point2f(t, -tick_len), Point2f(t, tick_len)] for t in ticks]...);
+    color = INK_SOFT, linewidth = 1.5)
+linesegments!(ax, vcat([[Point2f(-tick_len, t), Point2f(tick_len, t)] for t in ticks]...);
+    color = INK_SOFT, linewidth = 1.5)
+for t in ticks
+    label = replace(string(t), "-" => "−")
+    text!(ax, t + sign(t) * tick_len, -2.5 * tick_len; text = label,
+        fontsize = 14, color = INK_SOFT, align = (t > 0 ? :left : :right, :top))
+    text!(ax, -2.5 * tick_len, t + sign(t) * tick_len; text = label,
+        fontsize = 14, color = INK_SOFT, align = (:right, t > 0 ? :bottom : :top))
+end
 
 # One arrow per point, from the origin to its head
 arrows2d!(ax, zeros(nrow(df)), zeros(nrow(df)), re_vals, im_vals;
@@ -118,7 +137,7 @@ for (name, x, y) in zip(df[!, NAME], re_vals, im_vals)
     sign = y >= 0 ? "+" : "−"
     form = string(replace(string(round(x; digits = 2)), "-" => "−"), sign, round(abs(y); digits = 2), "i")
     h    = x > 0.1 ? :left : (x < -0.1 ? :right : :center)
-    v    = y > -0.05 ? :bottom : :top
+    v    = y > -0.2 ? :bottom : :top
     text!(ax, x + 0.1 * x / r, y + 0.1 * y / r;
         text     = name * "\n" * form,
         fontsize = 15,
