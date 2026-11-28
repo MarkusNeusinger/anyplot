@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: energy-level-atomic
 created: '2026-05-30T07:39:00Z'
-updated: '2026-11-27T23:54:09Z'
+updated: '2026-11-28T00:00:35Z'
 generated_by: claude-sonnet
-workflow_run: 46084537528
+workflow_run: 46085099091
 issue: 4434
 language_version: 4.6.1
 library_version: 4.0.3
@@ -12,25 +12,21 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-le
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
   - 'Physically exact hydrogen data: E_n = -13.6/n^2 eV gives -13.60, -3.40, -1.51,
-    -0.85, -0.54 eV, and the wavelength labels Lyα 122 nm, Hα 656 nm and Paα 1875
-    nm match the transitions they sit on'
-  - The -1/n display scale spreads out the converging upper levels, and the tick labels
-    give the real energies at each level, so the nonlinear scale shows on the axis
-  - Each wavelength label sits clear of the arrows on both sides, so every arrow can
-    be followed from level to level
+    -0.85, -0.54 eV, and the labels Lyα 122 nm, Hα 656 nm and Paα 1875 nm match the
+    transitions they sit on'
+  - The -1/n display scale spreads out the converging upper levels while the tick
+    labels give the real energies, so the nonlinear scale shows on the axis
   - Bold, series-colored direct labels below n = 1 act as the key, with italic wavelength
     labels and INK_SOFT quantum labels giving a clear type hierarchy
+  - Each wavelength label sits clear of the arrows, so every arrow can be followed
+    from level to level
   - 'Idiomatic ggplot2: geom_segment with grid arrow(), scale_y_continuous with custom
-    breaks and labels, and coord_cartesian(clip = ''off'')'
+    breaks and labels, coord_cartesian(clip = ''off'')'
   weaknesses:
-  - 'VQ-05 (both): x limits run to 1.20 while the right-most content (the n labels)
-    ends near 1.0, so about 15 % of the canvas width on the right holds only the dashed
-    ionization line → tighten the x range to about c(-0.05, 1.05) and let the drawing
-    use the width. Likely cause: scale_x_continuous(limits = c(-0.05, 1.20)).'
   - 'Suggestion: add one absorption transition (upward arrow) so the diagram also
     shows the absorption direction the Notes describe.'
   - 'Suggestion: extend the levels to n = 6, as in the spec''s example, to show the
@@ -38,18 +34,18 @@ review:
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, 3200x1800 landscape.
-      Chrome: title "Hydrogen Atom · energy-level-atomic · r · ggplot2 · anyplot.ai" in dark ink at about 70 % of the width; y-axis title "Energy (eV)"; tick labels -13.60, -3.40, -1.51, -0.85, -0.54 and 0 eV in INK_SOFT; quantum labels n = 1 … n = 5 on the right; "Ionization limit (0 eV)" above a dashed line at 0 eV; no x axis. All readable.
-      Data: five near-black level lines spanning about 0.08–0.90 of the x range; seven downward emission arrows spread across the width: three Lyman arrows in #009E73 ending on n = 1, two Balmer arrows in #C475FD ending on n = 2, two Paschen arrows in #4467A3 ending on n = 3; italic wavelength labels Lyα 122 nm, Hα 656 nm and Paα 1875 nm sit clear of all arrows; bold series labels in the series colors below n = 1. Right ~15 % of the width is empty except the dashed line.
+      Chrome: title 'Hydrogen Atom · energy-level-atomic · r · ggplot2 · anyplot.ai' in dark ink at about 70 % of the width; y-axis title 'Energy (eV)'; ticks -13.60, -3.40, -1.51, -0.85, -0.54 and 0 eV in INK_SOFT; quantum labels n = 1 … n = 5 on the right; 'Ionization limit (0 eV)' above a dashed line at 0 eV; no x axis. All readable.
+      Data: five near-black level lines spanning about 0.08–0.90 of the x range, which now runs to 1.05, so the levels and n labels reach toward the right edge (n labels end near 91 % of the width); seven downward emission arrows: three Lyman in #009E73 ending on n = 1, two Balmer in #C475FD ending on n = 2, two Paschen in #4467A3 ending on n = 3; italic wavelength labels Lyα 122 nm, Hα 656 nm, Paα 1875 nm clear of the arrows; bold series labels in the series colors below n = 1.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and axis title in light ink, ticks, n labels, ionization label and wavelength labels in light grey INK_SOFT; axis line light grey; no dark-on-dark text.
-      Data: level lines flip to light ink; arrow and series-label colors (#009E73, #C475FD, #4467A3) are identical to the light render; brand green clearly visible.
+      Chrome: title and axis title in light ink; ticks, n labels, ionization and wavelength labels in light grey INK_SOFT; axis line light grey; no dark-on-dark text.
+      Data: level lines flip to light ink; arrow and series-label colors (#009E73, #C475FD, #4467A3) identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,42 +53,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title ~13 pt, axis title 10 pt, ticks 8 pt, wavelength labels 2.8
-          mm (~8 pt); all readable in both themes
+        comment: Title ~12 pt (adaptive), axis title 10 pt, ticks 8 pt, level labels
+          3.0 mm, wavelength labels 2.8 mm (~8 pt); all explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with arrows or lines; wavelength labels sit clear
-          of neighboring arrows
+        comment: No text collides with arrows or level lines; wavelength labels sit
+          clear of neighbouring arrows
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Level lines (0.9 mm) and arrows (1.1 mm, closed heads) clearly visible
-          in both themes
+          for 5 levels and 7 transitions in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are CVD-separable, and each series also has a
-          direct text label
+        comment: Green / lavender / blue are CVD-separable and each series also has
+          a direct text label
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Right ~15 % of the width empty because x limits run to 1.20 (defect
-          line)
+        passed: true
+        comment: 'Drawing now uses the width: level lines and n labels reach toward
+          the right edge, margins hold the ticks, labels and title'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Energy (eV)'' with unit; no x title, which is right for a schematic
+        comment: '''Energy (eV)'' with unit; no x title, which fits the schematic
           x axis'
       - id: VQ-07
         name: Palette Compliance
@@ -100,9 +97,9 @@ review:
         max: 2
         passed: true
         comment: 'First series #009E73, then #C475FD and #4467A3 in Imprint order;
-          #FAF8F1 / #1A1A17 backgrounds; chrome theme-adaptive'
+          #FAF8F1 / #1A1A17 backgrounds; chrome theme-adaptive in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -111,22 +108,22 @@ review:
         max: 8
         passed: true
         comment: 'Beyond baseline: bold series-colored direct labels as the key, italic
-          wavelength labels, INK_SOFT quantum labels; a deliberate three-level type
-          hierarchy'
+          wavelength labels and INK_SOFT quantum labels form a deliberate three-level
+          type hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: label placement chosen to clear every arrow, level
-          labels aligned at one x, generous whitespace around the ionization line'
+        comment: 'Beyond baseline: wavelength labels placed to clear every arrow,
+          level labels aligned at one x, arrowheads stop on their lower level'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Representative wavelength per series (Lyα, Hα, Paα) ties each color
-          group to the spectrum, guiding the viewer from series to wavelength
+        comment: One representative wavelength per series (Lyα, Hα, Paα) ties each
+          color group to the spectrum, a modest focal layer chosen by the implementation
     spec_compliance:
       score: 15
       max: 15
@@ -143,24 +140,24 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Partial-width labeled levels, downward emission arrows, color by
-          spectral series, dashed ionization reference line, nonlinear scale with
-          energy ticks (C1-C5 met)
+        comment: Partial-width labeled levels (C1), downward emission arrows spread
+          across the width (C2), color by spectral region (C3), dashed labeled ionization
+          line (C4), -1/n nonlinear scale with energy ticks (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Levels at their (display-scaled) energies with real-energy ticks;
-          arrows connect the right levels; the 0.015 gap above the lower line only
-          clears the arrowhead
+        comment: Levels at their display-scaled energies with real-energy ticks; arrows
+          connect the right levels; the 0.015 gap above the lower line only clears
+          the arrowhead
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title in the prefixed mandated format; series colors keyed by direct
-          series labels
+          series labels; ionization line labeled
     data_quality:
       score: 15
       max: 15
@@ -171,7 +168,7 @@ review:
         max: 6
         passed: true
         comment: Three spectral series, 7 transitions of differing length, ionization
-          limit, converging levels
+          limit and converging upper levels
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -183,8 +180,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: E_n = -13.60/-3.40/-1.51/-0.85/-0.54 eV computed from -13.6/n^2;
-          Lyα 121.6 nm, Hα 656 nm, Paα 1875 nm correct'
+        comment: 'Checked: E_n = -13.60/-3.40/-1.51/-0.85/-0.54 eV computed from -13.6/n^2
+          (line 21) and read off the ticks; Lyα 122 nm, Hα 656 nm, Paα 1875 nm match
+          the 2→1, 3→2, 4→3 transitions they sit on'
     code_quality:
       score: 10
       max: 10
@@ -212,15 +210,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; nothing hand-rolled that a call replaces
+        comment: Appropriate complexity; nothing hand-rolled that an available call
+          replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg; current linewidth API
+        comment: Saves plot-{THEME}.png via ragg::agg_png; current linewidth API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -228,22 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Above default: geom_segment with grid arrow(), scale_y_continuous
-          custom breaks/labels for the nonlinear axis, coord_cartesian(clip = ''off'')'
+        comment: 'Above default: scale_y_continuous with custom breaks/labels implements
+          the nonlinear -1/n axis with real-energy labels; geom_segment with grid
+          arrow(); coord_cartesian(clip = ''off'')'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: grid arrow() units on geom_segment and annotate() direct labels;
-          nothing more ggplot2-specific
+        passed: false
+        comment: Generic usage; arrow() on geom_segment and annotate() exist in other
+          libraries too
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
-  rendered_at: '2026-11-27T23:50:56Z'
+  rendered_at: '2026-11-27T23:57:35Z'
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
   - annotations
   - manual-ticks
@@ -253,3 +252,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - publication-ready

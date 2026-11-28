@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' energy-level-atomic: Atomic Energy Level Diagram
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 86/100 | Updated: 2026-11-27
+#' Quality: 87/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -107,7 +107,7 @@ p <- ggplot() +
   annotate("text", x = 0.50, y = 0.032, label = "Ionization limit (0 eV)",
            color = INK_SOFT, size = 3.0, hjust = 0.5) +
   scale_color_manual(values = series_colors) +
-  scale_x_continuous(limits = c(-0.05, 1.20), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(-0.03, 1.05), expand = c(0, 0)) +
   scale_y_continuous(
     name   = "Energy (eV)",
     breaks = y_breaks,
