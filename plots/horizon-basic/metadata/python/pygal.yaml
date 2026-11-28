@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:02Z'
-updated: '2026-11-28T12:24:38Z'
+updated: '2026-11-28T12:34:51Z'
 generated_by: claude-sonnet
-workflow_run: 46143870110
+workflow_run: 46144602566
 issue: 1877
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,204 +12,190 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 86
 review:
   strengths:
-  - One shared band range across all eight rows (global max / 3), so each color step
-    stands for the same magnitude and sign in every sector (C4)
-  - 'imprint_div fields ramp applied correctly: matte red and blue poles with the
-    page color as midpoint, the first step lifted to 40 % so the palest band stays
-    visible in both themes'
-  - Rows ranked by final cumulative excess return give a clear leaderboard reading
-    from outperformers to laggards
-  - Real SVG <title> tooltips on every band cell give sector, date and signed value
-    in the HTML output
-  - 'Theme-correct chrome in both renders: warm page backgrounds, light-on-dark and
-    dark-on-light text throughout, and subtle zebra rows'
+  - 'A true horizon chart from stock pygal: StackedLine layers with fill=True fold
+    each sector''s values onto its row baseline, with an invisible page-coloured spacer
+    series lifting the next row'
+  - One band range for all eight rows and a legend that names each colour step's value
+    range in pp, so every colour means the same magnitude and sign everywhere
+  - imprint_div fields ramp sampled from 40% toward each pole, so the palest band
+    stays visible in both themes and darker (or, on the dark page, brighter) always
+    means larger
+  - Rows ranked by final excess return with the best performer on top, and per-point
+    tooltips (sector, date, signed pp) in the interactive HTML
   weaknesses:
-  - 'SC-01, SC-02 (both): bands are not folded onto the row baseline (C2). Band 0
-    fills the bottom third of each row, band 1 the middle third and band 2 the top
-    third, so the row is a banded area chart three band ranges tall, not a horizon
-    → draw every band from the row''s baseline with the full row height equal to one
-    band range, each higher band over the lower ones. Likely cause: band_y in _plot
-    (lines 143–144) offsets each band by (actual_row_height / n_bands) * band_idx,
-    and band_height divides the row by n_bands.'
-  - 'VQ-01 (both): row labels at 34 px, legend captions at 32 px and date ticks at
-    40 px sit below pygal''s 44 px tick reference, and the ''Underperform / Outperform''
-    captions read small → 44 px (+10, +12, +4 px). Likely cause: label_font_size =
-    min(34, …) at line 106, legend_font_size = 32 at line 205, x_label_font_size =
-    40 at line 172.'
-  - 'SC-04 (both): the stepped color key gives only the sign, not the value range
-    of each band, so a reader can''t tell what magnitude a step stands for → label
-    the band boundaries in pp (for example 0, band_size, 2×band_size, 3×band_size)
-    under the swatches. Likely cause: the legend block draws only the two group captions.'
-  - 'CQ-01 (code): line 52 `class HorizonChart(Graph)` holds the whole drawing and
-    the axis in `_plot` and `_compute` → draw at the top level, cell by cell, for
-    example with stock pygal charts or SVG built in top-level code. Likely cause:
-    a Graph subclass used as the extension point.'
+  - 'DQ-01 (both): no sector falls below about −16 pp, so the darkest red step (−16
+    to −24 pp) that the legend lists never appears in any row and the negative side
+    shows only two of its three intensities → let at least one sector''s drawdown
+    reach the third negative band. Likely cause: the drift/volatility pairs in sector_params
+    (Utilities −0.03/0.5 is the deepest loser).'
+  - 'Suggestion: IMPRINT_PALETTE is defined but never used — the colours come from
+    the imprint_div poles — and could be dropped.'
+  - 'Suggestion: a small gap between each legend swatch and its caption would let
+    the ''+''/''−'' signs breathe.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; rows alternate a slightly brighter elevated fill and the page color, each with a hairline frame.
-      Chrome: title "Sector Performance vs Benchmark · horizon-basic · python · pygal · anyplot.ai" in dark ink across about 70 % of the width, not clipped. Eight bold dark sector labels at the left (Consumer Discretionary, Financials, Energy, Real Estate, Technology, Industrials, Healthcare, Utilities). Muted date ticks from Jan 02 to Jun 18 with the bold axis title "Trading day (2024)" below them. At the top right, a 7-swatch stepped key (3 reds, an outlined neutral swatch, 3 blues) captioned "Underperform" and "Outperform". A dashed hairline vertical grid.
-      Data: each row shows blue for positive excess return and red for negative, rising from the row bottom in three intensity steps (#B1BED2 → #7B92BA → #4467A3, and the mirrored reds). The bands are stacked as horizontal strips of the row, not folded onto the baseline. Energy and Consumer Discretionary reach the darkest blue; Utilities reaches the second red step.
-      Legibility verdict: PASS. All text is readable; the 32 px legend captions are the smallest text.
+      Background: warm off-white #FAF8F1 across canvas and plot.
+      Chrome: title 'Sector Performance vs Benchmark · horizon-basic · python · pygal · anyplot.ai' dark, ~70% width; eight right-aligned sector labels (Consumer Discretionary … Utilities) in dark ink; date ticks Jan 02 … Jun 25 and x title 'Trading day (2024)'; legend top-left listing six colour steps '+16 to +24 pp' … '0 to −8 pp'. All readable.
+      Data: eight horizon rows separated by gaps; blue bands (pale, mid, deep #4467A3) for outperformance, red bands (pale, mid) for underperformance folded onto each row's baseline; Energy and Consumer Discretionary reach the deepest blue, Utilities the mid red. Diverging ramp, no categorical series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page; zebra rows alternate #242420 and the page color.
-      Chrome: title, sector labels, date ticks and axis title in light ink, all readable; no dark-on-dark text. The key captions are muted light grey.
-      Data: same layout and the same pole colors #AE3030 / #4467A3. The intermediate steps are blended from the dark page midpoint (#2B394F → #375079 → #4467A3, and the mirrored reds), as the imprint_div fields ramp takes its theme's midpoint. Every step stays distinguishable from the row fills.
+      Background: warm near-black #1A1A17.
+      Chrome: title, sector labels, ticks, x title and legend in light ink; no dark-on-dark text.
+      Data: same layout and band geometry; the ramp starts from the dark page so the pale steps are dark navy / dark maroon and the top steps are the bright poles — every step remains distinguishable from the page and its neighbours.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes are set explicitly and all text reads in both themes. The
-          row labels (34 px), the legend labels (32 px) and the date ticks (40 px)
-          sit below pygal's 44 px tick reference, and the legend labels read small
-          (defect line).
+        comment: Title 66 px scaled for the long prefix, ticks, row labels and legend
+          at 44 px; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions in either render
+        comment: No text collisions; row labels, legend and ticks are clear of each
+          other and the bands
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Full-width cells, and every band step is visible against both zebra
-          row fills in both themes
+        comment: Filled bands opaque, every intensity step visible against the page
+          in both themes; legend swatches match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red and blue diverge in hue and in lightness, so the scheme is CVD-safe
+        comment: Blue/red pair is CVD-safe; intensity carries magnitude in addition
+          to hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: The canvas gate passed. Rows fill the width, and the margins hold
-          the labels, the legend and the axis title.
+        comment: 'Landscape 3200x1800 well used: eight rows fill the plot height,
+          legend top-left beside the label column'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: The x title reads 'Trading day (2024)'. Rows carry sector names,
-          and the spec permits rows without a value axis.
+        comment: x-axis titled 'Trading day (2024)'; band key gives the unit pp; rows
+          carry sector names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div fields ramp (#AE3030 / page midpoint / #4467A3) with
-          each theme''s page midpoint; chrome is theme-correct in both renders'
+        comment: 'imprint_div fields ramp (page midpoint) sampled at 0.4/0.7/1.0 toward
+          #4467A3 and #AE3030; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Beyond the baseline: elevated or page zebra fills with hairline
-          row frames, bold sector labels, and a compact stepped diverging key with
-          grouped captions'
+        passed: false
+        comment: 'Beyond baseline: the first band step starts at 40% of the ramp so
+          the palest band never vanishes into the page, and a descriptive title prefix
+          scaled to fit'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: A dashed hairline time grid at a fortnightly interval chosen for
-          126 days, consistent row gaps and right-aligned labels
+        passed: false
+        comment: 'Beyond baseline: an 18% gap between rows separates them without
+          frames, y guides dropped and only sparse x guides kept'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Rows are ranked by final cumulative excess return, so the chart reads
-          as a leaderboard from outperformers to laggards. The implementation chose
-          this order; the spec does not ask for it.
+        passed: false
+        comment: Rows ranked by final excess return, best performer on top - a hierarchy
+          the Notes don't prescribe
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Bands are stacked into three horizontal strips of the row, not folded
-          onto the baseline. The result is a banded area chart, a related form (defect
-          line).
+        passed: true
+        comment: 'A true horizon chart: bands folded onto each row''s baseline, built
+          from pygal StackedLine layers'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'C2 (folded bands layered on the baseline) is missed. C1, C3, C4
-          and C5 are met: labelled rows, mirrored red/blue, one shared band range,
-          and no overlays.'
+        passed: true
+        comment: C1 labelled rows on a shared time axis, C2 folded bands with darker
+          = larger, C3 red second hue folded into the same row, C4 one band range
+          for all rows, C5 no overlays - all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, one row per sector, every point drawn at its value
+        comment: Time on x over all 126 trading days, every row's heights computed
+          from its values; no displacement
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: The title format is correct. The color key gives the sign only and
-          no band value range, so a step's magnitude can't be read (defect line).
+        passed: true
+        comment: Title format correct with descriptive prefix; legend gives each color
+          step's value range in pp
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Rows cross zero, and positive rows reach the third band. Some rows
-          stay quiet in the palest band. Both signs appear.
+        passed: false
+        comment: Positive side reaches all three bands and rows cross zero, but no
+          series reaches the darkest red band (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral scenario: real GICS-style sector names and excess return
-          in percentage points over H1 2024'
+        comment: 'Neutral: real sector names, excess return vs a benchmark over H1
+          2024'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 126 business days from 2024-01-02, and the cumulative drifted
-          random walk gives excess returns within about ±20 pp, plausible for half
-          a year. The spec has no check values.'
+        comment: 126 business days from 2024-01-02; cumulative excess returns within
+          about +/-24 pp, plausible for half a year; spec has no check values
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: The class HorizonChart(Graph) at line 52 holds the whole drawing
-          in _plot (defect line)
+        passed: true
+        comment: Reads top to bottom; only a short blend() colour helper above its
+          first use
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -227,49 +213,50 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. The band math is short and nothing available computes
-          it.
+        comment: Band folding is a few vectorised numpy lines; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: 'Default: a Style object carries the theme tokens. The class earns
-          no credit.'
+        passed: false
+        comment: Uses a stock pygal StackedLine with fill=True and a range/y_labels
+          dict mapping to build rows instead of hand-drawn SVG
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: true
-        comment: 'Default: the drawing is raw SVG through a Graph subclass, which
-          earns no credit'
+        passed: false
+        comment: Per-point value dicts carry custom tooltip labels (sector, date,
+          signed pp) in the HTML; y_labels as label/value dicts place the sector names
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
-  rendered_at: '2026-11-28T12:19:56Z'
+  rendered_at: '2026-11-28T12:30:28Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - html-export
+  - layer-composition
+  - manual-ticks
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - long-to-wide
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
+  - binning
   styling:
   - custom-colormap
-  - grid-styling
