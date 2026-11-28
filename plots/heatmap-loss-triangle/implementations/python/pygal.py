@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: pending | Updated: 2026-11-28
+Quality: 89/100 | Updated: 2026-11-28
 """
 
 import os
