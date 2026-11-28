@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' energy-level-atomic: Atomic Energy Level Diagram
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-05-30
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 87/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -38,7 +38,7 @@ transitions_df <- data.frame(
     "Balmer (visible)", "Balmer (visible)",
     "Paschen (IR)", "Paschen (IR)"
   ),
-  x_pos    = c(0.17, 0.25, 0.33,   0.47, 0.57,   0.71, 0.80),
+  x_pos    = c(0.14, 0.30, 0.44,   0.52, 0.66,   0.72, 0.89),
   wl_label = c("Lyα 122 nm", "", "", "Hα 656 nm", "", "Paα 1875 nm", ""),
   stringsAsFactors = FALSE
 )
@@ -94,20 +94,20 @@ p <- ggplot() +
   geom_text(
     data = wl_df,
     aes(x = x_pos + 0.018, y = y_mid, label = wl_label),
-    color = INK_SOFT, size = 2.4, hjust = 0, fontface = "italic"
+    color = INK_SOFT, size = 2.8, hjust = 0, fontface = "italic"
   ) +
   # Series labels below the n=1 level
-  annotate("text", x = 0.25, y = -1.09, label = "Lyman (UV)",
+  annotate("text", x = 0.30, y = -1.09, label = "Lyman (UV)",
            color = IMPRINT_PALETTE[1], size = 2.9, fontface = "bold") +
-  annotate("text", x = 0.52, y = -1.09, label = "Balmer (visible)",
+  annotate("text", x = 0.59, y = -1.09, label = "Balmer (visible)",
            color = IMPRINT_PALETTE[2], size = 2.9, fontface = "bold") +
-  annotate("text", x = 0.755, y = -1.09, label = "Paschen (IR)",
+  annotate("text", x = 0.805, y = -1.09, label = "Paschen (IR)",
            color = IMPRINT_PALETTE[3], size = 2.9, fontface = "bold") +
   # Ionization label (size increased to 3.0 for better mobile readability)
   annotate("text", x = 0.50, y = 0.032, label = "Ionization limit (0 eV)",
            color = INK_SOFT, size = 3.0, hjust = 0.5) +
   scale_color_manual(values = series_colors) +
-  scale_x_continuous(limits = c(-0.05, 1.20), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(-0.03, 1.05), expand = c(0, 0)) +
   scale_y_continuous(
     name   = "Energy (eV)",
     breaks = y_breaks,
