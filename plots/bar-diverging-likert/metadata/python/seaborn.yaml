@@ -2,9 +2,9 @@ library: seaborn
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:06:58Z'
-updated: '2026-11-28T01:01:54Z'
+updated: '2026-11-28T01:08:50Z'
 generated_by: claude-sonnet
-workflow_run: 46090401967
+workflow_run: 46091104424
 issue: 4429
 language_version: 3.14.10
 library_version: 0.13.2
@@ -16,7 +16,7 @@ quality_score: 84
 review:
   strengths:
   - Ordered Likert levels in five steps of the imprint_div marks ramp, red disagree
-    pole, grey neutral per theme, green agree pole
+    pole, grey neutral per theme, green agree pole; swatches match the bars
   - Vectorised diverging geometry (cumsum around half the neutral) feeding an overlay
     of axes-level sns.barplot layers
   - Readable white percentage labels inside every segment >=10% in both themes; narrow
@@ -25,34 +25,29 @@ review:
   - Bold extreme question labels and subtle row banding give the sorted rows a clear
     hierarchy
   weaknesses:
-  - 'VQ-02 (both): the 0% midline runs through every neutral percentage label (e.g.
-    ''1|2%'') → keep the line behind the bars so the neutral labels sit on an unbroken
-    fill. Likely cause: axvline zorder=0.9 still drawn above the seaborn bar patches;
-    set the bars'' zorder above it or draw the line before the bars with a lower zorder
-    than the patches.'
-  - 'VQ-03 (both): the legend swatches are the full-saturation ramp colors while the
-    bars are visibly duller (e.g. Strongly Disagree swatch #AE3030 vs bar about #9C3D3D)
-    → the swatches must match the marks. Likely cause: sns.barplot default saturation=0.75;
-    pass saturation=1.'
+  - 'VQ-02 (both): the 0% midline is still drawn over the neutral segments and runs
+    through every neutral percentage label (e.g. ''1|2%'') → the line must sit behind
+    the bar patches so the labels sit on an unbroken fill. Likely cause: the zorder=2
+    passed to sns.barplot does not end up on the patches above the axvline''s zorder=1.5;
+    set it on the patches after plotting (for p in ax.patches: p.set_zorder(2)) or
+    give the axvline a zorder below the patches'' actual value.'
   - 'Suggestion: compute the net-agreement sort order once and reuse it for table
     and net (lines 86-87).'
-  - 'Suggestion: the net-agreement column is a nice summary; consider lighter weight
-    so it does not compete with the bars.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 with alternating faint row bands.
-      Chrome: title 'Employee Engagement Survey · bar-diverging-likert · python · seaborn · anyplot.ai' in dark ink, x-axis 'Share of responses (%)' with absolute % ticks 60%..100%, eight question labels on the y axis (top 'Team collaboration' and bottom 'Compensation & benefits' bold), one-row frameless legend below. All readable.
-      Data: 8 horizontal diverging bars sorted by net agreement (+68 top to -13 bottom), centered on the split neutral segment at a dark 0% line; colors step from matte red (Strongly Disagree) through a muted red-grey, grey neutral, a muted green-grey to brand green (Strongly Agree). White % labels in segments >=10%. Right column 'net +68%' .. 'net -13%' in green/grey/red bold. The 0% line crosses the neutral labels; bars are slightly duller than the legend swatches.
+      Background: warm off-white #FAF8F1 with faint alternating row bands.
+      Chrome: title 'Employee Engagement Survey · bar-diverging-likert · python · seaborn · anyplot.ai' in dark ink, x-axis 'Share of responses (%)' with absolute ticks 60%..100%, eight question labels (top 'Team collaboration' and bottom 'Compensation & benefits' bold), frameless one-row legend below. All readable.
+      Data: 8 horizontal diverging bars sorted by net agreement (+68 top to -13 bottom), centered on the split neutral at a dark 0% line; full-saturation ramp from matte red #AE3030 through muted red-grey, grey neutral, muted green-grey to brand green #009E73, matching the legend swatches. White % labels in segments >=10%. Right column 'net +68%'..'net -13%' in green/grey/red bold. The 0% line still crosses every neutral label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 with faint row bands.
       Chrome: title and legend in light ink, ticks and question labels in light grey; no dark-on-dark text.
-      Data: same ramp colors as light, neutral step on the dark-theme grey; white segment labels readable on every fill; 0% line in light ink crossing the neutral labels; net badges readable.
+      Data: identical ramp colors to light, neutral step on the dark-theme grey; white segment labels readable on every fill; 0% line in light ink crossing the neutral labels; net badges readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,53 +55,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; white segment labels contrast with
-          every fill; net badges at 8 pt bold
+        comment: Explicit sizes (title fitted to length, 10 pt axis title, 8 pt ticks/labels/legend);
+          all text readable in both themes, white segment labels readable on every
+          fill
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: The 0% midline runs through every neutral percentage label (defect
-          line)
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: false
-        comment: Legend swatches are the full-saturation colors while the bars are
-          drawn desaturated by seaborn's default saturation=0.75 (defect line)
+        comment: The 0% midline runs through every neutral percentage label (defect
+          line); no other collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Eight bars, wide segments, legend swatches match the bar fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green poles backed by side of the midline, labels and legend;
+        comment: Red/green poles also separated by lightness, side and legend order;
           not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, chart, net column and legend fill the canvas, nothing
-          cut off
+        comment: Plot fills the 3200x1800 canvas with balanced margins; legend below,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Share of responses (%)'' with unit; question labels serve the
-          y axis'
+        comment: '''Share of responses (%)'' with unit; question labels are reader
+          text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered levels in five steps of the imprint_div marks ramp, #AE3030
-          on the disagree pole, grey midpoint per theme, #009E73 on the agree pole;
-          backgrounds correct'
+        comment: 'Ordered Likert levels in five steps of the imprint_div marks ramp,
+          red disagree pole to green agree pole, neutral grey per theme; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -114,22 +109,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Bold extreme question labels and a quiet typographic hierarchy (8
-          pt labels, 10 pt axis title) above the baseline
+        comment: 'Beyond baseline: subtle alternating row banding and a frameless
+          one-row legend under the axis give a calm, deliberate hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Alternating row banding at alpha 0.03, segment edges in the page
-          color, frameless one-row legend, x-only grid
+        comment: Absolute-percent tick formatter on both sides of the midline, row
+          bands chosen for this chart, x-grid only
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Bolded top and bottom questions set the extremes as focal points
-          beyond the sort the Notes ask for
+        comment: Bold labels on the most and least agreed questions mark the two ends
+          of the sorted ranking
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal diverging stacked Likert bars
+        comment: Diverging stacked horizontal Likert bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Centered on split neutral, diverging scheme, sorted by net agreement,
-          labels in segments >=10%, horizontal
+        comment: 'C1-C5 all met: scale order, centered on split neutral, diverging
+          scheme with legend, sorted by net agreement, labels in segments >=10%'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Segment lengths equal their percentages around one shared midpoint;
-          ticks show absolute %
+        comment: Segment lengths equal their percentages; shared 0% midline; axis
+          covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend names all five
-          levels in scale order
+        comment: Title 'Employee Engagement Survey · bar-diverging-likert · python
+          · seaborn · anyplot.ai'; legend names all five levels
     data_quality:
       score: 15
       max: 15
@@ -170,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Eight questions, net agreement from -13 to +68, one net-negative
-          item, unlabeled narrow segments
+        comment: Eight questions, net agreement +68 to -13 with one net-negative item,
+          narrow segments left unlabeled
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey items, neutral and plausible
+        comment: Employee engagement survey items, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Each row sums to 100%; net values read off the badges match agree+SA-D-SD
-          (e.g. Team collaboration 45+33-7-3=68)
+        comment: Each row sums to 100 (e.g. 20+28+17+22+13); net badges match agree+SA-D-SD
+          (Compensation 35-48=-13, Team collaboration 78-10=68); no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -220,12 +216,12 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
         comment: Axes-level sns.barplot with order/orient, sns.set_theme rc, sns.despine
@@ -238,18 +234,17 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-b9b18037ad
-  rendered_at: '2026-11-28T00:58:10Z'
+  rendered_at: '2026-11-28T01:05:58Z'
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-bars
   - annotations
   - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
-  - sorting
   styling:
-  - custom-colormap
-  - minimal-chrome
+  - publication-ready
+  - grid-styling
