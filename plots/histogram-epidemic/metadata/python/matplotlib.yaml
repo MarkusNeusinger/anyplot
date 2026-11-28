@@ -2,50 +2,55 @@ library: matplotlib
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:57Z'
-updated: '2026-06-02T03:26:57Z'
+updated: '2026-11-28T02:01:00Z'
 generated_by: claude-sonnet
-workflow_run: 26796061110
+workflow_run: 46095374264
 issue: 4426
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all five spec features implemented (stacked bars, three
-    classifications, two intervention markers, secondary cumulative axis, date x-axis
-    with proper intervals)'
-  - Both renders pass legibility check; path_effects stroke on annotation text ensures
-    readability on both light and dark surfaces
-  - Dynamic title fontsize formula correctly prevents overflow for the mandated anyplot.ai
-    title format
-  - Dual-axis design with secondary right spine colored red to match cumulative series
-    is a refined, intentional UX choice
-  - Two-wave epidemic data with Poisson phases creates a compelling, realistic outbreak
-    scenario with genuine storytelling
+  - Secondary axis spine, ticks and label colored to the cumulative series, so the
+    second scale reads as belonging to the red line
+  - withStroke halos keep the intervention labels readable over bars and grid in both
+    themes
+  - Idiomatic twinx + mdates.WeekdayLocator/DateFormatter and a combined legend built
+    from both axes' handles
+  - Realistic two-wave outbreak with plausible classification shares and a monotone
+    cumulative line on its own labeled axis
+  - Full Imprint palette fed to set_prop_cycle, so the classifications take positions
+    1-3 in canonical order
   weaknesses:
-  - 'Imprint palette position 2 (lavender #C475FD) skipped for Probable cases — code
-    uses positions 1, 3, 4 instead of canonical 1, 2, 3; no strong semantic justification
-    for epi case classifications to override canonical order; fix: change PROBABLE_COLOR
-    to #C475FD and SUSPECT_COLOR to #4467A3'
+  - 'SC-02 (both): bars are drawn 0.8 day wide on daily bins, leaving a visible gap
+    between every pair of adjacent bars, so the curve misses C1 (adjacent bars with
+    no gaps) → bar width equal to the 1-day bin (+0.2 day). Likely cause: bar_width
+    = 0.8 in ax.bar.'
+  - 'SC-03 (both): the secondary Cumulative Cases axis runs below zero to about -110,
+    so its 0 tick and the cumulative fill sit above the bar baseline and a count that
+    cannot be negative gets a negative range → start the axis at 0 (+110). Likely
+    cause: auto limits on ax2 with no ax2.set_ylim(bottom=0).'
+  - 'Suggestion: a slightly lighter cumulative fill (or none) would let the bars carry
+    the page alone.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, matches spec
-      Chrome: title "histogram-epidemic · python · matplotlib · anyplot.ai" in dark ink, centered, ~70% width; x-axis label "Date of Symptom Onset" and y-axis label "Daily New Cases" in dark ink at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt; all clearly readable
-      Data: Confirmed bars in #009E73 (brand green, first series correct); Probable bars in #4467A3 (blue, Imprint position 3); Suspect bars in #BD8233 (ochre, Imprint position 4); cumulative line in #AE3030 (matte red semantic anchor); two distinct epidemic waves visible; intervention dashed lines in muted gray
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: warm off-white #FAF8F1 on canvas and plot area
+      Chrome: title 'histogram-epidemic · python · matplotlib · anyplot.ai' in dark ink at about 55 % width; axis titles 'Date of Symptom Onset', 'Daily New Cases' dark; ticks in #4A4A44, biweekly 'Jan 16'..'Apr 09' rotated 30°; right axis 'Cumulative Cases' with ticks and spine in red #AE3030; subtle horizontal grid; legend top-left on an elevated frame; dashed grey lines at Feb 10 'Lockdown' and Mar 15 'Vaccination campaign' with haloed labels — all readable
+      Data: 90 daily stacked bars, Confirmed #009E73 bottom, Probable #C475FD middle, Suspect #4467A3 top, 0.8-day width with thin gaps; two waves peaking near 60 and 63; red cumulative line rising to about 2,250 with a faint red fill
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, matches spec
-      Chrome: title, axis labels, tick labels, and legend text all render in light tones (INK = #F0EFE8, INK_SOFT = #B8B7B0); annotation text ("Lockdown", "Vaccination campaign") uses INK_SOFT with path_effects stroke halo — readable; legend frame uses elevated dark background #242420; secondary right spine colored red to match cumulative series
-      Data: bar colors identical to light render — green (#009E73), blue (#4467A3), ochre (#BD8233), red cumulative (#AE3030) — Imprint palette data colors unchanged across themes
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text clearly readable against near-black background
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks, legend text and event labels flip to light tones (#F0EFE8 / #B8B7B0); legend frame #242420; red right axis still readable; no dark-on-dark text
+      Data: bar and line colors identical to the light render (#009E73, #C475FD, #4467A3, #AE3030); the cumulative fill shows as a dark red tint
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,82 +58,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; dynamic title scaling formula; axis
-          labels 10pt, ticks 8pt, annotations 7pt; well-proportioned both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, event labels
+          7 pt with a page-colored halo; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis tick labels rotated 30°; legend clears
-          bars; annotation stroke halos prevent readability issues
+        comment: No text collisions; event labels clear of the bars thanks to the
+          halo; the cumulative line crossing the bars hides no information
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars appropriately wide for 90-day dataset; cumulative line
-          linewidth=2.0; intervention dashes readable
+        comment: 90 daily stacked bars clearly visible; legend swatches and line sample
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; three perceptually distinct hues for case
-          classifications; redundant legend encoding
+        comment: Three classification hues well separated; the red cumulative line
+          is told apart by its own axis and shape, not by hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); plot fills canvas well; balanced
-          margins; secondary axis cleanly integrated
+        comment: Plot fills the 3200x1800 canvas with balanced margins; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date of Symptom Onset and Daily New Cases descriptive; Cumulative
-          Cases on secondary axis
+        comment: Date of Symptom Onset / Daily New Cases / Cumulative Cases — descriptive,
+          counts need no unit
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; BUT positions 2 (lavender #C475FD)
-          skipped — Probable uses position 3 (#4467A3), Suspect uses position 4 (#BD8233);
-          no strong semantic justification for epi classifications; backgrounds and
-          chrome theme-correct in both renders'
+        passed: true
+        comment: '#009E73 first, then Imprint positions 2 and 3 (#C475FD, #4467A3)
+          via set_prop_cycle on the full palette; red cumulative as semantic anchor;
+          backgrounds correct in both themes'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: Imprint palette with intention; cumulative in semantic
-          red creates hierarchy; secondary spine colored to match cumulative; path_effects
-          for annotation halos; dynamic title; above defaults'
+        comment: 'Beyond baseline: secondary axis spine, ticks and title colored to
+          match the cumulative series, tying the second scale to its line'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Excellent: spines minimized to L-shape on main + right-only on secondary
-          (colored red); grid alpha=0.15 very subtle; bar edges use PAGE_BG; themed
-          legend frame; path effects on annotations'
+        comment: Page-colored bar edges separate the stack segments and the halo strokes
+          keep the event labels readable over the gridlines
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear story: two waves, interventions contextualize between-wave
-          dip, cumulative shows total burden; strong epidemiological narrative with
-          visual hierarchy'
+        passed: false
+        comment: Data and the spec-required events displayed; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -136,29 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct epidemic curve: stacked histogram bars by date of symptom
-          onset with cumulative overlay'
+        comment: 'Correct epidemic curve: stacked daily histogram by onset date'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features: daily bins, stacked by confirmed/probable/suspect,
-          two intervention annotations, date x-axis, secondary cumulative axis'
+        passed: false
+        comment: Stacked by classification, annotated intervention lines, date axis,
+          cumulative secondary axis present; but bars at width 0.8 day leave gaps,
+          missing C1 (adjacent bars with no gaps) (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'X: dates of symptom onset; left Y: daily new cases; right Y: cumulative
-          total; all 90 days visible'
+        passed: false
+        comment: Bars at their dates and counts from zero; the secondary cumulative
+          axis runs below zero to about -110, so its zero and its area fill sit above
+          the bar baseline (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly histogram-epidemic · python · matplotlib · anyplot.ai;
-          legend labels Confirmed/Probable/Suspect/Cumulative correct
+        comment: Title in the mandated format; legend Confirmed/Probable/Suspect/Cumulative
+          matches the marks
     data_quality:
       score: 15
       max: 15
@@ -168,23 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two waves of varying magnitude, three case classifications, total
-          burden overlay, intervention events — all epidemic curve features shown
+        comment: Two waves, a thin tail, three classifications, two interventions
+          and a cumulative burden — all epi-curve aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible regional epidemic with lockdown and vaccination
-          campaign; neutral public health context; 90-day period
+        comment: Plausible, neutral regional outbreak with lockdown and vaccination
+          campaign
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~60-65 daily cases (regional outbreak plausible); cumulative
-          ~2,200 over 90 days; Probable 10-30% and Suspect 5-15% epidemiologically
-          realistic
+        comment: Peak about 63 daily cases, cumulative about 2,250 over 90 days; probable
+          10-30 % and suspect 5-15 % of cases — plausible; spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -194,8 +195,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → plot → save; no functions
-          or classes'
+        comment: Flat Imports → Tokens → Data → Plot → Save; a loop over case types,
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,51 +208,53 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All six imports used: os, matplotlib.dates, matplotlib.patheffects,
-          matplotlib.pyplot, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; dynamic title_fontsize computation; path_effects
-          stroke is elegant; no over-engineering
+        comment: pivot_table + cumulative cumsum, loop for the stack; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; savefig without bbox_inches='tight'; current
-          API throughout
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'; current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert matplotlib: axes methods throughout; twinx() for secondary
-          axis; mdates.WeekdayLocator + DateFormatter; plt.setp() for batch tick rotation;
-          combined legend handles from two axes'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: matplotlib.patheffects.withStroke for annotation halos; matplotlib.dates
-          with WeekdayLocator; secondary axis spine customization per-side; combined
-          multi-axis legend — strong but one point held
+        comment: 'Above default: ax.twinx() secondary axis, mdates.WeekdayLocator
+          + DateFormatter, combined legend from handles of both axes'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Above default: matplotlib.patheffects.withStroke halos on the event
+          labels'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-28T01:57:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
+  - long-to-wide
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
