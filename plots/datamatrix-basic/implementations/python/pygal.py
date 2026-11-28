@@ -1,7 +1,7 @@
 """ anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-28
+Quality: 83/100 | Updated: 2026-11-28
 """
 
 import os
@@ -18,7 +18,8 @@ for _p in _removed:
     sys.path.remove(_p)
 
 try:
-    from pygal.graph.graph import Graph
+    import cairosvg
+    import pygal
     from pygal.style import Style
 finally:
     for _p in _removed:
@@ -203,54 +204,6 @@ caption_detail = (
 )
 
 
-class DataMatrixChart(Graph):
-    """pygal draws no barcodes: this Graph subclass paints the symbol as SVG in the plot area."""
-
-    def _plot(self):
-        total = max(rows, cols) + 2 * QUIET_ZONE
-        # Whole-pixel module size and offsets, so adjacent modules meet without seams
-        cell = int((min(self.view.width, self.view.height) - 2 * 160) / total)
-        side = total * cell
-        x0 = round(self.view.x(0) + (self.view.width - side) / 2)
-        y0 = round(self.view.y(total) + (self.view.height - side) / 2)
-
-        group = self.svg.node(self.nodes["plot"], class_="datamatrix")
-        group.set("shape-rendering", "crispEdges")
-        tile = self.svg.node(group, "rect", x=x0, y=y0, width=side, height=side)
-        tile.set("fill", TILE_BG)
-        tile.set("stroke", INK_SOFT)
-        tile.set("stroke-width", "2")
-
-        # All dark modules in one path, so they merge into solid edges
-        r_idx, c_idx = np.nonzero(modules)
-        outline = "".join(
-            f"M{x0 + (c + QUIET_ZONE) * cell} {y0 + (r + QUIET_ZONE) * cell}h{cell}v{cell}h-{cell}z"
-            for r, c in zip(r_idx, c_idx, strict=True)
-        )
-        symbol = self.svg.node(group, "path", d=outline)
-        symbol.set("fill", "#1A1A17")
-
-        label_x = x0 + side / 2
-        label_y = y0 + side + 70
-        title_node = self.svg.node(group, "text", x=label_x, y=label_y)
-        title_node.set("text-anchor", "middle")
-        title_node.set("fill", INK)
-        title_node.set("style", "font-size:44px;font-weight:bold;font-family:sans-serif")
-        title_node.text = caption
-        detail_node = self.svg.node(group, "text", x=label_x, y=label_y + 58)
-        detail_node.set("text-anchor", "middle")
-        detail_node.set("fill", INK_SOFT)
-        detail_node.set("style", "font-size:36px;font-family:sans-serif")
-        detail_node.text = caption_detail
-
-    def _compute(self):
-        total = max(rows, cols) + 2 * QUIET_ZONE
-        self._box.xmin = 0
-        self._box.xmax = total
-        self._box.ymin = 0
-        self._box.ymax = total
-
-
 # Style
 custom_style = Style(
     background=PAGE_BG,
@@ -268,26 +221,49 @@ custom_style = Style(
     value_font_size=36,
 )
 
-chart = DataMatrixChart(
+chart = pygal.Line(
     width=2400,
     height=2400,
     style=custom_style,
     title="datamatrix-basic · python · pygal · anyplot.ai",
     show_legend=False,
     margin=100,
-    margin_top=180,
-    margin_bottom=180,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_dots=False,
 )
+# pygal needs a series to draw; it stays invisible, the symbol itself is added to the SVG below
+chart.add("", [0, 0], stroke=False)
 
-# Required: pygal's Graph._draw() only calls _plot() when series data is present
-chart.add("", [0])
+# pygal draws no barcodes: append the symbol to the SVG tree as one path of dark modules
+total = max(rows, cols) + 2 * QUIET_ZONE
+cell = (2400 - 2 * 265) // total  # whole-pixel module size, so adjacent modules meet without seams
+side = total * cell
+x0 = (2400 - side) // 2
+y0 = 300
+r_idx, c_idx = np.nonzero(modules)
+outline = "".join(
+    f"M{x0 + (c + QUIET_ZONE) * cell} {y0 + (r + QUIET_ZONE) * cell}h{cell}v{cell}h-{cell}z"
+    for r, c in zip(r_idx, c_idx, strict=True)
+)
+label_x = x0 + side // 2
+symbol_svg = (
+    '<g shape-rendering="crispEdges">'
+    f'<rect x="{x0}" y="{y0}" width="{side}" height="{side}" fill="{TILE_BG}" stroke="{INK_SOFT}"/>'
+    f'<path d="{outline}" fill="#1A1A17"/>'
+    f'<text x="{label_x}" y="{y0 + side + 70}" text-anchor="middle" fill="{INK}" '
+    f'style="font-size:44px;font-weight:bold;font-family:sans-serif">{caption}</text>'
+    f'<text x="{label_x}" y="{y0 + side + 128}" text-anchor="middle" fill="{INK_SOFT}" '
+    f'style="font-size:36px;font-family:sans-serif">{caption_detail}</text>'
+    "</g>"
+)
+svg_content = chart.render(is_unicode=True).replace("</svg>", symbol_svg + "</svg>")
 
 # Save
-chart.render_to_png(f"plot-{THEME}.png")
+cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
-svg_content = chart.render(is_unicode=True)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
