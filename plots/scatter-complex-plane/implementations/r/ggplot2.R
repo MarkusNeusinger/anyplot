@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 82/100 | Created: 2026-06-02
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -62,11 +62,13 @@ df <- data.frame(
 )
 
 # Nudge labels outward from origin for readability
-nudge_scale <- 0.30
+nudge_scale <- 0.20
 df$nx <- cos(df$angle) * nudge_scale
 df$ny <- sin(df$angle) * nudge_scale
 # Per-point hjust: left-align rightward labels so text clears the arrowhead
-df$hjust <- ifelse(cos(df$angle) > 0.8, 0, ifelse(cos(df$angle) < -0.8, 1, 0.5))
+df$hjust <- ifelse(cos(df$angle) > 0.2, 0, ifelse(cos(df$angle) < -0.2, 1, 0.5))
+# Lift labels of points on the real axis so the text clears the axis line
+df$ny <- df$ny + ifelse(abs(df$imag) < 0.05, 0.12, 0)
 
 # Unit circle reference path
 theta_seq <- seq(0, 2 * pi, length.out = 300)
@@ -108,11 +110,11 @@ p <- ggplot() +
     geom_text(
         data = df,
         aes(x = real + nx, y = imag + ny, label = label, color = category, hjust = hjust),
-        size        = 3.2,
+        size        = 3.8,
         show.legend = FALSE
     ) +
     scale_color_manual(values = category_colors, name = NULL) +
-    coord_equal(xlim = c(-2.1, 2.1), ylim = c(-2.1, 2.1)) +
+    coord_equal(xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5)) +
     labs(
         title = title_str,
         x     = "Real",
