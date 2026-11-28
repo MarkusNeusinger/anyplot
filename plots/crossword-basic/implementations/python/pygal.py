@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-22
@@ -17,7 +17,7 @@ import os
 
 import cairosvg
 import numpy as np
-from pygal.graph.graph import Graph
+import pygal
 from pygal.style import Style
 
 
@@ -40,6 +40,7 @@ CELL = 140
 GRID_SIZE = 15
 GRID_W = CELL * GRID_SIZE  # 2100 px — fills the plot area exactly
 NUM_SZ = 28
+MARGIN = 150  # equal margins on all sides around the 2100 px grid
 
 TITLE = "crossword-basic · python · pygal · anyplot.ai"
 
@@ -50,9 +51,11 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_SOFT,
+    guide_stroke_color=CELL_LINE,
+    major_guide_stroke_color=CELL_LINE,
     colors=IMPRINT_PALETTE,
     title_font_size=66,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -99,62 +102,28 @@ for row in range(GRID_SIZE):
                 numbers[(row, col)] = clue_num
                 clue_num += 1
 
-# Plot: custom pygal chart type that reads only grid and numbers
+# Plot: pygal supplies the themed page and title; the cells go into its SVG tree
+chart = pygal.XY(
+    style=custom_style, width=CANVAS, height=CANVAS, title=TITLE, show_legend=False, margin=MARGIN, no_data_text=""
+)
+svg_text = chart.render(is_unicode=True)
+parts = [f'<g transform="translate({MARGIN}, {MARGIN})">']
+for row in range(GRID_SIZE):
+    for col in range(GRID_SIZE):
+        x, y = col * CELL, row * CELL
+        fill = BLOCK_BG if grid[row, col] == 1 else ENTRY_BG
+        parts.append(
+            f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{fill}" stroke="{CELL_LINE}" stroke-width="2"/>'
+        )
+        if (row, col) in numbers:
+            parts.append(
+                f'<text x="{x + 6}" y="{y + NUM_SZ + 3}" fill="{CELL_INK}" font-family="Arial, sans-serif" '
+                f'font-size="{NUM_SZ}">{numbers[(row, col)]}</text>'
+            )
+parts.append("</g>")
+svg_bytes = svg_text.replace("</svg>", "".join(parts) + "</svg>").encode("utf-8")
 
-
-class CrosswordGrid(Graph):
-    # Custom pygal chart type: reuses pygal's style, title and render pipeline
-    # and draws the grid cells through its SVG node API.
-
-    def _compute(self):
-        pass
-
-    def _compute_x_labels(self):
-        pass
-
-    def _compute_y_labels(self):
-        pass
-
-    def _draw(self):
-        """Draw chart elements; always calls _plot since no series data is needed."""
-        self._compute()
-        self._compute_x_labels()
-        self._compute_x_labels_major()
-        self._compute_y_labels()
-        self._compute_y_labels_major()
-        self._compute_secondary()
-        self._post_compute()
-        self._compute_margin()
-        self._decorate()
-        self._plot()
-
-    def _plot(self):
-        # Coordinates are relative to the plot group, so (0, 0) is the grid's top-left corner.
-        plot = self.nodes["plot"]
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                x = col * CELL
-                y = row * CELL
-                fill = BLOCK_BG if grid[row, col] == 1 else ENTRY_BG
-
-                rect = self.svg.node(plot, "rect", x=x, y=y, width=CELL, height=CELL, fill=fill)
-                rect.set("stroke", CELL_LINE)
-                rect.set("stroke-width", "2")
-
-                if (row, col) in numbers:
-                    txt = self.svg.node(plot, "text", x=x + 6, y=y + NUM_SZ + 3, fill=CELL_INK)
-                    txt.set("font-family", "Arial, sans-serif")
-                    txt.set("font-size", str(NUM_SZ))
-                    txt.text = str(numbers[(row, col)])
-
-
-# margin=150 → equal 150 px margins on all sides; plot area = 2100×2100 = grid size
-chart = CrosswordGrid(style=custom_style, width=CANVAS, height=CANVAS, title=TITLE, show_legend=False, margin=150)
-
-# Render via pygal's pipeline: render() produces the SVG, cairosvg converts to PNG
-svg_bytes = chart.render()
+# Save: cairosvg converts the SVG to PNG, the same SVG is pygal's interactive output
 cairosvg.svg2png(bytestring=svg_bytes, write_to=f"plot-{THEME}.png", output_width=CANVAS, output_height=CANVAS)
-
-# HTML: pygal's interactive SVG output (embedded in a minimal page)
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(chart.render(is_unicode=True))
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(svg_bytes)
