@@ -9,7 +9,6 @@ using Colors
 # Theme tokens (Imprint palette — theme-adaptive chrome)
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
@@ -27,6 +26,8 @@ const X_MAX    =  1.0
 const Y_MIN    = -1.25
 const Y_MAX    =  1.25
 const MAX_ITER = 256
+const BAILOUT_SQ = 256.0^2   # large bailout radius keeps the smooth count free of arcs
+const TICK_COUNTS = [2, 4, 8, 16, 32, 64, 128, 256]
 const WIDTH    = 1600
 const HEIGHT   =  900
 
@@ -45,7 +46,7 @@ for i in 1:WIDTH, j in 1:HEIGHT
     while iter < MAX_ITER
         zx2 = zx * zx
         zy2 = zy * zy
-        if zx2 + zy2 > 4.0
+        if zx2 + zy2 > BAILOUT_SQ
             escaped = true
             break
         end
@@ -56,7 +57,7 @@ for i in 1:WIDTH, j in 1:HEIGHT
     if escaped
         zmod = sqrt(zx * zx + zy * zy)
         smooth = iter + 1.0 - log2(log2(zmod))
-        escape[i, j] = mod(smooth, 8.0) / 8.0
+        escape[i, j] = log(max(smooth, 1.0))
     else
         escape[i, j] = NaN
     end
@@ -99,11 +100,14 @@ ax = Axis(
 hm = heatmap!(ax, xs, ys, escape;
     colormap   = ANYPLOT_SEQ_FIELDS,
     nan_color  = INTERIOR_COLOR,
-    colorrange = (0.0, 1.0),
+    colorrange = (log(first(TICK_COUNTS)), log(last(TICK_COUNTS))),
 )
 
+colsize!(fig.layout, 1, Aspect(1, (X_MAX - X_MIN) / (Y_MAX - Y_MIN)))
+
 Colorbar(fig[1, 2], hm;
-    label          = "Escape speed",
+    label          = "Smoothed escape iteration (log scale)",
+    ticks          = (log.(TICK_COUNTS), string.(TICK_COUNTS)),
     labelsize      = 12,
     labelcolor     = INK,
     ticklabelsize  = 12,
