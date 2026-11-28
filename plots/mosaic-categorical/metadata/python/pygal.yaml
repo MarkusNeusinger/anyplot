@@ -12,36 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'Correct mosaic geometry: column widths from the device marginals and heights
-    from the conditional shares, computed from a pivot_table of a tidy DataFrame'
-  - 'Contrast-aware tile text: dark ink on the light lavender tiles, white on the
-    darker ones, readable in both themes'
-  - Row legend aligned with the first column's tiles, acting as row labels; marginal
-    session shares under every column
-  - Imprint palette in canonical order with solid fills, identical across the light
-    and dark renders
-  - Native SVG <title> tooltips per tile in the interactive HTML output
+  - 'Correct mosaic geometry computed straight from a pandas pivot_table: widths are
+    the device marginals, heights the conditional app-category shares'
+  - Theme tokens threaded through every text node; both renders fully readable, and
+    tile text switches between dark and white ink by fill luminance
+  - Row legend aligned with the first column's tiles, plus marginal-share subtitles
+    under each column, makes widths and colors readable at a glance
+  - Native SVG <title> tooltips per tile in the HTML output
   weaknesses:
-  - 'CQ-01 (code): MosaicPlot carries a _text helper method on top of the _plot/_compute
-    hooks pygal needs → keep the Graph subclass to those hooks and create the text
-    nodes inline (for example one loop over a list of label specs). Likely cause:
-    the _text method at lines 71-82.'
+  - 'CQ-01 (code): line 59 `class MosaicPlot(Graph)` with `__init__`, a `_text` helper
+    method and `_plot` holds the whole drawing (tiles, labels, legend, axis titles)
+    → draw the mosaic without a class so the file reads top to bottom. Likely cause:
+    a Graph subclass used as the mosaic engine.'
   - 'Suggestion: trim the ~190 px of empty space between the title and the top of
-    the mosaic to give the tiles a little more height.'
+    the mosaic to give the tiles more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 3200x1800 canvas
-      Chrome: title "App Usage by Device · mosaic-categorical · python · pygal · anyplot.ai" in dark ink; bold column labels Mobile / Tablet / Desktop with italic muted "42.5% / 28.8% / 28.8% of sessions" sub-labels; uppercase DEVICE TYPE and rotated APP CATEGORY in soft ink; italic muted key-insight caption at the bottom. All readable.
-      Data: 12 solid tiles separated by page-colored gaps — Social Media #009E73 (first), Gaming #C475FD, Productivity #4467A3, Entertainment #BD8233; row legend swatches aligned with the Mobile tiles; bold counts over percentages, dark ink on lavender, white elsewhere.
+      Background: warm off-white #FAF8F1
+      Chrome: title 'App Usage by Device · mosaic-categorical · python · pygal · anyplot.ai' in dark ink, uppercase soft-ink axis titles DEVICE TYPE / APP CATEGORY, bold column names with italic muted marginal shares (42.5% / 28.8% / 28.8% of sessions), italic key-insight caption; all readable
+      Data: 3 columns x 4 rows of tiles in Imprint #009E73, #C475FD, #4467A3, #BD8233, page-colored gaps, bold counts and percentages inside tiles; legend swatches at left aligned with the Mobile tiles
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17
-      Chrome: title, column labels, legend labels in light ink; axis titles and sub-labels in the light soft/muted tokens; no dark-on-dark anywhere.
-      Data: tile colors identical to the light render; only chrome flipped. Brand green clearly visible.
+      Chrome: title, column names and legend labels in light ink, axis titles in light soft ink, marginal shares and caption in muted light grey; no dark-on-dark text
+      Data: tile fills identical to the light render; in-tile text unchanged (white on green/blue/amber, dark on lavender)
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,51 +51,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 66, column labels 52, legend 44,
-          axis titles 48, tile counts up to 58, percentages >= 28 px); everything
-          readable in both themes
+        comment: Title 66 px, axis titles 48 px, column names 52 px, legend 44 px,
+          tile counts up to 58 px; all readable in both themes, dark ink on the lavender
+          tiles and white on the darker ones
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend labels end clear of the first column's
-          tiles
+        comment: No text collisions; legend labels end clear of the first column
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 tiles clearly visible with page-colored 4 px borders; legend swatches
-          match tile fills in both themes
+        comment: 12 tiles with page-colored 4 px borders; legend swatches match tile
+          fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-safe; tile text switches to dark ink on the
-          light lavender tiles and white on the darker ones
+        comment: Imprint hues are CVD-safe and every category is also named by the
+          legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas (gate passed); mosaic fills the canvas, title ~72%
-          wide (expected for the mandated title), nothing overflows
+        comment: 3200x1800, gate passed; mosaic fills the canvas, title about 72%
+          wide (expected), nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles 'DEVICE TYPE' and 'APP CATEGORY' are reader text derived
-          from the column names
+        comment: '''DEVICE TYPE'' and ''APP CATEGORY'' are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-4 in canonical order, first row #009E73, solid
-          fills identical in both renders; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'Imprint positions 1-4 in order, first row #009E73, identical fills
+          in both renders; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
       score: 12
       max: 20
@@ -106,26 +102,24 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Beyond baseline: bold count over lighter percentage inside each
-          tile, uppercase soft-ink axis titles, italic muted marginal subtitles under
-          the column names'
+        passed: false
+        comment: 'Beyond baseline: bold count over a lighter percentage inside each
+          tile, uppercase soft-ink axis titles, italic muted marginal subtitles'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Row legend centered on the tiles of the first column so it doubles
-          as row labels; page-colored tile borders form the gaps; per-tile luminance-based
-          text color
+        passed: false
+        comment: Row legend centered on the first column's tiles so it doubles as
+          row labels; luminance-based tile text color
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: A data-computed caption names the strongest association (Desktop
-          -> Productivity, 3.9x the Mobile rate); marginal shares under each column
-          frame the widths
+        passed: false
+        comment: Marginal shares under each column frame the widths, conditional percentages
+          per tile; the computed caption is an unrequested annotation and earns no
+          credit
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +130,27 @@ review:
         max: 5
         passed: true
         comment: 'Correct mosaic: widths from device marginals, heights from conditional
-          app-category shares'
+          shares'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'C1-C4 met: one tile per cell, gaps, both variables and their levels
-          labelled, color encodes app category the same way in every column with a
-          legend'
+        comment: 'C1-C4 met: one tile per cell, gaps, both variables and levels labelled,
+          color encodes app category the same way in every column with a legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tile geometry computed straight from the contingency table; all 12
-          cells shown
+        comment: Tile geometry computed from the contingency table; all 12 cells shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'App Usage by Device · mosaic-categorical · python · pygal
-          · anyplot.ai' is the correct format; legend entries match the rows
+        comment: Title format correct with descriptive prefix; legend entries match
+          the rows
     data_quality:
       score: 15
       max: 15
@@ -181,19 +173,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Counts 80-480 per cell; checked marginals 42.5/28.8/28.8% (1240/840/840
-          of 2920) and Desktop Productivity 480/840 = 57% in render and code
+        comment: Checked marginals 42.5/28.8/28.8% (1240/840/840 of 2920) and Desktop
+          Productivity 480/840 = 57% in render and code
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 0
         max: 3
-        passed: true
-        comment: Graph subclass (pygal's extension point) plus a _text helper method
-          (defect line)
+        passed: false
+        comment: 'The whole drawing sits inside the MosaicPlot Graph subclass (__init__,
+          _text, _plot, lines 59-end): row 0 (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,26 +211,32 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses pygal's Graph._plot/_compute hooks, self.svg.node and self.view,
-          and a Style object for chrome
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Native SVG <title> tooltips per tile in the HTML output
+        comment: Style object for all chrome tokens; the class's use of self.svg and
+          self.view earns no credit (no credit for a class)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated Style object; the Graph subclass earns
+          no credit
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-2a7b04a927
+  criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
   rendered_at: '2026-11-22T15:47:45Z'
+  last_kept:
+    pr: 15184
+    code: no_visible_improvement
+    note: '#15184 was kept because the review saw no visible improvement over the
+      live version.'
 impl_tags:
   dependencies: []
   techniques:
