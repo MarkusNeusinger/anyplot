@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-05-30
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 81/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -13,9 +13,12 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
-# Imprint sequential colormap for continuous escape iterations
-SEQ_LOW  <- "#009E73"  # Imprint position 1 — brand green (boundary region)
-SEQ_HIGH <- "#4467A3"  # Imprint position 3 — blue (far exterior)
+# Imprint sequential "fields" ramp (colored cells fill the plot), stops per theme
+SEQ_FIELDS <- if (THEME == "light") {
+    list(colours = c("#66E2B2", "#009E73", "#024582", "#351E45"), values = c(0, 0.369, 0.803, 1))
+} else {
+    list(colours = c("#404C02", "#009E73", "#CDD9FF"), values = c(0, 0.487, 1))
+}
 
 # Mandelbrot parameters
 MAX_ITER <- 200
@@ -71,16 +74,12 @@ TITLE <- "heatmap-mandelbrot · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
     geom_raster(interpolate = TRUE) +
-    scale_fill_gradient(
-        low      = SEQ_LOW,
-        high     = SEQ_HIGH,
+    scale_fill_gradientn(
+        colours  = SEQ_FIELDS$colours,
+        values   = SEQ_FIELDS$values,
         na.value = "#050503",  # fixed dark interior independent of theme
-        name     = "Escape\ncount\n(√)",
-        guide    = guide_colorbar(
-            title.position = "top",
-            barwidth       = 0.7,
-            barheight      = 8
-        )
+        name     = "Escape (√)",
+        guide    = guide_colorbar(title.position = "top")
     ) +
     coord_fixed(ratio = 1) +
     labs(
@@ -102,6 +101,8 @@ p <- ggplot(df, aes(x = real, y = imag, fill = esc)) +
                                          linewidth = 0.3),
         legend.text       = element_text(color = INK_SOFT,   size = 8),
         legend.title      = element_text(color = INK,        size = 10),
+        legend.key.width  = unit(0.25, "in"),
+        legend.key.height = unit(0.4, "in"),  # colorbar length is 5 x key height
         plot.margin       = margin(12, 12, 12, 12)
     )
 
