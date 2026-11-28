@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -19,17 +19,22 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — semantic role assignment for Mohr's circle
-CLR_GEOM = "#009E73"  # brand green (position 1) — circle outline, center, angle arc
-CLR_INPUT = "#AE3030"  # matte red (semantic: applied stress / force) — input points A, B
-CLR_DERIVED = "#4467A3"  # blue (position 3) — principal stresses σ₁, σ₂, τ_max
+# Imprint palette — all eight positions, with semantic role assignment for Mohr's circle
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+CLR_GEOM = IMPRINT_PALETTE[0]  # brand green (position 1) — circle outline, center, angle arc
+CLR_INPUT = IMPRINT_PALETTE[4]  # matte red (semantic: applied stress / force) — input points A, B
+CLR_DERIVED = IMPRINT_PALETTE[2]  # blue (position 3) — principal stresses σ₁, σ₂, τ_max
 
-# Data — steel beam under combined loading (tension + compression + shear)
+# Shared annotation style
+arrow_kw = {"arrowstyle": "-|>", "mutation_scale": 12, "lw": 1.2}
+stroke_fx = [patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG), patheffects.Normal()]
+
+# Data: replace these three stresses with your own stress state (MPa)
 sigma_x = 80  # Normal stress in x-direction (MPa)
 sigma_y = -40  # Normal stress in y-direction (MPa)
 tau_xy = 30  # Shear stress on xy-plane (MPa)
 
-# Mohr's circle parameters
+# Plot: Mohr's circle parameters derived from the stress state
 center = (sigma_x + sigma_y) / 2
 radius = np.sqrt(((sigma_x - sigma_y) / 2) ** 2 + tau_xy**2)
 sigma_1 = center + radius
@@ -42,11 +47,7 @@ theta = np.linspace(0, 2 * np.pi, 360)
 circle_sigma = center + radius * np.cos(theta)
 circle_tau = radius * np.sin(theta)
 
-# Shared arrow style
-arrow_kw = {"arrowstyle": "-|>", "mutation_scale": 12, "lw": 1.2}
-stroke_fx = [patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG), patheffects.Normal()]
-
-# Plot — square canvas for equal-aspect Mohr's circle (2400×2400 px)
+# Square canvas for equal-aspect Mohr's circle (2400×2400 px)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
