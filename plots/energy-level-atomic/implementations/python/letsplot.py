@@ -1,7 +1,7 @@
 """ anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-30
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-28
 """
 
 import os
@@ -10,6 +10,7 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    arrow,
     element_blank,
     element_line,
     element_rect,
@@ -40,131 +41,87 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint categorical palette — canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-lyman_color = IMPRINT_PALETTE[0]  # brand green — Lyman series (UV)
-balmer_color = IMPRINT_PALETTE[1]  # lavender — Balmer series (visible)
-paschen_color = IMPRINT_PALETTE[2]  # blue — Paschen series (IR)
 
-# Data — Hydrogen atom energy levels (E_n = -13.6/n² eV)
-level_names = ["n=1", "n=2", "n=3", "n=4", "n=5", "n=6"]
-energies = [-13.6, -3.4, -1.51, -0.85, -0.54, -0.38]
+# Constants
+HC_EV_NM = 1239.84  # photon energy (eV) times wavelength (nm)
+VISIBLE_NM = (380, 750)  # visible window; the series that falls in it is drawn thicker
+SERIES_NAMES = ["Lyman (UV)", "Balmer (Visible)", "Paschen (IR)"]  # by lower level, ground state first
+N_SERIES = 3  # the lowest levels that end a transition series
+MAX_JUMP = 3  # how many levels above its end level a series is drawn
+POWER = 0.33  # nonlinear energy axis: spreads the levels converging on the ionization limit
 
-# Power transform on y to spread converging upper levels for legibility
-y_positions = [-(abs(e) ** 0.33) for e in energies]
-level_ypos = dict(zip(level_names, y_positions, strict=True))
-ion_ypos = 0.0
+# Columns: set these to your table's column names
+LEVEL = "Level"  # role: level
+ENERGY = "Energy (eV)"  # role: energy
 
-level_df = pd.DataFrame(
-    {
-        "label": level_names,
-        "energy": energies,
-        "y": y_positions,
-        "x_start": [0.08] * 6,
-        "x_end": [0.56] * 6,
-        "x_label_right": [0.60] * 6,
-        "energy_label": [f"{e:.2f} eV" for e in energies],
-    }
-)
+# Data: replace this block with your own table, for example df = pd.read_csv("levels.csv")
+# Hydrogen atom: E_n = -13.6 / n² eV for n = 1..6
+df = pd.DataFrame({LEVEL: [f"n={n}" for n in range(1, 7)], ENERGY: [-13.6 / n**2 for n in range(1, 7)]})
 
-# Emission transitions with observed wavelength (nm)
-transitions = [
-    ("n=2", "n=1", "Lyman", lyman_color, 121.6),
-    ("n=3", "n=1", "Lyman", lyman_color, 102.6),
-    ("n=4", "n=1", "Lyman", lyman_color, 97.2),
-    ("n=3", "n=2", "Balmer", balmer_color, 656.3),
-    ("n=4", "n=2", "Balmer", balmer_color, 486.1),
-    ("n=5", "n=2", "Balmer", balmer_color, 434.0),
-    ("n=6", "n=2", "Balmer", balmer_color, 410.2),
-    ("n=4", "n=3", "Paschen", paschen_color, 1875.1),
-    ("n=5", "n=3", "Paschen", paschen_color, 1282.0),
-    ("n=6", "n=3", "Paschen", paschen_color, 1093.8),
-]
+# Plot: reads only df and the constants above
+df = df.sort_values(ENERGY).reset_index(drop=True)
+df["y"] = -((-df[ENERGY]) ** POWER)  # level energies are negative below the ionization limit
+df["energy_label"] = df[ENERGY].map(lambda e: f"{e:.2f} eV")
+n_levels = len(df)
+ion_y = 0.0
+y_span = ion_y - df["y"].min()
 
-# Balmer arrows are thicker to emphasise the visible-spectrum series
-series_cfg = {
-    "Lyman": {"color": lyman_color, "size": 1.4},
-    "Balmer": {"color": balmer_color, "size": 2.2},
-    "Paschen": {"color": paschen_color, "size": 1.4},
-}
+# Schematic horizontal layout (not data)
+x_start, x_end = 0.08, 0.56
+x_label_right = x_end + 0.04
+df["x_start"], df["x_end"], df["x_label_right"], df["x_label_left"] = x_start, x_end, x_label_right, x_start - 0.012
 
-# Stagger arrows horizontally within each series to avoid overlap
-series_base_x = {"Lyman": 0.14, "Balmer": 0.28, "Paschen": 0.43}
-within_series_gap = 0.05
-
+# Emission transitions: each of the lowest levels ends a series fed by the levels just above it
+series_gap = (x_end - x_start - 0.06) / N_SERIES
 arrow_rows = []
-series_counter = {"Lyman": 0, "Balmer": 0, "Paschen": 0}
-for from_lvl, to_lvl, series, color, wavelength in transitions:
-    idx = series_counter[series]
-    x_pos = series_base_x[series] + idx * within_series_gap
-    series_counter[series] += 1
-    y_top = level_ypos[from_lvl]
-    y_bot = level_ypos[to_lvl]
-    arrow_rows.append(
-        {
-            "x": x_pos,
-            "y_from": y_top + 0.06,
-            "y_to": y_bot - 0.06,
-            "series": series,
-            "color": color,
-            "wavelength": f"{wavelength:.1f} nm",
-            "transition": f"{from_lvl} → {to_lvl}",
-            "is_alpha": idx == 0,
-        }
-    )
-
+for s in range(min(N_SERIES, n_levels - 1)):
+    for k, hi in enumerate(range(s + 1, min(s + 1 + MAX_JUMP, n_levels))):
+        delta = df.loc[hi, ENERGY] - df.loc[s, ENERGY]
+        arrow_rows.append(
+            {
+                "series_idx": s,
+                "series": SERIES_NAMES[s] if s < len(SERIES_NAMES) else f"to {df.loc[s, LEVEL]}",
+                "x": x_start + 0.06 + s * series_gap + k * 0.045,
+                "y_from": df.loc[hi, "y"],
+                "y_to": df.loc[s, "y"],
+                "wavelength_nm": HC_EV_NM / delta,
+                "transition": f"{df.loc[hi, LEVEL]} → {df.loc[s, LEVEL]}",
+                "is_last": hi == min(s + MAX_JUMP, n_levels - 1),
+                "color": IMPRINT_PALETTE[s],
+            }
+        )
 arrow_df = pd.DataFrame(arrow_rows)
-
-# V-shape arrowheads at the bottom (emission direction)
-head_len, head_width = 0.10, 0.014
-head_df = pd.DataFrame(
-    {
-        "x_left": arrow_df["x"] - head_width,
-        "x_right": arrow_df["x"] + head_width,
-        "x_tip": arrow_df["x"].values,
-        "y_base": arrow_df["y_to"] + head_len,
-        "y_tip": arrow_df["y_to"].values,
-        "color": arrow_df["color"].values,
-        "series": arrow_df["series"].values,
-    }
+arrow_df["wavelength"] = arrow_df["wavelength_nm"].map(lambda w: f"{w:.1f} nm")
+in_visible = arrow_df["wavelength_nm"].between(*VISIBLE_NM)
+arrow_df["size"] = (
+    arrow_df["series_idx"].map(in_visible.groupby(arrow_df["series_idx"]).any()).map({True: 2.2, False: 1.4})
 )
 
-# Wavelength annotations on the first (α) transition of each series
-alpha_arrows = arrow_df[arrow_df["is_alpha"]].copy()
-alpha_arrows["y_mid"] = (alpha_arrows["y_from"] + alpha_arrows["y_to"]) / 2
-alpha_arrows["x_label"] = alpha_arrows["x"] + 0.025
-# Nudge Paschen α-annotation right to clear the Balmer/Paschen crossing zone near n=3
-alpha_arrows.loc[alpha_arrows["series"] == "Paschen", "x_label"] = (
-    alpha_arrows.loc[alpha_arrows["series"] == "Paschen", "x"] + 0.15
-)
+# Wavelength annotation beside the last (rightmost) transition of each series,
+# halfway between its end level and the level just above it, clear of the other arrows
+alpha_arrows = arrow_df[arrow_df["is_last"]].copy()
+alpha_arrows["y_mid"] = (alpha_arrows["y_to"] + alpha_arrows["series_idx"].map(lambda s: df.loc[s + 1, "y"])) / 2
+alpha_arrows["x_label"] = alpha_arrows["x"] + 0.015
 
-# Manual legend on the right side — anchored near upper energy levels to fill sparse area
-legend_labels = ["Lyman (UV)", "Balmer (Visible)", "Paschen (IR)"]
-legend_colors = [lyman_color, balmer_color, paschen_color]
-legend_df = pd.DataFrame(
-    {
-        "x_seg": [0.68] * 3,
-        "xend_seg": [0.74] * 3,
-        "x_text": [0.755] * 3,
-        "y": [-0.35, -0.70, -1.05],
-        "label": legend_labels,
-        "color": legend_colors,
-    }
-)
+# Manual legend in the sparse upper right, one row per series
+legend_df = arrow_df.drop_duplicates("series_idx")[["series", "color"]].reset_index(drop=True)
+legend_df["x_seg"], legend_df["xend_seg"], legend_df["x_text"] = 0.68, 0.74, 0.755
+legend_df["y"] = ion_y - y_span * (0.15 + 0.15 * legend_df.index)
 
-# Ionization limit line and label
-ion_df = pd.DataFrame({"x": [0.08], "xend": [0.56], "y": [ion_ypos], "yend": [ion_ypos]})
-ion_label_df = pd.DataFrame({"x": [0.60], "y": [ion_ypos], "label": ["0 eV (ionization)"]})
-
-# Subtle shaded continuum band above the ionization limit
-ion_band_df = pd.DataFrame({"xmin": [0.08], "xmax": [0.56], "ymin": [ion_ypos], "ymax": [ion_ypos + 0.25]})
+# Ionization limit line, label and continuum band above it
+ion_df = pd.DataFrame({"x": [x_start], "xend": [x_end], "y": [ion_y], "yend": [ion_y]})
+ion_label_df = pd.DataFrame({"x": [x_label_right], "y": [ion_y], "label": ["0 eV (ionization)"]})
+ion_band_df = pd.DataFrame({"xmin": [x_start], "xmax": [x_end], "ymin": [ion_y], "ymax": [ion_y + 0.1 * y_span]})
 
 # Y-axis ticks at actual energy values (transformed positions, eV labels)
-y_breaks = y_positions + [ion_ypos]
-y_labels = [f"{e:.1f}" for e in energies] + ["0.0"]
+ticks = pd.DataFrame({"y": [*df["y"], ion_y], "label": [f"{e:.3g}" for e in df[ENERGY]] + ["0"]})
+ticks = ticks.dropna().drop_duplicates("y")
+y_limits = [ticks["y"].min() - 0.05 * y_span, ion_y + 0.1 * y_span + 0.02 * y_span]
 
-# Theme — fully adaptive chrome, no hardcoded grays
+# Theme — fully adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     axis_text_x=element_blank(),
     axis_ticks_x=element_blank(),
     axis_title_x=element_blank(),
@@ -177,12 +134,12 @@ anyplot_theme = theme(
     plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
     panel_grid_major_x=element_blank(),
     panel_grid_minor_x=element_blank(),
-    panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major_y=element_blank(),
+    panel_border=element_blank(),
     panel_grid_minor_y=element_blank(),
     legend_position="none",
 )
 
-# Build plot
 plot = (
     ggplot()
     # Ionization continuum — subtle band above 0 eV
@@ -195,72 +152,52 @@ plot = (
     )
     # Energy level horizontal lines
     + geom_segment(
-        data=level_df,
+        data=df,
         mapping=aes(x="x_start", xend="x_end", y="y", yend="y"),
         size=2.0,
         color=INK,
-        tooltips=layer_tooltips().line("@label").line("Energy: @energy_label"),
+        tooltips=layer_tooltips().line(f"@{LEVEL}").line("Energy: @energy_label"),
     )
     # Quantum state labels (left of each level line)
     + geom_text(
-        data=level_df, mapping=aes(x="x_start", y="y", label="label"), hjust=1.3, size=5, color=INK, fontface="bold"
+        data=df, mapping=aes(x="x_label_left", y="y", label=LEVEL), hjust=1, size=4.2, color=INK, fontface="bold"
     )
-    # Energy value labels (right of each level line)
-    + geom_text(
-        data=level_df, mapping=aes(x="x_label_right", y="y", label="energy_label"), hjust=0, size=4, color=INK_SOFT
-    )
-    # Ionization limit dashed line
+    # Ionization limit dashed line and label
     + geom_segment(
         data=ion_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), size=1.2, color=INK_SOFT, linetype="dashed"
     )
-    + geom_text(data=ion_label_df, mapping=aes(x="x", y="y", label="label"), hjust=-0.05, size=4, color=INK_MUTED)
+    + geom_text(data=ion_label_df, mapping=aes(x="x", y="y", label="label"), hjust=0, size=4, color=INK_MUTED)
 )
 
-# Add transition arrows and arrowheads per series
-for series_name, cfg in series_cfg.items():
-    s_arrows = arrow_df[arrow_df["series"] == series_name]
-    s_heads = head_df[head_df["series"] == series_name]
-    plot = (
-        plot
-        + geom_segment(
-            data=s_arrows,
-            mapping=aes(x="x", xend="x", y="y_from", yend="y_to", color="color"),
-            size=cfg["size"],
-            tooltips=layer_tooltips().line("@series series").line("@transition").line("λ = @wavelength"),
-        )
-        + geom_segment(
-            data=s_heads,
-            mapping=aes(x="x_left", xend="x_tip", y="y_base", yend="y_tip", color="color"),
-            size=cfg["size"],
-        )
-        + geom_segment(
-            data=s_heads,
-            mapping=aes(x="x_right", xend="x_tip", y="y_base", yend="y_tip", color="color"),
-            size=cfg["size"],
-        )
+# Transition arrows (native open arrowheads), one layer per line width
+for width in sorted(arrow_df["size"].unique()):
+    plot = plot + geom_segment(
+        data=arrow_df[arrow_df["size"] == width],
+        mapping=aes(x="x", xend="x", y="y_from", yend="y_to", color="color"),
+        size=width,
+        arrow=arrow(angle=28, length=9, type="open"),
+        tooltips=layer_tooltips().line("@series series").line("@transition").line("λ = @wavelength"),
     )
 
-# Wavelength labels on the α-line of each series
-plot = plot + geom_text(
-    data=alpha_arrows,
-    mapping=aes(x="x_label", y="y_mid", label="wavelength"),
-    hjust=0,
-    size=3.5,
-    color=INK_MUTED,
-    fontface="italic",
-)
-
-# Legend, scales, and final assembly
 plot = (
     plot
+    # Wavelength labels on the last transition of each series
+    + geom_text(
+        data=alpha_arrows,
+        mapping=aes(x="x_label", y="y_mid", label="wavelength"),
+        hjust=0,
+        size=3.8,
+        color=INK_MUTED,
+        fontface="italic",
+    )
     + scale_color_identity()
     + geom_segment(data=legend_df, mapping=aes(x="x_seg", xend="xend_seg", y="y", yend="y", color="color"), size=2.5)
-    + geom_text(data=legend_df, mapping=aes(x="x_text", y="y", label="label", color="color"), hjust=0, size=4)
+    + geom_text(data=legend_df, mapping=aes(x="x_text", y="y", label="series", color="color"), hjust=0, size=4)
     + scale_x_continuous(limits=[-0.05, 1.05], expand=[0, 0])
-    + scale_y_continuous(breaks=y_breaks, labels=y_labels)
+    + scale_y_continuous(breaks=list(ticks["y"]), labels=list(ticks["label"]), limits=y_limits)
     + labs(
         x="",
-        y="Energy (eV)",
+        y=ENERGY,
         title="energy-level-atomic · python · letsplot · anyplot.ai",
         subtitle="Hydrogen Atom: Lyman, Balmer & Paschen Series",
     )

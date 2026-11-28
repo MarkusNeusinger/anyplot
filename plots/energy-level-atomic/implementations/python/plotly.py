@@ -1,11 +1,12 @@
 """ anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-30
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-27
 """
 
 import os
 
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -14,261 +15,196 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 
 # Theme-adaptive chrome (Imprint palette)
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint palette — series colors grouped by spectral series
-# Lyman (UV): purple family for invisible ultraviolet
-lyman_colors = ["#C475FD", "#954477", "#4467A3"]
-# Balmer (visible): red/ochre/cyan/lime — physically motivated + clearly distinct
-balmer_colors = ["#AE3030", "#BD8233", "#2ABCCD", "#99B314"]
-# Paschen (IR): green family — cool tones, no warm-hue overlap with Balmer
-paschen_colors = ["#009E73", "#DDCC77"]
+# Imprint palette, canonical order; the amber warning color sits outside the categorical pool
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+AMBER = "#DDCC77"
 
-# Data — Hydrogen atom energy levels (E_n = -13.6/n² eV)
-quantum_numbers = [1, 2, 3, 4, 5, 6]
-energies = {n: -13.6 / n**2 for n in quantum_numbers}
-
-# Transitions: (upper_n, lower_n, display_label, wavelength_nm)
-lyman_series = [(2, 1, "Ly-α<br>121.6 nm", 121.6), (3, 1, "Ly-β<br>102.6 nm", 102.6), (4, 1, "Ly-γ<br>97.2 nm", 97.2)]
-balmer_series = [
-    (3, 2, "Hα 656.3nm", 656.3),
-    (4, 2, "Hβ 486.1nm", 486.1),
-    (5, 2, "Hγ 434.0nm", 434.0),
-    (6, 2, "Hδ 410.2nm", 410.2),
+# Constants
+HC_EV_NM = 1239.84  # photon energy times wavelength, eV·nm
+IONIZATION = 0.0  # energy of the ionization limit (n → ∞), eV
+CROWDED = 0.08  # levels within this share of the ground-state depth of the limit are labelled together
+GREEK = "αβγδ"
+# Spectral series of hydrogen: name, region, label prefix, lower level, upper levels, arrow colors,
+# schematic x of the series center. Colors follow the spectral region: UV purple, visible warm/cool, IR green/amber.
+SERIES = [
+    ("Lyman", "Ultraviolet", "Ly-", 1, [2, 3, 4], [IMPRINT_PALETTE[1], IMPRINT_PALETTE[6], IMPRINT_PALETTE[2]], 0.27),
+    (
+        "Balmer",
+        "Visible",
+        "H",
+        2,
+        [3, 4, 5, 6],
+        [IMPRINT_PALETTE[4], IMPRINT_PALETTE[3], IMPRINT_PALETTE[5], IMPRINT_PALETTE[7]],
+        0.52,
+    ),
+    ("Paschen", "Infrared", "Pa-", 3, [4, 5], [IMPRINT_PALETTE[0], AMBER], 0.77),
 ]
-paschen_series = [(4, 3, "Pa-α 1875nm", 1875.1), (5, 3, "Pa-β 1282nm", 1281.8)]
+ARROW_SPACING = 0.06  # schematic horizontal gap between neighboring arrows of a series
+LINE_LEFT, LINE_RIGHT = 0.14, 0.88  # schematic extent of each level line
+
+# Columns: set these to your table's column names
+LEVEL = "Level"  # role: level
+ENERGY = "Energy (eV)"  # role: energy
+
+# Data: hydrogen levels, E_n = -13.6 / n² eV; replace with your own table, one row per level from the ground state up
+df = pd.DataFrame({LEVEL: [f"n = {n}" for n in range(1, 7)], ENERGY: [-13.6 / n**2 for n in range(1, 7)]})
+
+# Plot: reads only df and the constants above
+energies = dict(zip(range(1, len(df) + 1), df[ENERGY], strict=True))
+levels = dict(zip(range(1, len(df) + 1), df[LEVEL], strict=True))
+depth = IONIZATION - df[ENERGY].min()  # ground-state depth sets all vertical offsets
+crowded = [n for n, e in energies.items() if e > IONIZATION - CROWDED * depth]
+crowded_label = ", ".join(str(n) for n in crowded)
 
 fig = go.Figure()
 
-# Energy level lines — use INK_SOFT for structural chrome
-line_left = 0.12
-line_right = 0.88
-for n in quantum_numbers:
-    energy = energies[n]
+# Energy level lines
+for n, energy in energies.items():
     fig.add_trace(
         go.Scatter(
-            x=[line_left, line_right],
+            x=[LINE_LEFT, LINE_RIGHT],
             y=[energy, energy],
             mode="lines",
             line={"color": INK_SOFT, "width": 3},
             showlegend=False,
-            hovertemplate=f"<b>n = {n}</b><br>E = {energy:.2f} eV<extra></extra>",
+            hovertemplate=f"<b>{levels[n]}</b><br>E = {energy:.2f} eV<extra></extra>",
         )
     )
 
-# Ionization limit — dashed muted line at 0 eV
+# Ionization limit: dashed muted line
 fig.add_trace(
     go.Scatter(
-        x=[0.08, 0.92],
-        y=[0, 0],
+        x=[LINE_LEFT - 0.04, LINE_RIGHT + 0.04],
+        y=[IONIZATION, IONIZATION],
         mode="lines",
         line={"color": INK_MUTED, "width": 2, "dash": "dash"},
         showlegend=False,
-        hovertemplate="<b>Ionization Limit</b><br>E = 0 eV  (n → ∞)<extra></extra>",
+        hovertemplate=f"<b>Ionization Limit</b><br>E = {IONIZATION:g} eV  (n → ∞)<extra></extra>",
     )
 )
 
-# Quantum number labels — right side
-# n=1, n=2, n=3 are well-separated; individual labels are clean
-for n in [1, 2, 3]:
+# Separated levels get their own labels on both sides; the crowded ones share one label above the limit
+for n, energy in energies.items():
+    if n in crowded:
+        continue
     fig.add_annotation(
-        x=line_right + 0.02,
-        y=energies[n],
-        text=f"<b>n = {n}</b>",
+        x=LINE_RIGHT + 0.02,
+        y=energy,
+        text=f"<b>{levels[n]}</b>",
         showarrow=False,
         font={"size": 12, "color": INK_SOFT},
         xanchor="left",
         yanchor="middle",
     )
-
-# n=4, 5, 6 converge tightly near 0 eV — single combined label above ionization limit
-fig.add_annotation(
-    x=line_right + 0.02,
-    y=0.45,
-    text="<b>n = 4, 5, 6</b>",
-    showarrow=False,
-    font={"size": 11, "color": INK_SOFT},
-    xanchor="left",
-    yanchor="bottom",
-)
-
-# Left-side energy values for well-separated levels
-for n in [1, 2, 3]:
     fig.add_annotation(
-        x=line_left - 0.02,
-        y=energies[n],
-        text=f"<b>{energies[n]:.2f}</b> eV",
+        x=LINE_LEFT - 0.02,
+        y=energy,
+        text=f"<b>{energy:.2f}</b> eV",
         showarrow=False,
         font={"size": 12, "color": INK_MUTED},
         xanchor="right",
         yanchor="middle",
     )
-
-# Ionization label above the dashed line
 fig.add_annotation(
-    x=line_left - 0.02,
-    y=0,
-    text="<b>0</b> eV  <i>Ionization</i>",
+    x=LINE_RIGHT + 0.02,
+    y=IONIZATION,
+    yshift=8,
+    text=f"<b>n = {crowded_label}</b>",
+    showarrow=False,
+    font={"size": 11, "color": INK_SOFT},
+    xanchor="left",
+    yanchor="bottom",
+)
+fig.add_annotation(
+    x=LINE_LEFT - 0.02,
+    y=IONIZATION,
+    yshift=3,
+    text=f"<b>{IONIZATION:g}</b> eV  <i>Ionization</i>",
     showarrow=False,
     font={"size": 12, "color": INK_MUTED},
     xanchor="right",
     yanchor="bottom",
-    yshift=3,
 )
 
-# --- Lyman Series (UV) — left portion ---
-lyman_x = [0.21, 0.27, 0.33]
-for i, (n_up, n_low, label, _wl) in enumerate(lyman_series):
-    e_up, e_low = energies[n_up], energies[n_low]
-    fig.add_annotation(
-        x=lyman_x[i],
-        y=e_low + 0.2,
-        ax=lyman_x[i],
-        ay=e_up - 0.2,
-        xref="x",
-        yref="y",
-        axref="x",
-        ayref="y",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=2.5,
-        arrowcolor=lyman_colors[i],
-        text="",
-    )
-    fig.add_annotation(
-        x=lyman_x[i] - 0.015,
-        y=(e_up + e_low) / 2,
-        text=label,
-        showarrow=False,
-        font={"size": 11, "color": lyman_colors[i]},
-        xanchor="right",
-    )
-
-# --- Balmer Series (Visible) — center portion ---
-# Labels staggered vertically across the n=2–n=4 range and alternated left/right
-# to prevent crowding (all four transitions end at n=2, so midpoints cluster)
-balmer_x = [0.43, 0.49, 0.55, 0.61]
-balmer_label_configs = [
-    (-0.012, "right", -1.65),  # Hα: left of arrow, upper
-    (0.012, "left", -2.25),  # Hβ: right of arrow, upper-mid
-    (-0.012, "right", -2.80),  # Hγ: left of arrow, lower-mid
-    (0.012, "left", -3.15),  # Hδ: right of arrow, lower
-]
-for i, (n_up, n_low, label, _wl) in enumerate(balmer_series):
-    e_up, e_low = energies[n_up], energies[n_low]
-    xoff, xanc, ylbl = balmer_label_configs[i]
-    fig.add_annotation(
-        x=balmer_x[i],
-        y=e_low + 0.15,
-        ax=balmer_x[i],
-        ay=e_up - 0.15,
-        xref="x",
-        yref="y",
-        axref="x",
-        ayref="y",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=2.5,
-        arrowcolor=balmer_colors[i],
-        text="",
-    )
-    fig.add_annotation(
-        x=balmer_x[i] + xoff,
-        y=ylbl,
-        text=label,
-        showarrow=False,
-        font={"size": 11, "color": balmer_colors[i]},
-        xanchor=xanc,
-    )
-
-# --- Paschen Series (Infrared) — right portion ---
-# Labels at transition midpoints, alternating sides to avoid overlap and the Balmer zone
-paschen_x = [0.73, 0.80]
-# Pa-α: label to LEFT of its arrow; Pa-β: label to RIGHT (x>0.85, clear of Balmer zone)
-paschen_label_configs = [
-    (0.70, "right"),  # Pa-α: left of arrow at 0.73
-    (0.88, "right"),  # Pa-β: right side (x>0.85), ending before n-label zone
-]
-for i, (n_up, n_low, label, _wl) in enumerate(paschen_series):
-    e_up, e_low = energies[n_up], energies[n_low]
-    fig.add_annotation(
-        x=paschen_x[i],
-        y=e_low + 0.06,
-        ax=paschen_x[i],
-        ay=e_up - 0.06,
-        xref="x",
-        yref="y",
-        axref="x",
-        ayref="y",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=1.5,
-        arrowwidth=2.5,
-        arrowcolor=paschen_colors[i],
-        text="",
-    )
-    lx, xanc = paschen_label_configs[i]
-    fig.add_annotation(
-        x=lx,
-        y=(e_up + e_low) / 2,
-        text=label,
-        showarrow=False,
-        font={"size": 11, "color": paschen_colors[i]},
-        xanchor=xanc,
-    )
+# Transitions: one downward emission arrow per upper level, each series in its own column of the diagram
+hover = []
+for name, _region, prefix, lower, uppers, colors, center in SERIES:
+    for k, upper in enumerate(uppers):
+        if upper not in energies or lower not in energies:
+            continue  # a table without these levels has no such transition
+        x = center + (k - (len(uppers) - 1) / 2) * ARROW_SPACING
+        e_up, e_low = energies[upper], energies[lower]
+        gap = e_up - e_low
+        wavelength = HC_EV_NM / gap
+        label = f"{prefix}{GREEK[k]} {wavelength:.0f} nm"
+        gap_pad = min(0.015 * depth, 0.1 * gap)
+        fig.add_annotation(
+            x=x,
+            y=e_low + gap_pad,
+            ax=x,
+            ay=e_up - gap_pad,
+            xref="x",
+            yref="y",
+            axref="x",
+            ayref="y",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1.0,
+            arrowwidth=2.5,
+            arrowcolor=colors[k],
+            text="",
+        )
+        mid = (e_up + e_low) / 2
+        # Vertical labels keep neighboring arrows apart: Lyman labels run beside their arrow, the shorter series
+        # hang in the empty space below the n=2 line, in the color of their arrow
+        if lower == 1:
+            lx, ly, anchor = x - 0.016, mid, "middle"
+        else:
+            lx, ly, anchor = x, energies[2] - 0.03 * depth, "top"
+        fig.add_annotation(
+            x=lx,
+            y=ly,
+            text=label,
+            textangle=-90,
+            showarrow=False,
+            font={"size": 11, "color": colors[k]},
+            yanchor=anchor,
+        )
+        hover.append((x, mid, name, upper, lower, wavelength, gap))
 
 # Invisible hover targets at transition midpoints for HTML interactivity
-for series, _colors, x_pos, name in [
-    (lyman_series, lyman_colors, lyman_x, "Lyman"),
-    (balmer_series, balmer_colors, balmer_x, "Balmer"),
-    (paschen_series, paschen_colors, paschen_x, "Paschen"),
-]:
-    hover_x, hover_y, hover_labels = [], [], []
-    for idx, (n_up, n_low, _lbl, wl) in enumerate(series):
-        e_up, e_low = energies[n_up], energies[n_low]
-        hover_x.append(x_pos[idx])
-        hover_y.append((e_up + e_low) / 2)
-        hover_labels.append(
-            f"<b>{name} Series</b><br>n={n_up} → n={n_low}<br>λ = {wl} nm<br>ΔE = {abs(e_up - e_low):.2f} eV"
-        )
+for name, *_ in SERIES:
+    rows = [h for h in hover if h[2] == name]
     fig.add_trace(
         go.Scatter(
-            x=hover_x,
-            y=hover_y,
+            x=[h[0] for h in rows],
+            y=[h[1] for h in rows],
             mode="markers",
             marker={"size": 30, "opacity": 0},
             showlegend=False,
-            hovertext=hover_labels,
+            hovertext=[
+                f"<b>{name} Series</b><br>n={h[3]} → n={h[4]}<br>λ = {h[5]:.1f} nm<br>ΔE = {h[6]:.2f} eV" for h in rows
+            ],
             hoverinfo="text",
         )
     )
 
-# Series group headers
-fig.add_annotation(
-    x=0.27,
-    y=1.6,
-    text="<b>Lyman</b><br><i>Ultraviolet</i>",
-    showarrow=False,
-    font={"size": 13, "color": lyman_colors[0]},
-)
-fig.add_annotation(
-    x=0.52, y=1.6, text="<b>Balmer</b><br><i>Visible</i>", showarrow=False, font={"size": 13, "color": balmer_colors[0]}
-)
-fig.add_annotation(
-    x=0.77,
-    y=1.6,
-    text="<b>Paschen</b><br><i>Infrared</i>",
-    showarrow=False,
-    font={"size": 13, "color": paschen_colors[0]},
-)
+# Series group headers above the limit
+for name, region, _prefix, _lower, _uppers, colors, center in SERIES:
+    fig.add_annotation(
+        x=center,
+        y=0.115 * depth,
+        text=f"<b>{name}</b><br><i>{region}</i>",
+        showarrow=False,
+        font={"size": 13, "color": colors[0]},
+    )
 
-# Layout
+# Style
 fig.update_layout(
     autosize=False,
     title={
@@ -279,9 +215,9 @@ fig.update_layout(
     },
     xaxis={"visible": False, "range": [0, 1], "fixedrange": True},
     yaxis={
-        "title": {"text": "Energy (eV)", "font": {"size": 12, "color": INK}},
+        "title": {"text": ENERGY, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "range": [-15, 2.5],
+        "range": [IONIZATION - 1.04 * depth, IONIZATION + 0.18 * depth],
         "zeroline": False,
         "showgrid": True,
         "gridcolor": GRID,
@@ -296,6 +232,6 @@ fig.update_layout(
     showlegend=False,
 )
 
-# Save — canonical 3200×1800 landscape canvas
+# Save: canonical 3200×1800 landscape canvas
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
