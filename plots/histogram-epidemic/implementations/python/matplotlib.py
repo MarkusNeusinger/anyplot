@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-28
+Quality: 86/100 | Updated: 2026-11-28
 """
 
 import os
@@ -73,18 +73,18 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_prop_cycle(color=IMPRINT_PALETTE)
 
-bar_width = 0.8
+bar_width = 1.0  # one full day per bin: adjacent bars touch
 bottom = np.zeros(len(table))
 for case_type in case_types:
-    ax.bar(
-        table.index, table[case_type], width=bar_width, bottom=bottom, label=case_type, edgecolor=PAGE_BG, linewidth=0.3
-    )
+    ax.bar(table.index, table[case_type], width=bar_width, bottom=bottom, label=case_type, linewidth=0)
     bottom = bottom + table[case_type].to_numpy()
 
 # Cumulative line on secondary axis
 ax2 = ax.twinx()
 ax2.plot(table.index, cumulative, color=CUMULATIVE_COLOR, linewidth=2.0, alpha=0.85, label="Cumulative")
 ax2.fill_between(table.index, cumulative, alpha=0.07, color=CUMULATIVE_COLOR)
+ax2.set_ylim(bottom=0)
+ax.set_ylim(bottom=0)
 ax2.set_ylabel("Cumulative Cases", fontsize=10, color=CUMULATIVE_COLOR)
 ax2.tick_params(axis="y", labelsize=8, colors=CUMULATIVE_COLOR, labelcolor=CUMULATIVE_COLOR)
 ax2.spines["top"].set_visible(False)
