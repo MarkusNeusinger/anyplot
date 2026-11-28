@@ -1,10 +1,9 @@
 """ anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-28
 """
 
-import io
 import os
 import sys
 
@@ -16,13 +15,13 @@ _own_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _own_dir]
 
 import time
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, LinearColorMapper, NumeralTickFormatter
 from bokeh.plotting import figure
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -34,21 +33,38 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint sequential colormap — brand green (#009E73) → blue (#4467A3), 256 stops
-_t = np.linspace(0, 1, 256)
-_c0 = np.array([0x00, 0x9E, 0x73])
-_c1 = np.array([0x44, 0x67, 0xA3])
-_ramp = np.clip(np.round(_c0 + np.outer(_t, _c1 - _c0)).astype(int), 0, 255)
-ANYPLOT_SEQ256 = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in _ramp]
+# Imprint palette (all eight positions; this plot colors by a continuous ramp instead)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — compute Mandelbrot set on the complex plane
-# y-range padded to maintain 1:1 pixel ratio on the 2400x2400 canvas
-# (inner area ≈ 2000px wide × 2130px tall after min_borders;
-#  x spans 3.5 units → 571.4 px/unit; y needs 2130/571.4 ≈ 3.73 units)
+# imprint_seq, fields stops (colored cells fill the plot), low -> high
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+# LinearColorMapper takes evenly spaced colors, so sample the stops at 256 even steps
+ANYPLOT_SEQ256 = [ramp_color(SEQ_FIELDS, k / 255) for k in range(256)]
+
+# Data: replace this block with your own parameters (generated shape: no table)
+# Complex-plane window; y is padded so one unit is the same number of pixels on both
+# axes of the 2400x2400 canvas (inner area ~2000px wide x ~2130px tall after the borders)
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.865, 1.865
-grid_w, grid_h = 1400, 1050
 max_iter = 200
+grid_w = 1400
+grid_h = round(grid_w * (y_max - y_min) / (x_max - x_min))  # square pixels in the complex plane
 
 real = np.linspace(x_min, x_max, grid_w)
 imag = np.linspace(y_min, y_max, grid_h)
@@ -56,30 +72,26 @@ real_grid, imag_grid = np.meshgrid(real, imag)
 c = real_grid + 1j * imag_grid
 
 z = np.zeros_like(c, dtype=complex)
-iteration_count = np.zeros(c.shape, dtype=float)
+iteration_count = np.full(c.shape, np.nan)
 escaped = np.zeros(c.shape, dtype=bool)
 
 for i in range(max_iter):
-    mask = ~escaped
-    z[mask] = z[mask] ** 2 + c[mask]
-    newly_escaped = mask & (np.abs(z) > 2.0)
+    active = ~escaped
+    z[active] = z[active] ** 2 + c[active]
+    newly_escaped = active & (np.abs(z) > 2.0)
     # Smooth coloring: normalized iteration count eliminates discrete banding
     iteration_count[newly_escaped] = i + 1 - np.log2(np.log2(np.abs(z[newly_escaped])))
     escaped |= newly_escaped
 
-# Interior points (non-escaping) → NaN → rendered as near-black via nan_color
-iteration_count[~escaped] = np.nan
+# Plot: reads only the parameters and arrays above
+# Clip low to the 5th percentile so the ramp spreads over the visible gradient;
+# interior (never escaping, NaN) is drawn black by nan_color
+low_val = float(np.nanpercentile(iteration_count, 5))
+high_val = float(np.nanmax(iteration_count))
 
-valid = ~np.isnan(iteration_count)
-# Clip low to 5th percentile so the full palette spreads across the visible
-# gradient range instead of being compressed near the fast-escape floor.
-low_val = float(np.percentile(iteration_count[valid], 5)) if np.any(valid) else 0.0
-high_val = float(np.nanmax(iteration_count[valid])) if np.any(valid) else float(max_iter)
-
-# Title — 48 chars, within 67-char baseline, no fontsize scaling needed
 title = "heatmap-mandelbrot · python · bokeh · anyplot.ai"
 
-# Plot — 2400x2400 square canvas (heatmap category per style guide)
+# Square 2400x2400 canvas
 W, H = 2400, 2400
 p = figure(
     width=W,
@@ -149,23 +161,28 @@ p.border_fill_color = PAGE_BG
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot via headless Chrome — Chrome's viewport is ~139px shorter than
-# --window-size, so use H + 200 buffer then crop to exact canvas dimensions.
+# Screenshot via headless Chrome
 opts = Options()
 for arg in (
     "--headless=new",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
-    "--force-device-scale-factor=1",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H + 200)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Pin the viewport exactly (headless Chrome reserves a phantom title bar) and paint the
+# page in the theme color so no light edge shows through the canvas anti-aliasing
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
-raw = driver.get_screenshot_as_png()
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-Image.open(io.BytesIO(raw)).crop((0, 0, W, H)).save(f"plot-{THEME}.png")
