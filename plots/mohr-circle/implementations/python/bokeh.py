@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-30
@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, Span
 from bokeh.plotting import figure
@@ -40,16 +41,31 @@ IMPRINT_PALETTE = [
     "#4467A3",  # 3: blue         — max shear stress
     "#BD8233",  # 4: ochre
     "#AE3030",  # 5: matte red    — semantic anchor for critical/failure
+    "#2ABCCD",  # 6: cyan
+    "#954477",  # 7: plum
+    "#99B314",  # 8: olive
 ]
 BRAND = IMPRINT_PALETTE[0]  # "#009E73"
 COLOR_PRINCIPAL = IMPRINT_PALETTE[4]  # matte red — semantic: principal stresses at failure threshold
 COLOR_SHEAR = IMPRINT_PALETTE[2]  # blue — maximum shear stress
 COLOR_POINTS = IMPRINT_PALETTE[1]  # lavender — input stress points A and B
 
-# Data — typical combined loading stress state (structural beam cross-section)
-sigma_x = 80  # MPa (tensile, x-face normal stress)
-sigma_y = -30  # MPa (compressive, y-face normal stress)
-tau_xy = 40  # MPa (shear stress)
+# Column constants
+SIGMA_X = "Normal stress σx (MPa)"  # role: sigma_x
+SIGMA_Y = "Normal stress σy (MPa)"  # role: sigma_y
+TAU_XY = "Shear stress τxy (MPa)"  # role: tau_xy
+SIGMA = "Normal Stress σ (MPa)"  # role: extra
+TAU = "Shear Stress τ (MPa)"  # role: extra
+POINT = "Point"  # role: extra
+
+# Data: replace this block with your own stress state, for example df = pd.read_csv("stress.csv")
+# Typical combined loading of a structural beam cross-section (σx tensile, σy compressive).
+df = pd.DataFrame({SIGMA_X: [80], SIGMA_Y: [-30], TAU_XY: [40]})
+
+# Plot
+sigma_x = df[SIGMA_X].iloc[0]
+sigma_y = df[SIGMA_Y].iloc[0]
+tau_xy = df[TAU_XY].iloc[0]
 
 # Mohr's circle geometry
 center = (sigma_x + sigma_y) / 2
@@ -71,36 +87,18 @@ bx_pt = (sigma_y, -tau_xy)  # Point B: face with σy, −τxy
 
 # ColumnDataSources for interactive HoverTool readouts
 principal_source = ColumnDataSource(
-    data={
-        "x": [sigma_1, sigma_2],
-        "y": [0, 0],
-        "label": ["σ₁ (Major Principal)", "σ₂ (Minor Principal)"],
-        "sigma": [f"{sigma_1:.1f}", f"{sigma_2:.1f}"],
-        "tau": ["0.0", "0.0"],
-    }
+    pd.DataFrame({SIGMA: [sigma_1, sigma_2], TAU: [0.0, 0.0], POINT: ["σ₁ (Major Principal)", "σ₂ (Minor Principal)"]})
 )
-
 shear_source = ColumnDataSource(
-    data={
-        "x": [center, center],
-        "y": [tau_max, -tau_max],
-        "label": ["τ_max (Top)", "τ_max (Bottom)"],
-        "sigma": [f"{center:.1f}", f"{center:.1f}"],
-        "tau": [f"{tau_max:.1f}", f"{-tau_max:.1f}"],
-    }
+    pd.DataFrame({SIGMA: [center, center], TAU: [tau_max, -tau_max], POINT: ["τ_max (Top)", "τ_max (Bottom)"]})
 )
-
 stress_source = ColumnDataSource(
-    data={
-        "x": [ax_pt[0], bx_pt[0]],
-        "y": [ax_pt[1], bx_pt[1]],
-        "label": ["Point A (σx, τxy)", "Point B (σy, −τxy)"],
-        "sigma": [f"{ax_pt[0]:.1f}", f"{bx_pt[0]:.1f}"],
-        "tau": [f"{ax_pt[1]:.1f}", f"{bx_pt[1]:.1f}"],
-    }
+    pd.DataFrame(
+        {SIGMA: [ax_pt[0], bx_pt[0]], TAU: [ax_pt[1], bx_pt[1]], POINT: ["Point A (σx, τxy)", "Point B (σy, −τxy)"]}
+    )
 )
 
-# Plot — square canvas (2400×2400) for equal-aspect-ratio circle rendering
+# Square canvas (2400×2400) for equal-aspect-ratio circle rendering
 padding = radius * 0.6
 title = "mohr-circle · python · bokeh · anyplot.ai"
 
@@ -108,8 +106,8 @@ p = figure(
     width=2400,
     height=2400,
     title=title,
-    x_axis_label="Normal Stress σ (MPa)",
-    y_axis_label="Shear Stress τ (MPa)",
+    x_axis_label=SIGMA,
+    y_axis_label=TAU,
     x_range=(sigma_2 - padding, sigma_1 + padding),
     y_range=(-tau_max - padding, tau_max + padding),
     match_aspect=True,
@@ -139,8 +137,8 @@ p.line(
 
 # Principal stress markers — matte red diamonds (semantic: critical failure-limit values)
 principal_r = p.scatter(
-    "x",
-    "y",
+    SIGMA,
+    TAU,
     source=principal_source,
     size=26,
     color=COLOR_PRINCIPAL,
@@ -151,16 +149,16 @@ principal_r = p.scatter(
 
 # Maximum shear stress markers — blue triangles
 shear_r = p.scatter(
-    "x", "y", source=shear_source, size=26, color=COLOR_SHEAR, marker="triangle", line_color=PAGE_BG, line_width=2
+    SIGMA, TAU, source=shear_source, size=26, color=COLOR_SHEAR, marker="triangle", line_color=PAGE_BG, line_width=2
 )
 
 # Input stress state points A and B — lavender circles
-stress_r = p.scatter("x", "y", source=stress_source, size=26, color=COLOR_POINTS, line_color=PAGE_BG, line_width=2)
+stress_r = p.scatter(SIGMA, TAU, source=stress_source, size=26, color=COLOR_POINTS, line_color=PAGE_BG, line_width=2)
 
 # HoverTool for interactive stress readouts over all key points
 hover = HoverTool(
     renderers=[principal_r, shear_r, stress_r],
-    tooltips=[("Point", "@label"), ("σ (MPa)", "@sigma"), ("τ (MPa)", "@tau")],
+    tooltips=[(POINT, f"@{{{POINT}}}"), ("σ (MPa)", f"@{{{SIGMA}}}{{0.0}}"), ("τ (MPa)", f"@{{{TAU}}}{{0.0}}")],
 )
 p.add_tools(hover)
 
@@ -314,6 +312,9 @@ driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)  # wait for bokeh JS to finish rendering the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
