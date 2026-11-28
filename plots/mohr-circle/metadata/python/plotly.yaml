@@ -2,145 +2,137 @@ library: plotly
 language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:08:29Z'
-updated: '2026-05-30T09:08:07Z'
+updated: '2026-11-28T00:04:47Z'
 generated_by: claude-sonnet
-workflow_run: 26679770271
+workflow_run: 46085391979
 issue: 4432
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance — all 8 required features implemented: circle with correct
-    center/radius, principal stresses σ1/σ2, τmax top/bottom, stress points A/B, 2θp
-    angle arc, equal aspect ratio, labeled axes, reference lines'
-  - 'Semantic Imprint palette mapping: brand green for the circle (primary element),
-    red for given stress state points, blue for derived principal stresses, ochre
-    for max shear, lavender for the angle arc — each role is visually distinct'
-  - 'Multiple redundant encodings: marker shapes (circles, diamonds, triangles, X)
-    reinforce color differentiation, making the plot CVD-accessible and readable without
-    relying on color alone'
-  - 'Plotly-native features used well: hover tooltips on every key point show exact
-    values, toself fill on the circle interior, scaleanchor for equal aspect ratio,
-    HTML export'
-  - 'Clean theme adaptation: all chrome tokens (background, text, grid, annotations)
-    correctly flip between #FAF8F1/#1A1A17 surfaces; circle fill opacity increases
-    in dark mode for compensated contrast'
-  - 'Perfect code quality: KISS structure, deterministic (hardcoded) data, all font
-    sizes explicitly set, no dead imports'
+  - 'All Notes features present and correctly computed: circle, σ1/σ2, ±τmax, A and
+    B on a dashed diameter, 2θp arc spanning exactly the angle from the σ1 axis to
+    line C–A'
+  - Semantic color + shape role per element (green circle, red given state, blue diamonds
+    for principal stresses, ochre triangles for τmax, lavender arc) keeps the dense
+    annotation readable and CVD-safe
+  - Equal aspect via scaleanchor/scaleratio and reference lines drawn as add_shape(layer='below')
+    keep the circle dominant
+  - Theme tokens threaded through every chrome element; circle fill opacity adapted
+    per theme
+  - Per-marker hovertext with exact engineering values in the HTML output
   weaknesses:
-  - 'Annotation crowding near center: the ''2θp = 26.6°'' label and ''C (20, 0)''
-    label both live in the center cluster; on a small screen they are close together.
-    Consider shifting ''C (20, 0)'' further right (xshift=55) or reducing fontsize
-    to 11px'
-  - Spines/border frame not removed — keeping all four axis border lines is acceptable
-    for a Mohr's circle (enclosed coordinate space), but the default plotly frame
-    gives a slightly boxed look. Removing the top and right axis lines (showline=False
-    for xaxis2/yaxis2) would improve visual refinement
-  - 'DE-01 headroom: the fill inside the circle uses a flat rgba green; a very subtle
-    radial gradient effect or a slightly warmer fill tint could lift the aesthetic
-    sophistication above ''configured default'' toward publication-ready'
+  - 'VQ-02 (both): the σ=0 zero line (INK_SOFT, 1.5 px) runs through the ''σ₁'' glyph
+    of the ''σ₁ = -9.8'' label → label clear of the line by at least 4 px. Likely
+    cause: xanchor=''left'', xshift=22 places the label start exactly at σ=0 for this
+    stress state.'
+  - 'VQ-01 (dark): the σ₁/σ₂ labels in #4467A3 and the A/B labels in #AE3030 read
+    at low contrast (about 3:1) on #1A1A17 → label text at least 4.5:1 on the page,
+    e.g. INK text beside the colored marker. Likely cause: annotation font color set
+    to the marker color in both themes.'
+  - 'Suggestion: the circle looks faceted at full size because plotly simplifies the
+    360-point line; line simplify=False would draw it smooth.'
+  - 'Suggestion: use one consistent minus sign — tick labels use ''−'' while annotations
+    print ''-'' from f-strings.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "mohr-circle · python · plotly · anyplot.ai" in dark ink, clearly readable, fills ~60% of width. X-axis label "Normal Stress σ (MPa)" and Y-axis label "Shear Stress τ (MPa)" in dark ink at 12px, well-balanced. Tick labels in INK_SOFT (#4A4A44) at 10px — all readable.
-      Data: Brand green (#009E73) circle dominates with a very subtle teal interior fill. Red (#AE3030) circle markers at points A(80,30) and B(-40,-30) with annotation arrows. Blue (#4467A3) diamond markers at σ1=87.1 and σ2=-47.1 on the x-axis with below-axis labels. Ochre (#BD8233) triangle-up at τmax=67.1 and triangle-down at −τmax=-67.1 with above/below labels. Lavender (#C475FD) arc shows 2θp=26.6°. Dashed green diameter line connects A to B. Center X marker and "C (20, 0)" label. Reference horizontal and vertical lines through center in subtle GRID color.
-      Legibility verdict: PASS — all text readable, no light-on-light issues, annotations slightly dense near center but individually readable
+      Background: warm off-white #FAF8F1.
+      Chrome: title 'mohr-circle · python · plotly · anyplot.ai' in dark ink, centered; axis titles 'Normal Stress σ (MPa)' and 'Shear Stress τ (MPa)'; ticks −150…0 and −80…80 in INK_SOFT; subtle grid; all readable.
+      Data: brand green #009E73 circle (center −70, R 60.2) with faint fill; red points B(−110, 45) upper left and A(−30, −45) lower right joined by a dashed green diameter through C; blue diamonds σ2 = −130.2 and σ1 = −9.8 with labels above the axis outside the circle; ochre triangles at ±τmax = ±60.2; lavender arc from the σ1 axis down to line C–A labeled '2θp = -48.4°'. The σ=0 zero line crosses the 'σ₁' glyph.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in light ink (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Grid lines subtle in rgba(240,239,232,0.15). No dark-on-dark failures observed.
-      Data: Identical data colors to light render — brand green circle, red points A/B, blue diamonds for principal stresses, ochre triangles for shear, lavender arc. Circle interior fill is slightly more opaque (0.13 vs 0.07) for compensated contrast on dark background. All elements clearly distinguishable against the dark surface.
-      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render, no dark-on-dark issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink; grid subtle; no dark-on-dark text.
+      Data: identical data colors to the light render; fill opacity raised. Blue σ labels and red A/B labels are readable but at low contrast.
+      Legibility verdict: PASS (low-contrast colored labels noted)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 16px (dynamic scaling formula
-          applied), axis labels 12px, tick labels 10px, annotations 11-12px. Well-proportioned
-          in both themes.'
+        passed: false
+        comment: 'Fonts set explicitly (16/12/10/12 px); dark render: σ labels in
+          #4467A3 and A/B labels in #AE3030 read at low contrast on #1A1A17 (defect
+          line)'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: No actual overlap, but '2θp = 26.6°' and 'C (20, 0)' are close in
-          the center cluster — minor crowding risk at small sizes.
+        passed: false
+        comment: The σ=0 zero line runs through the 'σ₁' glyph of the σ₁ label (defect
+          line); all other labels clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle at 3.5px width, all markers at size 14, dashed diameter line
-          visible, arc clear at 2.5px. Optimal sizing throughout.
+        comment: Circle stroke 3.5 px, all key markers at size 14 with page-colored
+          outlines, arc 2.5 px — clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with redundant shape encoding (circles, diamonds,
-          triangles, X). CVD-safe by design.
+        comment: Color roles reinforced by distinct marker shapes (circle, diamond,
+          triangles, x); no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate for Mohr's circle (equal aspect
-          ratio). Circle fills ~75% of plot area. Symmetric margins (65/65/80/60).
-          No cutoffs.
+        comment: Square 2400x2400 canvas suits the equal-aspect circle; circle fills
+          most of the plot area; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Normal Stress σ (MPa)'', Y: ''Shear Stress τ (MPa)'' — descriptive
-          with units. Title format correct.'
+        comment: '''Normal Stress σ (MPa)'' and ''Shear Stress τ (MPa)'' exactly as
+          the spec asks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for circle (primary element). All other colors
-          from Imprint palette with semantic role assignment. Backgrounds #FAF8F1/#1A1A17.
-          Full theme chrome adaptation.'
+        comment: 'Circle in brand green #009E73; other roles from Imprint; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly, data colors identical across
+          themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: semantic color+shape mapping, subtle circle fill
-          with theme-adaptive opacity, dashed diameter line, arc visualization. Clearly
-          above library defaults.'
+        passed: false
+        comment: 'Above baseline: a semantic color+shape role per element (given state,
+          principal stresses, max shear, angle) and a theme-adapted circle fill opacity
+          (0.07 light / 0.13 dark)'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Grid styled with GRID token (15% opacity), subtle circle fill, reference
-          lines use GRID color. Four-sided frame kept (acceptable for enclosed coordinate
-          system). Some refinement visible.
+        passed: false
+        comment: Labels placed outward from the axis the arc sits on (flip), σ labels
+          pushed outside the circle, reference lines subordinate in GRID color
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: green circle as main element, red for given
-          state, blue/ochre for derived results, lavender for angle. Color contrast
-          guides viewer through the stress analysis narrative.'
+        passed: false
+        comment: Dashed A–B diameter through C ties the given state to the derived
+          results; the green circle is the focal element with derived values subordinate
     spec_compliance:
       score: 15
       max: 15
@@ -150,30 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Mohr''s circle: center at ((σx+σy)/2, 0), radius √((((σx−σy)/2)²+τxy²),
-          equal aspect ratio via scaleanchor.'
+        comment: Correct Mohr's circle, center ((σx+σy)/2, 0), radius from the Notes
+          formula, equal aspect via scaleanchor
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle, σ1/σ2 on x-axis, τmax top/bottom,
-          points A/B, 2θp arc, equal aspect, axis labels, reference lines + grid.'
+        comment: 'All Notes bullets present: circle, σ1/σ2, ±τmax, A and B, 2θp arc
+          and label, equal aspect, axis labels, light grid and reference lines through
+          the center'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: σx=80, σy=-40, τxy=30 correctly mapped. σ1=87.1, σ2=-47.1, τmax=67.1
-          correctly derived.
+        comment: All marks at their computed values; axes show the full circle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'mohr-circle · python · plotly · anyplot.ai' correct. No legend
-          (showlegend=False) appropriate since all elements are directly annotated
-          on the plot.
+        comment: Title 'mohr-circle · python · plotly · anyplot.ai' correct; no legend
+          needed — every element is directly labeled
     data_quality:
       score: 15
       max: 15
@@ -183,23 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: stress state, principal stresses, max shear,
-          diameter line, center, angle arc. Complete feature coverage.'
+        comment: 'Shows every aspect of the plot type: stress points, diameter, center,
+          principal stresses, max shear, principal angle'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic engineering stress state in MPa: combined tension (σx=80),
-          compression (σy=-40), and shear (τxy=30). Plausible for structural steel
-          under combined loading.'
+        comment: Plausible structural stress state in MPa
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values physically realistic for structural applications. All derived
-          quantities (σ1=87.1, σ2=-47.1, τmax=67.1 MPa) are mathematically correct.
+        comment: 'Checked: center −70, R = √(40²+45²) = 60.2, σ1 = −9.8, σ2 = −130.2,
+          τmax = 60.2, 2θp = atan2(−45, 40) = −48.4°, arc ends on line C–A; all computed
+          in code and match the render'
     code_quality:
       score: 10
       max: 10
@@ -209,64 +199,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → constants → calculations → traces
-          → annotations → layout → save. No functions or classes.'
+        comment: 'Flat top-to-bottom script: tokens → data → traces → annotations
+          → layout → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded stress state, all derived values
-          computed analytically.'
+        comment: Deterministic hard-coded stress state
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects imported — all used.
+        comment: os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for the visualization. Hover tooltips
-          are legitimate for plotly (not fake interactivity).
+        comment: Appropriate complexity; circle, angle and derived values computed
+          directly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=600, height=600, scale=4 → 2400×2400)
-          and plot-{THEME}.html. Current plotly API.
+        comment: Saves plot-{THEME}.png at 600x600 scale 4 and plot-{THEME}.html;
+          current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of go.Figure with add_trace, add_shape, add_annotation,
-          update_layout. Hover text on all key markers. Idiomatic Graph Objects pattern.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Plotly-specific: hover tooltips with engineering values, fill=''toself''
-          for circle interior, scaleanchor=''y''/scaleratio=1 for equal aspect ratio,
-          HTML export with CDN. Good use of Plotly''s interactive nature.'
+        passed: false
+        comment: 'Idiomatic graph_objects: add_trace, add_shape(layer=''below'') for
+          reference lines, add_annotation with arrows, scaleanchor/scaleratio for
+          equal aspect'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-marker hovertext with engineering values and fill='toself' circle
+          interior — somewhat beyond the prompt's baseline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
+  rendered_at: '2026-11-28T00:00:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
