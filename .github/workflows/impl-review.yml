@@ -389,6 +389,9 @@ jobs:
       - name: Checkout PR code
         env:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
         run: |
           # Keep the regen helpers from THIS workflow's ref before switching to
           # the PR head: the gate's parser must match the workflow that calls
@@ -410,6 +413,12 @@ jobs:
           # same workflow-ref copy of the gate.
           cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
           git fetch origin "$HEAD_SHA"
+          # The head may change only its pair's implementation and metadata, as
+          # regular files: the pipeline writes nothing else on the branch, and
+          # anything else would sit in the workspace for every later step.
+          # Checked from this ref's copy before the checkout; fail closed.
+          python3 -I automation/scripts/pr_tree_check.py --base origin/main --head "$HEAD_SHA" \
+            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY"
           git checkout "$HEAD_SHA"
 
       # Pre-merge test hook (impl-generate.yml dispatches the review on its own
@@ -960,7 +969,8 @@ jobs:
 
           pip install --quiet pillow
 
-          python3 <<'PY'
+          # -P: the workspace is the PR head, so it stays off the import path.
+          python3 -P - <<'PY'
           import os
           import sys
           from pathlib import Path
