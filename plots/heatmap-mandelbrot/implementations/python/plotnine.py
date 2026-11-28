@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-30
@@ -43,74 +43,82 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INTERIOR_COLOR = "#0D0D0A"  # Mandelbrot interior — near-black regardless of theme
 ANNOT_COLOR = "#F0EFE8"  # near-white; annotations always on dark Mandelbrot interior
 
-# Data — Mandelbrot set: z(n+1) = z(n)² + c
-x_min, x_max = -2.5, 1.0
-y_min, y_max = -1.25, 1.25
-max_iter = 100
-nx, ny = 1200, 857
+# Imprint continuous ramp for fields (cells that fill the plot), stops per theme
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
 
-real = np.linspace(x_min, x_max, nx)
-imag = np.linspace(y_min, y_max, ny)
+# Columns
+REAL = "Re(c)"  # role: extra
+IMAG = "Im(c)"  # role: extra
+ESCAPE = "Escape iterations"  # role: extra
+LOG_ESCAPE = "Log-scaled escape iterations"  # role: extra
+
+# Constants
+MAX_ITER = 100  # escape iteration limit; the color scale is log-spaced up to this count
+
+# Data: replace this block with your own grid, for example df = pd.read_csv("grid.csv")
+# Mandelbrot set: z(n+1) = z(n)² + c, smooth escape-time coloring
+real = np.linspace(-2.5, 1.0, 1200)
+imag = np.linspace(-1.25, 1.25, 857)
 real_grid, imag_grid = np.meshgrid(real, imag)
 c = real_grid + 1j * imag_grid
 
-# Vectorized iteration with smooth escape-time coloring
 z = np.zeros_like(c)
 escape_time = np.full(c.shape, np.nan, dtype=float)
 active = np.ones(c.shape, dtype=bool)
 
-for i in range(max_iter):
+for i in range(MAX_ITER):
     z[active] = z[active] ** 2 + c[active]
     escaped = active & (np.abs(z) > 2)
     escape_time[escaped] = i + 1 - np.log2(np.log2(np.abs(z[escaped])))
     active[escaped] = False
 
-# Interior points (never escape) remain NaN → na_value in scale renders them as INTERIOR_COLOR
-escape_time = np.clip(escape_time, 0, max_iter)
+# Interior points (never escape) stay NaN → na_value renders them as INTERIOR_COLOR
+df = pd.DataFrame({REAL: real_grid.ravel(), IMAG: imag_grid.ravel(), ESCAPE: np.clip(escape_time, 0, MAX_ITER).ravel()})
 
+# Plot
 # Log-transform escape time so the color gradient spreads across the boundary region.
 # Without this, most exterior pixels (escape ≈ 1–5) collapse into a uniform flat green.
-escape_log = np.where(np.isnan(escape_time), np.nan, np.log1p(escape_time) / np.log1p(max_iter) * max_iter)
+df[LOG_ESCAPE] = np.log1p(df[ESCAPE]) / np.log1p(MAX_ITER)
 
 # 3 colorbar breaks evenly spaced in log space → labeled with original iteration counts.
-_log_positions = [0.0, 50.0, 100.0]
-_orig_iters = [round(np.expm1(v / max_iter * np.log1p(max_iter))) for v in _log_positions]
-_break_labels = [str(v) for v in _orig_iters]
-
-# Long-form DataFrame for plotnine grammar of graphics
-df = pd.DataFrame({"real": real_grid.ravel(), "imag": imag_grid.ravel(), "escape": escape_log.ravel()})
+log_breaks = [0.0, 0.5, 1.0]
+break_labels = [str(round(np.expm1(v * np.log1p(MAX_ITER)))) for v in log_breaks]
 
 title = "heatmap-mandelbrot · python · plotnine · anyplot.ai"
 
-# Plot — layered grammar of graphics composition
 plot = (
-    ggplot(df, aes(x="real", y="imag", fill="escape"))
+    ggplot(df, aes(x=REAL, y=IMAG, fill=LOG_ESCAPE))
     + geom_raster(interpolate=True)
     + scale_fill_gradientn(
-        colors=["#009E73", "#2ABCCD", "#4467A3"],  # Imprint seq: green → cyan → blue
-        limits=(0, max_iter),
+        colors=[c for _, c in SEQ_FIELDS],
+        values=[p for p, _ in SEQ_FIELDS],
+        limits=(0, 1),
         name="Escape\nIterations",
         na_value=INTERIOR_COLOR,
-        breaks=_log_positions,
-        labels=_break_labels,
+        breaks=log_breaks,
+        labels=break_labels,
     )
     + guides(fill=guide_colorbar(nbin=300))
     + coord_fixed(ratio=1.0)
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(expand=(0, 0))
-    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=4, alpha=0.65, fontstyle="italic")
+    + annotate("text", x=-0.25, y=0, label="Cardioid", color=ANNOT_COLOR, size=5, alpha=0.85, fontstyle="italic")
     + annotate(
         "text",
         x=-1.0,
         y=0,
         label="Period-2\nBulb",
         color=ANNOT_COLOR,
-        size=4,
-        alpha=0.65,
+        size=5,
+        alpha=0.85,
         fontstyle="italic",
         ha="center",
     )
-    + labs(x="Re(c)", y="Im(c)", title=title)
+    + labs(title=title)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -121,7 +129,8 @@ plot = (
         axis_ticks=element_blank(),
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
         legend_position="right",
         legend_key_height=60,
         legend_key_width=12,
