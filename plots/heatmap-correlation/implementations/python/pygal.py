@@ -1,260 +1,39 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 87/100 | Updated: 2026-08-18
+Quality: 87/100 | Updated: 2026-11-28
 """
 
+import math
 import os
-import sys
+from itertools import pairwise
 
+import pandas as pd
+from pygal.graph.graph import Graph
+from pygal.style import Style
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-# Restore path
-sys.path.insert(0, _cwd)
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-class CorrelationHeatmap(Graph):
-    """Custom Correlation Matrix Heatmap for pygal - displays correlation coefficients with diverging colors."""
+# Constants
+# Imprint diverging ramp for fields: red (negative) -> page color (zero) -> blue (positive)
+DIV_FIELDS = [(0.0, "#AE3030"), (0.5, PAGE_BG), (1.0, "#4467A3")]
+CORRELATION_RANGE = (-1.0, 1.0)  # fixed color range, so the midpoint is always zero
 
-    def __init__(self, *args, **kwargs):
-        self.matrix_data = kwargs.pop("matrix_data", [])
-        self.labels = kwargs.pop("labels", [])
-        self.colormap = kwargs.pop("colormap", [])
-        self.show_values = kwargs.pop("show_values", True)
-        self.x_axis_title = kwargs.pop("x_axis_title", "")
-        self.y_axis_title = kwargs.pop("y_axis_title", "")
-        super().__init__(*args, **kwargs)
+# Columns: the matrix is a labeled square, so the descriptor names are its index and columns
+DESCRIPTOR = "Molecular Descriptors"  # role: variables
+CORRELATION = "Correlation"  # role: correlation_matrix
 
-    def _interpolate_color(self, value):
-        """Interpolate color for diverging colormap centered at 0, fixed range -1 to 1."""
-        normalized = (value + 1) / 2
-        normalized = max(0, min(1, normalized))
-
-        pos = normalized * (len(self.colormap) - 1)
-        idx1 = int(pos)
-        idx2 = min(idx1 + 1, len(self.colormap) - 1)
-        frac = pos - idx1
-
-        c1 = self.colormap[idx1]
-        c2 = self.colormap[idx2]
-
-        r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-        r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
-
-        return f"#{r:02x}{g:02x}{b:02x}"
-
-    def _get_text_color(self, bg_color):
-        """Get contrasting text color based on background brightness."""
-        r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
-        brightness = (r * 299 + g * 587 + b * 114) / 1000
-        return "#FFFFFF" if brightness < 140 else "#1A1A17"
-
-    def _plot(self):
-        """Draw the correlation matrix heatmap."""
-        if not self.matrix_data:
-            return
-
-        n = len(self.matrix_data)
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        # Row-label width scales with the longest label so the y-axis title never
-        # collides with row text, regardless of how long the variable names are.
-        max_row_chars = max((len(label) for label in self.labels), default=0)
-        row_label_width = max_row_chars * 54 * 0.56
-        y_title_block = 90 if self.y_axis_title else 0
-
-        # Column labels are rotated 45deg, so their vertical drop below the grid
-        # scales with label length too — reserve room before the x-axis title.
-        max_col_chars = max((len(label) for label in self.labels), default=0)
-        col_label_drop = max_col_chars * 54 * 0.56 * 0.7071
-        x_title_block = 90 if self.x_axis_title else 0
-
-        label_margin_left = row_label_width + y_title_block + 60
-        label_margin_bottom = 25 + col_label_drop + x_title_block + 40
-        label_margin_top = 20
-        label_margin_right = 320
-
-        available_width = plot_width - label_margin_left - label_margin_right
-        available_height = plot_height - label_margin_bottom - label_margin_top
-
-        cell_size = min(available_width, available_height) / n * 0.95
-        gap = cell_size * 0.02
-
-        grid_size = n * (cell_size + gap) - gap
-
-        left_edge = self.view.x(0)
-        x_offset = left_edge + label_margin_left + (available_width - grid_size) / 2
-        y_offset = self.view.y(n) + label_margin_top + (available_height - grid_size) / 2
-
-        plot_node = self.nodes["plot"]
-        heatmap_group = self.svg.node(plot_node, class_="correlation-heatmap")
-
-        if self.y_axis_title:
-            y_title_size = 52
-            y_title_x = left_edge + y_title_block / 2
-            y_title_y = y_offset + grid_size / 2
-            text_node = self.svg.node(heatmap_group, "text", x=y_title_x, y=y_title_y)
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{y_title_size}px;font-weight:bold;font-family:sans-serif")
-            text_node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
-            text_node.text = self.y_axis_title
-
-        row_font_size = min(54, int(cell_size * 0.55))
-        for i, label in enumerate(self.labels):
-            y = y_offset + i * (cell_size + gap) + cell_size / 2
-            text_node = self.svg.node(heatmap_group, "text", x=x_offset - 25, y=y + row_font_size * 0.35)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", INK_SOFT)
-            text_node.set("style", f"font-size:{row_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.text = label
-
-        col_font_size = min(54, int(cell_size * 0.55))
-        col_label_y = y_offset + n * (cell_size + gap) + 25
-        for j, label in enumerate(self.labels):
-            x = x_offset + j * (cell_size + gap) + cell_size / 2
-            text_node = self.svg.node(heatmap_group, "text", x=x, y=col_label_y)
-            text_node.set("text-anchor", "start")
-            text_node.set("fill", INK_SOFT)
-            text_node.set("style", f"font-size:{col_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.set("transform", f"rotate(45, {x}, {col_label_y})")
-            text_node.text = label
-
-        if self.x_axis_title:
-            x_title_size = 52
-            x_title_x = x_offset + grid_size / 2
-            x_title_y = col_label_y + col_label_drop + 40
-            text_node = self.svg.node(heatmap_group, "text", x=x_title_x, y=x_title_y)
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{x_title_size}px;font-weight:bold;font-family:sans-serif")
-            text_node.text = self.x_axis_title
-
-        value_font_size = min(46, int(cell_size * 0.38))
-        for i in range(n):
-            for j in range(n):
-                value = self.matrix_data[i][j]
-                color = self._interpolate_color(value)
-                text_color = self._get_text_color(color)
-
-                x = x_offset + j * (cell_size + gap)
-                y = y_offset + i * (cell_size + gap)
-
-                rect = self.svg.node(heatmap_group, "rect", x=x, y=y, width=cell_size, height=cell_size, rx=4, ry=4)
-                rect.set("fill", color)
-                rect.set("stroke", PAGE_BG)
-                rect.set("stroke-width", "2")
-
-                if self.show_values:
-                    text_x = x + cell_size / 2
-                    text_y = y + cell_size / 2 + value_font_size * 0.35
-
-                    text_node = self.svg.node(heatmap_group, "text", x=text_x, y=text_y)
-                    text_node.set("text-anchor", "middle")
-                    text_node.set("fill", text_color)
-                    text_node.set("style", f"font-size:{value_font_size}px;font-weight:bold;font-family:sans-serif")
-                    text_node.text = f"{value:.2f}"
-
-        colorbar_width = 55
-        colorbar_height = grid_size * 0.85
-        colorbar_x = x_offset + grid_size + 80
-        colorbar_y = y_offset + (grid_size - colorbar_height) / 2
-
-        n_segments = 60
-        segment_height = colorbar_height / n_segments
-        for seg_i in range(n_segments):
-            seg_value = 1 - (2 * seg_i / (n_segments - 1))
-            seg_color = self._interpolate_color(seg_value)
-            seg_y = colorbar_y + seg_i * segment_height
-
-            self.svg.node(
-                heatmap_group,
-                "rect",
-                x=colorbar_x,
-                y=seg_y,
-                width=colorbar_width,
-                height=segment_height + 1,
-                fill=seg_color,
-            )
-
-        self.svg.node(
-            heatmap_group,
-            "rect",
-            x=colorbar_x,
-            y=colorbar_y,
-            width=colorbar_width,
-            height=colorbar_height,
-            fill="none",
-            stroke=INK_SOFT,
-        )
-
-        cb_label_size = 42
-        text_node = self.svg.node(
-            heatmap_group, "text", x=colorbar_x + colorbar_width + 18, y=colorbar_y + cb_label_size * 0.35
-        )
-        text_node.set("fill", INK_SOFT)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = "+1.00"
-
-        mid_y = colorbar_y + colorbar_height / 2
-        text_node = self.svg.node(
-            heatmap_group, "text", x=colorbar_x + colorbar_width + 18, y=mid_y + cb_label_size * 0.35
-        )
-        text_node.set("fill", INK_SOFT)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = " 0.00"
-
-        text_node = self.svg.node(
-            heatmap_group,
-            "text",
-            x=colorbar_x + colorbar_width + 18,
-            y=colorbar_y + colorbar_height + cb_label_size * 0.35,
-        )
-        text_node.set("fill", INK_SOFT)
-        text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        text_node.text = "-1.00"
-
-        cb_title_size = 46
-        cb_title_x = colorbar_x + colorbar_width / 2
-        cb_title_y = colorbar_y - 40
-        text_node = self.svg.node(heatmap_group, "text", x=cb_title_x, y=cb_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK)
-        text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Correlation"
-
-    def _compute(self):
-        """Compute the box for rendering."""
-        n = len(self.matrix_data) if self.matrix_data else 1
-        self._box.xmin = 0
-        self._box.xmax = n
-        self._box.ymin = 0
-        self._box.ymax = n
-
-
-# Data: Correlation matrix for molecular descriptors (cheminformatics QSAR feature set)
+# Data: replace this block with your own labeled square matrix, e.g. df = pd.read_csv("corr.csv", index_col=0)
+# Correlation matrix of molecular descriptors (cheminformatics QSAR feature set)
 variables = [
     "Mol. Weight",
     "LogP",
@@ -265,76 +44,198 @@ variables = [
     "Aromatic Rings",
     "LogS",
 ]
-n = len(variables)
+df = pd.DataFrame(
+    [
+        [1.00, 0.45, 0.55, 0.25, 0.60, 0.70, 0.50, -0.55],
+        [0.45, 1.00, -0.75, -0.50, -0.35, 0.20, 0.40, -0.80],
+        [0.55, -0.75, 1.00, 0.80, 0.85, 0.15, -0.10, 0.50],
+        [0.25, -0.50, 0.80, 1.00, 0.45, 0.10, -0.15, 0.40],
+        [0.60, -0.35, 0.85, 0.45, 1.00, 0.25, 0.05, 0.35],
+        [0.70, 0.20, 0.15, 0.10, 0.25, 1.00, -0.20, -0.15],
+        [0.50, 0.40, -0.10, -0.15, 0.05, -0.20, 1.00, -0.35],
+        [-0.55, -0.80, 0.50, 0.40, 0.35, -0.15, -0.35, 1.00],
+    ],
+    index=variables,
+    columns=variables,
+)
 
-matrix_data = [
-    [1.00, 0.45, 0.55, 0.25, 0.60, 0.70, 0.50, -0.55],
-    [0.45, 1.00, -0.75, -0.50, -0.35, 0.20, 0.40, -0.80],
-    [0.55, -0.75, 1.00, 0.80, 0.85, 0.15, -0.10, 0.50],
-    [0.25, -0.50, 0.80, 1.00, 0.45, 0.10, -0.15, 0.40],
-    [0.60, -0.35, 0.85, 0.45, 1.00, 0.25, 0.05, 0.35],
-    [0.70, 0.20, 0.15, 0.10, 0.25, 1.00, -0.20, -0.15],
-    [0.50, 0.40, -0.10, -0.15, 0.05, -0.20, 1.00, -0.35],
-    [-0.55, -0.80, 0.50, 0.40, 0.35, -0.15, -0.35, 1.00],
-]
 
-# Custom style with theme-adaptive colors
+# Plot: reads only df and the constants above
+def ramp_color(stops, t):
+    """The hex at t (0 to 1) along (position, hex) stops, blended linearly in sRGB."""
+    if not math.isfinite(t):
+        return "none"  # a missing value draws nothing
+    t = min(max(t, 0.0), 1.0)
+    (p0, c0), (p1, c1) = next((a, b) for a, b in pairwise(stops) if t <= b[0])
+    share = (t - p0) / (p1 - p0)
+    return "#" + "".join(
+        f"{round(int(c0[i : i + 2], 16) * (1 - share) + int(c1[i : i + 2], 16) * share):02X}" for i in (1, 3, 5)
+    )
+
+
+def cell_color(value):
+    """Diverging fill for a correlation value on the fixed -1..1 range."""
+    lo, hi = CORRELATION_RANGE
+    return ramp_color(DIV_FIELDS, (value - lo) / (hi - lo))
+
+
+def text_color_on(bg_color):
+    """Dark or light text, whichever contrasts with the fill."""
+    if bg_color == "none":
+        return INK
+    r, g, b = (int(bg_color[i : i + 2], 16) for i in (1, 3, 5))
+    return "#FAF8F1" if (r * 299 + g * 587 + b * 114) / 1000 < 140 else "#1A1A17"
+
+
+class CorrelationHeatmap(Graph):
+    """Correlation matrix heatmap: pygal has no heatmap type, so the grid is drawn in the plot layer."""
+
+    def __init__(self, *args, **kwargs):
+        self.matrix = kwargs.pop("matrix")
+        self.labels = kwargs.pop("labels")
+        self.axis_title = kwargs.pop("axis_title")
+        self.bar_title = kwargs.pop("bar_title")
+        super().__init__(*args, **kwargs)
+
+    def _text(self, parent, x, y, text, size, fill, bold=False, anchor=None, rotate=None):
+        node = self.svg.node(parent, "text", x=x, y=y)
+        if anchor:
+            node.set("text-anchor", anchor)
+        node.set("fill", fill)
+        weight = "font-weight:bold;" if bold else ""
+        node.set("style", f"font-size:{size}px;{weight}font-family:sans-serif")
+        if rotate is not None:
+            node.set("transform", f"rotate({rotate}, {x}, {y})")
+        node.text = text
+
+    def _plot(self):
+        n = len(self.matrix)
+        longest = max(len(label) for label in self.labels)
+
+        # Label blocks scale with the longest name so nothing collides with the axis titles
+        row_label_width = longest * 54 * 0.64
+        col_label_drop = longest * 54 * 0.56 * 0.7071
+        title_block = 90
+        margin_left = row_label_width + title_block + 60
+        margin_bottom = 25 + col_label_drop + title_block + 40
+        margin_top = 20
+        margin_right = 340
+
+        available_width = self.view.width - margin_left - margin_right
+        available_height = self.view.height - margin_bottom - margin_top
+        cell = min(available_width, available_height) / n
+        gap = cell * 0.02
+        grid = n * (cell + gap) - gap
+
+        left = self.view.x(0)
+        x0 = left + margin_left + (available_width - grid) / 2
+        y0 = self.view.y(n) + margin_top + (available_height - grid) / 2
+        group = self.svg.node(self.nodes["plot"], class_="correlation-heatmap")
+
+        # Axis titles
+        y_title_x, y_title_y = left + title_block / 2, y0 + grid / 2
+        self._text(group, y_title_x, y_title_y, self.axis_title, 52, INK, True, "middle", -90)
+        label_size = min(54, int(cell * 0.55))
+        col_label_y = y0 + grid + 25
+        self._text(group, x0 + grid / 2, col_label_y + col_label_drop + 40, self.axis_title, 52, INK, True, "middle")
+
+        # Row labels and 45-degree column labels, same names in the same order
+        for i, label in enumerate(self.labels):
+            y = y0 + i * (cell + gap) + cell / 2
+            self._text(group, x0 - 25, y + label_size * 0.35, label, label_size, INK_SOFT, True, "end")
+            x = x0 + i * (cell + gap) + cell / 2
+            self._text(group, x, col_label_y, label, label_size, INK_SOFT, True, "start", 45)
+
+        # Cells with their values
+        value_size = min(46, int(cell * 0.33))
+        for i in range(n):
+            for j in range(n):
+                value = self.matrix[i][j]
+                fill = cell_color(value)
+                x, y = x0 + j * (cell + gap), y0 + i * (cell + gap)
+                rect = self.svg.node(group, "rect", x=x, y=y, width=cell, height=cell, rx=4, ry=4)
+                rect.set("fill", fill)
+                rect.set("stroke", PAGE_BG)
+                rect.set("stroke-width", "2")
+                if math.isfinite(value):
+                    label = f"{value:.2f}"
+                    self._text(
+                        group,
+                        x + cell / 2,
+                        y + cell / 2 + value_size * 0.35,
+                        label,
+                        value_size,
+                        text_color_on(fill),
+                        True,
+                        "middle",
+                    )
+
+        # Color bar fixed to the full -1..1 range, top = +1
+        bar_w, bar_h = 55, grid * 0.85
+        bar_x, bar_y = x0 + grid + 125, y0 + (grid - bar_h) / 2
+        segments = 60
+        for k in range(segments):
+            value = CORRELATION_RANGE[1] - (CORRELATION_RANGE[1] - CORRELATION_RANGE[0]) * k / (segments - 1)
+            self.svg.node(
+                group,
+                "rect",
+                x=bar_x,
+                y=bar_y + k * bar_h / segments,
+                width=bar_w,
+                height=bar_h / segments + 1,
+                fill=cell_color(value),
+            )
+        self.svg.node(group, "rect", x=bar_x, y=bar_y, width=bar_w, height=bar_h, fill="none", stroke=INK_SOFT)
+        tick_size = 42
+        for frac, tick in ((0.0, "+1.00"), (0.5, " 0.00"), (1.0, "-1.00")):
+            self._text(group, bar_x + bar_w + 18, bar_y + bar_h * frac + tick_size * 0.35, tick, tick_size, INK_SOFT)
+        self._text(group, bar_x + bar_w / 2, bar_y - 40, self.bar_title, 46, INK, True, "middle")
+
+    def _compute(self):
+        n = len(self.matrix)
+        self._box.xmin, self._box.xmax = 0, n
+        self._box.ymin, self._box.ymax = 0, n
+
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#009E73",),
+    colors=IMPRINT_PALETTE,
     title_font_size=72,
     legend_font_size=48,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     label_font_size=50,
+    major_label_font_size=50,
     value_font_size=44,
     font_family="sans-serif",
 )
 
-
-def _lerp_hex(c0, c1, t):
-    """Linearly interpolate between two hex colors."""
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02x}{g:02x}{b:02x}"
-
-
-# Diverging Imprint colormap: matte-red (negative) -> theme-adaptive midpoint (zero) -> blue (positive)
-_half_stops = 16
-diverging_colormap = [_lerp_hex("#AE3030", PAGE_BG, i / _half_stops) for i in range(_half_stops)] + [
-    _lerp_hex(PAGE_BG, "#4467A3", i / _half_stops) for i in range(_half_stops + 1)
-]
-
-# Create correlation heatmap
 chart = CorrelationHeatmap(
     width=2400,
     height=2400,
     style=custom_style,
-    title="heatmap-correlation · pygal · anyplot.ai",
-    matrix_data=matrix_data,
-    labels=variables,
-    colormap=diverging_colormap,
-    show_values=True,
+    title="heatmap-correlation · python · pygal · anyplot.ai",
+    matrix=df.to_numpy().tolist(),
+    labels=[str(name) for name in df.index],
+    axis_title=DESCRIPTOR,
+    bar_title=CORRELATION,
     show_legend=False,
     margin=120,
     margin_top=60,
     margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
-    x_axis_title="Molecular Descriptors",
-    y_axis_title="Molecular Descriptors",
 )
-
 chart.add("", [0])
 
-# Save outputs with theme-suffixed filenames
+# Save
 chart.render_to_file(f"plot-{THEME}.svg")
 chart.render_to_png(f"plot-{THEME}.png")
 
-# Save HTML for interactivity
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -352,6 +253,5 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>
 """
-
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
