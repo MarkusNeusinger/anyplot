@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-30
@@ -9,7 +9,6 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
 
 
 # Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
@@ -19,114 +18,142 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Mandelbrot set with smooth escape-time coloring (eliminates discrete banding)
+# Imprint palette (all eight positions, canonical order)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential ramp for colored fields (cells filling the plot), as (position, hex) stops
+SEQ_FIELDS = (
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
+    if THEME == "light"
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
+)
+
+# Constants
+INTERIOR_COLOR = "#000000"  # points that never escape: one solid color, apart from every exterior color
+
+# Columns: set these to your table's column names
+REAL = "Real (Re)"  # role: extra
+IMAGINARY = "Imaginary (Im)"  # role: extra
+ITERATIONS = "Escape iterations"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("grid.csv")
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
-max_iter = 100
-nx, ny = 800, 600
+max_iterations = 100
+nx = 800
+ny = round(nx * (y_max - y_min) / (x_max - x_min))
 
-step_x = (x_max - x_min) / nx
-step_y = (y_max - y_min) / ny
-real = np.linspace(x_min, x_max, nx, endpoint=False)
-imag = np.linspace(y_min, y_max, ny, endpoint=False)
+step = (x_max - x_min) / nx
+real = x_min + step * np.arange(nx)
+imag = y_min + step * np.arange(ny)
 real_grid, imag_grid = np.meshgrid(real, imag)
 c = real_grid + 1j * imag_grid
 
 z = np.zeros_like(c)
-smooth_iter = np.zeros(c.shape, dtype=float)
+smooth_iter = np.full(c.shape, np.nan)
 escaped = np.zeros(c.shape, dtype=bool)
-
-for i in range(max_iter):
+for i in range(max_iterations):
     active = ~escaped
     z[active] = z[active] ** 2 + c[active]
     newly_escaped = active & (np.abs(z) > 2)
     smooth_iter[newly_escaped] = i + 1 - np.log(np.log(np.abs(z[newly_escaped]))) / np.log(2)
     escaped[newly_escaped] = True
 
-flat_real = real_grid.ravel()
-flat_imag = imag_grid.ravel()
-flat_iter = smooth_iter.ravel()
-flat_escaped = escaped.ravel()
+df = pd.DataFrame({REAL: real_grid.ravel(), IMAGINARY: imag_grid.ravel(), ITERATIONS: smooth_iter.ravel()})
 
-df_interior = pd.DataFrame(
-    {
-        "real": flat_real[~flat_escaped],
-        "imaginary": flat_imag[~flat_escaped],
-        "real2": flat_real[~flat_escaped] + step_x,
-        "imaginary2": flat_imag[~flat_escaped] + step_y,
-    }
-)
-
-df_exterior = pd.DataFrame(
-    {
-        "real": flat_real[flat_escaped],
-        "imaginary": flat_imag[flat_escaped],
-        "real2": flat_real[flat_escaped] + step_x,
-        "imaginary2": flat_imag[flat_escaped] + step_y,
-        "iterations": flat_iter[flat_escaped],
-    }
-)
-
-# Plot
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 alt.data_transformers.disable_max_rows()
 
-x_scale = alt.Scale(domain=[x_min, x_max])
-y_scale = alt.Scale(domain=[y_min, y_max])
+# Each pixel is a rect from its corner to 1.5 grid steps, so neighbours overlap and leave no anti-aliasing seams
+real_step = np.diff(np.sort(df[REAL].unique())).min()
+imag_step = np.diff(np.sort(df[IMAGINARY].unique())).min()
+lo, hi = df[ITERATIONS].min(), df[ITERATIONS].max()
+df["x2"] = df[REAL] + 1.5 * real_step
+df["y2"] = df[IMAGINARY] + 1.5 * imag_step
 
-title = "heatmap-mandelbrot · python · altair · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = max(11, round(16 * ratio))
-
-# Interior layer - black for points inside the Mandelbrot set
-interior = (
-    alt.Chart(df_interior)
-    .mark_rect(color="#000000")
-    .encode(x=alt.X("real:Q", scale=x_scale), x2="real2:Q", y=alt.Y("imaginary:Q", scale=y_scale), y2="imaginary2:Q")
+real_field = REAL.translate(ESCAPE)
+imag_field = IMAGINARY.translate(ESCAPE)
+iter_field = ITERATIONS.translate(ESCAPE)
+x_enc = alt.X(
+    real_field,
+    type="quantitative",
+    title=REAL,
+    scale=alt.Scale(domain=[df[REAL].min(), df[REAL].max() + real_step], nice=False, zero=False),
+)
+y_enc = alt.Y(
+    imag_field,
+    type="quantitative",
+    title=IMAGINARY,
+    scale=alt.Scale(domain=[df[IMAGINARY].min(), df[IMAGINARY].max() + imag_step], nice=False, zero=False),
 )
 
-# Exterior layer - Imprint sequential colormap (brand green → blue) for escape iterations
+title = "heatmap-mandelbrot · python · altair · anyplot.ai"
+ratio = 67 / len(title) if len(title) > 67 else 1.0
+title_fontsize = max(11, round(16 * ratio))
+
+# Interior: NaN escape iterations, one solid color. Stroke in the fill color closes the seams between cells.
+interior = (
+    alt.Chart(df)
+    .transform_filter(f"!isValid(datum['{iter_field}'])")
+    .mark_rect(color=INTERIOR_COLOR, stroke=INTERIOR_COLOR, strokeWidth=0.6)
+    .encode(x=x_enc, x2="x2:Q", y=y_enc, y2="y2:Q")
+)
+
+# Exterior: smooth escape iterations on the Imprint sequential ramp
 exterior = (
-    alt.Chart(df_exterior)
+    alt.Chart(df)
+    .transform_filter(f"isValid(datum['{iter_field}'])")
     .mark_rect()
     .encode(
-        x=alt.X("real:Q", title="Real (Re)", scale=x_scale),
-        x2="real2:Q",
-        y=alt.Y("imaginary:Q", title="Imaginary (Im)", scale=y_scale),
-        y2="imaginary2:Q",
-        color=alt.Color(
-            "iterations:Q",
-            scale=alt.Scale(range=["#009E73", "#4467A3"]),
+        x=x_enc,
+        x2="x2:Q",
+        y=y_enc,
+        y2="y2:Q",
+        fill=alt.Fill(
+            iter_field,
+            type="quantitative",
+            title=ITERATIONS,
+            scale=alt.Scale(
+                domain=[lo + p * (hi - lo) for p, _ in SEQ_FIELDS],
+                range=[col for _, col in SEQ_FIELDS],
+                interpolate="rgb",
+            ),
             legend=alt.Legend(
-                title="Escape Iterations", titleFontSize=10, labelFontSize=10, gradientLength=200, gradientThickness=15
+                type="gradient",
+                orient="bottom",
+                titleFontSize=12,
+                labelFontSize=10,
+                gradientLength=300,
+                gradientThickness=14,
+                direction="horizontal",
             ),
         ),
         tooltip=[
-            alt.Tooltip("real:Q", title="Real", format=".4f"),
-            alt.Tooltip("imaginary:Q", title="Imaginary", format=".4f"),
-            alt.Tooltip("iterations:Q", title="Iterations", format=".1f"),
+            alt.Tooltip(real_field, type="quantitative", title=REAL, format=".4f"),
+            alt.Tooltip(imag_field, type="quantitative", title=IMAGINARY, format=".4f"),
+            alt.Tooltip(iter_field, type="quantitative", title=ITERATIONS, format=".1f"),
         ],
     )
 )
 
-# Square canvas (2400×2400) - canonical for heatmaps; inner view 395×395 + 20px padding
 chart = (
-    (interior + exterior)
-    .interactive()
+    alt.layer(interior, exterior)
     .properties(
-        width=395,
-        height=395,
+        width=600,
+        height=600,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding={"left": 10, "right": 10, "top": 10, "bottom": 70},
         background=PAGE_BG,
         title=alt.Title(
             title,
-            subtitle=["z(n+1) = z(n)² + c  ·  max 100 iterations  ·  escape radius 2"],
+            subtitle="z(n+1) = z(n)² + c  ·  max 100 iterations  ·  escape radius 2",
             fontSize=title_fontsize,
             subtitleFontSize=12,
             subtitleColor=INK_SOFT,
             anchor="start",
-            offset=12,
+            offset=10,
         ),
-        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
@@ -140,22 +167,9 @@ chart = (
     )
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
     .configure_title(color=INK)
+    .interactive()
 )
 
-# Save - square canvas target: 2400×2400
+# Save
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
-TW, TH = 2400, 2400
-_img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
-    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _canvas.save(f"plot-{THEME}.png")
-
 chart.save(f"plot-{THEME}.html")
