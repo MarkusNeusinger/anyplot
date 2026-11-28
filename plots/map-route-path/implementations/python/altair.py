@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-27
@@ -29,9 +29,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for marks drawn on the page, as (position, hex) stops
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Column constants
@@ -107,12 +107,18 @@ geo = {"longitude": alt.Longitude(LON, type="quantitative"), "latitude": alt.Lat
 lon_mid = (df[LONGITUDE].max() + df[LONGITUDE].min()) / 2
 lat_mid = (df[LATITUDE].max() + df[LATITUDE].min()) / 2
 lon_span = np.radians(df[LONGITUDE].max() - df[LONGITUDE].min()) * np.cos(np.radians(lat_mid))
+# Zoom and pan live in the HTML as bound controls: the projection scale and translate read these params
+zoom = alt.param(name="zoom", value=1, bind=alt.binding_range(min=0.5, max=8, step=0.1, name="Zoom "))
+pan_x = alt.param(name="pan_x", value=0, bind=alt.binding_range(min=-800, max=800, step=10, name="Pan east-west "))
+pan_y = alt.param(name="pan_y", value=0, bind=alt.binding_range(min=-500, max=500, step=10, name="Pan north-south "))
+base_scale = float(0.72 * 800 / lon_span)
 PROJ = {
     "type": "albers",
     "rotate": [-lon_mid, 0],
     "center": [0, lat_mid],
     "parallels": [df[LATITUDE].min(), df[LATITUDE].max()],
-    "scale": float(0.72 * 800 / lon_span),
+    "scale": alt.expr(f"{base_scale} * zoom"),
+    "translate": alt.expr("[width / 2 + pan_x, height / 2 + pan_y]"),
 }
 
 background = (
@@ -180,14 +186,14 @@ end_marker = (
 start_label = (
     alt.Chart(start_df)
     .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="center", color=INK)
-    .encode(**geo, text=alt.Text(PLACE, type="nominal"))
+    .encode(**geo, text=alt.Text("label", type="nominal"))
     .project(**PROJ)
 )
 
 end_label = (
     alt.Chart(end_df)
     .mark_text(fontSize=13, fontWeight="bold", dy=-20, baseline="bottom", align="left", color=INK)
-    .encode(**geo, text=alt.Text(PLACE, type="nominal"))
+    .encode(**geo, text=alt.Text("label", type="nominal"))
     .project(**PROJ)
 )
 
@@ -208,6 +214,7 @@ chart = (
         background=PAGE_BG,
         title=alt.Title(text=title_str, fontSize=16, anchor="start", color=INK, offset=8),
     )
+    .add_params(zoom, pan_x, pan_y)
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8)
