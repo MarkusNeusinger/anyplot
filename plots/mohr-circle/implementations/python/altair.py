@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-28
@@ -153,7 +153,7 @@ angle_lbl_df = pd.DataFrame(
 )
 angle_lbl = (
     alt.Chart(angle_lbl_df)
-    .mark_text(text=f"2θp = {theta_p2:.1f}°", fontSize=11, fontWeight="bold", color=BLUE)
+    .mark_text(text=f"2θp = {theta_p2:.1f}°", fontSize=11, fontWeight="bold", color=INK)
     .encode(x="sigma:Q", y="tau:Q")
 )
 
@@ -203,7 +203,7 @@ center_pt = (
 )
 center_lbl = (
     alt.Chart(center_pt_df)
-    .mark_text(text=f"C ({center:.0f}, 0)", fontSize=10, color=INK_SOFT, dy=18)
+    .mark_text(text=f"C ({center:.0f}, 0)", fontSize=10, color=INK_SOFT, align="left", dx=8, dy=18)
     .encode(x="sigma:Q", y="tau:Q")
 )
 
