@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T11:01:31Z'
-updated: '2026-11-26T11:21:57Z'
+updated: '2026-11-28T09:18:14Z'
 generated_by: claude-sonnet
-workflow_run: 45808212099
+workflow_run: 46129010035
 issue: 3002
 language_version: 3.14.10
 library_version: 4.11.0
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
   - The mosaic is defined as the string 'AAA;BBC;DEF' (with '.' gaps supported) and
@@ -20,41 +20,32 @@ review:
   - Whole canvas, gutters and main title follow the theme in both renders
   - Heatmap replaces its color bar with in-cell values whose ink flips by tile luminance
   - Six plot types, each titled and with unit-bearing axis labels suited to its panel
-  - Concrete retail scenario with real product and region names
+  - The spanning revenue panel is flush with the left edges of the panels below it
+  - Every y axis carries enough breaks to read values off
   weaknesses:
-  - 'VQ-05 (both): the plot boxes do not share a left edge — the spanning revenue
-    panel starts at about x=235 px, Sales by Product at about 197 px and Score Distribution
-    at about 176 px — so the spanning panel is not flush with the panels it spans
-    (spec C3) → one shared left edge (about -60 px drift to 0). Likely cause: each
-    ggbunch region holds the whole plot, including y tick labels whose widths differ
-    per panel.'
-  - 'SC-03 (both): the revenue y-axis shows only 0 and 1,000, the Score Distribution
-    y-axis only 0 and 20 and the Monthly Growth y-axis only 2 and 4, so values above
-    1,000 $, counts between 0 and 20 or growth above 4 % cannot be read off → about
-    4-6 round breaks per axis. Likely cause: default breaks on short panels; set scale_y_continuous
-    breaks.'
-  - 'VQ-07 (both): the heatmap ramp uses outdated SEQ_FIELDS stops — light (0.368
-    #009E73, 0.582 #4467A3, 1 #002850), dark (0 #00573D, 0.467 #009E73) — instead
-    of the style guide''s imprint_seq field stops → light (0 #66E2B2, 0.369 #009E73,
-    0.803 #024582, 1 #351E45), dark (0 #404C02, 0.487 #009E73, 1 #CDD9FF). Likely
-    cause: the SEQ_FIELDS constant.'
+  - 'DQ-02 (both): the panels ''Effort vs Output'', ''Score Distribution'' (''Performance
+    Score'') and ''Regional Score'' carry generic labels that do not belong to the
+    retail story of the revenue and product panels → name concrete retail measures
+    (e.g. ''Ad spend (k$) vs Orders'', ''Customer satisfaction score'', ''Store rating
+    by region''). Likely cause: the labs() titles and axis titles of panels C, D and
+    F.'
   - 'Suggestion: tighten the empty band between the main title and the top panel (TITLE_SHARE
     plus GAP) so the primary panel gains height.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, gutters included.
-      Chrome: centered bold dark title 'subplot-mosaic · python · letsplot · anyplot.ai'; bold left-aligned panel titles; dark axis titles and soft-ink ticks all readable; subtle grid. Left plot-box edges drift: revenue panel at about x=235 px, Sales by Product about 197 px, Score Distribution about 176 px.
-      Data: A full-width green line over a translucent green area from zero (revenue, 100 days, y ticks 0 and 1,000 only); B five green bars Laptops..Headsets with dark outlines; C green scatter with a lavender #C475FD lm line; D bimodal green histogram (x ticks 20-100, y ticks 0 and 20); E green line with markers Jan-Jun (y ticks 2 and 4); F 4x3 heatmap mint -> green -> blue -> navy with values in cells. First series #009E73.
+      Chrome: centered bold dark title 'subplot-mosaic · python · letsplot · anyplot.ai'; bold left-aligned panel titles; dark axis titles and soft-ink ticks all readable; subtle grid. The plot boxes of A, B and D share one left edge (about x=232-240 px at full size).
+      Data: A full-width green line over a translucent green area from zero (y ticks 0-1,500 every 500); B five green bars Laptops..Headsets with dark outlines; C green scatter with a lavender #C475FD lm line; D bimodal green histogram (x 20-100, y 0-30 every 5); E green line with markers Jan-Jun (y 2-5 every 1); F 4x3 heatmap mint -> green -> blue -> deep purple (imprint_seq light field stops) with values in cells. First series #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 across the whole canvas.
       Chrome: title, panel titles, axis titles and ticks light and readable; no dark-on-dark text.
-      Data: categorical greens and the lavender trend identical to the light render; bar and histogram outlines flip to light ink; heatmap on dark stops (deep green -> green -> pale blue/lavender) with contrasting cell values.
+      Data: greens and the lavender trend identical to the light render; bar and histogram outlines flip to light ink; heatmap on the dark field stops (olive -> green -> pale lavender-blue) with contrasting cell values.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,16 +53,16 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Main title 16 pt, panel titles 12 pt, axis titles 11 pt, ticks 9
-          pt, all set explicitly and readable in both themes; heatmap cell values
-          take light or dark ink per tile
+        comment: Main title 16 pt, bold panel titles 12 pt, axis titles 11 pt, ticks
+          9 pt, all set explicitly and readable in both themes; heatmap cell values
+          take light or dark ink per tile luminance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions in any panel; neighbouring axis titles stay clear
-          of adjacent panels
+        comment: No text collisions; axis titles of neighbouring panels stay clear
+          of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -84,30 +75,29 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Single green hue plus a lavender trend; values printed in every heatmap
+        comment: One green hue plus a lavender trend; values printed in every heatmap
           cell, so color is never the only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 3200x1800, whole canvas themed; the plot boxes do not share a left
-          edge across rows (defect line)
+        passed: true
+        comment: 3200x1800, whole canvas themed, plot boxes share their left and right
+          edges across rows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Every panel titled; axes with units (Revenue ($), Effort (hours),
-          Growth Rate (%))
+        comment: Every panel titled; axes carry units (Revenue ($), Effort (hours),
+          Growth Rate (%), Units Sold)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series #009E73, second #C475FD, backgrounds correct; the heatmap''s
-          SEQ_FIELDS stops are not the style guide''s imprint_seq field stops (defect
-          line)'
+        passed: true
+        comment: 'First series #009E73, second #C475FD, backgrounds correct; heatmap
+          uses the imprint_seq field stops of each theme'
     design_excellence:
       score: 10
       max: 20
@@ -117,25 +107,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: One green hue carried across five panels so the heatmap is the only
-          multi-tone field; three-level type hierarchy (centered bold main title,
-          bold left panel titles, axis text)
+        comment: 'Raised one: a three-level type hierarchy (centered bold main title,
+          bold left-aligned panel titles, axis text) and one green hue carried across
+          five panels so the heatmap is the only multi-tone field'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Heatmap color bar replaced by in-cell values with page-colored tile
-          borders; otherwise the baseline
+        comment: 'Raised one: per-panel plot margins give the spanning panel a left
+          edge flush with the panels below it; consistent gutters and left-aligned
+          panel titles'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Hierarchy is what the Notes ask for; no focal point chosen beyond
-          it
+        passed: true
+        comment: 'Default: the hierarchy comes from the layout the Notes require;
+          no further focal point chosen'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,31 +134,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mosaic defined by the string 'AAA;BBC;DEF' and placed through ggbunch
-          regions
+        comment: Mosaic layout of six differently sized panels from an ASCII layout
+          string
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Spanning panels, string-pattern layout with '.' gap support, larger
-          primary panel, six plot types; flush spanning edges scored under VQ-05
+        comment: String layout 'AAA;BBC;DEF' with '.' gaps supported, consistent gaps,
+          primary panel largest, six plot types (C1, C2, C4 met; C5 not applicable,
+          no empty cell)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Marks at their values; revenue y-axis with only 0 and 1,000, histogram
-          y-axis with only 0 and 20, growth y-axis with only 2 and 4 (defect line)
+        passed: true
+        comment: Axes fit the data, zero baseline on area, bars and histogram; every
+          y axis carries 4-7 readable breaks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'subplot-mosaic · python · letsplot · anyplot.ai'; no legend
-          needed (single series per panel, heatmap values in cells)
+        comment: Title in the mandated format; no legends needed (single series per
+          panel, heatmap values printed in cells)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -175,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full-width span, two-column span, single cells, three rows of differing
-          heights and six plot types
+        comment: Spanning in both directions (A across three columns, B across two),
+          unequal row heights, six different plot types
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Retail dashboard with real product names, regions and quarters; neutral
+        passed: false
+        comment: Retail dashboard with real product and region names; 'Effort vs Output',
+          'Performance Score' and 'Regional Score' read as generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue ~1,000-1,480 $, sales 290-520 units, growth 2-5 %, scores
-          60-90; plausible. No Check values in the spec
+        comment: 'Revenue 1,000-1,500 $/day, units sold 290-520, growth 2-5 %, scores
+          60-100: sensible for each domain'
     code_quality:
       score: 10
       max: 10
@@ -199,14 +192,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, data, plot, save top to bottom; ramp_color and a regions_from_layout
-          layout helper, which CQ-01 does not deduct
+        comment: Imports -> constants -> data -> plot -> save; two short helpers (ramp_color,
+          layout regions) above first use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: default_rng(42)
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -218,15 +211,17 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Layout parsing in one small helper; no fake UI
+        comment: Appropriate complexity; luminance-based text ink is a few lines with
+          no library call that replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current ggsave
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,42 +229,35 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layers per panel, a shared theme object added
-          to each plot, geom_smooth(method='lm')
+        comment: 'Raised one: grammar-of-graphics layering per panel (geom_area+geom_line,
+          geom_smooth(method=''lm''), geom_tile+geom_text) and a shared theme object
+          added to each plot'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: ggbunch with free-form regions turns the string mosaic into a lets-plot
-          composition; HTML export keeps lets-plot's tooltips
+        comment: 'Raised one: ggbunch with explicit fractional regions, lets-plot''s
+          free-placement composite, drives the mosaic directly from the layout string'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-aca0a6acca
-  rendered_at: '2026-11-26T11:18:37Z'
-  last_kept:
-    pr: 14832
-    code: regression
-    note: '#14832 was kept because the review found it worse than the live version
-      here: Score Distribution x-axis lost its ticks 20/40/60/80/100 and now shows
-      only 50 and 100, so scores can no longer be read off between them (Score Distribution
-      x-axis, both renders). Keep these as the live version has them.'
+  rendered_at: '2026-11-28T09:14:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - annotations
   - layer-composition
+  - annotations
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
-  - binning
   - regression
+  - binning
   - cumulative-sum
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
   - edge-highlighting
-  - grid-styling
