@@ -1,21 +1,17 @@
 """ anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-01
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-28
 """
 
 import os
-import sys
-
-
-# Remove the script's own directory from sys.path so that local matplotlib.py
-# does not shadow the installed matplotlib package.
-sys.path.pop(0)
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 
 
@@ -27,12 +23,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — semantic mapping: positive→green, negative→red, neutral→muted
-COL_SA = "#009E73"  # Strongly Agree    — brand green (most positive)
-COL_A = "#99B314"  # Agree             — lime (softer positive)
-COL_N = INK_MUTED  # Neutral           — theme-adaptive muted
-COL_D = "#BD8233"  # Disagree          — ochre (mild negative)
-COL_SD = "#AE3030"  # Strongly Disagree — matte red (most negative)
+# Imprint palette: the ordered Likert levels below take steps of a ramp between its red and green members
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Diverging ramp for marks: matte red pole, grey midpoint, brand green pole (Imprint, ordered categories)
+DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#009E73")]
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", DIV_MARKS)
 
 sns.set_theme(
     style="ticks",
@@ -51,158 +47,138 @@ sns.set_theme(
     },
 )
 
-# Data — employee engagement survey, 8 questions on 5-point Likert scale
-questions = [
-    "Career growth opportunities",
-    "Work-life balance",
-    "Team collaboration",
-    "Management communication",
-    "Compensation & benefits",
-    "Job security",
-    "Training & development",
-    "Workplace culture",
-]
+# Columns: set these to your table's column names
+QUESTION = "Question"  # role: question
+STRONGLY_DISAGREE = "Strongly Disagree"  # role: strongly_disagree
+DISAGREE = "Disagree"  # role: disagree
+NEUTRAL = "Neutral"  # role: neutral
+AGREE = "Agree"  # role: agree
+STRONGLY_AGREE = "Strongly Agree"  # role: strongly_agree
 
-survey_data = {
-    "question": questions,
-    "strongly_disagree": [5, 8, 3, 14, 20, 4, 10, 6],
-    "disagree": [10, 14, 7, 22, 28, 8, 18, 12],
-    "neutral": [15, 18, 12, 20, 17, 14, 16, 16],
-    "agree": [40, 35, 45, 28, 22, 42, 32, 38],
-    "strongly_agree": [30, 25, 33, 16, 13, 32, 24, 28],
-}
+# Constants
+LEVELS = [STRONGLY_DISAGREE, DISAGREE, NEUTRAL, AGREE, STRONGLY_AGREE]  # scale order, negative to positive
+LABEL_MIN = 10  # segments narrower than this share (in %) stay unlabeled
+STRONG_NET = 15  # a net agreement above this counts as strongly positive
 
-df = pd.DataFrame(survey_data)
+# Data: replace this block with your own table, for example df = pd.read_csv("survey.csv")
+df = pd.DataFrame(
+    {
+        QUESTION: [
+            "Career growth opportunities",
+            "Work-life balance",
+            "Team collaboration",
+            "Management communication",
+            "Compensation & benefits",
+            "Job security",
+            "Training & development",
+            "Workplace culture",
+        ],
+        STRONGLY_DISAGREE: [5, 8, 3, 14, 20, 4, 10, 6],
+        DISAGREE: [10, 14, 7, 22, 28, 8, 18, 12],
+        NEUTRAL: [15, 18, 12, 20, 17, 14, 16, 16],
+        AGREE: [40, 35, 45, 28, 22, 42, 32, 38],
+        STRONGLY_AGREE: [30, 25, 33, 16, 13, 32, 24, 28],
+    }
+)
 
-df["net_agreement"] = df["agree"] + df["strongly_agree"] - df["disagree"] - df["strongly_disagree"]
-df = df.sort_values("net_agreement").reset_index(drop=True)
+# Plot: reads only df and the constants above
+net = df[AGREE] + df[STRONGLY_AGREE] - df[DISAGREE] - df[STRONGLY_DISAGREE]
+table = df.loc[net.sort_values(ascending=False).index].reset_index(drop=True)  # most agreed at the top
+net = net.loc[net.sort_values(ascending=False).index].reset_index(drop=True)
+questions = table[QUESTION].tolist()
 
-category_keys = ["strongly_disagree", "disagree", "neutral", "agree", "strongly_agree"]
-category_names = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
-colors = {"strongly_disagree": COL_SD, "disagree": COL_D, "neutral": COL_N, "agree": COL_A, "strongly_agree": COL_SA}
+# Every bar is centered on the middle of its neutral segment
+mid = LEVELS.index(NEUTRAL)
+widths = table[LEVELS]
+start = -(widths.iloc[:, :mid].sum(axis=1) + widths[NEUTRAL] / 2)
+rights = widths.cumsum(axis=1).add(start, axis=0)
+lefts = rights - widths
 
-# Cumulative values for diverging stacked layout (overlay technique)
-half_n = df["neutral"] / 2
-df["r_sa"] = half_n + df["agree"] + df["strongly_agree"]
-df["r_a"] = half_n + df["agree"]
-df["r_n"] = half_n
-df["l_sd"] = -(half_n + df["disagree"] + df["strongly_disagree"])
-df["l_d"] = -(half_n + df["disagree"])
-df["l_n"] = -half_n
+colors = dict(zip(LEVELS, [imprint_div(v) for v in np.linspace(0, 1, len(LEVELS))], strict=True))
 
-# Question order: most positive at top (seaborn plots first item in order at top)
-q_order = df["question"].tolist()[::-1]
-
-# Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Subtle alternating row banding — seaborn-idiomatic scanline separation
-for i in range(len(q_order)):
-    if i % 2 == 0:
-        ax.axhspan(i - 0.5, i + 0.5, facecolor=INK, alpha=0.03, zorder=0)
+# Subtle alternating row banding
+for i in range(0, len(questions), 2):
+    ax.axhspan(i - 0.5, i + 0.5, facecolor=INK, alpha=0.03, zorder=0)
 
 bar_kw = {
-    "y": "question",
-    "order": q_order,
+    "y": questions,
+    "order": questions,
     "orient": "h",
     "ax": ax,
     "width": 0.65,
     "edgecolor": PAGE_BG,
     "linewidth": 0.5,
-    "errorbar": None,
 }
 
-# Right side: outermost layer first, overlaid by progressively narrower inner layers
-sns.barplot(data=df, x="r_sa", color=colors["strongly_agree"], **bar_kw)
-sns.barplot(data=df, x="r_a", color=colors["agree"], **bar_kw)
-sns.barplot(data=df, x="r_n", color=colors["neutral"], **bar_kw)
+# Overlay technique: outermost layer first, progressively narrower layers on top, per side
+for level in LEVELS[mid:][::-1]:
+    sns.barplot(x=rights[level].to_numpy(), color=colors[level], **bar_kw)
+for level in LEVELS[: mid + 1]:
+    sns.barplot(x=lefts[level].to_numpy(), color=colors[level], **bar_kw)
 
-# Left side: outermost first
-sns.barplot(data=df, x="l_sd", color=colors["strongly_disagree"], **bar_kw)
-sns.barplot(data=df, x="l_d", color=colors["disagree"], **bar_kw)
-sns.barplot(data=df, x="l_n", color=colors["neutral"], **bar_kw)
-
-# Percentage labels inside segments ≥10%
-for _, row in df.iterrows():
-    hn = row["neutral"] / 2
-    sd_left = -hn - row["disagree"] - row["strongly_disagree"]
-    d_left = -hn - row["disagree"]
-    a_left = hn
-    sa_left = hn + row["agree"]
-
-    segments = [
-        (sd_left + row["strongly_disagree"] / 2, row["strongly_disagree"], "white"),
-        (d_left + row["disagree"] / 2, row["disagree"], INK),
-        (0, row["neutral"], INK),
-        (a_left + row["agree"] / 2, row["agree"], INK),
-        (sa_left + row["strongly_agree"] / 2, row["strongly_agree"], "white"),
-    ]
-    y_pos = q_order.index(row["question"])
-    for x_center, value, text_color in segments:
-        if value >= 10:
+# Percentage labels inside the segments that have room for them
+for level in LEVELS:
+    for y_pos, (left, width) in enumerate(zip(lefts[level], widths[level], strict=True)):
+        if width >= LABEL_MIN:
             ax.text(
-                x_center,
+                left + width / 2,
                 y_pos,
-                f"{value}%",
+                f"{width:g}%",
                 ha="center",
                 va="center",
                 fontsize=8,
                 fontweight="medium",
-                color=text_color,
+                color="white",
             )
 
-# Net agreement callout — colored score badge at right edge for each question
-for _, row in df.iterrows():
-    y_pos = q_order.index(row["question"])
-    net = int(row["net_agreement"])
-    sign = "+" if net > 0 else ""
-    color = COL_SA if net > 15 else COL_SD if net < 0 else INK_MUTED
+# Net agreement callout at the right edge of each row
+for y_pos, value in enumerate(net):
+    badge_color = (
+        colors[STRONGLY_AGREE] if value > STRONG_NET else colors[STRONGLY_DISAGREE] if value < 0 else INK_MUTED
+    )
     ax.text(
-        88,
+        0.99,
         y_pos,
-        f"net {sign}{net}%",
-        ha="left",
+        f"net {value:+g}%",
+        transform=ax.get_yaxis_transform(),
+        ha="right",
         va="center",
-        fontsize=7,
-        color=color,
-        alpha=0.8,
-        fontweight="bold" if abs(net) > 40 else "normal",
+        fontsize=8,
+        color=badge_color,
+        fontweight="bold",
     )
 
 # Style
 title = "Employee Engagement Survey · bar-diverging-likert · python · seaborn · anyplot.ai"
-title_len = len(title)
-title_fontsize = max(8, round(12 * 67 / title_len))
+title_fontsize = max(8, round(12 * 67 / len(title)))
 
+x_low = lefts.min().min() - 8
+x_high = rights.max().max() + 0.2 * (rights.max().max() - x_low)
+ax.set_xlim(x_low, x_high)
+ax.set_xlabel("Share of responses (%)", fontsize=10, color=INK, labelpad=8)
 ax.set_ylabel("")
-ax.set_xlabel("Percentage", fontsize=10, color=INK, labelpad=8)
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
-ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
-ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
-ax.axvline(0, color=INK, linewidth=0.8, zorder=3)
-ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{abs(int(x))}%"))
-ax.set_xlim(-70, 112)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.axvline(0, color=INK, linewidth=0.8, zorder=0.9)  # behind the bars so it never strikes through the neutral labels
+ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{abs(x):g}%"))
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(False)
 ax.set_axisbelow(True)
 
-# Bold extreme question labels for storytelling emphasis
-for i, label in enumerate(ax.get_yticklabels()):
-    if i == 0 or i == len(q_order) - 1:
-        label.set_fontweight("bold")
+# Bold extreme question labels
+for i in (0, len(questions) - 1):
+    ax.get_yticklabels()[i].set_fontweight("bold")
 
 sns.despine(ax=ax)
 
-legend_handles = [
-    Patch(facecolor=colors[k], edgecolor=PAGE_BG, linewidth=0.5, label=cat_name)
-    for k, cat_name in zip(category_keys, category_names, strict=True)
-]
 ax.legend(
-    handles=legend_handles,
+    handles=[Patch(facecolor=colors[level], edgecolor=PAGE_BG, linewidth=0.5, label=level) for level in LEVELS],
     loc="upper center",
     bbox_to_anchor=(0.5, -0.15),
-    ncol=5,
+    ncol=len(LEVELS),
     fontsize=8,
     frameon=False,
     labelcolor=INK,
