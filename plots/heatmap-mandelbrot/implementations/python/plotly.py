@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-30
@@ -20,7 +20,14 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 INSIDE_COLOR = "#0D0D0A"  # near-black for points inside the Mandelbrot set
 
-# Data: Mandelbrot set on the complex plane
+# Imprint sequential ramp (fields stops), low -> high
+SEQ_FIELDS = (
+    [[0.0, "#66E2B2"], [0.369, "#009E73"], [0.803, "#024582"], [1.0, "#351E45"]]
+    if THEME == "light"
+    else [[0.0, "#404C02"], [0.487, "#009E73"], [1.0, "#CDD9FF"]]
+)
+
+# Data: Mandelbrot set on the complex plane, generated from the parameters below
 # Equal x/y extents (3.5 × 3.5 units) for square canvas
 x_min, x_max = -2.5, 1.0  # real axis — standard full view
 y_min, y_max = -1.75, 1.75  # imaginary axis — expanded to match x extent
@@ -57,10 +64,10 @@ linear_norm = (smooth - s_min) / (s_max - s_min)
 gamma_norm = np.power(np.maximum(linear_norm, 0.0), 0.3)
 z_data = np.where(escaped, gamma_norm * 0.98 + 0.02, 0.0)
 
-# Colorscale: inside set = near-black; escaped = Imprint sequential (green → blue)
-colorscale = [[0.000, INSIDE_COLOR], [0.019, INSIDE_COLOR], [0.020, "#009E73"], [1.000, "#4467A3"]]
-
 # Plot
+# Colorscale: inside set = near-black; escaped = Imprint sequential ramp squeezed into [0.02, 1]
+colorscale = [[0.0, INSIDE_COLOR], [0.019, INSIDE_COLOR]] + [[0.02 + 0.98 * p, c] for p, c in SEQ_FIELDS]
+
 title = "heatmap-mandelbrot · python · plotly · anyplot.ai"
 title_fontsize = round(16 * 67 / len(title)) if len(title) > 67 else 16
 
@@ -77,8 +84,8 @@ fig = go.Figure(
         colorbar=dict(
             thickness=12,
             len=0.85,
-            title=dict(text="Escape count", side="right", font=dict(size=10, color=INK_SOFT)),
-            tickfont=dict(size=9, color=INK_SOFT),
+            title=dict(text="Escape count", side="right", font=dict(size=12, color=INK_SOFT)),
+            tickfont=dict(size=10, color=INK_SOFT),
             bgcolor=PAGE_BG,
             outlinecolor=INK_SOFT,
             outlinewidth=1,
@@ -120,10 +127,10 @@ fig.update_layout(
             arrowsize=1,
             arrowwidth=1.5,
             arrowcolor=INK_MUTED,
-            font=dict(size=10, color=INK_MUTED),
-            ax=55,
-            ay=-45,
-            xanchor="left",
+            font=dict(size=12, color=INK_MUTED),
+            ax=-45,
+            ay=-75,
+            xanchor="right",
         ),
         dict(
             x=-0.15,
@@ -134,8 +141,8 @@ fig.update_layout(
             arrowsize=1,
             arrowwidth=1.5,
             arrowcolor=INK_MUTED,
-            font=dict(size=10, color=INK_MUTED),
-            ax=60,
+            font=dict(size=12, color=INK_MUTED),
+            ax=35,
             ay=-40,
             xanchor="left",
         ),
