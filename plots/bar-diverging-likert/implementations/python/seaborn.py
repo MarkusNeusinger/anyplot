@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-28
@@ -111,6 +111,8 @@ bar_kw = {
     "width": 0.65,
     "edgecolor": PAGE_BG,
     "linewidth": 0.5,
+    "saturation": 1,
+    "zorder": 2,
 }
 
 # Overlay technique: outermost layer first, progressively narrower layers on top, per side
@@ -162,7 +164,7 @@ ax.set_xlabel("Share of responses (%)", fontsize=10, color=INK, labelpad=8)
 ax.set_ylabel("")
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
-ax.axvline(0, color=INK, linewidth=0.8, zorder=0.9)  # behind the bars so it never strikes through the neutral labels
+ax.axvline(0, color=INK, linewidth=0.8, zorder=1.5)  # behind the bars so it never strikes through the neutral labels
 ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{abs(x):g}%"))
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(False)
