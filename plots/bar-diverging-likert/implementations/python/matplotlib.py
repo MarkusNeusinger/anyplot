@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 87/100 | Updated: 2026-11-28
+Quality: 88/100 | Updated: 2026-11-28
 """
 
 import os
@@ -19,9 +19,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-
-# Imprint palette: all eight positions in canonical order
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # imprint_div (marks): Imprint red -> theme grey midpoint -> Imprint blue; ordered Likert levels take its steps
 DIV_MARKS = [(0.0, "#AE3030"), (0.5, "#6B6A63" if THEME == "light" else "#686762"), (1.0, "#4467A3")]
