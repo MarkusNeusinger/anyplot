@@ -1,7 +1,7 @@
 """ anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 79/100 | Updated: 2026-11-27
+Quality: 89/100 | Updated: 2026-11-28
 """
 
 import os
@@ -10,6 +10,7 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    arrow,
     element_blank,
     element_line,
     element_rect,
@@ -96,26 +97,11 @@ arrow_df["size"] = (
     arrow_df["series_idx"].map(in_visible.groupby(arrow_df["series_idx"]).any()).map({True: 2.2, False: 1.4})
 )
 
-# V-shape arrowheads at the lower end of each arrow (emission direction)
-head_len, head_width = 0.10, 0.014
-head_df = pd.DataFrame(
-    {
-        "x_left": arrow_df["x"] - head_width,
-        "x_right": arrow_df["x"] + head_width,
-        "x_tip": arrow_df["x"],
-        "y_base": arrow_df["y_to"] + head_len,
-        "y_tip": arrow_df["y_to"],
-        "color": arrow_df["color"],
-        "size": arrow_df["size"],
-    }
-)
-
-# Wavelength annotation beside the last (rightmost) transition of each series
+# Wavelength annotation beside the last (rightmost) transition of each series,
+# halfway between its end level and the level just above it, clear of the other arrows
 alpha_arrows = arrow_df[arrow_df["is_last"]].copy()
-first_series = alpha_arrows["series_idx"] == alpha_arrows["series_idx"].min()
-# The first series (longest arrows) is labelled beside its arrow; the others sit just below their arrow tips
-alpha_arrows["y_mid"] = alpha_arrows["y_to"].where(first_series, alpha_arrows["y_to"] - 0.13) + 0.3 * first_series
-alpha_arrows["x_label"] = alpha_arrows["x"] + 0.02 - 0.05 * (~first_series)
+alpha_arrows["y_mid"] = (alpha_arrows["y_to"] + alpha_arrows["series_idx"].map(lambda s: df.loc[s + 1, "y"])) / 2
+alpha_arrows["x_label"] = alpha_arrows["x"] + 0.015
 
 # Manual legend in the sparse upper right, one row per series
 legend_df = arrow_df.drop_duplicates("series_idx")[["series", "color"]].reset_index(drop=True)
@@ -135,7 +121,7 @@ y_limits = [ticks["y"].min() - 0.05 * y_span, ion_y + 0.1 * y_span + 0.02 * y_sp
 # Theme — fully adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     axis_text_x=element_blank(),
     axis_ticks_x=element_blank(),
     axis_title_x=element_blank(),
@@ -148,7 +134,8 @@ anyplot_theme = theme(
     plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
     panel_grid_major_x=element_blank(),
     panel_grid_minor_x=element_blank(),
-    panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major_y=element_blank(),
+    panel_border=element_blank(),
     panel_grid_minor_y=element_blank(),
     legend_position="none",
 )
@@ -175,8 +162,6 @@ plot = (
     + geom_text(
         data=df, mapping=aes(x="x_label_left", y="y", label=LEVEL), hjust=1, size=4.2, color=INK, fontface="bold"
     )
-    # Energy value labels (right of each level line)
-    + geom_text(data=df, mapping=aes(x="x_label_right", y="y", label="energy_label"), hjust=0, size=3.6, color=INK_SOFT)
     # Ionization limit dashed line and label
     + geom_segment(
         data=ion_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), size=1.2, color=INK_SOFT, linetype="dashed"
@@ -184,24 +169,14 @@ plot = (
     + geom_text(data=ion_label_df, mapping=aes(x="x", y="y", label="label"), hjust=0, size=4, color=INK_MUTED)
 )
 
-# Transition arrows and arrowheads, one layer set per line width
+# Transition arrows (native open arrowheads), one layer per line width
 for width in sorted(arrow_df["size"].unique()):
-    s_arrows = arrow_df[arrow_df["size"] == width]
-    s_heads = head_df[head_df["size"] == width]
-    plot = (
-        plot
-        + geom_segment(
-            data=s_arrows,
-            mapping=aes(x="x", xend="x", y="y_from", yend="y_to", color="color"),
-            size=width,
-            tooltips=layer_tooltips().line("@series series").line("@transition").line("λ = @wavelength"),
-        )
-        + geom_segment(
-            data=s_heads, mapping=aes(x="x_left", xend="x_tip", y="y_base", yend="y_tip", color="color"), size=width
-        )
-        + geom_segment(
-            data=s_heads, mapping=aes(x="x_right", xend="x_tip", y="y_base", yend="y_tip", color="color"), size=width
-        )
+    plot = plot + geom_segment(
+        data=arrow_df[arrow_df["size"] == width],
+        mapping=aes(x="x", xend="x", y="y_from", yend="y_to", color="color"),
+        size=width,
+        arrow=arrow(angle=28, length=9, type="open"),
+        tooltips=layer_tooltips().line("@series series").line("@transition").line("λ = @wavelength"),
     )
 
 plot = (
