@@ -1,7 +1,7 @@
 """anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-06-02
+Quality: pending | Updated: 2026-06-02
 """
 
 import os
