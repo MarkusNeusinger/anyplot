@@ -2,46 +2,57 @@ library: plotnine
 language: python
 specification_id: histogram-epidemic
 created: '2026-03-05T18:40:08Z'
-updated: '2026-06-02T03:49:41Z'
+updated: '2026-11-28T02:16:31Z'
 generated_by: claude-sonnet
-workflow_run: 26796389147
+workflow_run: 46096613652
 issue: 4426
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Excellent spec compliance: all required features (stacked classification, intervention
-    lines, cumulative overlay, annotated peaks) implemented correctly'
-  - 'Full data quality: realistic two-wave epidemic model with factually correct proportions
-    and a genuinely informative public health scenario'
-  - 'Perfect Imprint palette compliance: positions 1-3 for case types, position 4
-    for cumulative line, theme-adaptive chrome in both renders'
-  - Strong data storytelling through peak annotations and intervention labels — viewer
-    immediately grasps the epidemiological narrative
-  - Clean KISS code structure with proper reproducibility seed and no unused imports
+  - 'Daily stacked epi curve with width=1.0 geom_col: adjacent bars over 90 equal
+    daily bins, stacked Confirmed (bottom, #009E73) / Probable (#C475FD) / Suspect
+    (#4467A3) in the same order in every bar'
+  - Intervention lines drawn idiomatically from the data via geom_vline(data=events,
+    aes(xintercept=...)) and labelled from the same rows with geom_text, so a user's
+    own event table drives both
+  - 'Clear typographic hierarchy for the annotations: muted italic intervention labels,
+    bold ink peak labels, and the cumulative total set in the line''s own ochre so
+    it reads as that line''s label'
+  - Frameless legend on the elevated surface with legend_key matched to it, y-only
+    subtle grid and an L-shaped axis frame; chrome fully theme-adaptive and readable
+    in both renders
+  - Realistic two-wave outbreak (peaks of 70 and 43 cases/day, 2,217 total) with stack
+    order and fill limits taken from the data rather than typed
   weaknesses:
-  - DE-01 and DE-02 have room to grow toward publication-grade polish — consider a
-    shaded background band for the inter-wave period or more refined legend positioning
-  - LM-02 could leverage more plotnine-distinctive features such as stat layers or
-    explicit coord/scale combinations to score above 3/5
-  - Annotation density in the Mar 01-10 zone is moderately tight; increase nudge_x
-    on intervention labels to improve mobile legibility at 400px width
+  - 'VQ-01 (both): the intervention labels (''Lockdown'', ''Vaccination campaign'',
+    muted italic) and the peak and cumulative annotations are set at 6 pt, below the
+    8 pt tick-label reference, and the muted italic intervention labels read small
+    beside the 8 pt ticks → 8 pt (+2 pt). Likely cause: geom_text/annotate size=6.'
+  - 'SC-02 (both): the cumulative case line (C5) is rescaled onto the daily case-count
+    axis, so the 2,217-case total is drawn at the height of 70 cases/day and has no
+    labeled axis of its own; only the end label names its value → give the cumulative
+    line a scale of its own a reader can read (labeled round cumulative totals along
+    the line) or leave the optional line out. Likely cause: cumulative_scaled = cumulative
+    / max_cumulative * max_daily, since plotnine has no secondary axis.'
+  - 'Suggestion: the legend sits a little far above the panel; tightening legend_box_spacing
+    would bring it closer to the bars it explains.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "histogram-epidemic · python · plotnine · anyplot.ai" in bold dark INK (#1A1A17), clearly readable. Axis labels "Date of Symptom Onset" and "Number of New Cases (per day)" in dark INK at 10pt, readable. Tick labels in INK_SOFT (#4A4A44) at 8pt, rotated 45 degrees for dates, readable. Legend text in INK_SOFT, legend title in INK — all readable.
-      Data: Confirmed bars in #009E73 (green, Imprint position 1) stacked at bottom, Probable in #C475FD (purple, position 2), Suspect in #4467A3 (blue, position 3). Cumulative line in #BD8233 (ochre, position 4). Two dashed vertical lines in INK_SOFT for interventions. Wave peak annotations in bold INK text. All data elements clearly visible.
+      Background: Warm off-white #FAF8F1, not pure white.
+      Chrome: Bold dark title "histogram-epidemic · python · plotnine · anyplot.ai" centred at the top (~55 % of width). Frameless legend "Case Classification: Confirmed, Probable, Suspect" on the elevated off-white surface below the title. Axis titles "Date of Symptom Onset" and "Number of New Cases (per day)" in dark ink; tick labels in INK_SOFT (dates every two weeks Jan 15 to Apr 08, rotated 45°; counts 0-80). Subtle y-only grid, L-shaped axis lines. All readable.
+      Data: 90 adjacent daily stacked bars, Confirmed #009E73 at the bottom, Probable #C475FD, Suspect #4467A3 on top; two waves peaking at 70 and 43 cases/day. Ochre #BD8233 cumulative line rising monotonically to the right end with an ochre bold italic label "Cumulative: 2,217 cases →". Two dashed INK_SOFT vertical lines at Feb 10 and Mar 01 with muted italic labels "Lockdown" and "Vaccination campaign" to their right; bold "Wave 1 peak 70 cases/day" and "Wave 2 peak 43 cases/day" labels above the peaks. Annotation text at 6 pt is smaller than the 8 pt ticks but legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light #F0EFE8 (INK for dark theme), clearly readable. Axis labels in same light color, readable. Tick labels in #B8B7B0 (INK_SOFT for dark theme), readable. Intervention labels in #A8A79F (INK_MUTED for dark), readable muted gray. Wave peak annotations in #F0EFE8 (INK for dark) — light text on dark background, readable. No dark-on-dark failures observed.
-      Data: All data colors identical to light render — green, purple, blue bars; ochre cumulative line. Imprint palette positions unchanged between themes.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title, axis titles and peak labels in light #F0EFE8; tick labels and legend text in #B8B7B0; intervention labels in #A8A79F; legend on the #242420 elevated surface. No dark-on-dark text anywhere; dashed event lines light grey and visible against bars and background.
+      Data: Bar colours (green, purple, blue) and the ochre cumulative line identical to the light render; only chrome flips. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,53 +64,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Minor deduction for tight annotation
-          density in Mar 01-10 zone and potential mobile legibility concern at 400px.
+        comment: All sizes explicitly set and readable in both themes; the 6 pt annotations
+          (intervention, peak, cumulative labels) sit 2 pt below the tick reference
+          and the muted italic event labels read small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Wave 2 peak and vaccination
-          labels separated by y-position.
+        comment: No text collides with text, the legend or the bars; labels sit right
+          of the event lines and above the peaks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars width=1.0 perfect for 90 daily bins. Cumulative line
-          size=1.5 visible. All elements clear in both themes.
+        comment: width=1.0 bars suit 90 daily bins; cumulative line size 1.5 clearly
+          visible; legend swatches match the fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-3 span green/purple/blue — distinct hue families.
-          CVD-safe.
+        comment: Green / purple / blue stack differs in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape. Plot fills canvas well. Legend at top, axes
-          balanced, no content cut off.
+        comment: 3200x1800, panel fills the canvas, margins hold title, legend and
+          ticks; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Date of Symptom Onset, Y: Number of New Cases (per day) — descriptive
-          with context.'
+        comment: '''Date of Symptom Onset'', ''Number of New Cases (per day)'' — descriptive
+          with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Confirmed=#009E73 (first Imprint), Probable=#C475FD (second), Suspect=#4467A3
-          (third), cumulative=#BD8233 (fourth). Backgrounds correct. Chrome fully
-          theme-adaptive.
+        comment: 'Imprint positions 1-3 for the stack (first #009E73), position 4
+          #BD8233 for the cumulative line; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -107,27 +117,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Strong design above library defaults: Imprint palette, stacked+line
-          overlay, annotated interventions, wave peak labels, theme-adaptive chrome.
-          Not quite FiveThirtyEight-level but intentional.'
+        comment: 'Typographic hierarchy decided for this chart: muted italic event
+          labels, bold peak labels, cumulative label in the line''s ochre'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Beyond baseline: x grid dropped for a time axis, event labels offset
+          right of their lines at a common height, cumulative line labelled directly
+          at its end instead of a legend entry'
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, explicit axis lines only, y-only major grid
-          at 15% opacity, no minor/x grid, elevated legend background, careful y-axis
-          expansion.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Excellent epidemiological narrative: two-wave pattern, interventions
-          contextually placed, cumulative burden visible, case classification breakdown.
-          Viewer immediately grasps outbreak dynamics.'
+        comment: Peak labels make the two waves the focal points; the cumulative total
+          gives burden context; interventions placed against the curve
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,30 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Epidemic curve as daily stacked bar chart. Correct type with all
-          required subtypes.
+        comment: Epidemic curve as daily stacked histogram-style bars
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Daily bins, stacked classification, intervention lines with labels,
-          date x-axis, cumulative overlay (scaled to primary axis — appropriate plotnine
-          workaround).
+        comment: 'C1-C4 met (daily bins, stacked classification, annotated intervention
+          lines, readable date ticks); C5 missed: the drawn cumulative line is rescaled
+          onto the daily axis without a labeled scale of its own (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: onset_date to x, case_count to y, case_type to fill. Cumulative correctly
-          computed and scaled.
+        comment: Onset date on x, counts on y from zero, fill by classification; all
+          data visible; round ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: histogram-epidemic · python · plotnine · anyplot.ai. Legend:
-          Case Classification with correct labels.'
+        comment: Mandated title; legend 'Case Classification' with readable entries;
+          cumulative line keyed by its direct label
     data_quality:
       score: 15
       max: 15
@@ -168,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two distinct wave shapes, three case classifications, intervention
-          effects visible, cumulative burden tracked.
+        comment: Two waves, three classifications, two interventions, a tail and cumulative
+          burden
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world epidemiological scenario with lockdown and vaccination
-          campaign. Neutral public health context.
+        comment: Neutral public-health outbreak with lockdown and vaccination campaign
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak wave 1 ~70/day, wave 2 ~43/day, cumulative 2217 cases — realistic
-          for localized outbreak. Wave 2 smaller post-intervention is factually correct.
+        comment: 'Checked: peaks read 70 and 43 cases/day off the axis and match the
+          labels; cumulative never falls and ends at the 2,217 label; 90 daily bins
+          within the 30-365 range'
     code_quality:
       score: 10
       max: 10
@@ -193,8 +200,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> theme tokens -> data -> plot -> save. No functions
-          or classes.'
+        comment: Imports, tokens, columns, data, plot, save — top to bottom, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,40 +212,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: Every imported plotnine name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic ggplot composition. No fake UI elements. Appropriate
-          complexity.
+        comment: groupby/cumsum for totals, no fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5)
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert plotnine grammar with ggplot + multiple geoms + scales + theme_minimal
-          + theme. Correct aesthetic mapping and element classes.
+        comment: Per-layer data= with aes mappings (geom_vline/geom_text from the
+          events rows, geom_line from the daily totals), axis and legend titles taken
+          from the column names
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: scale_x_date with date_breaks/date_labels is ggplot-specific. Multi-layer
-          grammar composition. Creative cumulative scaling workaround for plotnine
-          dual-axis limitation.
+        comment: scale_x_date(date_breaks='2 weeks', date_labels) and grammar layering
+          of three data frames in one plot
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-46a4077b7e
+  rendered_at: '2026-11-28T02:12:12Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -251,6 +259,6 @@ impl_tags:
   dataprep:
   - cumulative-sum
   - time-series
+  - normalization
   styling:
-  - alpha-blending
-  - grid-styling
+  - publication-ready
