@@ -1,11 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-28
 """
 
 import os
+import re
 
+import cairosvg
 import numpy as np
 import pandas as pd
 import pygal
@@ -71,16 +73,9 @@ n_bins = len(table)
 event_rows = df.drop_duplicates(ONSET_DATE).reset_index(drop=True)[EVENT_LABEL]
 intervention_idx = [i for i, label in enumerate(event_rows) if isinstance(label, str)]
 
-# X-axis labels: intervention dates get a triangle marker + event name
-date_labels = [
-    f"▼ {event_rows[i]}" if i in intervention_idx else d.strftime("%b %d") for i, d in enumerate(table.index)
-]
-
-# Major labels: first and last date plus interventions, without crowding an intervention
-major_idx = sorted(
-    set(intervention_idx) | {i for i in (0, n_bins - 1) if all(abs(i - iv) > 5 for iv in intervention_idx)}
-)
-major_labels = [date_labels[i] for i in major_idx]
+# X-axis labels: one date tick every two weeks places the bars in time; the events are drawn as lines below
+date_labels = [d.strftime("%b %d") for d in table.index]
+major_labels = date_labels[::14]
 
 # Series with rich tooltip dicts for the interactive HTML
 series = {name: [] for name in table.columns}
@@ -129,16 +124,16 @@ chart = pygal.StackedBar(
     legend_box_size=28,
     legend_at_bottom_columns=3,
     margin=60,
-    margin_bottom=180,
+    margin_bottom=110,
     margin_right=80,
     spacing=2,
     rounded_bars=3,
     truncate_legend=-1,
     truncate_label=-1,
-    x_label_rotation=45,
+    x_label_rotation=0,
     show_minor_x_labels=False,
     print_values=False,
-    range=(0, int(day_totals.max() * 1.1)),
+    range=(0, int(day_totals.max() * 1.2)),
     value_formatter=lambda x: f"{int(x):,}" if x else "",
 )
 
@@ -148,6 +143,32 @@ chart.x_labels_major = major_labels
 for name in table.columns:
     chart.add(str(name), series[name])
 
-chart.render_to_png(f"plot-{THEME}.png")
-with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+# Event lines: pygal has no vertical-line annotation, so draw them into the SVG overlay layer, above the bars
+svg = chart.render(is_unicode=True)
+plot_w = float(re.findall(r'<rect x="0" y="0" width="([\d.]+)" height="[\d.]+" class="background"', svg)[1])
+bar_y, bar_h = (
+    float(v)
+    for v in re.search(
+        r'<rect x="[\d.]+" y="([\d.]+)" rx="\d+" ry="\d+" width="[\d.]+" height="([\d.]+)"', svg
+    ).groups()
+)
+plot_h = bar_y + bar_h  # the baseline, where the lowest bar ends
+bar_centers = [float(c) for c in re.findall(r'<desc class="x centered">([\d.]+)</desc>', svg)[:n_bins]]
+overlay = ""
+for i in intervention_idx:
+    x, name = bar_centers[i], event_rows[i]
+    box_w = 21 * len(name) + 24
+    fits_right = x + 8 + box_w < plot_w
+    left = x + 8 if fits_right else x - 8 - box_w  # keep the label inside the plot
+    row = 0 if fits_right else 62  # a label placed left of its line drops a row, clear of the neighbouring label
+    overlay += (
+        f'<path d="M{x:.1f} 0 V{plot_h}" stroke="{INK}" stroke-width="5" stroke-dasharray="18 10" fill="none" />'
+        f'<rect x="{left:.1f}" y="{14 + row}" width="{box_w}" height="56" fill="{PAGE_BG}" fill-opacity="0.9" />'
+        f'<text x="{left + 12:.1f}" y="{54 + row}" fill="{INK}" font-size="38" font-weight="bold">{name}</text>'
+    )
+overlay_tag = re.search(r'<g transform="[^"]*" class="plot overlay">', svg).group(0)
+svg = svg.replace(overlay_tag, overlay_tag + overlay, 1)
+
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(svg)
