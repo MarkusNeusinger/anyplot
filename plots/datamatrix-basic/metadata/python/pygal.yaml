@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:56:19Z'
-updated: '2026-11-28T11:50:56Z'
+updated: '2026-11-28T11:57:32Z'
 generated_by: claude-sonnet
-workflow_run: 46141233348
+workflow_run: 46141875725
 issue: 3811
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 83
 review:
   strengths:
   - 'Complete ECC 200 pipeline at module level: ASCII codewords, ISO pseudo-random
@@ -28,24 +28,19 @@ review:
   - Caption derived from the symbol itself (matrix size and EC codeword count), outside
     the quiet zone
   weaknesses:
-  - 'CQ-01 (code): line 206 `class DataMatrixChart(Graph)` holds the whole drawing
-    (tile, module path, captions) in `_plot()` and `_compute()` → draw at the top
-    level without a class, e.g. render a plain pygal chart for title and background,
-    then append the tile, the module path and the captions to `chart.render_tree()`
-    (or the SVG string) and convert with cairosvg. Likely cause: Graph subclass used
-    as the drawing hook.'
-  - 'Suggestion: the gap between the title and the tile (~370 px) is larger than the
-    space below the captions; moving the tile up would balance the column.'
+  - 'Suggestion: the pygal Line chart with an invisible series only supplies title
+    and background; a lighter carrier (e.g. pygal.Bar with no data and no axes) would
+    read more plainly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; symbol on a cream tile (#FFFDF6) with a thin soft-ink frame
+      Background: warm off-white #FAF8F1 page; symbol on a cream tile (#FFFDF6) with a thin soft-ink frame, tile about 78% of the canvas width, just below the title
       Chrome: title 'datamatrix-basic · python · pygal · anyplot.ai' in dark ink at the top; below the tile 'Encoded: NDC:0069-0069-20' (bold) and 'Matrix: 18 × 18 | ECC 200 | 14 of 32 codewords for error correction' (soft ink) — all readable
-      Data: 18x18 Data Matrix in near-black #1A1A17; solid left finder column and solid bottom row meeting in the lower-left and running through the bottom-right corner; top row alternating with the top-right module white; right column alternating with the bottom-right black; diagonal-placement data region; no seams between modules; 2-module quiet zone
+      Data: 18x18 Data Matrix in near-black #1A1A17; solid left column and bottom row meeting lower-left; top row and right column alternating (top-right white, bottom-right black); data region of square seamless modules; 2-module quiet zone
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page; the same cream tile behind the symbol (permitted by the spec)
-      Chrome: title and captions in light ink (#F0EFE8 / #B8B7B0), clearly readable; no dark-on-dark text; tile frame in light soft ink
+      Chrome: title and captions in light ink (#F0EFE8 / #B8B7B0), clearly readable; no dark-on-dark text
       Data: module pattern identical to the light render; only page and text chrome flip
       Legibility verdict: PASS
   criteria_checklist:
@@ -58,21 +53,21 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (title 66 px, captions 44/36 px); title
-          and captions read clearly in both themes
+        comment: Title 66 px, captions 44/36 px set explicitly; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No collisions: captions sit below the tile, title clear of everything'
+        comment: Captions below the tile, title clear; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Whole-pixel module size, one path and crispEdges: modules merge
-          into solid edges with no seams'
+        comment: 'Whole-pixel module size, one path, crispEdges: modules merge into
+          solid edges without seams'
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -84,8 +79,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Tile fills about two thirds of the 2400x2400 canvas, centred, nothing
-          cut off
+        comment: Tile fills about 78% of the canvas width, sits just below the title
+          with captions beneath; balanced column, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,14 +103,14 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
+        passed: false
         comment: Style-guide baseline with a bold content caption over a soft-ink
-          detail line; nothing further
+          detail line
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
+        passed: false
         comment: Thin soft-ink tile frame and captions centred on the symbol axis,
           a little beyond the baseline
       - id: DE-03
@@ -133,25 +128,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single Data Matrix symbol with a human-readable caption outside the
-          quiet zone; no layers beyond it
+        comment: Single Data Matrix symbol; caption outside the quiet zone, no layers
+          on the code
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: C1 solid left/bottom finder meeting in the lower-left corner; C2
-          clock on top and right in step with the grid (top-right white, bottom-right
-          black); C3 square crisp modules; C4 2-module quiet zone free of text; C5
-          single symbol
+        comment: C1 solid left/bottom finder meeting lower-left; C2 clock on top and
+          right (top-right white, bottom-right black); C3 square crisp modules; C4
+          2-module quiet zone free of text; C5 single symbol
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Checked in code: ASCII codewords, ISO pad codewords, RS with roots
-          alpha^1..alpha^14 over GF(256)/0x12D, and the Annex F utah placement with
-          all four corner cases'
+        comment: 'Module positions follow ECC 200 symbology: ASCII codewords, ISO
+          padding, RS over GF(256)/0x12D, Annex F placement with corner cases'
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -168,58 +161,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows finder, clock, data region and quiet zone of one symbol
+        comment: Finder, clock, data region and quiet zone all present in an 18x18
+          symbol
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NDC drug-package code — neutral pharmaceutical serialization use
-          case named in the spec
+        comment: Pharmaceutical NDC serial, a real application listed in the spec;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 16 ASCII codewords fit the 18x18 symbol (18 data + 14 EC
-          = 32 codewords), render is 18x18 modules, caption states 14 of 32; quiet
-          zone 2 ≥ 1'
+        comment: 16 ASCII codewords -> 18x18 symbol (18 data + 14 EC codewords), the
+          correct smallest ECC 200 size; caption values match the code
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: The DataMatrixChart Graph subclass (line 206) holds the whole drawing
-          in _plot() (defect line)
+        passed: true
+        comment: Top to bottom; only the short place() helper above its use
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, fixed content
+        comment: Deterministic encoding
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path guard is the self-shadowing workaround
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No barcode package is installed, so the written-out RS encoder and
-          placement are allowed; dummy series required for _plot
+        comment: Encoder written out because no Data Matrix package is installed;
+          no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 4
       max: 10
@@ -228,25 +220,28 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Style object, render_to_png and render(); the Graph subclass earns
-          no credit
+        passed: false
+        comment: pygal Style tokens and a chart rendered for title/background; the
+          symbol is appended SVG
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing pygal-distinctive beyond SVG output
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
-  rendered_at: '2026-11-28T11:46:57Z'
+  rendered_at: '2026-11-28T11:54:20Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
-  - annotations
   - html-export
+  - layer-composition
+  - annotations
   patterns:
+  - data-generation
   - matrix-construction
   dataprep: []
   styling:

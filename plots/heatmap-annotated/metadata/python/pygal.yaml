@@ -12,40 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 81
 review:
   strengths:
-  - Correct imprint_div fields ramp (red / page-colored midpoint / blue) centered
-    on zero over the full -1..1 correlation domain, via the library prompt's ramp_color
-    helper
-  - 'Per-cell text switches between #1A1A17 and #FAF8F1 by the fill''s brightness,
-    so every value stays legible on pale and saturated cells in both themes'
+  - Text color switches with each cell's luminance (dark on pale cells, light on deep
+    ones), so every value stays legible at both ends of the ramp in both themes
+  - imprint_div fields ramp centered on 0 with the theme's page color as midpoint,
+    so near-zero correlations read as page and the sign stands out
   - Rounded tiles with page-colored gaps and no axis chrome give a clean, tiled matrix
-  - Column constants and a df-only Data block keep the plot adaptable to a user's
-    own square table (passes the adaptability check)
-  - Drawing through pygal's svg.node API keeps the output native SVG in the HTML view
+  - 'Native SVG output: the HTML file carries the same vector chart as the PNG'
   weaknesses:
   - 'CQ-01 (code): line 70 `class AnnotatedHeatmap(Graph)` holds the whole drawing
-    — cells, labels and colorbar in `_plot` — so the file cannot be read top to bottom
-    and the agent chat''s validator refuses it → no class: draw the cells, labels
-    and colorbar at the top level (for example build the SVG elements at the top level
-    and add them to the rendered chart''s SVG tree). Likely cause: the Graph subclass
-    pattern used to reach pygal''s `_plot` hook.'
-  - 'Suggestion: tighten the ~150 px gap between the title and the top row so the
-    grid gains height.'
-  - 'Suggestion: round colorbar ticks (0.00, 0.50, 1.00) would read more easily than
-    the min/mid/max values -0.18 / 0.41 / 1.00.'
+    (cells, labels and colorbar in `_plot`), so the file cannot be read top to bottom
+    and the agent chat''s validator refuses it → no class: build the cells, labels
+    and colorbar at the top level and splice them into the rendered chart''s SVG.
+    Likely cause: the Graph subclass used to reach pygal''s `_plot` hook.'
+  - 'SC-03 (both): the colorbar is labelled only at the data''s min, midpoint and
+    max (-0.18, 0.41, 1.00), not at round values, so a value cannot be read off a
+    color and the diverging midpoint 0 carries no tick → round ticks across the bar
+    (for example -0.25, 0.00, 0.25, 0.50, 0.75, 1.00, about +3 ticks). Likely cause:
+    the colorbar tick loop over (max_val, (min_val + max_val) / 2, min_val) at lines
+    185-193.'
+  - 'Suggestion: tighten the gap between the title and the top row so the grid gains
+    height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, correct.
-      Chrome: title 'heatmap-annotated · python · pygal · anyplot.ai' in dark ink at the top; bold dark row labels (Revenue … Retention) on the left and the same labels rotated 45° below the grid; colorbar on the right titled 'Correlation' with ticks 1.00 / 0.41 / -0.18 in dark ink. All readable.
-      Data: 6x6 symmetric correlation matrix as rounded tiles with page-colored gaps; diagonal 1.00 in Imprint blue #4467A3, positives in lighter blues, the -0.18 and -0.12 cells pale red near the page-colored midpoint. Values with 2 decimals, white on saturated blue cells and near-black on pale cells. No categorical series (continuous imprint_div fields ramp).
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: title 'heatmap-annotated · python · pygal · anyplot.ai' in dark ink at the top; bold dark row labels on the left, bold column labels rotated 45 degrees below the grid; colorbar on the right titled 'Correlation' with ticks 1.00 / 0.41 / -0.18. All readable.
+      Data: 6x6 correlation matrix as rounded tiles with page-colored gaps, the grid starting about 150 px below the title; imprint_div fields ramp, deep blue #4467A3 on the diagonal, pale blue for weak positives, pale red-tinted page tone for the negatives -0.18 and -0.12. Values printed bold with 2 decimals: light text on deep blue cells, dark text on pale cells. No categorical series.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, correct.
-      Chrome: title, row/column labels, colorbar title and ticks in light cream ink; no dark-on-dark text.
-      Data: same matrix with the dark fields ramp: midpoint is the dark page, so weak positives are dark slate-blue and the negatives dark maroon; diagonal bright blue. All values in light text, readable on every cell. Ramp endpoints identical to light; only the midpoint (page color) flips, as the fields ramp requires.
+      Background: warm near-black #1A1A17.
+      Chrome: title, row/column labels, colorbar title and ticks in light ink #F0EFE8; no dark-on-dark text.
+      Data: same layout; ramp with the dark page as midpoint, so weak correlations recede into dark slate and negatives into dark maroon, the diagonal stays #4467A3. All values in light text and legible on every cell.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -57,50 +57,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (labels/values up to 52 px, colorbar ticks
-          40 px, title 72); every label and value readable in both themes
+        comment: All sizes set (title 72, labels and values 52, colorbar ticks 40);
+          every label and value readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with cells; rotated column labels
-          clear each other
+        comment: No text collides; the 45-degree column labels clear each other and
+          the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 36 cells clearly drawn with thin page-colored gaps; colorbar visible
-          with an ink border in both themes
+        comment: 36 cells with thin page-colored gaps; colorbar with ink outline visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue diverging ramp is CVD-safe, and every value is printed,
-          so color is never the sole signal
+        comment: Red/blue diverging ramp is CVD-safe and every value is printed, so
+          color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square grid with colorbar fills the 2400x2400 canvas well; nothing
-          clipped
+        comment: Grid, row/column labels and colorbar fill the 2400x2400 canvas with
+          balanced margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Variable names as row/column labels and a 'Correlation' colorbar
-          title; correlations are unitless
+        comment: Readable variable names at rows and columns; colorbar titled 'Correlation'
+          (unitless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div fields ramp (#AE3030 / page midpoint / #4467A3) with
-          the theme''s page color as midpoint; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'imprint_div fields ramp (#AE3030 / page-color midpoint / #4467A3)
+          per theme; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -110,25 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: rounded cell corners, page-colored cell gaps that
-          make the grid read as tiles, bold label/value hierarchy against a lighter
-          colorbar tick weight'
+        comment: 'Beyond baseline: rounded cell corners, page-colored gaps that turn
+          the grid into tiles, bold label/value hierarchy against lighter colorbar
+          ticks'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: No axis chrome at all; a consistent cell gap and centered alignment
-          of grid and colorbar; margins could be tighter above the grid
+        comment: No axis chrome at all, a consistent cell gap, colorbar centered on
+          the grid
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed with no focal point chosen beyond what the colormap
-          gives
+        comment: Data displayed; no focal point chosen beyond what the colormap gives
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,22 +141,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values in every cell, contrast-switching text, colorbar, diverging
-          map centered on zero, 2-decimal formatting (all Notes and C1-C4 met)
+        comment: Values in every cell (C2), contrast-switching text (C3), colorbar,
+          diverging map centered on 0 (C4), 2-decimal format
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Rows/columns mapped to their labels; scale centered on zero over
-          the -1..1 domain; colorbar spans the data range
+        comment: Cells at their row/column, scale centered on 0; colorbar ticks only
+          at min/mid/max (-0.18, 0.41, 1.00), not round values (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-annotated · python · pygal · anyplot.ai' matches the
-          format; colorbar titled 'Correlation'
+        comment: Title 'heatmap-annotated · python · pygal · anyplot.ai'; colorbar
+          titled 'Correlation'
     data_quality:
       score: 15
       max: 15
@@ -167,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Strong positives, weak positives and mild negatives exercise both
-          arms of the diverging map
+        comment: Strong and weak positives plus mild negatives exercise both arms
+          of the diverging map
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral business-metrics correlation matrix
+        comment: Plausible, neutral business-metrics correlation matrix with named
+          variables
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: symmetric, diagonal 1.00, all values within -1..1; no Check
-          values in the Notes'
+        comment: 'Checked: matrix symmetric, diagonal 1.00, all values within -1..1;
+          no Check values in the Notes'
     code_quality:
       score: 7
       max: 10
@@ -192,7 +192,7 @@ review:
         max: 3
         passed: false
         comment: line 70 class AnnotatedHeatmap(Graph) holds the whole drawing (cells,
-          labels, colorbar) -> row 0 (defect line)
+          labels, colorbar) in _plot -> row 0 (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,13 +204,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (math, os, pairwise, numpy, pandas, Graph, Style)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses the library prompt's ramp_color helper; no fake UI; complexity
+        comment: ramp_color is the library prompt's helper; no fake UI; complexity
           matches what pygal lacks
       - id: CQ-05
         name: Output & API
@@ -227,19 +227,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Style tokens and pygal's Graph/_compute/_plot extension pattern;
-          default 3
+        comment: Style tokens and pygal's Graph/_compute/_plot extension; default
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Draws directly through pygal's svg.node API into the plot node, keeping
-          the chart native SVG in the HTML output
+        passed: false
+        comment: Draws through pygal's svg.node API into the chart's plot node, so
+          the HTML stays native pygal SVG
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
   rendered_at: '2026-11-27T17:52:14Z'
+  last_kept:
+    pr: 15162
+    code: criterion_below
+    note: '#15162 was kept because it scored below the live version''s re-score on
+      these criteria: LM-02 1 < 2: Cells, labels and colorbar are raw SVG strings
+      spliced into the rendered chart; nothing pygal-specific beyond the mandated
+      Style. Do not score lower than the live version on them.'
 impl_tags:
   dependencies: []
   techniques:
