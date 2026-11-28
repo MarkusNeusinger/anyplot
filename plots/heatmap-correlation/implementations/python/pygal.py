@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: pygal 3.1.3 | Python 3.13.15
-Quality: pending | Updated: 2026-11-28
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-28
 """
 
 import math
