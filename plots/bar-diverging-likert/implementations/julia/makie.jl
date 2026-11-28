@@ -97,9 +97,9 @@ ax = Axis(
     titlecolor         = INK,
     xlabel             = "← Disagree        Response Share (%)        Agree →",
     xlabelcolor        = INK,
-    xlabelsize         = 13,
+    xlabelsize         = 14,
     xticklabelcolor    = INK_SOFT,
-    xticklabelsize     = 11,
+    xticklabelsize     = 12,
     yticklabelcolor    = INK_SOFT,
     yticklabelsize     = 12,
     xtickcolor         = INK_SOFT,
@@ -162,12 +162,19 @@ for i in 1:n_q
                   fontsize = label_fs)
         end
     end
+    # One label for the whole neutral share, set in its right half so the 0 % line stays clear of it
+    text!(ax, n_half[i] / 2, yi;
+          text     = "$(round(Int, n[i]))%",
+          align    = (:center, :center),
+          color    = colorant"#FFFFFF",
+          fontsize = label_fs)
 end
 
 # x-axis padding to avoid tight right/left margins
 max_right = maximum(n_half .+ a .+ sa)
 max_left  = maximum(sd .+ d .+ n_half)
 xlims!(ax, -(max_left + 8), max_right + 8)
+ax.xticks = collect(-20 * floor(Int, (max_left + 8) / 20):20:20 * floor(Int, (max_right + 8) / 20))
 
 # Legend (horizontal, frameless)
 Legend(
