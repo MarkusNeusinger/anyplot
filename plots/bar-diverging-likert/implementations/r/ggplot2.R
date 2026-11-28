@@ -6,7 +6,6 @@
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -102,7 +101,7 @@ p <- ggplot(df_long, aes(x = pct, y = question, fill = response)) +
     aes(label = label_text),
     position = position_stack(vjust = 0.5),
     color    = "#FAF8F1",
-    size     = 2.2,
+    size     = 2.7,
     fontface = "bold"
   ) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.6) +
