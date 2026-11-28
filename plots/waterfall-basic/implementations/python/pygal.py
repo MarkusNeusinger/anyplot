@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-28
 """
 
 import os
+import re
 
 import pandas as pd
 import pygal
@@ -62,38 +63,26 @@ bar_heights = [running_totals[0]] + [abs(val) for val in changes] + [running_tot
 display_values = [running_totals[0]] + changes + [running_totals[-1]]
 
 
-class WaterfallChart(pygal.StackedBar):
-    """StackedBar with dashed connector lines between waterfall steps.
-
-    pygal has no native bar+line combo chart, so the connectors are drawn
-    directly on the SVG plot layer, reusing the exact view/margin math
-    StackedBar._bar() uses internally so the connector endpoints land
-    pixel-exact on the bar edges.
-    """
-
-    def __init__(self, *args, connector_levels=None, connector_color="#000", **kwargs):
-        self._connector_levels = connector_levels or []
-        self._connector_color = connector_color
-        super().__init__(*args, **kwargs)
-
-    def _plot(self):
-        super()._plot()
-        n = self._len
-        width_full = (self.view.x(1) - self.view.x(0)) / n
-        margin = width_full * self._series_margin
-        bar_width = width_full - 2 * margin
-        node = self.svg.node(self.nodes["plot"], class_="waterfall-connectors")
-        for i, level in enumerate(self._connector_levels):
-            if level is None:
-                continue
-            x_right = self.view.x(i / n) + margin + bar_width
-            x_left = self.view.x((i + 1) / n) + margin
-            y = self.view.y(level)
-            self.svg.line(
-                node,
-                [(x_right, y), (x_left, y)],
-                style=(f"stroke:{self._connector_color};stroke-width:3;stroke-dasharray:14,10;fill:none;opacity:0.85"),
-            )
+def add_connectors(root):
+    """Dashed connectors between steps, drawn on the SVG plot layer."""
+    n = chart._len
+    width_full = (chart.view.x(1) - chart.view.x(0)) / n
+    margin = width_full * chart._series_margin
+    node = chart.svg.node(chart.nodes["plot"], class_="waterfall-connectors")
+    for i, level in enumerate(running_totals[:-1]):
+        x_right = chart.view.x(i / n) + margin + width_full - 2 * margin
+        x_left = chart.view.x((i + 1) / n) + margin
+        y = chart.view.y(level)
+        chart.svg.line(
+            node,
+            [(x_right, y), (x_left, y)],
+            style=f"stroke:{INK_MUTED};stroke-width:3;stroke-dasharray:14,10;fill:none;opacity:0.85",
+        )
+    for text in root.iter("text"):
+        if re.fullmatch(r"[+-]?\$\d+K", text.text or ""):  # bar labels: centred over their bar, in INK
+            text.set("style", f"text-anchor:middle;fill:{INK}")
+            text.set("dy", "-12")
+    return root
 
 
 # Theme-adaptive Style — first categorical series is always Imprint position 1
@@ -119,7 +108,7 @@ custom_style = Style(
     opacity_hover="1",
 )
 
-chart = WaterfallChart(
+chart = pygal.StackedBar(
     width=3200,
     height=1800,
     style=custom_style,
@@ -136,20 +125,20 @@ chart = WaterfallChart(
     # "label" key — plain print_values would print the raw stacked-segment height
     # instead (and, via StackedBar's none_to_zero adapter, a stray "0" for every
     # other series' empty slot at that category)
-    print_values_position="center",
+    print_values_position="top",  # labels sit above each bar in INK, clear of the bar fills
     truncate_legend=-1,
     truncate_label=-1,
     x_label_rotation=25,
     margin=60,
-    margin_bottom=380,
+    margin_bottom=150,
+    legend_box_size=40,
     spacing=34,  # extra breathing room so the legend row doesn't crowd the x_title
-    connector_levels=running_totals[:-1],
-    connector_color=INK_MUTED,
 )
 
 # Set x-axis labels (category + running total)
 labels_with_totals = [f"{cat} (${running_totals[i]}K)" for i, cat in enumerate(df[STEP])]
 chart.x_labels = labels_with_totals
+chart.add_xml_filter(add_connectors)
 
 # Build data series: spacer (invisible), then one list per slot (total, increase, decrease)
 label_signs = ["", "+", "-"]
