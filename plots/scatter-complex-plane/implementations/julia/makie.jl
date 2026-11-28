@@ -5,9 +5,7 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
+using DataFrames
 
 # Theme tokens
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
@@ -15,52 +13,60 @@ const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+# Imprint palette
 const IMPRINT_PALETTE = [
-    colorant"#009E73",  # 1 — brand green (first series)
-    colorant"#C475FD",  # 2 — lavender
-    colorant"#4467A3",  # 3 — blue
-    colorant"#BD8233",  # 4 — ochre
-    colorant"#AE3030",  # 5 — matte red
-    colorant"#2ABCCD",  # 6 — cyan
-    colorant"#954477",  # 7 — rose
-    colorant"#99B314",  # 8 — lime
+    colorant"#009E73",
+    colorant"#C475FD",
+    colorant"#4467A3",
+    colorant"#BD8233",
+    colorant"#AE3030",
+    colorant"#2ABCCD",
+    colorant"#954477",
+    colorant"#99B314",
 ]
 
-# Data — 5th roots of unity: e^(2πik/5) for k = 0,...,4
-n_roots = 5
-theta_roots = [2π * k / n_roots for k in 0:(n_roots - 1)]
-re_roots = cos.(theta_roots)
-im_roots = sin.(theta_roots)
-root_labels = ["z₀", "z₁", "z₂", "z₃", "z₄"]
+# Columns
+const NAME     = "Name"                # role: label
+const RE_PART  = "Real part Re(z)"     # role: x
+const IM_PART  = "Imaginary part Im(z)" # role: y
+const KIND     = "Kind of number"      # role: group
 
-# Arbitrary complex numbers outside the unit circle
-re_arb = [1.5, -1.3, 0.6]
-im_arb = [1.1, 0.8, -1.7]
-arb_labels = ["w₁", "w₂", "w₃"]
-
-# Unit circle reference (parametric)
-theta_circle = LinRange(0, 2π, 300)
-
-# Figure — square canvas: size=(1200,1200) × px_per_unit=2 → 2400×2400 px
-fig = Figure(
-    size            = (1200, 1200),
-    fontsize        = 14,
-    backgroundcolor = PAGE_BG,
+# Data: sixth roots of unity, two operands a and b, and their sum and product
+roots = [cis(2π * k / 6) for k in 0:5]
+a = 1.2 + 0.8im
+b = -1.0 + 0.6im
+z = vcat(roots, [a, b, a + b, a * b])
+df = DataFrame(
+    NAME => vcat(["z" * Char(0x2080 + k) for k in 0:5], ["a", "b", "a + b", "a · b"]),
+    RE_PART => real.(z),
+    IM_PART => imag.(z),
+    KIND => vcat(fill("6th roots of unity", 6), fill("Operands", 2), fill("Sum and product", 2)),
 )
+
+# Plot
+kinds   = unique(df[!, KIND])
+group   = [findfirst(==(k), kinds) for k in df[!, KIND]]
+markers = [:circle, :diamond, :rect][group]
+re_vals = df[!, RE_PART]
+im_vals = df[!, IM_PART]
+span    = maximum(abs.(vcat(re_vals, im_vals))) * 1.4
+theta   = range(0, 2π; length = 300)
+
+fig = Figure(size = (1200, 1200), fontsize = 14, backgroundcolor = PAGE_BG)
 
 ax = Axis(
     fig[1, 1];
     title              = "scatter-complex-plane · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "Re(z)",
-    ylabel             = "Im(z)",
-    xlabelsize         = 14,
-    ylabelsize         = 14,
+    xlabel             = RE_PART,
+    ylabel             = IM_PART,
+    xlabelsize         = 16,
+    ylabelsize         = 16,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 12,
-    yticklabelsize     = 12,
+    xticklabelsize     = 14,
+    yticklabelsize     = 14,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -72,122 +78,62 @@ ax = Axis(
     bottomspinecolor   = INK_SOFT,
     xgridcolor         = (INK_SOFT, 0.12),
     ygridcolor         = (INK_SOFT, 0.12),
+    xminorgridvisible  = false,
+    yminorgridvisible  = false,
     aspect             = DataAspect(),
 )
+limits!(ax, -span, span, -span, span)
 
-# Unit circle — dashed reference
-lines!(ax, cos.(theta_circle), sin.(theta_circle);
-    linestyle = :dash,
-    color     = (INK_SOFT, 0.8),
-    linewidth = 1.5,
+# Unit circle, dashed reference
+lines!(ax, cos.(theta), sin.(theta); linestyle = :dash, color = (INK_SOFT, 0.8), linewidth = 2)
+
+# Real and imaginary axes through the origin
+hlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 1)
+vlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 1)
+
+# One arrow per point, from the origin to its head
+arrows2d!(ax, zeros(nrow(df)), zeros(nrow(df)), re_vals, im_vals;
+    color     = IMPRINT_PALETTE[group],
+    shaftwidth = 2.5,
+    tipwidth  = 14,
+    tiplength = 16,
 )
 
-# Real and imaginary axis lines through origin
-hlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 0.8)
-vlines!(ax, [0.0]; color = (INK_SOFT, 0.5), linewidth = 0.8)
-
-# Arrows from origin to 5th roots of unity
-roots_origins = fill(Point2f(0, 0), n_roots)
-roots_dirs    = Point2f.(re_roots, im_roots)
-arrows!(ax, roots_origins, roots_dirs;
-    color     = IMPRINT_PALETTE[1],
-    linewidth = 2.0,
-    arrowsize = 16,
-)
-
-# Arrows from origin to arbitrary complex numbers
-arb_origins = fill(Point2f(0, 0), length(re_arb))
-arb_dirs    = Point2f.(re_arb, im_arb)
-arrows!(ax, arb_origins, arb_dirs;
-    color     = IMPRINT_PALETTE[2],
-    linewidth = 2.0,
-    arrowsize = 16,
-)
-
-# Scatter points — 5th roots of unity (circle markers)
-scatter!(ax, re_roots, im_roots;
-    color       = IMPRINT_PALETTE[1],
-    markersize  = 14,
-    marker      = :circle,
-    strokewidth = 1.5,
-    strokecolor = PAGE_BG,
-    label       = "5th roots of unity",
-)
-
-# Scatter points — arbitrary complex numbers (diamond markers for shape encoding)
-scatter!(ax, re_arb, im_arb;
-    color       = IMPRINT_PALETTE[2],
-    markersize  = 14,
-    marker      = :diamond,
-    strokewidth = 1.5,
-    strokecolor = PAGE_BG,
-    label       = "Arbitrary complex",
-)
-
-# Labels for roots of unity — symbolic name + rectangular form annotation
-label_offset = 0.18
-for (r_val, i_val, lbl) in zip(re_roots, im_roots, root_labels)
-    mag = sqrt(r_val^2 + i_val^2)
-    ox  = r_val / mag * label_offset
-    oy  = i_val / mag * label_offset
-    h   = r_val > 0.1 ? :left : (r_val < -0.1 ? :right : :center)
-    v   = i_val > 0.1 ? :bottom : (i_val < -0.1 ? :top : :center)
-    # Symbolic label
-    text!(ax, [Point2f(r_val + ox, i_val + oy)];
-        text     = [lbl],
-        fontsize = 14,
-        color    = INK,
-        align    = [(h, v)],
-    )
-    # Rectangular form — placed further out along the same radial direction
-    rect_str = i_val >= 0 ?
-        "$(round(r_val, digits=2))+$(round(i_val, digits=2))i" :
-        "$(round(r_val, digits=2))$(round(i_val, digits=2))i"
-    rox = r_val / mag * (label_offset + 0.24)
-    roy = i_val / mag * (label_offset + 0.24)
-    text!(ax, [Point2f(r_val + rox, i_val + roy)];
-        text     = [rect_str],
-        fontsize = 10,
-        color    = INK_SOFT,
-        align    = [(h, v)],
+# Points, one scatter per kind so the legend names them
+for (i, kind) in enumerate(kinds)
+    idx = findall(==(i), group)
+    scatter!(ax, re_vals[idx], im_vals[idx];
+        color       = IMPRINT_PALETTE[i],
+        marker      = markers[idx[1]],
+        markersize  = 16,
+        strokewidth = 1.5,
+        strokecolor = PAGE_BG,
+        label       = kind,
     )
 end
 
-# Labels for arbitrary complex numbers — symbolic name + rectangular form annotation
-for (r_val, i_val, lbl) in zip(re_arb, im_arb, arb_labels)
-    mag = sqrt(r_val^2 + i_val^2)
-    ox  = r_val / mag * 0.2
-    oy  = i_val / mag * 0.2
-    h   = r_val > 0 ? :left : :right
-    v   = i_val > 0 ? :bottom : :top
-    # Symbolic label
-    text!(ax, [Point2f(r_val + ox, i_val + oy)];
-        text     = [lbl],
-        fontsize = 14,
+# Name and rectangular form a+bi, placed outward along each point's direction
+for (name, x, y) in zip(df[!, NAME], re_vals, im_vals)
+    r    = hypot(x, y)
+    sign = y >= 0 ? "+" : "−"
+    form = string(replace(string(round(x; digits = 2)), "-" => "−"), sign, round(abs(y); digits = 2), "i")
+    h    = x > 0.1 ? :left : (x < -0.1 ? :right : :center)
+    v    = y > -0.05 ? :bottom : :top
+    text!(ax, x + 0.1 * x / r, y + 0.1 * y / r;
+        text     = name * "\n" * form,
+        fontsize = 15,
         color    = INK,
-        align    = [(h, v)],
-    )
-    # Rectangular form — placed further out along the same radial direction
-    rect_str = i_val >= 0 ?
-        "$(round(r_val, digits=2))+$(round(i_val, digits=2))i" :
-        "$(round(r_val, digits=2))$(round(i_val, digits=2))i"
-    rox = r_val / mag * (0.2 + 0.24)
-    roy = i_val / mag * (0.2 + 0.24)
-    text!(ax, [Point2f(r_val + rox, i_val + roy)];
-        text     = [rect_str],
-        fontsize = 10,
-        color    = INK_SOFT,
-        align    = [(h, v)],
+        align    = (h, v),
     )
 end
 
-# Legend (lower-left inside axis)
 axislegend(ax;
     position        = :lb,
     backgroundcolor = ELEVATED_BG,
     framecolor      = INK_SOFT,
     labelcolor      = INK,
-    labelsize       = 12,
+    labelsize       = 15,
 )
 
+# Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
