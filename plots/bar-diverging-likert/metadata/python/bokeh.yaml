@@ -2,145 +2,146 @@ library: bokeh
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:07:40Z'
-updated: '2026-06-01T23:22:08Z'
+updated: '2026-11-28T01:13:00Z'
 generated_by: claude-sonnet
-workflow_run: 26786987044
+workflow_run: 46091178113
 issue: 4429
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Semantic diverging Imprint palette — red→ochre→muted→cyan→green maps perfectly
-    to the negative→neutral→positive Likert polarity, with palette-doc justification
-    in the code comments
-  - Sorted by net agreement with +/- percentage annotations on the right margin, delivering
-    immediate insight without needing to read every bar
-  - 'Excellent visual refinement: axis lines removed, tick marks removed, x-only dashed
-    12%-alpha grid, elevated legend box — minimal chrome that keeps focus on the data'
-  - 'Fully theme-adaptive: all chrome tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED, ELEVATED_BG)
-    flow correctly in both light and dark renders with no dark-on-dark failures'
-  - 'Rich Bokeh-native features: per-renderer HoverTool with descriptive tooltips,
-    LabelSet for categorical-axis annotations, Span for the zero-line, Legend click_policy=''hide'',
-    and interactive HTML alongside the static PNG'
+  - Neutral segment split evenly across a shared zero line, computed once in vectorised
+    left/right arrays
+  - Rows sorted by net agreement, with a signed, green/red net-agreement column as
+    a focal read-out
+  - 'Fill-dependent label ink: dark text on the light cyan Agree fill, light text
+    on the darker fills'
+  - Zero line placed in the underlay so it never crosses a label; page-colored segment
+    separators
+  - 'Bokeh-native interactivity: per-renderer HoverTool tooltips and a click-to-hide
+    legend in the HTML'
+  - Theme tokens threaded through title, ticks, grid and legend; both renders theme-correct
   weaknesses:
-  - 'Title is missing the language token — current: ''bar-diverging-likert · bokeh
-    · anyplot.ai''; required format: ''bar-diverging-likert · python · bokeh · anyplot.ai''.
-    Fix both the figure title= and the save() title= arguments.'
-  - Y-axis tick labels set at 28pt instead of the recommended 34pt for bokeh 3200×1800
-    canvas — question labels are readable at full resolution but will be marginally
-    small when the image is scaled to 400px mobile width. Increase yaxis.major_label_text_font_size
-    to '34pt'.
-  - Implementation uses bokeh.io.export_png directly; the library guide explicitly
-    forbids this (snap-shim conflict on dev boxes) and specifies the Selenium screenshot
-    approach instead. Since images were generated successfully in CI this attempt
-    is not penalised heavily, but future repairs should switch to the Selenium pattern
-    from prompts/library/bokeh.md.
+  - 'VQ-01, SC-02 (dark): the light #F0EFE8 percentage labels on the dark-theme neutral
+    fill #A8A79F have low contrast (about 2:1) and read faint → dark ink #1A1A17 on
+    that fill, or the ramp midpoint #686762 as neutral fill. Likely cause: LEVEL_INK
+    fixed to light ink for the neutral level while INK_MUTED flips to a light grey
+    in dark.'
+  - 'VQ-01 (both): in-segment percentage labels at 22pt read small beside the 34pt
+    question labels (reference 34pt for text without its own row) → about 28-30pt
+    (+6 to +8pt). Likely cause: LabelSet text_font_size=''22pt''.'
+  - 'VQ-07 (both): the five ordered Likert levels use categorical palette members
+    (#BD8233 ochre, #2ABCCD cyan) between the red and green poles instead of steps
+    of the imprint_div marks ramp, and the dark neutral is #A8A79F instead of the
+    ramp midpoint #686762 → sample the ordered steps from the red→grey midpoint→green
+    marks ramp per theme. Likely cause: LEVEL_COLORS hard-coded from the categorical
+    palette and INK_MUTED.'
+  - 'Suggestion: tick labels on the disagree side could read as positive shares (60,
+    40, 20) with a custom tick formatter so no negative percentages appear.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
-      Chrome: Title "bar-diverging-likert · bokeh · anyplot.ai" in bold dark ink, clearly readable. X-axis label "← Disagree  Percentage  Agree →" in dark ink, readable. Y-axis question labels in dark-secondary (INK_SOFT) at 28pt — readable but slightly below the 34pt recommendation. X-axis tick labels (-60 to 100) in secondary dark, readable. Legend below chart with elevated #FFFDF6 background and subtle border — all 5 category labels clearly visible.
-      Data: 10 horizontal bars sorted by net agreement (top = most positive). Colors: Strongly Disagree (#AE3030 red), Disagree (#BD8233 ochre), Neutral (INK_MUTED gray), Agree (#2ABCCD cyan), Strongly Agree (#009E73 brand green). Percentage labels inside segments ≥10% in contrasting white or dark ink. Net agreement annotations in green (+) or red (-) on the right margin. Center vertical line at 0.
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title 'bar-diverging-likert · python · bokeh · anyplot.ai' at top; ten question labels in INK_SOFT on the left; x ticks -60…100 and the directional axis title '← Disagree  Percentage of responses  Agree →' in dark ink; horizontal legend on an elevated box below. All readable.
+      Data: ten horizontal bars sorted by net agreement (top +66% 'I understand company goals', bottom -14% 'Meetings are productive'); segments red #AE3030, ochre #BD8233, grey #6B6A63, cyan #2ABCCD, green #009E73, neutral split across a thin zero line drawn under the bars; bold percentage labels inside segments >=10% (dark on cyan, light elsewhere); signed net values in green/red at the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title in light #F0EFE8 text, clearly readable against dark background. X-axis label and tick labels in light secondary (#B8B7B0), readable. Y-axis question labels in light secondary, readable. Legend with elevated #242420 background and subtle border — all labels in light secondary text, clearly visible.
-      Data: Colors are identical to the light render — #AE3030, #BD8233, INK_MUTED, #2ABCCD, #009E73 all unchanged. Inside-bar percentage labels use the same contrasting colors. Net agreement annotations (+green/-red) remain distinct and visible.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected. Brand green #009E73 remains clearly visible on the dark surface.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, question labels, ticks, axis title and legend labels in light ink; no dark-on-dark text.
+      Data: red, ochre, cyan and green identical to the light render; the neutral fill flips to a light grey #A8A79F, on which the light percentage labels read faint (low contrast). Brand green clearly visible.
+      Legibility verdict: PASS (neutral-segment labels weak, see weaknesses)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; title (50pt), x-axis label (38pt),
-          x-tick (30pt), y-tick (28pt), inside labels (18pt), legend (28pt). Y-axis
-          tick labels at 28pt are below the recommended 34pt — readable at full res
-          but borderline at 400px mobile width.
+        passed: false
+        comment: 'All sizes set explicitly (title 50pt, axis title 38pt, ticks 32/34pt,
+          legend 30pt). In-segment percentage labels at 22pt read small beside the
+          34pt question labels (defect line), and the light #F0EFE8 labels on the
+          dark-theme neutral fill #A8A79F are faint (defect line).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap detected — inside-bar labels, net-agreement annotations,
-          and question labels are all well-separated.
+        comment: No text collides; the zero line sits in the underlay, so neutral-segment
+          labels are not crossed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 0.72, alpha 0.92 — all five categories clearly visible.
-          Inside labels appropriately sized at 18pt for segment widths.
+        comment: Bars at height 0.72 with page-colored 2px separators; legend swatches
+          match the fills in both themes; narrow segments under 10% stay unlabeled
+          (permitted).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging warm-to-cool palette (red→ochre→gray→cyan→green) provides
-          CVD-safe discrimination. Not relying on red-green alone — ochre, gray, and
-          cyan provide redundant hue separation.
+        comment: Red, ochre, grey, cyan and green differ in lightness as well as hue;
+          no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 canvas gate passed. Generous min_border_left=720 accommodates
-          long question labels. Plot fills ~65% of canvas with balanced margins. Nothing
-          clipped or overflowing.
+        comment: Plot fills the canvas; long question labels sit in a 800px left margin
+          without waste; legend directly below; nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label '← Disagree  Percentage  Agree →' is descriptive with
-          directional context. Y-axis categorical labels (question text) are self-explanatory.
+        comment: Directional axis title '← Disagree  Percentage of responses  Agree
+          →' carries the unit; question text is self-explanatory.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Legitimate semantic exception: #AE3030 (SD), #BD8233 (D), INK_MUTED
-          (N), #2ABCCD (A), #009E73 (SA) — all Imprint palette members. Brand green
-          anchors ''Strongly Agree'' (most positive). Backgrounds #FAF8F1/#1A1A17
-          correct. Chrome fully theme-adaptive.'
+        passed: false
+        comment: 'Backgrounds and chrome are theme-correct, poles red (disagree) and
+          green (agree) on the right sides, but the five Likert levels use categorical
+          palette members (ochre, cyan) instead of steps of the imprint_div marks
+          ramp, and dark neutral is #A8A79F rather than the ramp midpoint #686762
+          (defect line).'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: intentional semantic diverging palette, net-agreement
-          annotations, center reference line, professional typography hierarchy. Clearly
-          above configured-default level.'
+        passed: false
+        comment: 'Beyond the baseline: a deliberate type hierarchy (bold title, bold
+          in-bar figures, colored bold net column) and fill-dependent label ink.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: 'Axis lines removed, tick marks removed, x-only dashed grid at 12%
-          alpha, elevated legend with subtle border, outline removed. Nearly perfect
-          — minor note: style guide prefers solid (not dashed) grid.'
+        passed: false
+        comment: 'Beyond the baseline: page-colored segment separators, the zero line
+          pushed to the underlay, x-only grid, axis lines and ticks removed, legend
+          framed on the elevated surface.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: 'Excellent: sorted by net agreement, +/- percentage annotations give
-          immediate read on each question, semantic red/green encoding reinforces
-          polarity. Viewer immediately identifies ''Meetings are productive'' as the
-          only negative-net question.'
+        passed: false
+        comment: The signed, green/red net-agreement column on the right gives the
+          ranking a focal read-out the Notes do not ask for; 'Meetings are productive'
+          stands out as the only negative row.
     spec_compliance:
       score: 14
       max: 15
@@ -150,32 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging stacked bar chart for Likert scale —
-          bars diverge from centered neutral midpoint.
+        comment: Horizontal diverging stacked bar chart centered on neutral.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features present: neutral centered at midpoint, diverging
-          color scheme, sorted by net agreement, percentage labels inside segments,
-          horizontal orientation.'
+        passed: false
+        comment: Centered neutral, diverging scheme, net-agreement sort, horizontal
+          bars and in-segment labels are present; C5 is weakened in the dark render
+          where neutral labels are faint on their fill (defect line).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on Y-axis, percentage on X-axis, all 5 Likert categories
-          shown, all 10 questions visible.
+        comment: Segments sit at their exact cumulative positions around zero; axis
+          covers -57 to 83 with room for the net column; round ticks every 20.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing ''python'' language token. Current: ''bar-diverging-likert
-          · bokeh · anyplot.ai''. Required: ''bar-diverging-likert · python · bokeh
-          · anyplot.ai''. Legend labels (Strongly Disagree, Disagree, Neutral, Agree,
-          Strongly Agree) are correct.'
+        passed: true
+        comment: Title 'bar-diverging-likert · python · bokeh · anyplot.ai' correct;
+          legend names the five levels in scale order.
     data_quality:
       score: 15
       max: 15
@@ -185,23 +183,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full Likert range represented. One negative-net question (Meetings
-          are productive, -14%), one borderline (I have growth opportunities, +2%),
-          range up to +66%. Strong variation across questions.
+        comment: Ten questions from +66% to -14% net, one negative and one near-zero
+          row, varying neutral shares.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey with 10 realistic, neutral business questions.
-          Not controversial. Plausible real-world scenario.
+        comment: Employee engagement survey with realistic, neutral items.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages sum to 100% per question. Net agreement range -14% to
-          +66% is plausible for an engaged-but-imperfect workplace. Factually coherent.
+        comment: 'Checked: every row sums to 100%; net values in the right column
+          match agree+strongly agree minus disagree+strongly disagree (e.g. Meetings
+          33-47 = -14).'
     code_quality:
       score: 10
       max: 10
@@ -211,69 +208,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: sys.path fix → imports → data → figure → bars loop
-          → labels → net annotations → legend → styling → save. No functions or classes.'
+        comment: Imports → tokens → data → plot loop → labels → legend → style → save,
+          all top level.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded survey data, no random elements.
+        comment: Deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path workaround), numpy, bokeh.io, bokeh.models,
-          bokeh.plotting.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, Pythonic. The bar-building loop, separate positive/negative
-          label sets, and label_text_colors dict are appropriately complex for the
-          task.
+        comment: Segment edges computed once in arrays; one LabelSet with a color
+          column for the net values.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via the Selenium pattern
+          of the library prompt.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Excellent Bokeh patterns throughout: ColumnDataSource, hbar, HoverTool
-          per renderer, LabelSet, Span, Legend with LegendItem construction. Minor:
-          uses export_png against the library guideline which mandates the Selenium
-          screenshot approach (bokeh.md).'
+        passed: false
+        comment: ColumnDataSource per level, hbar with left/right, LabelSet sources,
+          LegendItem built from renderers.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: 'Strong Bokeh-specific usage: per-renderer HoverTool (5 separate
-          tooltip instances), LabelSet on categorical y-axis, Span for reference line,
-          click_policy=''hide'' for legend interactivity, interactive HTML artifact
-          alongside PNG. These features are native to Bokeh''s web-first model.'
+        passed: false
+        comment: Per-renderer HoverTool tooltips, legend click_policy='hide', LabelSet
+          with a data-driven text_color column.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-d1e55bc6e3
+  rendered_at: '2026-11-28T01:08:56Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - annotations
   - html-export
   - custom-legend
   patterns:
-  - columndatasource
   - iteration-over-groups
-  dataprep: []
+  - columndatasource
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
+  - grid-styling
