@@ -1,7 +1,7 @@
 """anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-28
+Quality: pending | Updated: 2026-11-28
 """
 
 import os
