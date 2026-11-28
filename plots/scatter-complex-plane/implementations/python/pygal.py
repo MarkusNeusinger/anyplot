@@ -1,7 +1,7 @@
 """anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-06-02
+Quality: pending | Updated: 2026-06-02
 """
 
 import os
