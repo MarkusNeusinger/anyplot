@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: mohr-circle
 created: '2026-02-27T22:11:27Z'
-updated: '2026-11-28T00:14:09Z'
+updated: '2026-11-28T00:20:04Z'
 generated_by: claude-sonnet
-workflow_run: 46086224115
+workflow_run: 46086876223
 issue: 4432
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,13 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
   - 'Equal data-per-pixel scale on both axes: the circle measures round in both renders
     and fills the square canvas'
   - All six key points computed from the stress state and labeled at their true positions,
-    with labels placed clear of the circle line
+    clear of the circle line
   - 2θp arc spans exactly the computed 26.6° from the σ1 direction to the C–A diameter,
     colored like the principal stresses
   - Imprint positions 1–3 assigned semantically; theme tokens flip all chrome cleanly
@@ -26,87 +26,77 @@ review:
   - alt.selection_point on pointerover with alt.condition and typed tooltips give
     real hover inspection in the HTML
   weaknesses:
-  - 'VQ-01 (dark): the ''2θp = 26.6°'' angle label in #4467A3 bold 11 pt reads faint
-    against the #1A1A17 background (about 3:1 contrast) → keep the arc blue but draw
-    the label in INK, or a lighter label tone in the dark theme. Likely cause: angle_lbl
-    mark_text color=BLUE in both themes.'
-  - 'VQ-02 (both): the ''C (20, 0)'' center label is crossed by the dashed vertical
-    reference line through the center → align it left of or right of the line (align=''left''
-    with a small dx) so the rule does not run through the text. Likely cause: center_lbl
-    mark_text centered at x=center with dy=18 only.'
   - 'Suggestion: the hand-tuned VIEW_ASPECT = 0.947 keeps the circle round only for
-    this layout; deriving the shear domain from the view''s actual width and height
-    would keep it round if titles or tick widths change.'
+    this layout; deriving the shear domain from the view''s actual size would keep
+    it round if titles or tick widths change.'
   - 'Suggestion: a slightly heavier weight or size on the σ₁ / σ₂ labels would put
     the principal stresses first in the label hierarchy.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400×2400.
-      Chrome: bold title 'mohr-circle · python · altair · anyplot.ai' and soft-ink subtitle with the input stresses; axis titles 'Normal Stress σ (MPa)' and 'Shear Stress τ (MPa)' in dark ink; tick labels −60..100 and −60..60 in INK_SOFT; subtle grid; dashed vertical and solid horizontal reference lines through C; rounded legend card bottom-right (Stress State, Principal, Max Shear) — all readable.
-      Data: green #009E73 circle filling most of the canvas, green A (80, 30) and B (-40, -30) joined by a faint dashed diameter through grey center C (20, 0); blue σ₁ = 87.1 and σ₂ = -47.1 markers on the axis with labels inside the circle below the axis; lavender ±τmax markers top and bottom with labels to their right; blue 2θp arc and label '2θp = 26.6°'. The C label is crossed by the dashed vertical rule.
+      Chrome: bold title 'mohr-circle · python · altair · anyplot.ai' with soft-ink subtitle 'σx=80, σy=-40, τxy=30 MPa'; axis titles 'Normal Stress σ (MPa)' / 'Shear Stress τ (MPa)' in dark ink; ticks −60..100 and −60..60; subtle grid; solid horizontal and dashed vertical reference lines through C; rounded legend card bottom-right (Stress State, Principal, Max Shear). All readable.
+      Data: #009E73 circle, green A (80, 30) and B (-40, -30) joined by a faint dashed diameter through grey center C (20, 0), whose label sits right of the dashed rule; blue σ₁ = 87.1 / σ₂ = -47.1 markers on the axis; lavender ±τmax markers top and bottom; blue 2θp arc with a dark-ink '2θp = 26.6°' label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and labels in light ink, tick labels in light soft ink, grid subtle, legend card on #242420 with light labels — no dark-on-dark text.
-      Data: categorical colors identical to the light render (green circle and A/B, blue principal points and arc, lavender ±τmax). The blue '2θp = 26.6°' label is the faintest text on the dark surface but still legible.
-      Legibility verdict: PASS (one faint label noted)
+      Chrome: title, axis titles and point labels in light ink, ticks and subtitle in light soft ink, subtle grid, legend card on #242420 with light labels. No dark-on-dark text; the 2θp label is now light ink and clearly readable.
+      Data: categorical colors identical to the light render (green circle and A/B, blue principal points and arc, lavender ±τmax).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: 'The ''2θp = 26.6°'' label in #4467A3 reads faint on the #1A1A17
-          dark background (defect line); all other text explicitly sized and readable
-          in both themes'
+        passed: true
+        comment: All text explicitly sized and readable in both themes; the 2θp label
+          is in INK and reads clearly on the dark surface
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Point labels clear the circle and rules; only 'C (20, 0)' is crossed
-          by the dashed vertical reference line (defect line)
+        passed: true
+        comment: No text collisions; 'C (20, 0)' now sits right of the dashed vertical
+          rule
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle at 2.5 px, six key markers at size 300 with page-colored outline
-          halos, arc at 2.5 px, legend glyphs filled and visible in both themes
+        comment: Circle at 2.5 px, six key markers at size 300 with page-colored halos,
+          2θp arc at 2.5 px; legend glyphs filled and visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/lavender Imprint positions are CVD-safe; no red-green
+        comment: Green/blue/lavender Imprint positions 1–3 are CVD-safe; no red-green
           signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circle fills most of the square canvas with tight, balanced margins;
+        comment: Circle fills most of the square 2400×2400 canvas with balanced margins;
           nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Normal Stress σ (MPa)'' and ''Shear Stress τ (MPa)'' as the spec
-          asks, with units'
+        comment: '''Normal Stress σ (MPa)'' and ''Shear Stress τ (MPa)'' exactly as
+          the spec asks, with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Stress State = #009E73, Principal #4467A3, Max Shear
-          #C475FD (Imprint 1–3); backgrounds #FAF8F1 / #1A1A17; chrome tokens flip
-          correctly'
+        comment: 'Stress State = #009E73, Principal #4467A3, Max Shear #C475FD (Imprint
+          1–3); backgrounds #FAF8F1 / #1A1A17; chrome tokens flip correctly'
     design_excellence:
       score: 11
       max: 20
@@ -116,25 +106,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: a typographic hierarchy of bold ink labels for
-          the key points, a soft-ink center label, an angle label colored like its
-          arc, and a subtitle carrying the input stress state'
+        comment: 'Beyond baseline: a typographic hierarchy of bold ink point labels
+          against a soft-ink center label, and a subtitle carrying the input stress
+          state'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
+        passed: true
         comment: 'Beyond baseline: page-colored stroke halos on markers where they
-          cut the circle and the rules, a rounded elevated legend card tucked in the
-          empty corner'
+          cut the circle and rules; rounded elevated legend card placed in the empty
+          corner'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: The 2θp arc and label share the principal-stress blue, tying the
-          angle to the principal axis; subtitle states the inputs so the reader can
-          check the geometry
+        passed: true
+        comment: The 2θp arc shares the principal-stress blue, tying the angle to
+          the principal axis; subtitle states the inputs so the geometry can be checked
     spec_compliance:
       score: 15
       max: 15
@@ -144,31 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's circle on a σ–τ plane; the type legend keys the three
-          marker colors
+        comment: Correct Mohr's circle on a σ–τ plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and good-version bullets: circle center/radius, σ1/σ2
-          on the axis, ±τmax top and bottom, A and B on a diameter, 2θp arc spanning
-          exactly 26.6° from the σ1 direction to CA, labeled axes, light grid, reference
-          lines through the center, equal aspect'
+        comment: 'All Notes and good-version bullets present: circle center/radius,
+          σ1/σ2 on the axis, ±τmax top and bottom, A and B on a diameter through C,
+          2θp arc spanning exactly 26.6° from the σ1 direction to CA, labeled axes,
+          light grid, reference lines through the center, equal aspect'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Marks at their computed values; equal data-per-pixel scale on both
-          axes, so the circle is round
+          axes (circle measures about 1384×1396 px), so it reads as round
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'mohr-circle · python · altair · anyplot.ai' exact; legend
-          entries are readable category names
+          keys the three marker colors with readable names
     data_quality:
       score: 15
       max: 15
@@ -193,8 +181,8 @@ review:
         max: 4
         passed: true
         comment: 'Checked: C = 20, R = √(60²+30²) = 67.1, σ1 = 87.1, σ2 = −47.1, τmax
-          = 67.1, 2θp = atan2(30, 60) = 26.6°, all computed in code and matching the
-          labels and axis positions'
+          = 67.1, 2θp = atan2(30, 60) = 26.6°, all computed in code and matching labels
+          and axis positions'
     code_quality:
       score: 10
       max: 10
@@ -205,7 +193,7 @@ review:
         max: 3
         passed: true
         comment: Flat top-to-bottom script, no functions or classes; label layers
-          built by a list comprehension over rows
+          built by a list comprehension
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -241,9 +229,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic alt.layer composition, typed encodings, alt.Scale with
-          explicit domains, alt.Title subtitle, configure_axis/legend/view, typed
-          tooltips
+        comment: Idiomatic alt.layer composition, typed encodings, explicit alt.Scale
+          domains, alt.Title subtitle, configure_axis/legend/view, typed tooltips
       - id: LM-02
         name: Distinctive Features
         score: 3
@@ -254,7 +241,7 @@ review:
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
-  rendered_at: '2026-11-28T00:10:36Z'
+  rendered_at: '2026-11-28T00:16:53Z'
 impl_tags:
   dependencies:
   - pillow
@@ -262,12 +249,9 @@ impl_tags:
   - annotations
   - layer-composition
   - hover-tooltips
-  - custom-legend
   - html-export
-  patterns:
-  - iteration-over-groups
+  patterns: []
   dataprep: []
   styling:
-  - minimal-chrome
   - edge-highlighting
   - grid-styling
