@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-28
@@ -40,13 +40,13 @@ IMPRINT_PALETTE = [
     "#C475FD",  # 2: lavender
     "#4467A3",  # 3: blue         — max shear stress
     "#BD8233",  # 4: ochre
-    "#AE3030",  # 5: matte red    — semantic anchor for critical/failure
+    "#AE3030",  # 5: matte red
     "#2ABCCD",  # 6: cyan
     "#954477",  # 7: plum
     "#99B314",  # 8: olive
 ]
 BRAND = IMPRINT_PALETTE[0]  # "#009E73"
-COLOR_PRINCIPAL = IMPRINT_PALETTE[4]  # matte red — semantic: principal stresses at failure threshold
+COLOR_PRINCIPAL = IMPRINT_PALETTE[3]  # ochre — principal stresses and the 2θp arc
 COLOR_SHEAR = IMPRINT_PALETTE[2]  # blue — maximum shear stress
 COLOR_POINTS = IMPRINT_PALETTE[1]  # lavender — input stress points A and B
 
@@ -99,7 +99,7 @@ stress_source = ColumnDataSource(
 )
 
 # Square canvas (2400×2400) for equal-aspect-ratio circle rendering
-padding = radius * 0.6
+padding = radius * 0.3
 title = "mohr-circle · python · bokeh · anyplot.ai"
 
 p = figure(
@@ -140,7 +140,7 @@ principal_r = p.scatter(
     SIGMA,
     TAU,
     source=principal_source,
-    size=26,
+    size=40,
     color=COLOR_PRINCIPAL,
     marker="diamond",
     line_color=PAGE_BG,
@@ -149,11 +149,11 @@ principal_r = p.scatter(
 
 # Maximum shear stress markers — blue triangles
 shear_r = p.scatter(
-    SIGMA, TAU, source=shear_source, size=26, color=COLOR_SHEAR, marker="triangle", line_color=PAGE_BG, line_width=2
+    SIGMA, TAU, source=shear_source, size=40, color=COLOR_SHEAR, marker="triangle", line_color=PAGE_BG, line_width=2
 )
 
 # Input stress state points A and B — lavender circles
-stress_r = p.scatter(SIGMA, TAU, source=stress_source, size=26, color=COLOR_POINTS, line_color=PAGE_BG, line_width=2)
+stress_r = p.scatter(SIGMA, TAU, source=stress_source, size=40, color=COLOR_POINTS, line_color=PAGE_BG, line_width=2)
 
 # HoverTool for interactive stress readouts over all key points
 hover = HoverTool(
@@ -176,22 +176,23 @@ ann_sz = "30pt"
 
 p.add_layout(
     Label(
-        x=sigma_1,
-        y=offset_lg * 1.4,
+        x=sigma_1 - offset_lg * 1.6,
+        y=-offset_lg * 0.6,
         text=f"σ₁ = {sigma_1:.1f} MPa",
         text_font_size=ann_sz,
         text_color=COLOR_PRINCIPAL,
-        text_align="center",
+        text_align="right",
+        text_baseline="top",
     )
 )
 p.add_layout(
     Label(
-        x=sigma_2,
-        y=offset_lg * 1.4,
+        x=sigma_2 + offset_lg * 1.6,
+        y=offset_lg * 0.6,
         text=f"σ₂ = {sigma_2:.1f} MPa",
         text_font_size=ann_sz,
         text_color=COLOR_PRINCIPAL,
-        text_align="center",
+        text_align="left",
     )
 )
 p.add_layout(
