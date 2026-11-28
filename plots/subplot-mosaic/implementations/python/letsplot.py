@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-26
@@ -27,9 +27,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for colored cells (heatmap fields), light and dark stops
 SEQ_FIELDS = (
-    [(0.0, "#66E2B2"), (0.368, "#009E73"), (0.582, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#00573D"), (0.467, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#404C02"), (0.487, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 # Constants: the mosaic, drawn as text. Repeated letters span cells, "." leaves a gap
@@ -129,7 +129,9 @@ if len(frames) > 0:
         ggplot(data_a, aes(x=X, y=Y))
         + geom_area(fill=IMPRINT_PALETTE[0], alpha=0.3)
         + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
-        + scale_y_continuous(limits=[0, float(data_a[Y].max()) * 1.05])
+        + scale_y_continuous(
+            limits=[0, float(data_a[Y].max()) * 1.05], breaks=np.arange(0, data_a[Y].max() * 1.05, 500).tolist()
+        )
         + labs(x=X, y="Revenue ($)", title="Daily Revenue Overview")
         + base_theme
     )
@@ -141,6 +143,7 @@ if len(frames) > 1:
         + geom_bar(stat="identity", fill=IMPRINT_PALETTE[0], color=INK_SOFT, size=0.3, alpha=0.9)
         + labs(x="Product", y="Units Sold", title="Sales by Product")
         + base_theme
+        + theme(plot_margin=[None, None, None, 11])
     )
 
 # C: scatter with a linear trend
@@ -158,8 +161,14 @@ if len(frames) > 3:
     plots.append(
         ggplot(frames[3], aes(x=X))
         + geom_histogram(bins=25, fill=IMPRINT_PALETTE[0], color=INK_SOFT, alpha=0.85, size=0.2)
+        + scale_x_continuous(
+            limits=[np.floor(frames[3][X].min() / 20) * 20, np.ceil(frames[3][X].max() / 20) * 20],
+            breaks=np.arange(np.floor(frames[3][X].min() / 20) * 20, frames[3][X].max() + 20, 20).tolist(),
+        )
+        + scale_y_continuous(breaks=np.arange(0, 60, 5).tolist())
         + labs(x="Performance Score", y="Frequency", title="Score Distribution")
         + base_theme
+        + theme(plot_margin=[None, None, None, 20])
     )
 
 # E: line with markers over months
@@ -170,6 +179,7 @@ if len(frames) > 4:
         + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
         + geom_point(color=IMPRINT_PALETTE[0], size=3.5)
         + scale_x_continuous(breaks=data_e[X].tolist(), labels=data_e[CATEGORY].tolist())
+        + scale_y_continuous(breaks=np.arange(np.floor(data_e[Y].min()), data_e[Y].max() + 1, 1).tolist())
         + labs(x="Month", y="Growth Rate (%)", title="Monthly Growth")
         + base_theme
     )
