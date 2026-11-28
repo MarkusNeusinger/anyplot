@@ -2,9 +2,9 @@ library: plotly
 language: python
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:04:56Z'
-updated: '2026-11-28T01:14:00Z'
+updated: '2026-11-28T01:21:38Z'
 generated_by: claude-sonnet
-workflow_run: 46091438557
+workflow_run: 46092156109
 issue: 4429
 language_version: 3.14.10
 library_version: 7.1.0
@@ -12,45 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Diverging positions built from go.Bar base= offsets in overlay mode with the neutral
-    split evenly across a shared zero midpoint
-  - Theme-aware per-segment text colors keep every percentage label readable on its
-    fill in both themes
+  - Diverging positions built from go.Bar base= offsets in overlay mode, the neutral
+    split evenly across one shared zero midpoint
+  - Per-segment text colors chosen against each fill keep every percentage label readable
+    in both themes
   - Net-score callouts in the pole colors and a subtitle naming the extremes give
     the chart its own focal points
-  - Legend placed well clear of the axis title on an elevated surface with a hairline
-    border
-  - Data rows sum to 100 % and the sort by net agreement is computed, not typed
+  - Legend on the elevated surface with a hairline border, five levels in scale order
+  - Rows sum to 100 % and the sort by net agreement is computed, not typed
   - Per-segment hovertemplate via customdata in the HTML export
   weaknesses:
-  - 'VQ-07, VQ-04 (dark): the Agree step #4A6898 is nearly the same blue as the Strongly
-    Agree pole #4467A3, so the two agree levels and their legend swatches cannot be
-    told apart and the ''stronger for the strong responses'' property (C3) is lost
-    → an Agree step about halfway between #4467A3 and the dark grey midpoint #686762
-    (around #56677F), clearly lighter or greyer than the pole. Likely cause: the dark
-    branch of LIKERT_COLORS[3].'
+  - 'VQ-07 (both): the intermediate steps are tints off the imprint_div marks ramp
+    — light Disagree #CC807D and Agree #8DA1C2 and dark Disagree #B06060 are lighter
+    than the grey midpoint instead of lying between pole and midpoint → the ramp''s
+    halfway steps, about #8C4D49 / #576883 on light and #8B4B49 on dark (keep dark
+    Agree #56677F), with the segment text ink re-chosen for the darker fills. Likely
+    cause: the hand-picked hex values in LIKERT_COLORS[1] and [3].'
   - 'Suggestion: the band between the x-axis title and the legend is wide; a legend
     y nearer -0.3 would tighten the lower third.'
-  - 'Suggestion: the net callouts could be added to the hovertemplate so the HTML
-    shows each row''s net score.'
+  - 'Suggestion: the net score could be added to the hovertemplate so the HTML shows
+    each row''s net agreement.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, correct
-      Chrome: title 'Employee Engagement Survey · bar-diverging-likert · python · plotly · anyplot.ai' centered, grey subtitle naming the highest and lowest rows, ten question labels at left, x ticks -50 % to 100 %, axis title 'Response (%)', boxed horizontal legend well below it; all dark text readable
-      Data: ten diverging bars sorted by net agreement (tools on top, career path at bottom); dark red, rose, grey #6B6A63, light blue, deep blue in scale order; percentage labels inside segments over 7 points; '+70 net' blue callout right of the top bar, '−10 net' red callout left of the bottom bar
+      Chrome: title 'Employee Engagement Survey · bar-diverging-likert · python · plotly · anyplot.ai' centered, grey subtitle naming the highest and lowest rows, ten question labels at left, x ticks -50 % to 100 %, axis title 'Response (%)', boxed horizontal legend below; all dark text readable
+      Data: ten diverging bars sorted by net agreement (tools on top, career path at bottom); dark red #AE3030, rose #CC807D, grey #6B6A63, light blue #8DA1C2, deep blue #4467A3 in scale order; percentage labels inside segments over 7 points; '+70 net' blue callout right of the top bar, '−10 net' red callout left of the bottom bar
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, correct
-      Chrome: title, subtitle, question labels, ticks, axis title and legend all in light ink, readable; no dark-on-dark
-      Data: same layout; red poles and neutral grey #686762 render as the diverging marks stops; Disagree #B06060 and Agree #4A6898 are the dark steps, but Agree is barely distinguishable from Strongly Agree #4467A3 in the bars and the legend
+      Chrome: title, subtitle, question labels, ticks, axis title and legend in light ink, all readable; no dark-on-dark
+      Data: same layout; poles #AE3030/#4467A3 identical to light, neutral #686762, Disagree #B06060, Agree #56677F — a greyer blue clearly distinct from the Strongly Agree pole in the bars and the legend; ordered steps take dark stops as intended
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,51 +59,53 @@ review:
         passed: true
         comment: All font sizes explicit (title scaled to 14 px for its 79 chars,
           axis title 12, ticks 10, segment labels 11); every text readable in both
-          themes, segment labels contrast with their fills
+          themes, segment labels in light or dark ink matched to their fills
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend sits well clear of the axis title; net
-          callouts clear of bars and labels
+        comment: No text collisions; net callouts clear of bars, legend clear of the
+          axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 bars at bargap 0.25 well sized; page-colored segment separators;
-          legend swatches visible in both themes
+        comment: 10 bars at bargap 0.25, page-colored segment separators, legend swatches
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Red/blue poles are CVD-safe, but in the dark render Agree and Strongly
-          Agree are nearly the same blue (defect line)
+        passed: true
+        comment: Red/blue poles CVD-safe; every step distinct from its neighbours
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, explicit margins, automargin for question labels;
-          drawing fills the canvas, nothing cut off
+        comment: 3200x1800 canvas, explicit margins, automargin for the question labels;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x-axis 'Response (%)' with % tick suffix; question labels self-explanatory
+        comment: '''Response (%)'' with % tick suffix; question labels are readable
+          sentences'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Backgrounds and chrome theme-correct; imprint_div poles #AE3030/#4467A3
-          in scale order; but the dark Agree step #4A6898 is not distinguishable from
-          the #4467A3 pole (defect line)'
+        comment: 'Backgrounds and chrome theme-correct; poles #AE3030/#4467A3 and
+          neutral #6B6A63/#686762 match the imprint_div marks ramp, dark Agree #56677F
+          is its step; but light Disagree #CC807D, light Agree #8DA1C2 and dark Disagree
+          #B06060 are tints off the ramp, lighter than its grey midpoint (defect line)'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,22 +113,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Beyond baseline: theme-aware per-segment text colors, a muted subtitle
-          level under the title, colored bold net callouts matching their pole'
+        comment: 'Beyond baseline: per-segment text colors chosen against each fill,
+          a muted subtitle level under the title, bold net callouts in their pole
+          colors'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Page-colored segment separators, legend on the elevated surface with
-          a 0.5 px hairline border, grid only at the 50 % steps
+        comment: Page-colored segment separators, emphasized zero midline, grid only
+          at the 50 % steps, legend on the elevated surface with a hairline border
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
         comment: 'Own focal points: net-score callouts on the best and worst rows
-          in their pole color and a subtitle naming both extremes'
+          and a subtitle naming both extremes'
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Diverging stacked horizontal bar chart, correct type
+        comment: Diverging stacked horizontal Likert bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'Neutral split across zero, diverging scheme with muted neutral,
-          sorted by net agreement, inside percentage labels with a 7-point threshold,
-          horizontal orientation: all Notes and C1-C5 present'
+          sorted by net agreement, inside labels above 7 points, horizontal: all Notes
+          and C1-C5 present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Segments at their percentages from base offsets, shared zero midpoint,
-          all data on the axis; range derived from the data
+        comment: Segments at their percentages via base offsets on one shared zero
+          midpoint; range fitted to the data with readable ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'Employee Engagement Survey · bar-diverging-likert · python
-          · plotly · anyplot.ai' correct; legend names the five levels in scale order
+          · plotly · anyplot.ai'; legend names the five levels in scale order
     data_quality:
       score: 15
       max: 15
@@ -169,21 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Ten questions from net +70 to net -10, all five levels varying, narrow
-          and wide segments both shown
+        comment: Ten questions from net +70 to net -10, narrow and wide segments,
+          all levels varying
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey with recognisable, neutral questions
+        comment: Employee engagement survey with neutral, plausible questions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: every row sums to 100 %; net values +70 (tools) and -10
-          (career path) follow from the data (40+40-3-7, 20+15-25-20)'
+        comment: 'Checked: every row sums to 100 %; +70 (tools: 40+40-7-3) and -10
+          (career path: 20+15-25-20) follow from the data; no Check values in the
+          Notes'
     code_quality:
       score: 10
       max: 10
@@ -211,13 +214,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Concise: start offsets computed in one dict, labels via list comprehension'
+        comment: Start offsets in one dict, labels by comprehension; nothing an available
+          call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
       score: 6
       max: 10
@@ -228,18 +232,18 @@ review:
         max: 5
         passed: false
         comment: go.Bar with base= offsets in overlay mode for the diverging stack,
-          customdata/hovertemplate, native title.subtitle
+          native title.subtitle, customdata with hovertemplate
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Per-segment hovertemplate via customdata in the HTML export; little
-          else plotly-specific
+        comment: Per-segment hovertemplate in the HTML export and the native subtitle;
+          little else plotly-specific
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-a25892e7d1
-  rendered_at: '2026-11-28T01:10:31Z'
+  rendered_at: '2026-11-28T01:18:17Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -247,9 +251,10 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - explicit-figure
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
+  - custom-colormap
   - minimal-chrome
-  - edge-highlighting
