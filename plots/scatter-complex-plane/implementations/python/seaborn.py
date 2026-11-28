@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-02
@@ -40,78 +40,75 @@ sns.set_theme(
     },
 )
 
-# Data — 3rd roots of unity, their sum, and arbitrary points across all quadrants
+# Constants
+MARKER_CYCLE = ["D", "X", "o", "s", "^", "v", "P", "*"]  # one marker per category, in order
+UNIT_TOLERANCE = 0.01  # a point within this of modulus 1 counts as lying on the unit circle
+
+# Columns: set these to your table's column names
+REAL = "Re(z)"  # role: real
+IMAGINARY = "Im(z)"  # role: imaginary
+LABEL = "Label"  # role: label
+CATEGORY = "Category"  # role: extra
+MAGNITUDE = "Magnitude |z|"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("complex_numbers.csv")
 roots_of_unity = [np.exp(2j * np.pi * k / 3) for k in range(3)]
 root_sum = sum(roots_of_unity)
-
 arbitrary_points = [2.5 + 1.5j, -1.8 + 2.2j, 1.0 - 2.0j, -2.5 - 1.0j, 0.5 + 2.8j, -1.2 - 2.5j, 3.0 + 0.0j]
-
 all_points = roots_of_unity + [root_sum] + arbitrary_points
-
-labels = (
-    [f"$\\omega_{k}$" for k in range(3)]
-    + ["$\\Sigma\\omega_k$"]
-    + [f"$z_{{{i + 1}}}$" for i in range(len(arbitrary_points))]
-)
-
-categories = ["Roots of Unity"] * 3 + ["Sum of Roots"] * 1 + ["Arbitrary Points"] * len(arbitrary_points)
-magnitudes = [abs(z) for z in all_points]
 
 df = pd.DataFrame(
     {
-        "real": [z.real for z in all_points],
-        "imaginary": [z.imag for z in all_points],
-        "label": labels,
-        "category": categories,
-        "magnitude": magnitudes,
+        REAL: [z.real for z in all_points],
+        IMAGINARY: [z.imag for z in all_points],
+        LABEL: (
+            [f"$\\omega_{k}$" for k in range(3)]
+            + ["$\\Sigma\\omega_k$"]
+            + [f"$z_{{{i + 1}}}$" for i in range(len(arbitrary_points))]
+        ),
+        CATEGORY: ["Roots of Unity"] * 3 + ["Sum of Roots"] + ["Arbitrary Points"] * len(arbitrary_points),
+        MAGNITUDE: [abs(z) for z in all_points],
     }
 )
 
-cat_colors = {
-    "Roots of Unity": IMPRINT_PALETTE[0],  # #009E73 green — first series
-    "Sum of Roots": IMPRINT_PALETTE[1],  # #C475FD lavender
-    "Arbitrary Points": IMPRINT_PALETTE[2],  # #4467A3 blue
-}
-markers = {"Roots of Unity": "D", "Sum of Roots": "X", "Arbitrary Points": "o"}
+# Plot: reads only df and the constants above
+categories = list(df[CATEGORY].unique())
+colors = [IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i in range(len(categories))]  # repeats past eight categories
+cat_colors = dict(zip(categories, colors, strict=True))
 
 # JointGrid — square canvas (2400×2400 px) suits the equal-aspect complex plane
-g = sns.JointGrid(data=df, x="real", y="imaginary", height=6, ratio=6, space=0.15)
+g = sns.JointGrid(data=df, x=REAL, y=IMAGINARY, height=6, ratio=6, space=0.15)
 g.figure.set_dpi(400)
 g.figure.patch.set_facecolor(PAGE_BG)
+ax = g.ax_joint
+ax.set_facecolor(PAGE_BG)
 
 # Main scatter with hue, style, and size encoding
 sns.scatterplot(
     data=df,
-    x="real",
-    y="imaginary",
-    hue="category",
-    style="category",
-    size="magnitude",
+    x=REAL,
+    y=IMAGINARY,
+    hue=CATEGORY,
+    style=CATEGORY,
+    size=MAGNITUDE,
     sizes=(150, 450),
-    markers=markers,
-    palette=cat_colors,
+    markers=[MARKER_CYCLE[i % len(MARKER_CYCLE)] for i in range(len(categories))],
+    palette=colors,
     edgecolor=PAGE_BG,
     linewidth=1.5,
     zorder=5,
-    ax=g.ax_joint,
+    ax=ax,
     legend="full",
 )
 
 # Marginal KDE plots — distinctively seaborn, adds statistical context
 for cat, color in cat_colors.items():
-    subset = df[df["category"] == cat]
+    subset = df[df[CATEGORY] == cat]
     sns.kdeplot(
-        data=subset, x="real", color=color, fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_x, warn_singular=False
+        data=subset, x=REAL, color=color, fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_x, warn_singular=False
     )
     sns.kdeplot(
-        data=subset,
-        y="imaginary",
-        color=color,
-        fill=True,
-        alpha=0.3,
-        linewidth=1.5,
-        ax=g.ax_marg_y,
-        warn_singular=False,
+        data=subset, y=IMAGINARY, color=color, fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_y, warn_singular=False
     )
 
 # Marginal axes styling
@@ -124,48 +121,34 @@ g.ax_marg_y.tick_params(bottom=False, labelbottom=False)
 g.ax_marg_x.set_facecolor(PAGE_BG)
 g.ax_marg_y.set_facecolor(PAGE_BG)
 
-ax = g.ax_joint
-ax.set_facecolor(PAGE_BG)
-
 # Vectors from origin to each point
 for _, row in df.iterrows():
-    color = cat_colors[row["category"]]
     ax.annotate(
         "",
-        xy=(row["real"], row["imaginary"]),
+        xy=(row[REAL], row[IMAGINARY]),
         xytext=(0, 0),
-        arrowprops={"arrowstyle": "->", "color": color, "lw": 1.8, "alpha": 0.5},
+        arrowprops={"arrowstyle": "->", "color": cat_colors[row[CATEGORY]], "lw": 1.8, "alpha": 0.5},
     )
 
-# Annotations with rectangular form — offsets in points from the data point
-offsets = {
-    "$\\omega_0$": (20, -28),
-    "$\\omega_1$": (-95, -35),  # lowered to clear the upper-left legend
-    "$\\omega_2$": (-95, -26),
-    "$\\Sigma\\omega_k$": (15, -55),  # lower-right of origin, away from z3
-    "$z_{2}$": (16, -30),  # below data point to avoid upper-left legend
-    "$z_{3}$": (45, 16),  # shifted right to separate from Σωₖ annotation
-    "$z_{4}$": (-85, 16),  # above-left to avoid ω₂ annotation in lower-left
-    "$z_{7}$": (-90, 16),  # rightmost point — move label left to avoid right marginal
-}
-
+# Annotations with rectangular form — each box sits beyond its arrow tip, along the vector's direction
 for _, row in df.iterrows():
-    r = row["real"]
-    i_val = row["imaginary"]
-    r_str = "0" if abs(r) < 0.01 else f"{r:.1f}"
-    if abs(i_val) < 0.01:
-        rect_form = f"{r_str}+0.0i"
-    elif i_val >= 0:
-        rect_form = f"{r_str}+{i_val:.1f}i"
-    else:
-        rect_form = f"{r_str}{i_val:.1f}i"
-
-    offset = offsets.get(row["label"], (16, 16))
+    re_part, im_part = row[REAL], row[IMAGINARY]
+    sign = "-" if im_part < 0 else "+"
+    rect_form = f"{re_part:.1f}{sign}{abs(im_part):.1f}i".replace("-0.0", "0.0").replace("+-", "-")
+    modulus = np.hypot(re_part, im_part)
+    ux, uy = (re_part / modulus, im_part / modulus) if modulus > UNIT_TOLERANCE else (0.7, -0.7)
+    if (
+        abs(modulus - 1) < UNIT_TOLERANCE
+    ):  # unit-circle points: turn the label 45° off the ray, clear of the outer points
+        ux, uy = (ux - uy) / np.sqrt(2), (ux + uy) / np.sqrt(2)
     ax.annotate(
-        f"{row['label']}\n{rect_form}",
-        xy=(r, i_val),
-        xytext=offset,
+        f"{row[LABEL]}\n{rect_form}",
+        xy=(re_part, im_part),
+        xytext=(20 * ux, 20 * uy),
         textcoords="offset points",
+        multialignment="center",
+        ha="left" if ux > 0.3 else "right" if ux < -0.3 else "center",
+        va="bottom" if uy > 0.3 else "top" if uy < -0.3 else "center",
         fontsize=9,
         color=INK,
         fontweight="medium",
@@ -179,10 +162,12 @@ for _, row in df.iterrows():
         zorder=6,
     )
 
-# Equilateral triangle connecting roots of unity
-root_reals = [z.real for z in roots_of_unity] + [roots_of_unity[0].real]
-root_imags = [z.imag for z in roots_of_unity] + [roots_of_unity[0].imag]
-ax.plot(root_reals, root_imags, ls="-", color=IMPRINT_PALETTE[0], lw=2.0, alpha=0.4, zorder=3)
+# Polygon through the points of unit modulus, ordered by angle
+on_circle = df[(df[MAGNITUDE] - 1).abs() < UNIT_TOLERANCE]
+if len(on_circle) >= 3:
+    order = np.argsort(np.arctan2(on_circle[IMAGINARY], on_circle[REAL]))
+    ring = on_circle.iloc[np.append(order, order[0])]
+    ax.plot(ring[REAL], ring[IMAGINARY], ls="-", color=IMPRINT_PALETTE[0], lw=2.0, alpha=0.4, zorder=3)
 
 # Unit circle — dashed reference at r=1
 theta = np.linspace(0, 2 * np.pi, 200)
@@ -209,28 +194,22 @@ sns.despine(ax=g.ax_marg_y, left=True, bottom=True)
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-limit = 3.8
+limit = max(df[REAL].abs().max(), df[IMAGINARY].abs().max(), 1.0) * 1.6
 ax.set_xlim(-limit, limit)
 ax.set_ylim(-limit, limit)
 
-ax.set_xlabel("Re(z)", fontsize=10, labelpad=8, color=INK)
-ax.set_ylabel("Im(z)", fontsize=10, labelpad=8, color=INK)
+ax.set_xlabel(REAL, fontsize=10, labelpad=8, color=INK)
+ax.set_ylabel(IMAGINARY, fontsize=10, labelpad=8, color=INK)
 
-# Legend — keep category + unit circle entries, remove magnitude size entries
+# Legend — keep category + unit circle entries, drop the magnitude size entries
 handles, leg_labels = ax.get_legend_handles_labels()
-keep = []
-for handle, lbl in zip(handles, leg_labels, strict=False):
-    if lbl not in {"magnitude", "", "category"}:
-        try:
-            float(lbl)
-        except ValueError:
-            keep.append((handle, lbl))
-filtered_handles, filtered_labels = zip(*keep, strict=False) if keep else ([], [])
+wanted = set(categories) | {"Unit Circle"}
+keep = [(h, lbl) for h, lbl in zip(handles, leg_labels, strict=False) if lbl in wanted]
 ax.legend(
-    filtered_handles,
-    filtered_labels,
+    [h for h, _ in keep],
+    [lbl for _, lbl in keep],
     fontsize=8,
-    loc="upper left",
+    loc="upper right",
     framealpha=0.95,
     edgecolor=INK_SOFT,
     fancybox=True,
@@ -238,4 +217,4 @@ ax.legend(
 )
 
 # Save — bbox_inches must stay default (None) to preserve exact 2400×2400 canvas
-plt.savefig(f"plot-{THEME}.png", dpi=400)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
