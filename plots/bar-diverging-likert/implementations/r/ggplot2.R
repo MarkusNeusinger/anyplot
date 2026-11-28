@@ -1,12 +1,11 @@
 #' anyplot.ai
 #' bar-diverging-likert: Likert Scale Diverging Bar Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-06-01
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 80/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -102,7 +101,7 @@ p <- ggplot(df_long, aes(x = pct, y = question, fill = response)) +
     aes(label = label_text),
     position = position_stack(vjust = 0.5),
     color    = "#FAF8F1",
-    size     = 2.2,
+    size     = 2.7,
     fontface = "bold"
   ) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.6) +
