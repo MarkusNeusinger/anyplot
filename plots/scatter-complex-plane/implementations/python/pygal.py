@@ -1,75 +1,78 @@
 """ anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-06-02
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-28
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-# Theme tokens (Imprint palette)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — 3rd roots of unity + sample complex numbers + vector sum
-np.random.seed(42)
-roots_of_unity = [np.exp(2j * np.pi * k / 3) for k in range(3)]
-sample_pts = [2.5 + 1.0j, -1.8 + 1.5j, 1.0 - 2.0j, -0.5 - 1.5j]
-z1, z2 = sample_pts[0], sample_pts[1]
-z_sum = z1 + z2  # complex addition: parallelogram / vector sum law
-
-# Pre-compute labels inline (no helper function)
-root_labels = [
-    (
-        f"ω{k}={z.real:.1f}"
-        if abs(z.imag) < 1e-10
-        else f"ω{k}={z.imag:.1f}i"
-        if abs(z.real) < 1e-10
-        else f"ω{k}={z.real:.1f}{z.imag:+.1f}i"
-    )
-    for k, z in enumerate(roots_of_unity)
+# Constants
+UNIT_RADIUS = 1.0  # the reference circle of the complex plane
+ARROW_LENGTH = 0.28  # arrowhead barb length in data units (capped at 40% of a short vector)
+ARROW_SPREAD = np.radians(24)  # angle between the shaft and each barb
+VECTOR_DOTS = [20, 16, 22]  # dot size of the tip, per category in order
+VECTOR_STROKES = [  # stroke per category in order; a dashed stroke marks a computed result
+    {"width": 5, "linecap": "round", "opacity": 0.88},
+    {"width": 3.5, "linecap": "round", "opacity": 0.75},
+    {"width": 6, "dasharray": "10, 5", "linecap": "round", "opacity": 0.92},
 ]
-pt_names = ["z₁", "z₂", "z₃", "z₄"]
-pt_labels = [
-    (
-        f"{n}={z.real:.1f}"
-        if abs(z.imag) < 1e-10
-        else f"{n}={z.imag:.1f}i"
-        if abs(z.real) < 1e-10
-        else f"{n}={z.real:.1f}{z.imag:+.1f}i"
-    )
-    for n, z in zip(pt_names, sample_pts, strict=False)
-]
-sum_label = f"z₁+z₂={z_sum.real:.1f}{z_sum.imag:+.1f}i"
 
-# Unit circle reference points
-theta = np.linspace(0, 2 * np.pi, 180)
-unit_circle = [(float(np.cos(t)), float(np.sin(t))) for t in theta]
+# Columns: set these to your table's column names
+REAL = "Real Axis"  # role: real
+IMAGINARY = "Imaginary Axis"  # role: imaginary
+LABEL = "Annotation"  # role: label
+CATEGORY = "Category"  # role: extra
 
-# Title — 51 chars, under 67-char baseline so default fontsize applies
+# Data: replace this block with your own table, for example df = pd.read_csv("complex_numbers.csv")
+roots = [np.exp(2j * np.pi * k / 3) for k in range(3)]
+samples = [2.5 + 1.0j, -1.8 + 1.5j, 1.0 - 2.0j, -0.5 - 1.5j]
+numbers = roots + samples + [samples[0] + samples[1]]  # the last one is the vector sum z1 + z2
+names = [f"ω{k}" for k in range(len(roots))] + [f"z{k + 1}" for k in range(len(samples))] + ["z1+z2"]
+categories = ["Roots of Unity (3rd)"] * len(roots) + ["Sample Points"] * len(samples) + ["z1+z2 (Vector Sum)"]
+df = pd.DataFrame(
+    {
+        REAL: [z.real for z in numbers],
+        IMAGINARY: [z.imag for z in numbers],
+        LABEL: [f"{n}={z.real:.1f}{z.imag:+.1f}i" for n, z in zip(names, numbers, strict=True)],
+        CATEGORY: categories,
+    }
+)
+
+# Plot: reads only df and the constants above
+extent = np.ceil(max(df[REAL].abs().max(), df[IMAGINARY].abs().max())) + 0.5
+
 title = "scatter-complex-plane · python · pygal · anyplot.ai"
 title_fs = max(44, round(66 * 67 / max(len(title), 67)))
 
-# Style
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     colors=IMPRINT_PALETTE,
+    value_colors=[INK] * len(IMPRINT_PALETTE),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=title_fs,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
@@ -79,14 +82,14 @@ custom_style = Style(
     opacity_hover=1.0,
 )
 
-# Chart — square canvas ensures equal aspect ratio for the Argand diagram
+# Square canvas keeps the aspect ratio equal so the unit circle looks circular
 chart = pygal.XY(
     width=2400,
     height=2400,
     style=custom_style,
     title=title,
-    x_title="Real Axis",
-    y_title="Imaginary Axis",
+    x_title=REAL,
+    y_title=IMAGINARY,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -100,68 +103,53 @@ chart = pygal.XY(
     margin_left=100,
     margin_right=80,
     margin_top=100,
-    range=(-3.5, 3.5),
-    xrange=(-3.5, 3.5),
+    range=(-extent, extent),
+    xrange=(-extent, extent),
     print_values=False,
     print_labels=True,
     js=[],
 )
 
-# Series 1: Roots of Unity (3rd) — Imprint #009E73
-roots_series = []
-for i, z in enumerate(roots_of_unity):
-    roots_series += [
-        {"value": (0.0, 0.0), "label": ""},
-        {"value": (float(z.real), float(z.imag)), "label": root_labels[i]},
-        None,
-    ]
-chart.add(
-    "Roots of Unity (3rd)",
-    roots_series,
-    stroke=True,
-    show_dots=True,
-    dots_size=20,
-    stroke_style={"width": 5, "linecap": "round", "opacity": 0.88},
-)
+# One vector series per category: origin -> tip, then two barbs forming the arrowhead
+no_dot = {"r": 0}
+for i, (category, rows) in enumerate(df.groupby(CATEGORY, sort=False)):
+    points = []
+    for re, im, label in zip(rows[REAL], rows[IMAGINARY], rows[LABEL], strict=True):
+        tip = complex(re, im)
+        head = min(ARROW_LENGTH, 0.4 * abs(tip))
+        barbs = [tip - head * np.exp(1j * (np.angle(tip) + sign * ARROW_SPREAD)) for sign in (1, -1)]
+        # pygal joins every point of a series into one path (None does not break it), so the
+        # path retraces its own steps: origin, tip, barb, tip, barb, tip, back to the origin
+        tip_point = {"value": (re, im), "label": "", "node": no_dot}
+        points += [
+            {"value": (0.0, 0.0), "label": "", "node": no_dot},
+            {"value": (re, im), "label": label},
+            {"value": (barbs[0].real, barbs[0].imag), "label": "", "node": no_dot},
+            tip_point,
+            {"value": (barbs[1].real, barbs[1].imag), "label": "", "node": no_dot},
+            tip_point,
+        ]
+    chart.add(
+        category,
+        points,
+        stroke=True,
+        show_dots=True,
+        dots_size=VECTOR_DOTS[i % len(VECTOR_DOTS)],
+        stroke_style=VECTOR_STROKES[i % len(VECTOR_STROKES)],
+    )
 
-# Series 2: Sample Points — Imprint #C475FD
-pt_series = []
-for i, z in enumerate(sample_pts):
-    pt_series += [
-        {"value": (0.0, 0.0), "label": ""},
-        {"value": (float(z.real), float(z.imag)), "label": pt_labels[i]},
-        None,
-    ]
-chart.add(
-    "Sample Points",
-    pt_series,
-    stroke=True,
-    show_dots=True,
-    dots_size=16,
-    stroke_style={"width": 3.5, "linecap": "round", "opacity": 0.75},
-)
-
-# Series 3: Vector Sum z₁+z₂ — Imprint #4467A3 (dashed = result of addition)
-chart.add(
-    "z₁+z₂ (Vector Sum)",
-    [{"value": (0.0, 0.0), "label": ""}, {"value": (float(z_sum.real), float(z_sum.imag)), "label": sum_label}],
-    stroke=True,
-    show_dots=True,
-    dots_size=22,
-    stroke_style={"width": 6, "dasharray": "10, 5", "linecap": "round", "opacity": 0.92},
-)
-
-# Series 4: Unit Circle — Imprint #BD8233, subtle dashed reference
+# Unit circle: subtle dashed reference
+angles = np.linspace(0, 2 * np.pi, 180)
 chart.add(
     "Unit Circle",
-    unit_circle,
+    [(float(UNIT_RADIUS * np.cos(t)), float(UNIT_RADIUS * np.sin(t))) for t in angles],
     stroke=True,
     show_dots=False,
     fill=False,
-    stroke_style={"width": 2.5, "dasharray": "6, 6", "opacity": 0.40},
+    stroke_style={"width": 2.5, "dasharray": "6, 6", "opacity": 0.6},
 )
 
-# Series 5: Origin — Imprint #AE3030, drawn last to render on top of all vectors
+# Origin: drawn last so it sits on top of all vectors
 chart.add("Origin", [{"value": (0.0, 0.0), "label": ""}], stroke=False, dots_size=20)
 
 # Save
