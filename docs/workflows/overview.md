@@ -669,6 +669,8 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
 
    The score tolerance, the criterion floor, and the regression rule apply as above. The reason starts with `readiness path:` and names the refusals the predecessor had; a gain the gate can't confirm is named in the keep reason.
 
+   What the gate does not confirm is that nothing else is refused: that the new side is served is still the runner's word. A forged record could merge a confirmed class removal while another refusal remains. The file is then as blocked as its predecessor, with a real CQ-01 fix, and a forged record can already hide a new refusal on any merge with a carrier. Running the validator in impl-review itself, as `readiness_record.py` describes, would close both.
+
    **Adapt route.** A Python regeneration that converts the implementation to the adaptable-code convention ([Adaptable catalogue code](../concepts/adaptable-code.md)) changes the code but not the picture, so it has no visible improvement to carry it. It replaces the live implementation on render identity instead, when all of these hold:
    - the predecessor fails the adaptability check (the static check or the smoke run) and the new source passes both;
    - the two sources' renders, both made in the same `impl-generate.yml` runner ("Adaptability smoke run (record-only)") from the very sources the records checked, differ in at most 0.5 % of their pixels in each theme, at equal size; a size change fails, and so does a pair rendered from other source versions (`pair_stale`);
