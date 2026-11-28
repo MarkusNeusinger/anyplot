@@ -41,7 +41,10 @@ Merge requires ALL of:
    carrier, by a counted *code improvement* (``classify_code_improvements``):
    a previous CQ-04 ``(code)`` defect line the re-score classed ``defect``,
    fixed with the named call or removal in a shorter source, with the data
-   scenario and encodings unchanged (``decide --prev-impl/--new-impl``);
+   scenario and encodings unchanged (``decide --prev-impl/--new-impl``), or
+   by a *readiness gain* (``readiness_gain``): the agent chat's validator
+   refused the predecessor and accepts the new source, with no new refusal
+   and the data scenario and encodings unchanged (``decide --readiness``);
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them;
 8. no criterion below its re-score (``criterion_floor``): each of the 24
@@ -1604,6 +1607,28 @@ def readiness_regression_text(readiness: Readiness) -> str:
     return f"the agent chat's validator refuses the new source for {keys}, which it did not refuse the predecessor for"
 
 
+# The side statuses of a file the agent chat can serve: ``coupled`` is served
+# too, with its data coupled to the drawing.
+READY_SIDES = ("clean", "coupled")
+
+
+def readiness_gain(readiness: Readiness) -> bool:
+    """The chat's validator refused the predecessor and accepts the new source, with no new refusal.
+
+    The readiness path (``_judge``) counts it as an improvement: the
+    adaptability check does not see a construct only the validator refuses (a
+    pygal subclass), so its removal changes no render and no adaptability
+    status, yet it is what lets the chat serve the file.
+    """
+    return readiness.status == READINESS_NONE and readiness.prev == "blocked" and readiness.new in READY_SIDES
+
+
+def readiness_gain_text(readiness: Readiness) -> str:
+    """What the readiness path rests on: the refusals the predecessor had and the new source's status."""
+    keys = ", ".join(readiness.removed) or "no key named"
+    return f"the agent chat's validator refused the predecessor ({keys}) and accepts the new source ({readiness.new})"
+
+
 def readiness_summary_line(readiness: Readiness) -> str:
     """``**Readiness:** …`` for the PR comment; fixed text and validator identifiers only."""
     if readiness.regression:
@@ -2335,14 +2360,19 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
     if result.code_improvements and not code_counted:
         why = "; ".join(f"{c['ref'] or '?'}: {c['why']}" for c in result.code_improvements)
         code_note = f" (code path: nothing counted — {why})"
+    # The readiness path: with no carrier and no counted code fix, a validator
+    # that refused the predecessor and accepts the new source still carries,
+    # with the data scenario and the encodings unchanged on any spec. The
+    # tolerance and the floor below apply to it as to any merge.
+    ready = readiness_gain(inp.readiness) and not result.scenario_changed and not result.encodings_added
 
-    if not visible and not code_counted:
+    if not visible and not code_counted and not ready:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""
         result.code = "no_visible_improvement"
         result.reason = f"no visible improvement{detail}{note}{code_note}"
         return _adapt_instead(result, adapt)
 
-    if not carriers and not code_counted:
+    if not carriers and not code_counted and not ready:
         kinds = [
             (sum(1 for i in visible if i["basis"] == basis), label)
             for basis, label in (
@@ -2388,11 +2418,16 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
             f"({', '.join(i['ref'] for i in carriers)}), no regressions, new score {inp.score} >= "
             f"re-scored predecessor {prev_rescored} - 1{note}"
         )
-    else:
+    elif code_counted:
         fixed = ", ".join(f"{c['ref']} ({CODE_RULE}, {c['kind']})" for c in code_counted)
         result.reason = (
             f"code path: {fixed} fixed, {result.prev_lines} → {result.new_lines} lines, no carrier, "
             f"no regressions, new score {inp.score} >= re-scored predecessor {prev_rescored} - 1{note}"
+        )
+    else:
+        result.reason = (
+            f"readiness path: {readiness_gain_text(inp.readiness)}, no carrier, no regressions, "
+            f"new score {inp.score} >= re-scored predecessor {prev_rescored} - 1{note}"
         )
     return result
 

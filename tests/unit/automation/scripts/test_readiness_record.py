@@ -348,6 +348,78 @@ def test_the_adapt_regression_comes_first_when_both_hold():
     assert decide(inp).code == "adapt_regression"
 
 
+# --- the gate: the readiness path ------------------------------------------------------------------
+
+GAIN = Readiness(status="none", new="clean", prev="blocked", removed=("security:banned-statement", "security:dunder"))
+
+
+def test_a_file_the_chat_now_accepts_merges_without_a_visible_improvement():
+    """A pygal subclass removed with the drawing unchanged: the adaptability check sees nothing, the validator does."""
+    assert decide(_inp(regen=_regen(improvements=[]))).code == "no_visible_improvement"
+    result = decide(_inp(regen=_regen(improvements=[]), readiness=GAIN))
+    assert (result.verdict, result.code) == (MERGE, "merge")
+    assert result.reason == (
+        "readiness path: the agent chat's validator refused the predecessor (security:banned-statement, "
+        "security:dunder) and accepts the new source (clean), no carrier, no regressions, "
+        "new score 85 >= re-scored predecessor 85 - 1"
+    )
+
+
+def test_a_coupled_file_counts_and_a_visible_suggestion_rides_along():
+    """The chat serves a coupled file too; an improvement that carries nothing on its own does not stop the path."""
+    regen = _regen(
+        improvements=[{"ref": "P1", "rule": "DE-02", "what": "fonts aligned", "where_visible": "both renders"}]
+    )
+    assert decide(_inp(regen=regen)).code == "no_defect_improvement"
+    result = decide(_inp(regen=regen, readiness=Readiness(status="none", new="coupled", prev="blocked")))
+    assert (result.verdict, result.code) == (MERGE, "merge")
+    assert result.reason.startswith("readiness path: the agent chat's validator refused the predecessor (no key named)")
+
+
+def test_a_carrier_keeps_its_own_reason():
+    result = decide(_inp(readiness=GAIN))
+    assert result.verdict == MERGE and result.reason.startswith("1 visible improvement(s), 1 carrying (W2)")
+
+
+@pytest.mark.parametrize(
+    "readiness",
+    [
+        Readiness(),
+        Readiness(status="stale", new="clean", prev="blocked"),
+        Readiness(status="invalid"),
+        Readiness(status="none", new="blocked", prev="blocked"),
+        Readiness(status="none", new="error", prev="blocked"),
+        Readiness(status="none", new="clean", prev="coupled"),
+        Readiness(status="none", new="clean", prev="n/a"),
+    ],
+    ids=lambda readiness: f"{readiness.status}:{readiness.prev}>{readiness.new}",
+)
+def test_only_a_judged_step_from_blocked_to_served_counts(readiness):
+    result = decide(_inp(regen=_regen(improvements=[]), readiness=readiness))
+    assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+
+
+@pytest.mark.parametrize(
+    ("overrides", "code"),
+    [
+        ({"score": 83}, "below_tolerance"),
+        ({"new_checklist": {**NEW_CHECKLIST, "LM-02": 1}}, "criterion_below"),
+        ({"regen": _regen(improvements=[], scenario_changed=True)}, "no_visible_improvement"),
+        ({"regen": _regen(improvements=[], encodings_added=["size by revenue"])}, "no_visible_improvement"),
+        (
+            {"regen": _regen(improvements=[], regressions=[{"what": "legend lost", "where_visible": "both renders"}])},
+            "regression",
+        ),
+    ],
+    ids=["tolerance", "floor", "scenario", "encodings", "regression"],
+)
+def test_the_tolerance_the_floor_and_the_regression_rule_still_apply(overrides, code):
+    fields = {"regen": _regen(improvements=[]), "readiness": GAIN, **overrides}
+    score = fields.pop("score", 85)
+    result = decide(_inp(score, **fields))
+    assert (result.verdict, result.code) == (KEEP, code)
+
+
 def test_the_keep_returns_within_a_window_like_a_regression():
     """Without it the pair would queue behind the whole catalogue for a construct a second try rarely adds."""
     assert "readiness_regression" in REASON_CODES
