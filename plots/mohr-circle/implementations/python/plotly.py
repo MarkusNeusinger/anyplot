@@ -1,7 +1,7 @@
 """ anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-30
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-28
 """
 
 import os
@@ -26,9 +26,9 @@ TAU_COLOR = "#BD8233"  # ochre — maximum shear stress
 ARC_COLOR = "#C475FD"  # lavender — principal plane angle arc
 
 # Data — stress state (MPa)
-sigma_x = 80
-sigma_y = -40
-tau_xy = 30
+sigma_x = -30
+sigma_y = -110
+tau_xy = -45
 
 # Mohr's circle parameters
 center = (sigma_x + sigma_y) / 2
@@ -186,7 +186,8 @@ fig.add_trace(
     )
 )
 
-# Annotations
+# Annotations (label offsets point away from the axis the arc sits on)
+flip = 1 if tau_xy >= 0 else -1
 fig.add_annotation(
     x=point_a[0],
     y=point_a[1],
@@ -195,7 +196,7 @@ fig.add_annotation(
     arrowhead=0,
     arrowcolor=POINT_COLOR,
     ax=40,
-    ay=-35,
+    ay=-35 * flip,
     font={"size": 12, "color": POINT_COLOR},
 )
 fig.add_annotation(
@@ -206,14 +207,28 @@ fig.add_annotation(
     arrowhead=0,
     arrowcolor=POINT_COLOR,
     ax=-40,
-    ay=35,
+    ay=35 * flip,
     font={"size": 12, "color": POINT_COLOR},
 )
 fig.add_annotation(
-    x=sigma_1, y=0, text=f"σ₁ = {sigma_1:.1f}", showarrow=False, yshift=-28, font={"size": 12, "color": SIGMA_COLOR}
+    x=sigma_1,
+    y=0,
+    text=f"σ₁ = {sigma_1:.1f}",
+    showarrow=False,
+    xanchor="left",
+    xshift=22,
+    yshift=20,
+    font={"size": 12, "color": SIGMA_COLOR},
 )
 fig.add_annotation(
-    x=sigma_2, y=0, text=f"σ₂ = {sigma_2:.1f}", showarrow=False, yshift=-28, font={"size": 12, "color": SIGMA_COLOR}
+    x=sigma_2,
+    y=0,
+    text=f"σ₂ = {sigma_2:.1f}",
+    showarrow=False,
+    xanchor="right",
+    xshift=-22,
+    yshift=20,
+    font={"size": 12, "color": SIGMA_COLOR},
 )
 fig.add_annotation(
     x=center, y=tau_max, text=f"τmax = {tau_max:.1f}", showarrow=False, yshift=18, font={"size": 12, "color": TAU_COLOR}
@@ -231,16 +246,17 @@ fig.add_annotation(
     y=0,
     text=f"C ({center:.0f}, 0)",
     showarrow=False,
-    xshift=35,
-    yshift=-18,
+    xshift=-35 * flip,
+    yshift=18,
     font={"size": 12, "color": INK_SOFT},
 )
 
 # 2θp label near arc midpoint
 mid_angle = np.radians(theta_2p / 2)
 fig.add_annotation(
-    x=center + arc_r * 1.4 * np.cos(mid_angle),
-    y=arc_r * 1.4 * np.sin(mid_angle),
+    x=center + arc_r * 1.15 * np.cos(mid_angle),
+    y=arc_r * 1.15 * np.sin(mid_angle),
+    xanchor="left",
     text=f"2θp = {theta_2p:.1f}°",
     showarrow=False,
     font={"size": 11, "color": ARC_COLOR},
