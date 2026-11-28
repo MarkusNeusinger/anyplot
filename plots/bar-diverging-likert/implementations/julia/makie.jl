@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-diverging-likert: Likert Scale Diverging Bar Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: pending | Created: 2026-06-01
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 84/100 | Updated: 2026-11-28
 
 using CairoMakie
 using Colors
