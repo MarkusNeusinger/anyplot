@@ -2,57 +2,53 @@ library: altair
 language: python
 specification_id: heatmap-stripes-climate
 created: '2026-03-06T02:35:48Z'
-updated: '2026-06-02T06:07:03Z'
+updated: '2026-11-28T02:47:35Z'
 generated_by: claude-sonnet
-workflow_run: 26801078959
+workflow_run: 46099347841
 issue: 4423
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - 'Faithful warming-stripes implementation: no axes, no labels, no gridlines — correctly
-    strips all chrome as the spec requires'
-  - 'Correct imprint_div diverging colormap with LAB interpolation (blue #4467A3 ↔
-    PAGE_BG ↔ red #AE3030), theme-adaptive midpoint is an elegant design choice'
-  - 'Clean theme-adaptive tokens throughout: INK for title color, PAGE_BG for both
-    background and colormap neutral midpoint'
-  - Realistic 175-year synthetic HadCRUT-like temperature anomaly data with proper
-    piecewise trend and np.random.seed(42)
-  - 'Correct canvas handling: vl-convert inner dims (620×320), scale_factor=4.0, PIL
-    pad-only to 3200×1800 with no cropping'
-  - Interactive tooltips with formatted anomaly values (+.2f) and HTML export — distinctive
-    Altair features used well
-  - 'Altair-idiomatic encoding: mark_rect(), alt.X with axis=None, alt.Color with
-    explicit Scale domain/range, configure_view strokeWidth=0'
+  - 'Faithful warming stripes: 175 touching, equal-width stripes in chronological
+    order with no axes, ticks, labels, gridlines or legend, exactly as the spec''s
+    Notes ask'
+  - Stripe band fills the 16:9 canvas edge to edge under the title, so the color progression
+    carries the whole image
+  - 'imprint_div fields ramp (#4467A3 ↔ page ↔ #AE3030) built with domainMid=0 and
+    a symmetric domain [-limit, limit], blended with interpolate=''rgb'' so the intermediate
+    colors are the style guide''s; years near zero are the palest in both themes'
+  - Synthetic HadCRUT-like anomalies with a piecewise trend plus noise show warm and
+    cool years interleaved, so the stripes read as observed data rather than a smooth
+    gradient
+  - autosize fit with contains='padding' sizes the chart to the canvas the Vega-Lite
+    way; formatted tooltips (+.2f) on year and anomaly add value in the HTML export
+  - Column constants and an escaped-field pattern keep the plot code independent of
+    the data block
   weaknesses:
-  - 'Dark render: cold-anomaly stripes (1850–1910) have reduced contrast — #4467A3
-    blue against #1A1A17 near-black provides moderate but not strong contrast; near-neutral
-    stripes around 1980 are nearly invisible against the dark background (by design
-    but limits visible information range in dark mode)'
-  - 'DE-03: no additional data storytelling elements beyond the warming-stripes chart
-    type itself — a decade reference tick or subtle year annotations at key climate
-    events (1980 warming acceleration) would elevate the storytelling without violating
-    the spec''s minimalism intent'
+  - 'Suggestion: a slightly smaller outer padding at the left and right edges would
+    let the stripes run fully flush with the canvas, as in the classic warming-stripes
+    graphic.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
-      Chrome: Title "heatmap-stripes-climate · python · altair · anyplot.ai" is bold dark text (#1A1A17), centered above the stripes at fontSize=16, clearly readable and spans ~50% of canvas width. No axis labels, no tick marks, no gridlines — spec-correct minimalist chrome.
-      Data: 175 vertical stripes progressing from muted blue (#4467A3 range) on the far left (1850, cold anomalies) through near-off-white (#FAF8F1, ~1980 neutral zone) to deep red (#AE3030 range) on the far right (2024, warm anomalies). Color transitions smoothly via LAB interpolation. The warming trend is immediately visible.
-      Legibility verdict: PASS — all text readable, no overlap, no clipping.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "heatmap-stripes-climate · python · altair · anyplot.ai" centered at the top, about half the width; no axes, ticks, labels, gridlines or legend, as the spec asks. Title fully readable.
+      Data: 175 equal-width touching vertical stripes filling the canvas edge to edge under the title (about 3120×1620 px band). Muted blues on the left (1850–1910 cool years), palest near-page tones in the middle (around 1950–1990, with interleaved faint blue and pink stripes), and reds deepening to #AE3030-like red at the right (2010s–2024). Year-to-year variation is clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title is rendered in light cream/off-white (#F0EFE8 INK token), clearly readable against the dark background. No dark-on-dark failures for text.
-      Data: Colors are consistent with the light render's palette — cold stripes appear as dark navy-blue against the near-black background (moderate contrast, distinguishable but lower than light mode), the neutral zone stripes (~1975–1985) fade nearly completely into the background (by imprint_div design — #1A1A17 midpoint equals the background), and the warm red stripes on the right are clearly visible with strong contrast. The warming story is still communicated though cold-zone contrast is reduced.
-      Legibility verdict: PASS for text elements. Data: cold stripes have reduced but sufficient contrast; neutral zone stripes intentionally invisible (imprint_div midpoint = dark background by design).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in light ink #F0EFE8, clearly readable; no dark-on-dark text. No other chrome.
+      Data: same stripe layout; the fields ramp uses the dark midpoint (#1A1A17), so cool stripes read as dark slate blues, near-zero years merge toward the page, and warm years brighten to strong red at the right. Poles are the same #4467A3/#AE3030 as the light render; only the midpoint flips with the theme, as the style guide prescribes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,77 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontSize=16 explicitly set, theme-adaptive INK color, readable
-          in both themes, no overflow
+        comment: Only text is the title, explicitly sized (16 px at scale 4), readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Only one text element (title); stripes have no gaps
+        comment: Title sits clear above the stripes; no other text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Light render: all stripes clearly visible. Dark render: cold blue
-          stripes have moderate contrast against near-black; neutral zone intentionally
-          invisible (imprint_div midpoint = dark bg)'
+        comment: Every stripe visible; near-zero years palest in both themes by the
+          fields ramp, as the spec asks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Blue #4467A3 and red #AE3030 are CVD-distinguishable (different
-          hue families)'
+        comment: Blue vs red diverging poles are CVD-distinguishable and differ in
+          lightness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; stripes fill canvas width well; balanced margins;
-          3200x1800 confirmed
+        comment: Canvas gate passed; the stripe band fills the canvas edge to edge
+          under the title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Spec requires no axis labels (N/A); title correctly formatted
+        comment: N/A for axis labels (spec forbids them); title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging (blue #4467A3 ↔ PAGE_BG ↔ red #AE3030) — correct
-          semantic exception (cold→blue, warm→red). Backgrounds #FAF8F1/#1A1A17 correct.
-          LAB interpolation.'
+        comment: imprint_div fields ramp with theme midpoint, domainMid=0, interpolate='rgb';
+          backgrounds correct in both themes
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Faithful warming-stripes aesthetic: maximum chrome removal, imprint_div
-          colormap with LAB interpolation, theme-adaptive midpoint is an elegant design
-          choice. Strong, clearly above defaults.'
+        comment: 'Style-guide baseline: clean title over the stripes, nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: No spines, no axes, no gridlines, no legend — maximum chrome removal.
-          configure_view strokeWidth=0 removes chart border. Near-perfect refinement.
+        comment: Full-bleed stripe band with even thin margins chosen for this chart
+          instead of a small centered block
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color gradient from blue to red guides viewer through the climate
-          warming story. Tooltip enables precise value exploration. Visual hierarchy
-          is clear.
+        passed: false
+        comment: The chart type tells the story; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct warming stripes: vertical colored bars, one per year, no
-          axes or labels'
+        comment: Correct warming stripes, no additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging blue-to-red colormap ✓, one bar per year ✓, no gaps ✓,
-          symmetric scale around zero ✓
+        comment: C1 one touching equal-width stripe per year ✓; C2 symmetric diverging
+          scale centered on zero ✓; C3 no axes/labels/ticks/grid, full-height band
+          wider than tall ✓; C4 interleaved warm/cool years ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Year on X (ordinal), anomaly encoded as color; 175 years (1850-2024)
-          within spec range
+        comment: Year on x (ordinal, chronological), anomaly as color; all 175 years
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-stripes-climate · python · altair · anyplot.ai''
-          ✓; no legend (correct for this spec)'
+        comment: Title in the required format; no legend, which the spec permits (C5)
     data_quality:
       score: 15
       max: 15
@@ -172,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 175-year warming stripes with cold, neutral, and warm phases
-          all represented
+        comment: Cool, neutral and warm phases with year-to-year variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic HadCRUT-like global temperature anomalies, scientifically
-          neutral topic
+        comment: Global temperature anomalies relative to a baseline, neutral science
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomaly range ~-0.5 to +0.8°C is realistic for HadCRUT instrumental
-          record
+        comment: Anomalies from about -0.45 to about +1.2 °C, plausible for HadCRUT
+          vs 1961-1990; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -197,34 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → tokens → data → chart → save. No functions
-          or classes.'
+        comment: Flat Imports → constants → Data → Plot → Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no over-engineering; no fake UI
+        comment: Native scale handles the symmetric domain; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (PIL-padded to 3200x1800) and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,26 +220,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: mark_rect(), alt.X axis=None, alt.Color with explicit Scale domain/range,
-          configure_view strokeWidth=0, alt.Title with theme tokens — strong idiomatic
-          Altair patterns
+        comment: 'Beyond the mandated scale: autosize=fit with contains=''padding''
+          to size the view to the canvas, configure_view/configure_title'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: LAB color interpolation (interpolate='lab') is Vega-Lite-specific;
-          interactive tooltips with formatted values; HTML export for web-ready interactivity
+        passed: false
+        comment: Vega-Lite tooltips with d3 format strings in the HTML export
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  rendered_at: '2026-11-28T02:44:19Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
+  - custom-colormap
   patterns:
   - data-generation
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap
