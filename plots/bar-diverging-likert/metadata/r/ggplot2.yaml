@@ -2,43 +2,56 @@ library: ggplot2
 language: r
 specification_id: bar-diverging-likert
 created: '2026-06-01T23:30:22Z'
-updated: '2026-06-01T23:47:19Z'
+updated: '2026-11-28T01:28:09Z'
 generated_by: claude-sonnet
-workflow_run: 26787485358
+workflow_run: 46092736917
 issue: 4429
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - 'Perfect spec implementation: neutral split, sorted by net agreement, percentage
-    labels, diverging color scheme all met'
-  - Expert ggplot2 diverging Likert technique using factor-level ordering for stack
-    direction — canonical idiomatic approach
-  - All survey percentages sum exactly to 100% for all 10 questions
-  - Both themes render cleanly with no dark-on-dark or readability failures
-  - 'Strong design refinement: y-grid removed, very subtle x-grid, all spines/ticks
-    removed, clean centered vertical reference line'
+  - Sorted by net agreement from Health insurance (top) to Annual bonus (bottom),
+    so the ranking reads at a glance
+  - scale_fill_manual(breaks, labels) folds the two neutral halves into a single legend
+    entry in scale order
+  - Bold light percentage labels centered with position_stack(vjust = 0.5) stay readable
+    on every fill in both themes; narrow segments are left unlabeled
+  - 'Theme tokens threaded through all chrome: both renders theme-correct with no
+    dark-on-dark text'
+  - Realistic employee-benefits data, every row summing to 100%
   weaknesses:
-  - library(scales) imported but never used — remove it
-  - In-bar percentage labels at size=2.2mm (~6.3pt) are slightly small for mobile
-    readability; increase geom_text size to 2.5–2.8
+  - 'SC-02 (both): on the disagree side the stack runs in reverse — Strongly Disagree
+    (red) sits next to the 0% line and the left neutral half sits at the far left
+    end, so no bar is centered on its neutral segment (C2) and the scale order is
+    not strongly disagree at the left end (C1); only the agree side is ordered correctly
+    → stack the left side neutral half, then Disagree, then Strongly Disagree outward
+    from 0. Likely cause: the response factor levels c("neutral_neg", "disagree",
+    "strongly_disagree", ...) — position_stack puts the later level nearest 0 for
+    negatives too, so the negative levels must be c("strongly_disagree", "disagree",
+    "neutral_neg").'
+  - 'VQ-07 (dark): the neutral step uses the light marks midpoint #6B6A63 in the dark
+    render instead of the dark imprint_div marks midpoint #686762 (the other theme''s
+    stop) → pick the midpoint from THEME. Likely cause: colorRampPalette(c("#AE3030",
+    "#6B6A63", "#4467A3")) hard-codes the light midpoint.'
+  - 'Suggestion: a slightly lighter neutral label weight would let the agree/disagree
+    numbers lead.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Employee Benefits · bar-diverging-likert · r · ggplot2 · anyplot.ai" in dark ink, centered, ~75% width. X-axis label "Percentage of Respondents" in dark ink. Y-axis question labels in dark ink (size=9). X-axis tick labels (50%, 0%, 50%) in INK_SOFT. Legend text in INK_SOFT. All readable.
-      Data: Ten horizontal diverging bars. Strongly Disagree in matte red (#AE3030), Disagree in interpolated brownish-red, Neutral in muted gray (#6B6A63), Agree in interpolated blue, Strongly Agree in Imprint blue (#4467A3). White bold percentage labels inside segments ≥8%. Diverging from center. Sorted by net agreement (Health insurance top, Annual bonus bottom).
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'Employee Benefits · bar-diverging-likert · r · ggplot2 · anyplot.ai' in dark ink, centered, ~66% width; x title 'Percentage of Respondents', ticks 50% / 0% / 50% in INK_SOFT; ten question labels in dark ink; boxed horizontal legend at the bottom (Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree). All readable.
+      Data: ten horizontal stacked bars sorted by net agreement (Health insurance top, Annual bonus bottom). Agree side: neutral half (grey #6B6A63) at 0, then Agree (grey-blue step), then Strongly Agree (#4467A3) outward — correct. Disagree side: Strongly Disagree (#AE3030) sits next to 0, then Disagree (brown-red step), then the other neutral half at the far left end — reversed, so the bars are not centered on neutral. Bold light percentage labels (~7.7 pt) in segments of 8% and more; a dark 0% center rule.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels, question labels all flip to light cream/off-white (INK=#F0EFE8 or INK_SOFT=#B8B7B0). Legend background switches to elevated dark #242420. No dark-on-dark text failures observed. Grid lines subtle and visible.
-      Data: Identical data colors to light render — same red/gray/blue diverging scale. White percentage labels inside bars. Confirming only chrome flips, not data colors.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis title, question labels in light ink; ticks and legend text in INK_SOFT; legend box on elevated #242420; light 0% center rule; no dark-on-dark text.
+      Data: identical fills to the light render, including the light midpoint #6B6A63 for neutral (the dark marks midpoint is #686762); same reversed disagree-side order. Labels readable on every fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,83 +59,82 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis title=10, x ticks=8,
-          y labels=9, legend=8). Minor: in-bar labels at 2.2mm (~6.3pt) slightly small
-          for mobile.'
+        comment: Sizes explicit (title 12, axis title 10, ticks 8, questions 9, legend
+          8); bold in-bar labels at 2.7 mm (~7.7 pt) near the tick reference; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. All segments, labels, and legend clear.
+        comment: No text collisions; labels sit inside their segments, narrow segments
+          left unlabeled
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars at width=0.72 well-proportioned for 10 questions. Diverging
-          structure immediately legible.
+        comment: Ten bars at width 0.72 for 10 questions; legend swatches match the
+          fills in both themes; in-bar labels fit their segments
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-to-blue diverging scale (not red-green). Imprint palette is CVD-safe.
+        comment: Red ↔ blue diverging scheme, no red-green; light labels readable
+          on every fill
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape. Chart fills canvas well, legend at bottom proportionate,
-          margins generous.
+        comment: 3200x1800; bars, labels and the bottom legend fill the canvas with
+          balanced margins; title ~66% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Percentage of Respondents. Y suppressed (question labels serve
-          as axis). Appropriate for chart type.'
+        comment: '''Percentage of Respondents'' with % ticks; question labels serve
+          as the y axis'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Semantic exception: diverging Likert uses Imprint red (#AE3030)
-          to muted (#6B6A63) to Imprint blue (#4467A3) — mirrors imprint_div semantics.
-          Backgrounds #FAF8F1/#1A1A17 correct. Chrome adapts correctly.'
+        passed: false
+        comment: 'Five ordered steps of imprint_div marks ramp, red on disagree, blue
+          on agree, backgrounds and chrome theme-correct; but the dark render keeps
+          the light midpoint #6B6A63 instead of #686762 (defect line)'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above well-configured defaults: semantic diverging palette, sorted
-          by net agreement, white bold in-bar labels, subtle center line at 0. Professional
-          feel but not FiveThirtyEight-level.'
+        passed: false
+        comment: 'Style-guide baseline: tokens, explicit sizes, Imprint ramp; nothing
+          distinctive beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Strong refinement: y-grid removed, x-grid at linewidth=0.15 very
-          subtle, all spines/ticks removed, panel border removed, legend with elevated-bg
-          border.'
+        passed: false
+        comment: 'Beyond baseline: horizontal grid removed, x grid only at the 50%
+          steps, a heavier 0% center rule and a boxed horizontal legend in scale order'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Sorted by net agreement surfaces ranking narrative. Diverging colors
-          communicate valence instantly. Visual hierarchy guides viewer from best-rated
-          to worst-rated benefit.
+        passed: false
+        comment: Sorting by net agreement is prescribed by the Notes; no hierarchy
+          chosen beyond it
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -130,30 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart for Likert scale. Bars diverge
-          from neutral midpoint, horizontal orientation.
+        comment: Horizontal diverging stacked Likert bar chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Neutral centered and split evenly, diverging color scheme red-to-blue,
-          sorted by net agreement, percentage labels inside segments ≥8%, horizontal
-          orientation.
+        passed: false
+        comment: Sorted by net agreement (C4), diverging colors with legend (C3),
+          in-segment labels (C5), horizontal; but the disagree side is stacked in
+          reverse, so bars are not centered on neutral (C2) and the left end is neutral,
+          not strongly disagree (C1) (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Y: questions. X: percentage (symmetric around 0). All 10 questions
-          visible.'
+        comment: Segment lengths equal their percentages; axis symmetric around 0
+          shows all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Employee Benefits · bar-diverging-likert · r · ggplot2
-          · anyplot.ai'' — correct format. Legend: 5 correct labels.'
+        comment: '''Employee Benefits · bar-diverging-likert · r · ggplot2 · anyplot.ai'';
+          legend names the five levels in scale order'
     data_quality:
       score: 15
       max: 15
@@ -163,24 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrum from highly positive (health insurance 76% agree) to
-          net-negative (annual bonus 50% disagree). All 5 categories shown.
+        comment: Ten questions from strongly positive to net negative; all five levels
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Employee Benefits Survey: neutral, real-world business context with
-          10 realistic benefit categories.'
+        comment: Employee benefits survey with real benefit names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All 10 questions sum exactly to 100%. Response distributions realistic
-          for corporate benefits surveys.
+        comment: 'Checked: every row sums to 100% (e.g. 4+8+12+45+31, 22+28+18+22+10);
+          net-agreement order matches the data'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -188,65 +199,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → reshape → plot → save. No
-          functions or classes.'
+        comment: Linear imports → tokens → data → reshape → plot → save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(scales) imported but never called. x-axis labels use custom
-          closure, expansion() is from ggplot2. Remove library(scales).
+        passed: true
+        comment: dplyr, tidyr, ragg, ggplot2 all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Neutral-split logic and factor-level ordering are genuinely necessary.
-          Well-commented. No over-engineering.
+        comment: Neutral split and stack ordering are necessary; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) produces correct filenames. Modern
-          ggplot2 API. ragg::agg_png device explicit.
+        comment: ggsave to plot-{THEME}.png via ragg at 8x4.5 in, 400 dpi
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expert ggplot2 usage: geom_col with position_stack, factor-level
-          ordering for diverging stack direction, scale_fill_manual with breaks to
-          control legend, position_stack(vjust=0.5) for centered labels. Canonical
-          ggplot2 diverging Likert pattern.'
+        passed: false
+        comment: 'Beyond default: scale_fill_manual(breaks, labels) merges the two
+          neutral halves into one legend entry; position_stack(vjust = 0.5) centers
+          labels in segments; pivot_longer reshape'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Diverging stacking via factor-level ordering and split neutral is
-          distinctively ggplot2 grammar-of-graphics. scale_fill_manual(breaks=...)
-          to decouple legend from factor levels is ggplot2-specific. Solid distinctiveness.
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9011b9f6bb
+  rendered_at: '2026-11-28T01:24:55Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - dplyr
+  - tidyr
+  - ragg
   techniques:
-  - layer-composition
   - annotations
   patterns:
-  - data-generation
   - wide-to-long
   dataprep: []
   styling:
-  - minimal-chrome
+  - grid-styling
