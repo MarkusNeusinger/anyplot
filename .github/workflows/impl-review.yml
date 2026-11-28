@@ -1435,7 +1435,7 @@ jobs:
           else
             echo "::notice::readiness self-scan did not run; the staged record counts only to keep"
           fi
-          if ! python3 "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
+          if ! python3 -I "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
                --record "$RECORD" --new "$NEW" --prev "$PREV" \
                --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT"; then
             echo "::warning::readiness check did not run; the regen gate decides without it"
