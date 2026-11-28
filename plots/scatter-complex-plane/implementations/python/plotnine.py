@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-28
@@ -78,7 +78,7 @@ is_last = (df[CATEGORY] == categories[-1]).to_numpy()
 
 # Annotation text: point name + rectangular form (a+bi)
 df["annotation"] = [
-    f"{lbl} = {r:.2f}{'+' if i >= 0 else '−'}{abs(i):.2f}i" for lbl, r, i in zip(df[LABEL], real, imag, strict=True)
+    f"{lbl}\n{r:.2f}{'+' if i >= 0 else '−'}{abs(i):.2f}i" for lbl, r, i in zip(df[LABEL], real, imag, strict=True)
 ]
 
 # Vectors from origin to each point
@@ -90,12 +90,13 @@ df_circle = pd.DataFrame({"x": np.cos(theta), "y": np.sin(theta)})
 
 # Radial label offsets — spread labels away from vectors to reduce crowding
 angles = np.arctan2(imag, real)
-label_radius = 0.46
+label_radius = 0.32
 is_left = np.cos(angles) >= 0
+is_upper = (np.sin(angles) > 0.5) & is_first
 df_labels = pd.DataFrame(
     {
         "x": real + label_radius * np.cos(angles),
-        "y": imag + label_radius * np.sin(angles),
+        "y": imag + label_radius * np.sin(angles) - 0.3 * (~is_left & is_upper),
         "annotation": df["annotation"],
     }
 )
@@ -105,10 +106,10 @@ df["pt_size"] = np.select([is_first, is_last], [3.5, 5.5], default=4.0)
 df["pt_alpha"] = np.select([is_first, is_last], [0.90, 1.0], default=0.95)
 
 # Axis range from the data: whole units outside the farthest point, ticks at integers
-limit = np.ceil(np.nanmax(np.abs(np.concatenate([real, imag])))) + 0.5
+limit = np.ceil(np.nanmax(np.abs(np.concatenate([real, imag])))) + 1.0
 step = 10 ** np.floor(np.log10(limit))
 ticks = np.arange(-np.floor(limit / step), np.floor(limit / step) + 1) * step
-unit_label_angle = np.deg2rad(50)
+unit_label_angle = np.deg2rad(100)
 
 plot = (
     ggplot()
@@ -119,13 +120,13 @@ plot = (
     + geom_path(df_circle, aes(x="x", y="y"), color=INK_MUTED, linetype="dashed", size=0.7, alpha=0.65)
     + annotate(
         "text",
-        x=np.cos(unit_label_angle),
-        y=np.sin(unit_label_angle),
+        x=1.12 * np.cos(unit_label_angle),
+        y=1.12 * np.sin(unit_label_angle),
         label="∣z∣ = 1",
         size=5.5,
         color=INK_SOFT,
         fontstyle="italic",
-        angle=50,
+        angle=10,
     )
     # Vectors from origin (no parallelogram construction lines)
     + geom_segment(
@@ -133,6 +134,7 @@ plot = (
         aes(x="x", y="y", xend="xend", yend="yend", color=CATEGORY),
         size=0.55,
         alpha=0.50,
+        show_legend=False,
         arrow=arrow(length=0.09, type="closed"),
     )
     # Points — main scatter layer with visual hierarchy
@@ -145,7 +147,7 @@ plot = (
     + geom_label(
         df_labels[is_left],
         aes(x="x", y="y", label="annotation"),
-        size=3.8,
+        size=6.5,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.88,
@@ -156,9 +158,23 @@ plot = (
         boxstyle="round,pad=0.2",
     )
     + geom_label(
-        df_labels[~is_left],
+        df_labels[~is_left & ~is_upper],
         aes(x="x", y="y", label="annotation"),
-        size=3.8,
+        size=6.5,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.88,
+        ha="right",
+        fontweight="bold",
+        label_padding=0.18,
+        label_size=0.2,
+        boxstyle="round,pad=0.2",
+    )
+    # Upper-left labels sit lower (see df_labels) so they never cover a neighbouring point
+    + geom_label(
+        df_labels[~is_left & is_upper],
+        aes(x="x", y="y", label="annotation"),
+        size=6.5,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.88,
