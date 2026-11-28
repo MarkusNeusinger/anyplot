@@ -1,7 +1,7 @@
 """ anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-28
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import Arrow, ColumnDataSource, HoverTool, Label, NormalHead, Range1d
 from bokeh.plotting import figure
@@ -16,77 +17,115 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# --- Theme ---
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Theme-adaptive chrome tokens (Imprint palette system)
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# --- Data ---
-# Hydrogen atom energy levels (E_n = -13.6 / n² eV)
-levels = [1, 2, 3, 4, 5, 6]
-energies = {n: -13.6 / n**2 for n in levels}
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Visual y-positions: sqrt compression for nonlinear mapping
-visual_y = {n: -np.sqrt(abs(energies[n])) for n in levels}
-ionization_visual_y = 0.0
-
-# Spectral series transitions: (upper_level, lower_level, color, label)
-# Lyman series (n→1, UV) — hue-varied for better visual differentiation
-lyman = [
-    (2, 1, "#3B1FA8", "Lyα 121.6 nm"),  # deep blue-violet
-    (3, 1, "#912DB8", "Lyβ 102.6 nm"),  # purple-magenta
-    (4, 1, "#C4278A", "Lyγ 97.3 nm"),  # rose-magenta
+# Constants
+# Spectral region of a transition: (upper wavelength bound in nm, Imprint color), shortest first
+SPECTRAL_COLORS = [
+    (400, IMPRINT_PALETTE[1]),  # ultraviolet
+    (450, IMPRINT_PALETTE[6]),  # violet
+    (495, IMPRINT_PALETTE[2]),  # blue
+    (700, IMPRINT_PALETTE[4]),  # red end of the visible range
+    (float("inf"), IMPRINT_PALETTE[3]),  # infrared
 ]
+TICK_STEPS = [0.5, 1.0, 5.0, 10.0]  # round energies (eV) marked on the compressed axis, besides the lowest levels
+IONIZATION_ENERGY = 0.0  # energy of the free electron (eV)
 
-# Balmer series (n→2, visible light) — spectral colors
-balmer = [
-    (3, 2, "#C0392B", "Hα 656.3 nm"),
-    (4, 2, "#2980B9", "Hβ 486.1 nm"),
-    (5, 2, "#6C3483", "Hγ 434.0 nm"),
-    (6, 2, "#512E5F", "Hδ 410.2 nm"),
+# Columns: one row per emission transition
+LEVEL = "Upper level n"  # role: level
+ENERGY = "Energy (eV)"  # role: energy
+LOWER_LEVEL = "Lower level n"  # role: extra
+LOWER_ENERGY = "Lower energy (eV)"  # role: extra
+LINE = "Line"  # role: extra
+WAVELENGTH = "Wavelength (nm)"  # role: extra
+SERIES = "Series"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("transitions.csv")
+# Hydrogen atom, E_n = -13.6 / n² eV; one row per transition from an upper to a lower level
+lines = [
+    ("Lyman (UV)", 2, 1, "Lyα", 121.6),
+    ("Lyman (UV)", 3, 1, "Lyβ", 102.6),
+    ("Lyman (UV)", 4, 1, "Lyγ", 97.3),
+    ("Balmer (Visible)", 3, 2, "Hα", 656.3),
+    ("Balmer (Visible)", 4, 2, "Hβ", 486.1),
+    ("Balmer (Visible)", 5, 2, "Hγ", 434.0),
+    ("Balmer (Visible)", 6, 2, "Hδ", 410.2),
+    ("Paschen (IR)", 4, 3, "Paα", 1875.0),
+    ("Paschen (IR)", 5, 3, "Paβ", 1282.0),
+    ("Paschen (IR)", 6, 3, "Paγ", 1094.0),
 ]
+df = pd.DataFrame(lines, columns=[SERIES, LEVEL, LOWER_LEVEL, LINE, WAVELENGTH])
+df[ENERGY] = -13.6 / df[LEVEL] ** 2
+df[LOWER_ENERGY] = -13.6 / df[LOWER_LEVEL] ** 2
 
-# Paschen series (n→3, IR) — warm tones
-paschen = [(4, 3, "#D35400", "Paα 1875 nm"), (5, 3, "#922B21", "Paβ 1282 nm"), (6, 3, "#641E16", "Paγ 1094 nm")]
+# Plot
+W, H = 3200, 1800
 
-# Layout: level lines extended to ±1.5 for better canvas utilization
+# Levels seen anywhere in the transitions, ordered from the ground state up
+levels = (
+    pd.concat(
+        [
+            df[[LEVEL, ENERGY]].set_axis(["n", "energy"], axis=1),
+            df[[LOWER_LEVEL, LOWER_ENERGY]].set_axis(["n", "energy"], axis=1),
+        ]
+    )
+    .drop_duplicates("n")
+    .sort_values("n")
+    .reset_index(drop=True)
+)
+
+# Square-root compression pulls the converging upper levels apart: visual y = -sqrt(|E|)
+levels["vy"] = -np.sqrt(np.abs(levels["energy"] - IONIZATION_ENERGY))
+vy_of = dict(zip(levels["n"], levels["vy"], strict=True))
+span = -levels["vy"].min()
+y_low, y_high = levels["vy"].min() - 0.08 * span, 0.22 * span
+
+# Horizontal layout: the first series sits left of the level lines, the others to their right
 level_x0, level_x1 = -1.5, 1.5
-lyman_x_start = -3.5  # 3 arrows: -3.50, -2.95, -2.40
-balmer_x_start = 3.2  # 4 arrows:  3.20,  3.75,  4.30,  4.85
-paschen_x_start = 5.7  # 3 arrows:  5.70,  6.25,  6.80
 arrow_spacing = 0.55
+series_names = list(df[SERIES].unique())
+x_cursor = {series_names[0]: -3.5}
+x_next = 3.2
+for name in series_names[1:]:
+    x_cursor[name] = x_next
+    x_next += (df[SERIES] == name).sum() * arrow_spacing + 0.3
+x_min = x_cursor[series_names[0]] - 1.5
+x_max = x_next + 0.9
 
-# Custom y-axis ticks for sqrt-compressed nonlinear scale
-tick_energies = [0, -0.5, -1.0, -1.5, -3.4, -5.0, -10.0, -13.6]
-tick_visual = [-np.sqrt(abs(e)) if e != 0 else 0.0 for e in tick_energies]
+# Ticks of the compressed axis: ground levels plus round energies inside the range
+low_energy = levels["energy"].min()
+tick_energies = sorted(
+    {IONIZATION_ENERGY, *levels["energy"].iloc[:3], *(-s for s in TICK_STEPS if s < abs(low_energy))}, reverse=True
+)
+tick_visual = [-np.sqrt(abs(e - IONIZATION_ENERGY)) for e in tick_energies]
 tick_labels = [f"{e:.1f}" for e in tick_energies]
 
-# ColumnDataSource for energy level lines (enables HoverTool)
 level_source = ColumnDataSource(
     data={
         "x0": [level_x0] * len(levels),
-        "y0": [visual_y[n] for n in levels],
+        "y0": levels["vy"],
         "x1": [level_x1] * len(levels),
-        "y1": [visual_y[n] for n in levels],
-        "quantum_n": [f"n = {n}" for n in levels],
-        "energy": [f"{energies[n]:.2f} eV" for n in levels],
-        "degeneracy": [f"{n**2}-fold" for n in levels],
+        "y1": levels["vy"],
+        "quantum_n": [f"n = {n}" for n in levels["n"]],
+        "energy": [f"{e:.2f} eV" for e in levels["energy"]],
+        "degeneracy": [f"{n**2}-fold" for n in levels["n"]],
     }
 )
-
-# --- Plot (3200×1800 landscape canvas) ---
-W, H = 3200, 1800
 
 p = figure(
     width=W,
     height=H,
-    title="energy-level-atomic · bokeh · anyplot.ai",
-    x_range=Range1d(-5.0, 8.5),
-    y_range=Range1d(visual_y[1] - 0.3, ionization_visual_y + 0.8),
+    title="energy-level-atomic · python · bokeh · anyplot.ai",
+    x_range=Range1d(x_min, x_max),
+    y_range=Range1d(y_low, y_high),
     toolbar_location=None,
     min_border_bottom=100,
     min_border_left=180,
@@ -94,25 +133,23 @@ p = figure(
     min_border_right=50,
 )
 
-# Custom y-axis ticks
 p.yaxis.ticker = tick_visual
 p.yaxis.major_label_overrides = dict(zip(tick_visual, tick_labels, strict=True))
-p.yaxis.axis_label = "Energy (eV)"
+p.yaxis.axis_label = ENERGY
 
-# Energy level lines (Imprint blue #4467A3)
-level_glyph = p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=level_source, line_width=8, line_color="#4467A3")
-
-# HoverTool for interactive HTML
-hover = HoverTool(
-    renderers=[level_glyph], tooltips=[("Level", "@quantum_n"), ("Energy", "@energy"), ("Degeneracy", "@degeneracy")]
+# Energy level lines in the first Imprint color
+level_glyph = p.segment(
+    x0="x0", y0="y0", x1="x1", y1="y1", source=level_source, line_width=8, line_color=IMPRINT_PALETTE[0]
 )
-p.add_tools(hover)
+p.add_tools(
+    HoverTool(
+        renderers=[level_glyph],
+        tooltips=[("Level", "@quantum_n"), ("Energy", "@energy"), ("Degeneracy", "@degeneracy")],
+    )
+)
 
-# Level labels (right of level lines)
-for n in levels:
-    vy = visual_y[n]
-    e = energies[n]
-    y_off = 18 if n == 6 else (-18 if n == 5 else 0)
+# Level labels right of the level lines
+for n, e, vy in zip(levels["n"], levels["energy"], levels["vy"], strict=True):
     p.add_layout(
         Label(
             x=level_x1 + 0.15,
@@ -121,86 +158,70 @@ for n in levels:
             text_font_size="22pt",
             text_color=INK_SOFT,
             text_baseline="middle",
-            y_offset=y_off,
         )
     )
 
-# Ionization limit dashed line
-p.segment(
-    x0=[-5.0],
-    y0=[ionization_visual_y],
-    x1=[8.5],
-    y1=[ionization_visual_y],
-    line_width=3,
-    line_color=INK_MUTED,
-    line_dash="dashed",
-)
+# Ionization limit: dashed line across the plot, labeled
+p.segment(x0=[x_min], y0=[0.0], x1=[x_max], y1=[0.0], line_width=3, line_color=INK_MUTED, line_dash="dashed")
 p.add_layout(
     Label(
         x=level_x1 + 0.15,
-        y=ionization_visual_y + 0.12,
-        text="Ionization (0 eV)",
+        y=0.03 * span,
+        text=f"Ionization ({IONIZATION_ENERGY:g} eV)",
         text_font_size="22pt",
         text_color=INK_MUTED,
     )
 )
 
-# Transition arrows and labels
-all_series = [(lyman, lyman_x_start, "left"), (balmer, balmer_x_start, "right"), (paschen, paschen_x_start, "right")]
-
-for transitions, x_start, label_side in all_series:
-    for i, (n_upper, n_lower, color, label_text) in enumerate(transitions):
+# Transition arrows colored by spectral region, labeled with their wavelength
+for series_name, group in df.groupby(SERIES, sort=False):
+    x_start = x_cursor[series_name]
+    on_left = series_name == series_names[0]
+    first_color = None
+    for i, row in enumerate(group.itertuples(index=False)):
+        wavelength = row[4]
+        color = next((c for bound, c in SPECTRAL_COLORS if wavelength < bound), INK_MUTED)
+        first_color = first_color or color
+        y_from, y_to = vy_of[row[1]], vy_of[row[2]]
         x_pos = x_start + i * arrow_spacing
         p.add_layout(
             Arrow(
                 end=NormalHead(size=22, fill_color=color, line_color=color),
                 x_start=x_pos,
-                y_start=visual_y[n_upper],
+                y_start=y_from,
                 x_end=x_pos,
-                y_end=visual_y[n_lower],
+                y_end=y_to,
                 line_color=color,
                 line_width=4,
             )
         )
-        mid_y = (visual_y[n_upper] + visual_y[n_lower]) / 2
-        align = "right" if label_side == "left" else "left"
-        x_off = -12 if label_side == "left" else 12
         p.add_layout(
             Label(
                 x=x_pos,
-                y=mid_y,
-                text=label_text,
+                y=(y_from + y_to) / 2,
+                text=f"{row[3]} {wavelength:g} nm",
                 text_font_size="20pt",
                 text_color=color,
-                text_align=align,
-                x_offset=x_off,
+                text_align="center",
+                text_baseline="bottom",
+                angle=np.pi / 2,
+                x_offset=-8,
             )
         )
-
-# Series header labels
-header_y = ionization_visual_y + 0.58
-lyman_cx = lyman_x_start + arrow_spacing  # center of 3 arrows
-balmer_cx = balmer_x_start + 1.5 * arrow_spacing  # center of 4 arrows
-paschen_cx = paschen_x_start + arrow_spacing  # center of 3 arrows
-
-for cx, text, color in [
-    (lyman_cx, "Lyman Series (UV)", "#3B1FA8"),
-    (balmer_cx, "Balmer Series (Visible)", "#C0392B"),
-    (paschen_cx, "Paschen Series (IR)", "#D35400"),
-]:
+    centre = x_start + (len(group) - 1) / 2 * arrow_spacing
     p.add_layout(
         Label(
-            x=cx,
-            y=header_y,
-            text=text,
+            x=centre,
+            y=0.157 * span,
+            text=f"{series_name} series",
             text_font_size="26pt",
             text_font_style="bold",
-            text_color=color,
+            text_color=first_color,
             text_align="center",
         )
     )
 
-# --- Style (theme-adaptive chrome) ---
+# Style (theme-adaptive chrome)
 p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
 p.title.text_color = INK
@@ -222,7 +243,7 @@ p.outline_line_color = None
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
-# --- Save ---
+# Save
 output_file(f"plot-{THEME}.html", title="Atomic Energy Level Diagram")
 save(p)
 
@@ -238,12 +259,15 @@ for arg in (
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-# Force viewport to exactly W×H via CDP — Chrome's window chrome otherwise
-# shrinks the visible area (e.g. 3200×1800 window → 3200×1661 viewport).
+# Force the viewport to exactly W×H via CDP: the window chrome otherwise shrinks it
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Paint the page in the theme color so the anti-aliased canvas edge shows no white line
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0]; document.body.style.background = arguments[0];", PAGE_BG
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
