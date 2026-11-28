@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' mohr-circle: Mohr's Circle for Stress Analysis
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-05-30
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 80/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -117,10 +117,10 @@ p <- ggplot() +
   annotate("point", x = sigma_y, y = -tau_xy,
            color = "white", fill = IMPRINT_PALETTE[5], size = 5.0, shape = 21,
            stroke = 0.5) +
-  # Label A: positioned to the left+above to stay within panel
-  annotate("text", x = sigma_x - 3, y = tau_xy + 6,
+  # Label A: inside the circle, clear of the arc
+  annotate("text", x = center_x + 4, y = tau_xy + 7,
            label = label_A,
-           color = IMPRINT_PALETTE[3], hjust = 1, vjust = 0, size = 3.8) +
+           color = IMPRINT_PALETTE[3], hjust = 0, vjust = 0, size = 3.8) +
   # Label B: positioned to the right+below to stay within panel
   annotate("text", x = sigma_y + 3, y = -tau_xy - 6,
            label = label_B,
@@ -140,7 +140,7 @@ p <- ggplot() +
   # Label 2thetap angle: near midpoint of arc
   annotate("text", x = arc_label_x, y = arc_label_y,
            label = label_2tp,
-           color = INK_SOFT, hjust = 0, vjust = 0.5, size = 3.0) +
+           color = INK_SOFT, hjust = 0, vjust = 0.5, size = 3.8) +
   coord_fixed(ratio = 1, clip = "off") +
   labs(
     x     = paste0("Normal Stress ", sigma_sym, " (MPa)"),
