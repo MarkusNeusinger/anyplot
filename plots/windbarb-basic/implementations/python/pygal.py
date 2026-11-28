@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-22
@@ -6,7 +6,6 @@ Quality: 83/100 | Updated: 2026-11-22
 
 import math
 import os
-import xml.etree.ElementTree as ET
 
 import numpy as np
 import pandas as pd
@@ -56,81 +55,64 @@ df = pd.DataFrame(
 
 
 # Plot: reads only df and the constants above
-def barb_elems(cx, cy, spd, dirn):
-    """Return SVG element strings for one wind barb: staff points toward the direction the wind comes from."""
-    if spd < CALM_KT:
-        return [f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="10" fill="none" stroke="{BRAND}" stroke-width="3"/>']
-    out = [f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="4" fill="{BRAND}"/>']
-    dr = math.radians(dirn)
-    sdx, sdy = math.sin(dr), -math.cos(dr)
-    xt, yt = cx + sdx * STAFF, cy + sdy * STAFF
-    out.append(
-        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{xt:.1f}" y2="{yt:.1f}" '
-        f'stroke="{BRAND}" stroke-width="3" stroke-linecap="round"/>'
-    )
-    bpx, bpy = -sdy, sdx  # feathers on the left of the staff (Northern Hemisphere)
-    n50, rest = divmod(round(spd / 5) * 5, 50)
-    n10, rest = divmod(rest, 10)
-    n5 = rest // 5
-    pos = 0.0
-    for _ in range(n50):
-        bx, by = xt - sdx * pos, yt - sdy * pos
-        tx, ty = bx + bpx * BFULL, by + bpy * BFULL
-        nx, ny = bx - sdx * BSPC, by - sdy * BSPC
-        out.append(f'<polygon points="{bx:.1f},{by:.1f} {tx:.1f},{ty:.1f} {nx:.1f},{ny:.1f}" fill="{BRAND}"/>')
-        pos += BSPC
-    for count, length in ((n10, BFULL), (n5, BHALF)):
-        for _ in range(count):
-            bx, by = xt - sdx * pos, yt - sdy * pos
-            out.append(
-                f'<line x1="{bx:.1f}" y1="{by:.1f}" x2="{bx + bpx * length:.1f}" y2="{by + bpy * length:.1f}" '
-                f'stroke="{BRAND}" stroke-width="3" stroke-linecap="round"/>'
-            )
-            pos += BSPC
-    return out
-
-
-class WindBarbXY(pygal.XY):
-    """pygal.XY that overlays wind barbs, positioned with pygal's own data-to-pixel view."""
-
-    def __init__(self, winds, **kw):
-        self._winds = winds
-        super().__init__(**kw)
-
-    def _draw(self):
-        super()._draw()
-        layer = self.svg.node(self.nodes["plot"], tag="g", id="wind-barbs")
-        for lon, lat, spd, dirn in self._winds:
-            for s in barb_elems(self.view.x(lon), self.view.y(lat), spd, dirn):
-                layer.append(ET.fromstring(s))
-        self._draw_key()
-
-    def _draw_key(self):
-        """Key below the plot area: sample barbs for 5, 10, 20 and 50 kt plus the calm circle."""
-        samples = [(5, "5 kt"), (10, "10 kt"), (20, "20 kt"), (50, "50 kt"), (0, f"Calm (<{CALM_KT} kt)")]
-        left = self.margin_box.left
-        step = (self.width - self.margin_box.left - self.margin_box.right) / len(samples)
-        y = self.height - 60
-        key = self.svg.node(self.nodes["graph"], tag="g", id="wind-key")
-        for j, (spd, label) in enumerate(samples):
-            x = left + j * step
-            for s in barb_elems(x, y, spd if spd else 0.0, 0):
-                key.append(ET.fromstring(s))
-            txt = ET.SubElement(key, "text")
-            txt.set("x", f"{x + 70:.1f}")
-            txt.set("y", f"{y + 12:.1f}")
-            txt.set("fill", INK_MUTED)
-            txt.set("font-size", str(self.style.legend_font_size))
-            txt.set("font-family", "sans-serif")
-            txt.text = label
-
-
 speed_kt = np.hypot(df[U_WIND], df[V_WIND])
 from_deg = np.degrees(np.arctan2(-df[U_WIND], -df[V_WIND])) % 360
 winds = [w for w in zip(df[LONGITUDE], df[LATITUDE], speed_kt, from_deg, strict=True) if not np.isnan(w).any()]
 
 lons = sorted(df[LONGITUDE].dropna().unique())
 lats = sorted(df[LATITUDE].dropna().unique())
+
+KEY = [(5, "5 kt"), (10, "10 kt"), (20, "20 kt"), (50, "50 kt"), (0.0, f"Calm (<{CALM_KT} kt)")]
+
+
+class WindBarbXY(pygal.XY):
+    """pygal.XY that overlays wind barbs, positioned with pygal's own data-to-pixel view."""
+
+    def _draw(self):
+        super()._draw()
+        left = self.margin_box.left
+        step = (self.width - left - self.margin_box.right) / len(KEY)
+        # Station barbs in data coordinates, then the key samples in canvas pixels
+        stations = self.svg.node(self.nodes["plot"], tag="g", id="wind-barbs")
+        key = self.svg.node(self.nodes["graph"], tag="g", id="wind-key")
+        barbs = [(stations, self.view.x(lon), self.view.y(lat), spd, dirn) for lon, lat, spd, dirn in winds]
+        barbs += [(key, left + j * step, self.height - 60, spd, 0) for j, (spd, _) in enumerate(KEY)]
+        line = {"stroke": BRAND, "stroke-width": 3, "stroke-linecap": "round"}
+        for layer, cx, cy, spd, dirn in barbs:
+            if spd < CALM_KT:
+                self.svg.node(layer, "circle", {"cx": f"{cx:.1f}", "cy": f"{cy:.1f}", "r": 10, "fill": "none", **line})
+                continue
+            self.svg.node(layer, "circle", {"cx": f"{cx:.1f}", "cy": f"{cy:.1f}", "r": 4, "fill": BRAND})
+            dr = math.radians(dirn)
+            sdx, sdy = math.sin(dr), -math.cos(dr)  # unit vector of the staff, pointing to the wind's origin
+            xt, yt = cx + sdx * STAFF, cy + sdy * STAFF
+            self.svg.node(
+                layer, "line", {"x1": f"{cx:.1f}", "y1": f"{cy:.1f}", "x2": f"{xt:.1f}", "y2": f"{yt:.1f}", **line}
+            )
+            bpx, bpy = -sdy, sdx  # feathers on the left of the staff (Northern Hemisphere)
+            n50, rest = divmod(round(spd / 5) * 5, 50)
+            n10, rest = divmod(rest, 10)
+            pos = 0.0
+            for kind in ["pennant"] * n50 + ["full"] * n10 + ["half"] * (rest // 5):
+                bx, by = xt - sdx * pos, yt - sdy * pos
+                if kind == "pennant":
+                    points = f"{bx:.1f},{by:.1f} {bx + bpx * BFULL:.1f},{by + bpy * BFULL:.1f} {bx - sdx * BSPC:.1f},{by - sdy * BSPC:.1f}"
+                    self.svg.node(layer, "polygon", {"points": points, "fill": BRAND})
+                else:
+                    length = BFULL if kind == "full" else BHALF
+                    feather = {
+                        "x1": f"{bx:.1f}",
+                        "y1": f"{by:.1f}",
+                        "x2": f"{bx + bpx * length:.1f}",
+                        "y2": f"{by + bpy * length:.1f}",
+                    }
+                    self.svg.node(layer, "line", {**feather, **line})
+                pos += BSPC
+        for j, (_, label) in enumerate(KEY):
+            attrs = {"x": f"{left + j * step + 70:.1f}", "y": f"{self.height - 48:.1f}", "fill": INK_MUTED}
+            attrs |= {"font-size": self.style.legend_font_size, "font-family": "sans-serif"}
+            self.svg.node(key, "text", attrs).text = label
+
 
 custom_style = Style(
     background=PAGE_BG,
