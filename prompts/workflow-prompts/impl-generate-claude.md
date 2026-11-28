@@ -230,13 +230,15 @@ Before the first render, check the file against what the prompts mandate where t
 ```bash
 cd "$GITHUB_WORKSPACE"
 .venv/bin/python -I automation/scripts/contract_check.py selfcheck \
-    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} --library {LIBRARY}
+    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} --library {LIBRARY} \
+    --regeneration {IS_REGENERATION}
 ```
 
-It prints one line per rule the file breaks: what it found and, after `→`, the words of the prompt that set the rule, with their file. Its last line is the verdict: `contract: pass`, `contract: pass (advisory: palette)`, `contract: fix (<keys>)` or `contract: not run (<reason>)`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.
+It prints one line per rule the file breaks: what it found and, after `→`, the words of the prompt that set the rule, with their file. Its last line is the verdict: `contract: pass`, `contract: pass (advisory: <keys>)`, `contract: fix (<keys>)` or `contract: not run (<reason>)`. It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.
 
 - **Fix every line that is not marked `(advisory)`,** then run the check again. The fix is the setting the quoted words ask for, written the way `prompts/library/{LIBRARY}.md` shows it. The output is the whole rule: don't read the script for its patterns.
 - **On a regeneration, also fix the lines the previous file already broke.** "Base style wins on everything else" makes each of them a named item of this regeneration, like a CQ-04 weakness.
+- **On a regeneration, a `data-block` line is not fixed** (R, Julia and JavaScript): the check marks it `(advisory on a regeneration)`, and the working data code stays, as the regeneration mindset above says.
 - **The `palette (advisory)` line** lists colours outside the style guide's palette. Keep one only for a reason that holds, such as a semantic exception of the style guide or a colour the spec names, and name the colour and the reason in the commit line; replace the others with Imprint colours or theme tokens.
 - **Never trade a defect in the render for a clean check,** and never remove an element the spec asks for to silence a line.
 - If the command cannot run (exit 2, or a runner error), say so in the commit line and go on; it never blocks the implementation. `impl-review.yml` runs the same check on the committed file again, record-only.
@@ -518,7 +520,7 @@ Before finishing, confirm:
 6. ✅ Every data mark sits at its data value — overlap was handled through data generation, marker size or alpha, not by moving marks (SC-03 exemptions only: categorical strip/swarm jitter, layout-positioned types, jitter/dodge/offset the spec asks for)
 7. ✅ If regenerating: same data scenario and variant as before (unless a weakness or change request asked otherwise), no new encodings on a `-basic` spec, no new `main()`, class, function that holds the plot or the save, or function inside a function below the Data block (a short helper above its first use, and what the library or the harness asks for, are fine), and no added code whose effect does not show in the render. For Python (`LANGUAGE=python`), converting the file to the Data block convention is the exception: it may add code while the render stays identical
 8. ✅ If regenerating: the title ends in `{spec-id} · {language} · {library} · anyplot.ai` with the real language (`python`, `r`, `julia`, `javascript`), whatever the previous title said, after the optional `{Descriptive Title} · ` prefix of `prompts/plot-generator.md`
-9. ✅ For Python (`LANGUAGE=python`): Step 3c ran (at most three attempts, both commands in each) and the commit body carries its `Adaptability self-check:` and `Readiness self-check:` lines; for every language, the file follows the zones of `prompts/adaptable-code.md`
+9. ✅ For Python (`LANGUAGE=python`): Step 3c ran (at most three attempts, both commands in each) and the commit body carries its `Adaptability self-check:` and `Readiness self-check:` lines; for every language, the file follows the zones of `prompts/adaptable-code.md`, except that a regeneration in R, Julia and JavaScript keeps its working data code
 10. ✅ Step 4 asked every question of both renders, fixed what failed in its one fix round without deleting an element, and the commit body carries its `Visual self-check:` line
 11. ✅ Step 2b ran on the file, again in Step 4 when the file changed after it, and the commit body carries its `Contract self-check:` line; every line not marked `(advisory)` was fixed or is named as open
 12. ✅ Every claim the plot states that its data or structure can confirm was checked by a computation outside the file, what failed was fixed in Step 4's fix round, no checking code is in the committed file, and the commit body carries its `Claims self-check:` line

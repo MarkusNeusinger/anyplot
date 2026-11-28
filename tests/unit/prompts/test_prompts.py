@@ -1783,9 +1783,23 @@ class TestGeneratorSelfChecks:
         command = (
             ".venv/bin/python -I automation/scripts/contract_check.py selfcheck \\\n"
             "    plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT} --spec-id {SPEC_ID} --language {LANGUAGE} "
-            "--library {LIBRARY}"
+            "--library {LIBRARY} \\\n"
+            "    --regeneration {IS_REGENERATION}"
         )
         assert command in step
+        # The one exception the step names: a regeneration keeps its working data code.
+        exception = (
+            "**On a regeneration, a `data-block` line is not fixed** (R, Julia and JavaScript): the check marks it "
+            "`(advisory on a regeneration)`, and the working data code stays"
+        )
+        assert exception in step
+        assert step.count("data-block") == 1
+        # The final check says the same, so it never asks a regeneration to convert its data code.
+        final_check = next(line for line in content.splitlines() if line.startswith("9. ✅"))
+        assert final_check.endswith(
+            "for every language, the file follows the zones of `prompts/adaptable-code.md`, except that a "
+            "regeneration in R, Julia and JavaScript keeps its working data code"
+        )
         for sentence in (
             "It exits 0 when nothing must be fixed, 1 when something must, and 2 when it cannot read the file.",
             "**Fix every line that is not marked `(advisory)`,** then run the check again.",
@@ -1805,7 +1819,10 @@ class TestGeneratorSelfChecks:
         source = tmp_path / "plot.py"
         source.write_text('import os\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n', encoding="utf-8")
         argv = ["selfcheck", str(source), "--spec-id", "scatter-basic", "--language", "python", "--library", "bokeh"]
-        assert contract_check.main(argv) == 1  # no title, no save target, the toolbar kept
+        # No title, no save target, the toolbar kept.
+        assert contract_check.main([*argv, "--regeneration", "false"]) == 1
+        # The session passes its IS_REGENERATION: the regeneration exception touches only data-block.
+        assert contract_check.main([*argv, "--regeneration", "true"]) == 1
 
     def test_step_4_checks_the_plots_claims_by_computation(self) -> None:
         """The review reads the picture; the generator recomputes what the picture states, outside the file."""
