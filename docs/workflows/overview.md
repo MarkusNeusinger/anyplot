@@ -140,6 +140,7 @@ impl-generate.yml
        |
        v
 impl-review.yml
+  |-- Refuses a PR head that changes more than its pair's implementation and metadata file (pr_tree_check.py, before the checkout)
   |-- Checks the staged render.sha256 against the PR head (only a match lets the review run)
   |-- Checks that both theme renders sit on the same canonical canvas (a miss forces VQ-05 to 0)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)

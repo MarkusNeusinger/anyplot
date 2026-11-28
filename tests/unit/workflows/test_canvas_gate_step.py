@@ -408,6 +408,7 @@ def test_the_step_keeps_its_place_and_never_fails_the_job_by_itself():
     step = _step("impl-review.yml", STEP)
     assert step["if"] == "steps.render_stop.outputs.stopped != 'true'"
     script = str(step["run"])
-    assert script.count("python3 <<'PY'") == 1
+    # -P keeps the workspace, the PR head, off the import path of the heredoc.
+    assert script.count("python3 -P - <<'PY'") == 1
     assert "exit 1" not in script
     assert "sys.exit(1)" not in script

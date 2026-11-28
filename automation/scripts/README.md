@@ -465,6 +465,15 @@ python3 pr_guard.py filter --repo OWNER/NAME --libraries "altair bokeh ..." < pr
 python3 pr_guard.py spec-id scatter-basic   # prints it and exits 0, or exits 1
 ```
 
+### `pr_tree_check.py`
+
+Fail-closed check that an implementation pull request's head changes only its pair's implementation and metadata file, as regular files, against the merge base with `main`. `impl-review.yml` runs it from the workflow's own ref in "Checkout PR code", before the head is checked out into the workspace, and stops the job on anything else. Exits 0, 1 (refused, with a `::error::` line), or 2 (a usage error, or git can't compare the two).
+
+```bash
+python3 -I automation/scripts/pr_tree_check.py --base origin/main --head <sha> \
+  --spec-id scatter-basic --language python --library matplotlib
+```
+
 ### `spec_pr_guard.py`
 Fail-closed file allowlist for the spec PR that the merge job in `spec-create.yml`
 merges: the diff of the PR head against its merge base with `main` may only add or
