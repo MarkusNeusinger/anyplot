@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-28
+Quality: 87/100 | Updated: 2026-11-28
 """
 
 import sys
@@ -123,17 +123,19 @@ for z, label in zip(all_points, all_labels, strict=False):
 
     polar = f"{abs(z):.2f}∠{angle_deg:.1f}°"
 
-    dx = (re / mag) * 0.45
-    dy = (im / mag) * 0.45
+    ux, uy = re / mag, im / mag
+    ha = "left" if ux > 0.35 else "right" if ux < -0.35 else "center"
+    va = "bottom" if uy > 0.35 else "top" if uy < -0.35 else "center"
 
     ax.annotate(
         f"{label}\n{coord}\n{polar}",
         xy=(re, im),
-        xytext=(re + dx, im + dy),
+        xytext=(ux * 14, uy * 14),
+        textcoords="offset points",
         fontsize=9,
         color=INK,
-        ha="center",
-        va="center",
+        ha=ha,
+        va=va,
         bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.88, "pad": 3},
         zorder=6,
     )
@@ -159,7 +161,16 @@ ax.set_ylim(-extent, extent)
 
 # Legend
 legend_elements = [
-    Line2D([0], [0], marker=group_marker[g], color="w", markerfacecolor=group_color[g], markersize=9, label=g)
+    Line2D(
+        [0],
+        [0],
+        marker=group_marker[g],
+        linestyle="none",
+        markerfacecolor=group_color[g],
+        markeredgecolor=PAGE_BG,
+        markersize=9,
+        label=g,
+    )
     for g in groups
 ] + [Line2D([0], [0], color=INK_MUTED, linewidth=1.5, linestyle="--", label="Unit circle  |z| = 1")]
 leg = ax.legend(handles=legend_elements, fontsize=8, loc="lower left", framealpha=0.9)
