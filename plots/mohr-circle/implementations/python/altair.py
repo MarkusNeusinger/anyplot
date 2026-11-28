@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-30
@@ -31,11 +31,16 @@ BRAND = "#009E73"  # pos 1 — stress state points + circle line
 LAVENDER = "#C475FD"  # pos 2 — max shear points
 BLUE = "#4467A3"  # pos 3 — principal stresses + 2θp arc
 
-# Data — 2D stress state (MPa)
-sigma_x = 80
-sigma_y = -40
-tau_xy = 30
+# Columns: set these to your table's column names
+SIGMA_X = "sigma_x (MPa)"  # role: sigma_x
+SIGMA_Y = "sigma_y (MPa)"  # role: sigma_y
+TAU_XY = "tau_xy (MPa)"  # role: tau_xy
 
+# Data: replace this one-row table with your own stress state, for example df = pd.read_csv("stress.csv")
+df = pd.DataFrame({SIGMA_X: [80], SIGMA_Y: [-40], TAU_XY: [30]})
+
+# Plot: everything below derives from the stress state in df
+sigma_x, sigma_y, tau_xy = (df[c].iloc[0] for c in (SIGMA_X, SIGMA_Y, TAU_XY))
 center = (sigma_x + sigma_y) / 2
 radius = np.sqrt(((sigma_x - sigma_y) / 2) ** 2 + tau_xy**2)
 sigma_1 = center + radius
@@ -46,10 +51,10 @@ theta_p2 = np.degrees(np.arctan2(tau_xy, (sigma_x - sigma_y) / 2))
 # Circle outline (parametric)
 angles = np.linspace(0, 2 * np.pi, 361)
 circle_df = pd.DataFrame(
-    {"sigma": center + radius * np.cos(angles), "tau": radius * np.sin(angles), "order": range(361)}
+    {"sigma": center + radius * np.cos(angles), "tau": radius * np.sin(angles), "order": range(len(angles))}
 )
 
-# Key stress points
+# Key stress points; dx/dy are label offsets in screen pixels
 stress_points = pd.DataFrame(
     [
         {
@@ -68,8 +73,8 @@ stress_points = pd.DataFrame(
             "dx": -18,
             "dy": 14,
         },
-        {"sigma": sigma_1, "tau": 0, "label": f"σ₁ = {sigma_1:.1f} MPa", "type": "Principal", "dx": 12, "dy": -16},
-        {"sigma": sigma_2, "tau": 0, "label": f"σ₂ = {sigma_2:.1f} MPa", "type": "Principal", "dx": -18, "dy": -16},
+        {"sigma": sigma_1, "tau": 0, "label": f"σ₁ = {sigma_1:.1f} MPa", "type": "Principal", "dx": -16, "dy": 20},
+        {"sigma": sigma_2, "tau": 0, "label": f"σ₂ = {sigma_2:.1f} MPa", "type": "Principal", "dx": 16, "dy": 20},
         {
             "sigma": center,
             "tau": tau_max,
@@ -96,16 +101,15 @@ diameter_df = pd.DataFrame({"sigma": [sigma_x, sigma_y], "tau": [tau_xy, -tau_xy
 arc_r = radius * 0.25
 arc_angles = np.linspace(0, np.radians(theta_p2), 50)
 arc_df = pd.DataFrame(
-    {"sigma": center + arc_r * np.cos(arc_angles), "tau": arc_r * np.sin(arc_angles), "order": range(50)}
+    {"sigma": center + arc_r * np.cos(arc_angles), "tau": arc_r * np.sin(arc_angles), "order": range(len(arc_angles))}
 )
 
-# Equal-aspect domains — square inner view (460×460) so circle renders as true circle
-span = max(sigma_1 - sigma_2, 2 * tau_max) + 30
-domain_sigma = [center - span / 2, center + span / 2]
-domain_tau = [-span / 2, span / 2]
-
-x_scale = alt.Scale(domain=domain_sigma)
-y_scale = alt.Scale(domain=domain_tau)
+# Equal-aspect domains: same data span on both axes in a square view, so the circle stays round
+span = max(sigma_1 - sigma_2, 2 * tau_max) * 1.25
+x_scale = alt.Scale(domain=[center - span / 2, center + span / 2], nice=False)
+# The fit layout leaves the view about 5 % wider than tall (axis titles and ticks take height), so the shear span shrinks by that ratio
+VIEW_ASPECT = 0.947
+y_scale = alt.Scale(domain=[-span / 2 * VIEW_ASPECT, span / 2 * VIEW_ASPECT], nice=False)
 
 # Reference lines through center
 h_rule = (
@@ -203,26 +207,33 @@ center_lbl = (
     .encode(x="sigma:Q", y="tau:Q")
 )
 
-# Annotation labels — data-space offsets (px_to_data = span per inner-view pixel)
-px_to_data = span / 460
-stress_points["lbl_sigma"] = stress_points["sigma"] + stress_points["dx"] * px_to_data
-stress_points["lbl_tau"] = stress_points["tau"] - stress_points["dy"] * px_to_data
-labels = (
-    alt.Chart(stress_points)
-    .mark_text(fontSize=11, fontWeight="bold", color=INK)
-    .encode(x="lbl_sigma:Q", y="lbl_tau:Q", text="label:N")
-)
+# Annotation labels, one text layer per point so each gets its own pixel offset
+labels = [
+    alt.Chart(pd.DataFrame([row]))
+    .mark_text(
+        fontSize=11,
+        fontWeight="bold",
+        color=INK,
+        dx=row["dx"],
+        dy=row["dy"],
+        align="left" if row["dx"] > 0 else "right",
+    )
+    .encode(x="sigma:Q", y="tau:Q", text="label:N")
+    for row in stress_points.to_dict("records")
+]
 
 # Title and subtitle
 title_text = "mohr-circle · python · altair · anyplot.ai"
 subtitle_text = f"2D Stress Transformation — σx={sigma_x}, σy={sigma_y}, τxy={tau_xy} MPa"
 
-# Compose chart — square inner view (460×460) preserves circular aspect ratio
+# Compose chart; the fit autosize makes the view square, so the circle stays round
 chart = (
-    alt.layer(h_rule, v_rule, circle, diameter, arc, points, center_pt, labels, center_lbl, angle_lbl)
+    alt.layer(h_rule, v_rule, circle, diameter, arc, points, center_pt, *labels, center_lbl, angle_lbl)
     .properties(
-        width=460,
-        height=460,
+        width=600,
+        height=600,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        padding=10,
         background=PAGE_BG,
         title=alt.Title(
             title_text,
@@ -234,7 +245,7 @@ chart = (
             subtitleColor=INK_SOFT,
         ),
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=460, continuousHeight=460)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
@@ -243,6 +254,7 @@ chart = (
         tickColor=INK_SOFT,
         grid=True,
         gridOpacity=0.12,
+        tickMinStep=20,
         gridColor=INK,
         domain=False,
     )
@@ -257,20 +269,15 @@ chart = (
     .configure_title(color=INK)
 )
 
-# Save — target 2400×2400; pad with PAGE_BG if vl-convert lands short
+# Save: 600×600 fit chart × scale 4 = 2400×2400; pad with PAGE_BG if short, never crop
 TW, TH = 2400, 2400
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
-
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")
