@@ -1,255 +1,31 @@
 """ anyplot.ai
 horizon-basic: Horizon Chart
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 78/100 | Updated: 2026-11-28
+Quality: 86/100 | Updated: 2026-11-28
 """
 
 import os
-import sys
 
 import numpy as np
 import pandas as pd
+import pygal
+from pygal.style import Style
 
 
-# Temporarily remove current directory from path to avoid name collision
-# with this file (pygal.py) shadowing the real "pygal" package on import.
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-# Restore path
-sys.path.insert(0, _cwd)
-
-# Theme configuration (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
-
-# imprint_div endpoints (diverging, meaningful midpoint = the sector's own
-# background) — never ColorBrewer / viridis / any other named cmap.
-DIV_NEGATIVE = "#AE3030"
-DIV_POSITIVE = "#4467A3"
-DIV_MIDPOINT = PAGE_BG
-
-
-def _lerp_hex(c0, c1, t):
-    """Interpolate two hex colors — Imprint has no built-in cmap API, so
-    continuous bands are built manually from the two imprint_div endpoints."""
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
-class HorizonChart(Graph):
-    """Horizon chart: folds signed deviations into imprint_div bands.
-
-    pygal has no native horizon type, so this subclasses Graph and draws SVG.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.series_data = kwargs.pop("series_data", {})
-        self.time_labels = kwargs.pop("time_labels", [])
-        self.n_bands = kwargs.pop("n_bands", 3)
-        self.pos_colors = kwargs.pop("pos_colors", [])
-        self.neg_colors = kwargs.pop("neg_colors", [])
-        super().__init__(*args, **kwargs)
-
-    def _plot(self):
-        """Draw the horizon chart: one row per series, folded bands per cell."""
-        if not self.series_data:
-            return
-
-        series_names = list(self.series_data.keys())
-        n_series = len(series_names)
-        n_points = len(self.time_labels)
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        # Layout margins tuned for the 3200x1800 canvas — margin_left must
-        # fit the longest series label ("Consumer Discretionary") at
-        # label_font_size without overflowing past the canvas edge.
-        margin_left = 520
-        margin_right = 50
-        margin_top = 140
-        margin_bottom = 160
-
-        available_width = plot_width - margin_left - margin_right
-        available_height = plot_height - margin_top - margin_bottom
-
-        row_height = available_height / n_series
-        band_gap = row_height * 0.10
-        actual_row_height = row_height - band_gap
-        cell_width = available_width / n_points
-
-        x_offset = self.view.x(0) + margin_left
-        y_offset = self.view.y(n_series) + margin_top
-
-        plot_node = self.nodes["plot"]
-        horizon_group = self.svg.node(plot_node, class_="horizon-chart")
-
-        # Global min/max drives the fold — every row shares one scale so
-        # band color intensity is comparable sector-to-sector.
-        all_values = [v for values in self.series_data.values() for v in values]
-        global_max = np.nanmax(np.abs(all_values))
-        band_size = global_max / self.n_bands
-
-        label_font_size = min(34, int(actual_row_height * 0.34))
-
-        for i, series_name in enumerate(series_names):
-            values = self.series_data[series_name]
-            row_y = y_offset + i * row_height
-
-            # Zebra striping for row-to-row scan-ability
-            bg_rect = self.svg.node(
-                horizon_group, "rect", x=x_offset, y=row_y, width=available_width, height=actual_row_height, rx=4
-            )
-            bg_rect.set("fill", ELEVATED_BG if i % 2 == 0 else PAGE_BG)
-            bg_rect.set("stroke", RULE)
-            bg_rect.set("stroke-width", "1.5")
-
-            # Series (sector) label
-            text_node = self.svg.node(
-                horizon_group, "text", x=x_offset - 22, y=row_y + actual_row_height / 2 + label_font_size * 0.32
-            )
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", INK)
-            text_node.set("style", f"font-size:{label_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.text = series_name
-
-            # Horizon bands, one folded stack per time point
-            for j, value in enumerate(values):
-                cell_x = x_offset + j * cell_width
-                if np.isnan(value):
-                    continue
-                is_positive = value >= 0
-                remaining = abs(value)
-
-                for band_idx in range(self.n_bands):
-                    band_value = min(remaining, band_size)
-                    if band_value <= 0:
-                        break
-
-                    height_ratio = band_value / band_size
-                    band_height = (actual_row_height / self.n_bands) * height_ratio
-                    band_y = row_y + actual_row_height - (actual_row_height / self.n_bands) * (band_idx + height_ratio)
-                    color = (self.pos_colors if is_positive else self.neg_colors)[band_idx]
-
-                    rect = self.svg.node(
-                        horizon_group, "rect", x=cell_x, y=band_y, width=cell_width + 0.5, height=band_height, rx=3
-                    )
-                    rect.set("fill", color)
-                    rect.set("stroke", "none")
-
-                    # Real SVG hover tooltip (native browser behavior in the
-                    # interactive HTML output — not a simulated/fake one).
-                    tip = self.svg.node(rect, "title")
-                    tip.text = f"{series_name} · {self.time_labels[j]}: {value:+.1f}pp vs benchmark"
-
-                    remaining -= band_size
-
-        # Subtle vertical grid at regular intervals for time readability
-        grid_interval = max(1, n_points // 12)
-        for j in range(0, n_points + 1, grid_interval):
-            grid_x = x_offset + j * cell_width
-            line = self.svg.node(
-                horizon_group, "line", x1=grid_x, y1=y_offset, x2=grid_x, y2=y_offset + n_series * row_height
-            )
-            line.set("stroke", RULE)
-            line.set("stroke-width", "1")
-            line.set("stroke-dasharray", "4,4")
-
-        # X-axis tick labels
-        x_label_font_size = 40
-        label_interval = max(1, n_points // 12)
-        for j in range(0, n_points, label_interval):
-            label_x = x_offset + j * cell_width + cell_width / 2
-            label_y = y_offset + n_series * row_height + 50
-
-            text_node = self.svg.node(horizon_group, "text", x=label_x, y=label_y)
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", INK_MUTED)
-            text_node.set("style", f"font-size:{x_label_font_size}px;font-family:sans-serif")
-            text_node.text = self.time_labels[j]
-
-        # X-axis title
-        x_title_font_size = 40
-        text_node = self.svg.node(
-            horizon_group, "text", x=x_offset + available_width / 2, y=y_offset + n_series * row_height + 115
-        )
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", INK_SOFT)
-        text_node.set("style", f"font-size:{x_title_font_size}px;font-weight:600;font-family:sans-serif")
-        text_node.text = DAY
-
-        # Diverging color-scale legend (imprint_div): a single compact strip
-        # from full red (strong underperformance) through the neutral
-        # benchmark swatch to full blue (strong outperformance).
-        swatch = 52
-        gap = 12
-        n_neg = len(self.neg_colors)
-        n_pos = len(self.pos_colors)
-        stops = list(reversed(self.neg_colors)) + [None] + self.pos_colors
-        legend_width = len(stops) * (swatch + gap) - gap
-        legend_x = x_offset + available_width - legend_width
-        legend_y = self.view.y(n_series) + 48
-        legend_font_size = 32
-
-        for k, color in enumerate(stops):
-            sx = legend_x + k * (swatch + gap)
-            rect = self.svg.node(horizon_group, "rect", x=sx, y=legend_y, width=swatch, height=swatch, rx=5)
-            if color is None:
-                rect.set("fill", ELEVATED_BG)
-                rect.set("stroke", INK_MUTED)
-                rect.set("stroke-width", "1.5")
-            else:
-                rect.set("fill", color)
-                rect.set("stroke", "none")
-
-        # Center each label under its own color group (not the whole legend
-        # bar) so a wider, more legible font never collides across groups.
-        neg_block_width = n_neg * (swatch + gap) - gap
-        pos_block_start = legend_x + (n_neg + 1) * (swatch + gap)
-        pos_block_width = n_pos * (swatch + gap) - gap
-        neg_center_x = legend_x + neg_block_width / 2
-        pos_center_x = pos_block_start + pos_block_width / 2
-
-        left_label = self.svg.node(horizon_group, "text", x=neg_center_x, y=legend_y - 16)
-        left_label.set("text-anchor", "middle")
-        left_label.set("fill", INK_MUTED)
-        left_label.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
-        left_label.text = "Underperform"
-
-        right_label = self.svg.node(horizon_group, "text", x=pos_center_x, y=legend_y - 16)
-        right_label.set("text-anchor", "middle")
-        right_label.set("fill", INK_MUTED)
-        right_label.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
-        right_label.text = "Outperform"
-
-    def _compute(self):
-        """Establish the data-space box for view.x()/view.y() scaling."""
-        n_series = len(self.series_data) if self.series_data else 1
-        n_points = len(self.time_labels) if self.time_labels else 1
-        self._box.xmin = 0
-        self._box.xmax = n_points
-        self._box.ymin = 0
-        self._box.ymax = n_series
-
 
 # Imprint palette: all eight positions, canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
 N_BANDS = 3  # folded bands per polarity
+ROW_GAP = 0.18  # empty space between rows, as a share of the row height
+DIV_NEGATIVE = "#AE3030"  # imprint_div poles; the midpoint is the page color
+DIV_POSITIVE = "#4467A3"
 
 # Columns: set these to your table's column names
 DAY = "Trading day (2024)"  # role: date
@@ -286,17 +62,66 @@ df = pd.concat(
 
 # Plot
 table = df.pivot_table(index=DAY, columns=SECTOR, values=EXCESS, sort=False)
-time_labels = [d.strftime("%b %d") for d in table.index]
-
 # Rank rows by final cumulative excess return (best performer on top)
 ranked = table.ffill().iloc[-1].sort_values(ascending=False).index
-sector_returns = {sector: table[sector].tolist() for sector in ranked}
 
-# Band colors: from a visible first step (never the bare page color) to the full endpoint
-pos_colors = [_lerp_hex(DIV_MIDPOINT, DIV_POSITIVE, 0.4 + 0.6 * i / max(1, N_BANDS - 1)) for i in range(N_BANDS)]
-neg_colors = [_lerp_hex(DIV_MIDPOINT, DIV_NEGATIVE, 0.4 + 0.6 * i / max(1, N_BANDS - 1)) for i in range(N_BANDS)]
+# One band range for every row: a color stands for the same magnitude in all sectors
+band_size = np.nanmax(np.abs(table.to_numpy())) / N_BANDS
 
-# Title: scale fontsize down if the descriptive prefix pushes past the 67-char baseline
+
+def blend(t, pole):
+    """Mix the page color toward a pole color by share t (imprint_div fields ramp)."""
+    mix = [round(int(PAGE_BG[i : i + 2], 16) * (1 - t) + int(pole[i : i + 2], 16) * t) for i in (1, 3, 5)]
+    return "#" + "".join(f"{c:02X}" for c in mix)
+
+
+# Band k: from a visible first step (never the bare page color) up to the full pole
+steps = [0.4 + 0.6 * k / (N_BANDS - 1) for k in range(N_BANDS)]
+pos_colors = [blend(t, DIV_POSITIVE) for t in steps]
+neg_colors = [blend(t, DIV_NEGATIVE) for t in steps]
+
+# Each row is a stack of layers measured in row heights (0 to 1). A value in band m draws its
+# remainder r in band m's color at the baseline, with the full lower band m-1 above it.
+row_stacks = []  # per row, from the bottom of the chart up: (polarity, band, heights, color)
+for sector in reversed(ranked):
+    values = table[sector].to_numpy()
+    magnitude = np.abs(values)
+    band = np.minimum(magnitude // band_size, N_BANDS - 1)
+    remainder = np.clip((magnitude - band * band_size) / band_size, 0, 1)
+    stack = []
+    for polarity, on_side, colors in (("+", values >= 0, pos_colors), ("−", values < 0, neg_colors)):
+        for k in reversed(range(N_BANDS)):
+            heights = np.where(on_side & (band == k), remainder, 0.0)
+            if k + 1 < N_BANDS:
+                heights = heights + np.where(on_side & (band == k + 1), 1 - remainder, 0.0)
+            stack.append((polarity, k, heights, colors[k]))
+    row_stacks.append((sector, values, stack))
+
+day_labels = [d.strftime("%b %d") for d in table.index]
+row_pitch = 1 + ROW_GAP
+series_colors = []
+chart_series = []
+for j, (sector, values, stack) in enumerate(row_stacks):
+    # The top row's layers carry the legend entries: the value range each color step stands for
+    is_key_row = j == len(row_stacks) - 1
+    for sign, k, heights, color in stack:
+        low, high = k * band_size, (k + 1) * band_size
+        key = (
+            f"{sign}{low:.0f} to {sign}{high:.0f} pp".replace("+0 to", "0 to").replace("−0 to", "0 to")
+            if is_key_row
+            else None
+        )
+        points = [
+            {"value": float(h), "label": f"{sector} · {day}: {v:+.1f} pp"}
+            for h, v, day in zip(heights, values, day_labels, strict=True)
+        ]
+        chart_series.append((key, points))
+        series_colors.append(color)
+    # The spacer lifts the next row's baseline; it draws nothing
+    used = sum(heights for _, _, heights, _ in stack)
+    chart_series.append((None, [float(g) for g in row_pitch - used]))
+    series_colors.append(PAGE_BG)
+
 title = "Sector Performance vs Benchmark · horizon-basic · python · pygal · anyplot.ai"
 title_font_size = round(66 * min(1.0, 67 / len(title)))
 
@@ -308,35 +133,42 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     major_guide_stroke_color=INK_MUTED,
-    colors=IMPRINT_PALETTE,
+    colors=tuple(series_colors),
+    opacity="1",
+    opacity_hover="1",
     title_font_size=title_font_size,
     legend_font_size=44,
-    label_font_size=56,
+    label_font_size=44,
     major_label_font_size=44,
     value_font_size=36,
     font_family="sans-serif",
 )
 
-chart = HorizonChart(
+chart = pygal.StackedLine(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
-    series_data=sector_returns,
-    time_labels=time_labels,
-    n_bands=N_BANDS,
-    pos_colors=pos_colors,
-    neg_colors=neg_colors,
-    show_legend=False,
+    x_title=DAY,
+    fill=True,
+    show_dots=False,
+    stroke_style={"width": 0},
+    show_y_guides=False,
+    show_x_guides=True,
+    x_labels=day_labels,
+    x_labels_major_count=9,
+    show_minor_x_labels=False,
+    x_label_rotation=0,
+    truncate_label=-1,
+    y_labels=[{"label": sector, "value": j * row_pitch + 0.5} for j, (sector, _, _) in enumerate(row_stacks)],
+    range=(0, len(row_stacks) * row_pitch - ROW_GAP),
+    legend_at_bottom=False,
+    truncate_legend=-1,
+    legend_box_size=44,
     margin=50,
-    margin_top=50,
-    margin_bottom=50,
-    show_x_labels=False,
-    show_y_labels=False,
 )
-
-# Dummy series to trigger the render pipeline (_plot draws everything else)
-chart.add("", [0])
+for key, points in chart_series:
+    chart.add(key, points)
 
 # Save outputs
 chart.render_to_file(f"plot-{THEME}.html")
