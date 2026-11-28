@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-30
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-28
 """
 
 import os
