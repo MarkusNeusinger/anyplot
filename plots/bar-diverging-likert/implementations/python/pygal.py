@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-28
+Quality: 86/100 | Updated: 2026-11-28
 """
 
 import importlib.util
@@ -128,6 +128,7 @@ chart = pygal.HorizontalStackedBar(
     print_values=True,
     print_values_position="center",
     value_formatter=lambda x: f"{abs(x):.0f}%" if abs(x) >= 8 else "",
+    legend_box_size=36,
     x_title="Response Percentage (%)",
     margin=50,
     spacing=15,
@@ -136,10 +137,12 @@ chart = pygal.HorizontalStackedBar(
 )
 
 # Add series in stacking order (center outward); legend shows N, D, SD, A, SA
-chart.add(NEUTRAL, (-df[NEUTRAL] / 2).tolist())
+chart.add(NEUTRAL, (-df[NEUTRAL] / 2).tolist(), formatter=lambda x: "")  # label shown once, on the right half
 chart.add(DISAGREE, (-df[DISAGREE]).tolist())
 chart.add(STRONGLY_DISAGREE, (-df[STRONGLY_DISAGREE]).tolist())
-chart.add(None, (df[NEUTRAL] / 2).tolist())  # right-half neutral hidden from legend
+chart.add(
+    None, (df[NEUTRAL] / 2).tolist(), formatter=lambda x: f"{2 * x:.0f}%" if 2 * x >= 8 else ""
+)  # right half hidden from legend; carries the full neutral percentage
 chart.add(AGREE, df[AGREE].tolist())
 chart.add(STRONGLY_AGREE, df[STRONGLY_AGREE].tolist())
 
@@ -152,14 +155,14 @@ svg_content = chart.render().decode("utf-8")
 svg_content = re.sub(r'<path [^>]*class="(?:major )?(?:axis major )?guide line"[^/]*/>', "", svg_content)
 
 # Re-flow the legend entries left to right as SD | D | N | A | SA, spaced by label length
-char_width, swatch, gap = 27, 40, 90
+char_width, swatch, gap = 27, 54, 90
 cursor = 0.0
 for serie, label in ((2, STRONGLY_DISAGREE), (1, DISAGREE), (0, NEUTRAL), (4, AGREE), (5, STRONGLY_AGREE)):
     entry = re.search(rf'<g id="activate-serie-{serie}".*?</g>', svg_content)
     if entry is None:
         continue
     moved = re.sub(r'(<rect x=")[\d.]+', rf"\g<1>{cursor}", entry.group(0))
-    moved = re.sub(r'(<text x=")[\d.]+', rf"\g<1>{cursor + 17}", moved)
+    moved = re.sub(r'(<text x=")[\d.]+', rf"\g<1>{cursor + 36 + 14}", moved)
     svg_content = svg_content.replace(entry.group(0), moved)
     cursor += swatch + len(label) * char_width + gap
 

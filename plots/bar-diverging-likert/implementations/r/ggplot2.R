@@ -1,12 +1,11 @@
 #' anyplot.ai
 #' bar-diverging-likert: Likert Scale Diverging Bar Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-06-01
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 84/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -21,7 +20,8 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
 # Diverging colors from Imprint palette: red (bad) -> muted (neutral) -> blue (good)
 # Semantic exception: negative sentiment = red (#AE3030), positive = blue (#4467A3)
-likert_palette <- colorRampPalette(c("#AE3030", "#6B6A63", "#4467A3"))(5)
+DIV_MID_MARKS  <- if (THEME == "light") "#6B6A63" else "#686762"
+likert_palette <- colorRampPalette(c("#AE3030", DIV_MID_MARKS, "#4467A3"))(5)
 
 # --- Survey data: Employee Benefits Survey ---
 questions <- c(
@@ -71,11 +71,10 @@ df_long <- survey_sorted %>%
   ) %>%
   mutate(
     # For horizontal diverging bars in ggplot2 position_stack:
-    # negatives: lowest factor level = innermost (nearest 0)
-    # positives: highest factor level = innermost (nearest 0)
-    # So positive levels must be ordered: strongly_agree < agree < neutral_pos
+    # Both sides stack so that the highest factor level sits nearest 0, hence
+    # the outermost level comes first on each side
     response = factor(response, levels = c(
-      "neutral_neg", "disagree", "strongly_disagree",
+      "strongly_disagree", "disagree", "neutral_neg",
       "strongly_agree", "agree", "neutral_pos"
     )),
     abs_pct    = abs(pct),
@@ -102,7 +101,7 @@ p <- ggplot(df_long, aes(x = pct, y = question, fill = response)) +
     aes(label = label_text),
     position = position_stack(vjust = 0.5),
     color    = "#FAF8F1",
-    size     = 2.2,
+    size     = 2.7,
     fontface = "bold"
   ) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.6) +
