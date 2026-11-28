@@ -1,7 +1,7 @@
 """ anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: plotnine 0.15.9 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-28
+Quality: 86/100 | Updated: 2026-11-28
 """
 
 import os
@@ -55,7 +55,7 @@ SIGMA_Y = "σy (MPa)"  # role: sigma_y
 TAU_XY = "τxy (MPa)"  # role: tau_xy
 
 # Data: replace this block with your own stress state, for example df = pd.read_csv("stress.csv")
-# Retaining wall panel under compressive loading: both normal stresses negative (MPa)
+# Steel column flange under compressive loading: both normal stresses negative (MPa)
 df = pd.DataFrame({SIGMA_X: [-120.0], SIGMA_Y: [-40.0], TAU_XY: [45.0]})
 
 # Plot: reads only df and the constants above
@@ -115,14 +115,9 @@ center_df = pd.DataFrame({"sigma": [sigma_c], "tau": [0.0]})
 # Accent segment along the σ axis between σ2 and σ1 — draws the eye to the principal stress span
 span_df = pd.DataFrame({"x": [sigma_2], "xend": [sigma_1], "y": [0.0], "yend": [0.0]})
 
-# 2θp arc label — on the arc's bisector, outside the arc
-angle_mid = angle_A / 2
+# 2θp arc label — just right of the vertical reference line, above the arc, inside the circle
 arc_lbl_df = pd.DataFrame(
-    {
-        "sigma": [sigma_c + arc_r * 1.75 * np.cos(angle_mid)],
-        "tau": [arc_r * 1.75 * np.sin(angle_mid)],
-        "label": [f"2θp = {two_theta_p:.1f}°"],
-    }
+    {"sigma": [sigma_c + radius * 0.06], "tau": [arc_r * 1.4], "label": [f"2θp = {two_theta_p:.1f}°"]}
 )
 
 # Point labels: A sits on the side of σx relative to the center, B opposite; ha says which way the text extends
@@ -152,7 +147,7 @@ labels_df = pd.DataFrame(
 )
 
 # Equal-aspect view centered on the circle, with room for the labels
-reach = radius * 1.5
+reach = radius * 1.75
 title = "mohr-circle · python · plotnine · anyplot.ai"
 
 anyplot_theme = theme(
@@ -167,6 +162,8 @@ anyplot_theme = theme(
     axis_line=element_line(color=INK_SOFT, size=0.5),
     plot_title=element_text(color=INK, size=12, ha="center"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_key=element_rect(fill=ELEVATED_BG, color="none"),
+    legend_box_margin=8,
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_blank(),
     legend_position="bottom",
@@ -194,12 +191,12 @@ plot = (
     # Center mark C
     + geom_point(data=center_df, color=INK, size=2.5)
     # Angle arc label
-    + geom_text(data=arc_lbl_df, mapping=aes(label="label"), ha="left", size=4.8, color=INK_SOFT)
+    + geom_text(data=arc_lbl_df, mapping=aes(label="label"), ha="left", size=8, color=INK_SOFT)
     + labs(x="Normal Stress σ (MPa)", y="Shear Stress τ (MPa)", title=title)
     + coord_fixed(ratio=1, xlim=(sigma_c - reach, sigma_c + reach), ylim=(-reach, reach))
     + anyplot_theme
 )
 for ha, group in labels_df.groupby("ha", sort=False):
-    plot += geom_text(data=group, mapping=aes(x="sigma", y="tau", label="label"), ha=ha, size=5.0, color=INK)
+    plot += geom_text(data=group, mapping=aes(x="sigma", y="tau", label="label"), ha=ha, size=8, color=INK)
 
 plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
