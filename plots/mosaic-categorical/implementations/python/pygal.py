@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-22
@@ -59,28 +59,6 @@ for i, row in enumerate(row_labels):
 class MosaicPlot(Graph):
     """pygal has no mosaic type: draw the tiles straight into the SVG plot node."""
 
-    def __init__(self, *args, **kwargs):
-        self.counts = kwargs.pop("counts")
-        self.row_labels = kwargs.pop("row_labels")
-        self.col_labels = kwargs.pop("col_labels")
-        self.x_name = kwargs.pop("x_name")
-        self.y_name = kwargs.pop("y_name")
-        self.insight = kwargs.pop("insight")
-        super().__init__(*args, **kwargs)
-
-    def _text(self, parent, x, y, text, size, fill, weight=400, italic=False, anchor="middle"):
-        node = self.svg.node(parent, "text", x=x, y=y)
-        node.set("text-anchor", anchor)
-        node.set("dominant-baseline", "middle")
-        node.set("fill", fill)
-        node.set(
-            "style",
-            f"font-size:{size}px;font-weight:{weight};font-family:sans-serif"
-            + (";font-style:italic" if italic else ""),
-        )
-        node.text = text
-        return node
-
     def _plot(self):
         n_rows, n_cols = len(self.row_labels), len(self.col_labels)
         col_tot = self.counts.sum(axis=0)
@@ -97,6 +75,7 @@ class MosaicPlot(Graph):
         y0 = self.view.y(n_rows) + 20
 
         group = self.svg.node(self.nodes["plot"], class_="mosaic-plot")
+        labels = []  # (x, y, text, size, fill, weight, style, anchor, rotation), drawn above the tiles
         x = x0
         for j, col in enumerate(self.col_labels):
             col_w = draw_w * col_tot[j] / grand
@@ -120,17 +99,31 @@ class MosaicPlot(Graph):
                 if h > 90 and col_w > 120:
                     size = min(58, int(min(col_w, h) * 0.26))
                     if h > 150 and col_w > 180:
-                        self._text(group, cx, y + h / 2 - size * 0.3, f"{freq:,.0f}", size, text_fill, 700)
+                        labels.append(
+                            (cx, y + h / 2 - size * 0.3, f"{freq:,.0f}", size, text_fill, 700, "normal", "middle", 0)
+                        )
                         pct_size = max(int(size * 0.65), 28)
-                        self._text(group, cx, y + h / 2 + size * 0.55, f"{share * 100:.0f}%", pct_size, text_fill, 500)
+                        labels.append(
+                            (
+                                cx,
+                                y + h / 2 + size * 0.55,
+                                f"{share * 100:.0f}%",
+                                pct_size,
+                                text_fill,
+                                500,
+                                "normal",
+                                "middle",
+                                0,
+                            )
+                        )
                     else:
-                        self._text(group, cx, y + h / 2, f"{freq:,.0f}", size, text_fill, 700)
+                        labels.append((cx, y + h / 2, f"{freq:,.0f}", size, text_fill, 700, "normal", "middle", 0))
                 y += h + row_gap
 
             # Column label and its share of all sessions
-            self._text(group, x + col_w / 2, y0 + avail_h + 50, col, 52, INK, 700)
+            labels.append((x + col_w / 2, y0 + avail_h + 50, col, 52, INK, 700, "normal", "middle", 0))
             share_text = f"{col_tot[j] / grand * 100:.1f}% of sessions"
-            self._text(group, x + col_w / 2, y0 + avail_h + 105, share_text, 36, INK_MUTED, 400, True)
+            labels.append((x + col_w / 2, y0 + avail_h + 105, share_text, 36, INK_MUTED, 400, "italic", "middle", 0))
             x += col_w + col_gap
 
         # Row legend, aligned with the tiles of the first column
@@ -142,16 +135,29 @@ class MosaicPlot(Graph):
             swatch.set("fill", IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)])
             swatch.set("stroke", INK_SOFT)
             swatch.set("stroke-width", "1.5")
-            self._text(group, x0 - 340, cy, row, 44, INK, 500, anchor="start")
+            labels.append((x0 - 340, cy, row, 44, INK, 500, "normal", "start", 0))
             y += h + row_gap
 
         # Axis titles
-        self._text(group, x0 + avail_w / 2, y0 + avail_h + 175, self.x_name.upper(), 48, INK_SOFT, 700)
+        labels.append(
+            (x0 + avail_w / 2, y0 + avail_h + 175, self.x_name.upper(), 48, INK_SOFT, 700, "normal", "middle", 0)
+        )
         ty = y0 + avail_h / 2
-        title = self._text(group, x0 - 470, ty, self.y_name.upper(), 48, INK_SOFT, 700)
-        title.set("transform", f"rotate(-90, {x0 - 470}, {ty})")
+        labels.append((x0 - 470, ty, self.y_name.upper(), 48, INK_SOFT, 700, "normal", "middle", -90))
         if self.insight:
-            self._text(group, x0 + avail_w / 2, y0 + avail_h + 250, self.insight, 38, INK_MUTED, 400, True)
+            labels.append(
+                (x0 + avail_w / 2, y0 + avail_h + 250, self.insight, 38, INK_MUTED, 400, "italic", "middle", 0)
+            )
+
+        for lx, ly, text, size, fill, weight, font_style, anchor, angle in labels:
+            node = self.svg.node(group, "text", x=lx, y=ly)
+            node.set("text-anchor", anchor)
+            node.set("dominant-baseline", "middle")
+            node.set("fill", fill)
+            node.set("style", f"font-size:{size}px;font-weight:{weight};font-family:sans-serif;font-style:{font_style}")
+            if angle:
+                node.set("transform", f"rotate({angle}, {lx}, {ly})")
+            node.text = text
 
     def _compute(self):
         self._box.xmin, self._box.xmax = 0, len(self.col_labels)
@@ -167,6 +173,9 @@ style = Style(
     colors=tuple(IMPRINT_PALETTE),
     title_font_size=66,
     label_font_size=44,
+    major_label_font_size=44,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     legend_font_size=44,
     value_font_size=36,
     font_family="sans-serif",
@@ -177,12 +186,6 @@ chart = MosaicPlot(
     height=1800,
     style=style,
     title="App Usage by Device · mosaic-categorical · python · pygal · anyplot.ai",
-    counts=counts,
-    row_labels=row_labels,
-    col_labels=col_labels,
-    x_name=DEVICE,
-    y_name=APP_CATEGORY,
-    insight=insight,
     show_legend=False,
     show_x_labels=False,
     show_y_labels=False,
@@ -190,6 +193,8 @@ chart = MosaicPlot(
     margin_top=120,
     margin_bottom=40,
 )
+chart.counts, chart.row_labels, chart.col_labels = counts, row_labels, col_labels
+chart.x_name, chart.y_name, chart.insight = DEVICE, APP_CATEGORY, insight
 chart.add("", [0])  # pygal only runs its pipeline when a series exists
 
 chart.render_to_png(f"plot-{THEME}.png")
