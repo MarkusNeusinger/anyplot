@@ -1,7 +1,7 @@
 """anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 80/100 | Updated: 2026-11-28
+Quality: pending | Updated: 2026-11-28
 """
 
 import os
