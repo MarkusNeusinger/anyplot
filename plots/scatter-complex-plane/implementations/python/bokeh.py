@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: bokeh 3.10.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-28
@@ -75,10 +75,13 @@ z = df[REAL].to_numpy() + 1j * df[IMAGINARY].to_numpy()
 df["label"] = [fmt_z(re, im) for re, im in zip(df[REAL], df[IMAGINARY], strict=True)]
 df["magnitude"] = np.abs(z)
 df["angle_deg"] = np.degrees(np.angle(z))
-limit = max(df[REAL].abs().max(), df[IMAGINARY].abs().max(), UNIT_RADIUS) * 1.235
+x_lo, x_hi = min(df[REAL].min(), -UNIT_RADIUS), max(df[REAL].max(), UNIT_RADIUS)
+y_lo, y_hi = min(df[IMAGINARY].min(), -UNIT_RADIUS), max(df[IMAGINARY].max(), UNIT_RADIUS)
+pad = 0.16 * max(x_hi - x_lo, y_hi - y_lo)  # room for the point labels around the extent
 
 # Square canvas for the equal-aspect complex plane (2400 x 2400)
 W, H = 2400, 2400
+FRAME = 2100  # square plot frame so equal spans give equal pixels per unit
 hover_tool = HoverTool(
     tooltips=[
         ("Point", "@label"),
@@ -96,6 +99,8 @@ p = figure(
     x_axis_label=REAL,
     y_axis_label=IMAGINARY,
     match_aspect=True,
+    frame_width=FRAME,
+    frame_height=FRAME,
     tools=[hover_tool],
     toolbar_location=None,  # a toolbar would shorten the canvas
     min_border_bottom=160,  # room for 34pt x-tick labels + 42pt x-axis label
@@ -103,8 +108,10 @@ p = figure(
     min_border_top=110,  # room for 50pt title
     min_border_right=60,
 )
-p.x_range = Range1d(-limit, limit)
-p.y_range = Range1d(-limit, limit)
+half = (max(x_hi - x_lo, y_hi - y_lo) + 2 * pad) / 2  # equal spans on both axes keep the circle round
+x_mid, y_mid = (x_lo + x_hi) / 2, (y_lo + y_hi) / 2
+p.x_range = Range1d(x_mid - half, x_mid + half)
+p.y_range = Range1d(y_mid - half, y_mid + half)
 
 # Unit circle: dashed geometric reference
 theta = np.linspace(0, 2 * np.pi, 300)
@@ -184,30 +191,27 @@ for cat in categories:
     )
     legend_items.append(LegendItem(label=str(cat), renderers=[r]))
 
-# Point labels, offset radially from the origin (screen pixels); marks stay at their values
-placed = []
-for re, im, lbl, mag in zip(df[REAL], df[IMAGINARY], df["label"], df["magnitude"], strict=True):
+# Point labels: anchored just outside each marker along its radial direction (screen pixels);
+# marks stay at their values
+LABEL_GAP = 26  # marker radius plus clearance
+for re, im, lbl in zip(df[REAL], df[IMAGINARY], df["label"], strict=True):
     angle = np.arctan2(im, re)
-    on_circle = abs(mag - UNIT_RADIUS) < ON_CIRCLE_TOL
-    base_dist = 55 if on_circle else 30  # larger offset where points cluster on the unit circle
-    ox = base_dist * np.cos(angle)
-    oy = base_dist * np.sin(angle)
-    if re < -0.5:  # push left-half labels further left to clear the axis
-        ox -= 12
-    if abs(im) < 0.3 and re > 0:  # raise near-horizontal labels above the point
-        oy += 18
-    if on_circle:
-        if im < -0.3:
-            oy -= 16
-        if abs(re) < 0.5 and im > 0:
-            oy += 14
-    for px, py in placed:  # nudge the label away from labels already placed
-        dx = (re + ox * 0.012) - px
-        dy = (im + oy * 0.012) - py
-        if abs(dx) < 0.55 and abs(dy) < 0.55:
-            oy += 35 if im >= py else -35
-    placed.append((re + ox * 0.012, im + oy * 0.012))
-    p.add_layout(Label(x=re, y=im, text=lbl, x_offset=ox, y_offset=oy, text_font_size="24pt", text_color=INK_SOFT))
+    cx, cy = np.cos(angle), np.sin(angle)
+    p.add_layout(
+        Label(
+            x=re,
+            y=im,
+            text=lbl,
+            x_offset=LABEL_GAP * cx,
+            y_offset=LABEL_GAP * cy,
+            text_align="center" if abs(cx) < 0.35 else ("left" if cx > 0 else "right"),
+            text_baseline="middle" if abs(cy) < 0.35 else ("bottom" if cy > 0 else "top"),
+            text_font_size="24pt",
+            text_color=INK,
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.8,
+        )
+    )
 
 # Legend, top-left
 legend = Legend(
