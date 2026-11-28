@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-28
@@ -17,6 +17,7 @@ from plotnine import (
     element_text,
     geom_col,
     geom_line,
+    geom_point,
     geom_text,
     geom_vline,
     ggplot,
@@ -90,8 +91,22 @@ daily = df.groupby(ONSET_DATE, as_index=False)[CASE_COUNT].sum()
 daily["cumulative"] = daily[CASE_COUNT].cumsum()
 max_daily = daily[CASE_COUNT].max()
 max_cumulative = int(daily["cumulative"].max())
-# plotnine has no secondary axis: the cumulative line is rescaled onto the daily axis and labeled directly
+# plotnine has no secondary axis: the cumulative line is rescaled onto the daily axis and carries its own
+# labeled round totals (ticks on the line itself) so it reads on its own scale
 daily["cumulative_scaled"] = daily["cumulative"] / max_cumulative * max_daily
+tick_step = 10 ** (len(str(max_cumulative)) - 1) / 2
+tick_values = np.arange(tick_step, max_cumulative, tick_step)
+cumul_ticks = pd.DataFrame(
+    {
+        ONSET_DATE: [daily.loc[(daily["cumulative"] >= v).idxmax(), ONSET_DATE] for v in tick_values],
+        "cumulative_scaled": tick_values / max_cumulative * max_daily,
+        "tick_label": [f"{v:,.0f}" for v in tick_values],
+    }
+)
+# A label set to the left of its tick would cross an intervention line just before it: set those to the right
+crosses_event = cumul_ticks[ONSET_DATE].apply(lambda d: ((d - events[EVENT_DATE]).dt.days.between(0, 9)).any())
+ticks_left = cumul_ticks[~crosses_event]
+ticks_right = cumul_ticks[crosses_event]
 
 # Waves are split at the middle of the observed period
 wave_split = daily[ONSET_DATE].min() + (daily[ONSET_DATE].max() - daily[ONSET_DATE].min()) / 2
@@ -100,7 +115,7 @@ wave2 = daily[daily[ONSET_DATE] >= wave_split]
 wave1_peak = wave1.loc[wave1[CASE_COUNT].idxmax()]
 wave2_peak = wave2.loc[wave2[CASE_COUNT].idxmax()]
 
-cumul_label = f"Cumulative: {max_cumulative:,} cases →"
+cumul_label = f"Cumulative cases: {max_cumulative:,} →"
 
 title = "histogram-epidemic · python · plotnine · anyplot.ai"
 
@@ -109,6 +124,29 @@ plot = (
     + geom_col(aes(fill=CASE_TYPE), width=1.0)
     + geom_line(
         data=daily, mapping=aes(x=ONSET_DATE, y="cumulative_scaled"), color=IMPRINT_PALETTE[3], size=1.5, alpha=0.9
+    )
+    + geom_point(data=cumul_ticks, mapping=aes(x=ONSET_DATE, y="cumulative_scaled"), color=IMPRINT_PALETTE[3], size=2.5)
+    + geom_text(
+        data=ticks_left,
+        mapping=aes(x=ONSET_DATE, y="cumulative_scaled", label="tick_label"),
+        ha="right",
+        va="bottom",
+        nudge_x=-1,
+        nudge_y=1.5,
+        size=8,
+        color=IMPRINT_PALETTE[3],
+        fontweight="bold",
+    )
+    + geom_text(
+        data=ticks_right,
+        mapping=aes(x=ONSET_DATE, y="cumulative_scaled", label="tick_label"),
+        ha="left",
+        va="bottom",
+        nudge_x=1,
+        nudge_y=1.5,
+        size=8,
+        color=IMPRINT_PALETTE[3],
+        fontweight="bold",
     )
     + geom_vline(
         data=events, mapping=aes(xintercept=EVENT_DATE), linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.8
@@ -119,7 +157,7 @@ plot = (
         y=max_daily * 0.88,
         ha="left",
         nudge_x=1.5,
-        size=6,
+        size=8,
         color=INK_MUTED,
         fontstyle="italic",
     )
@@ -130,7 +168,7 @@ plot = (
         label=cumul_label,
         ha="right",
         va="bottom",
-        size=6,
+        size=8,
         color=IMPRINT_PALETTE[3],
         fontstyle="italic",
         fontweight="bold",
@@ -142,18 +180,18 @@ plot = (
         label=f"Wave 1 peak\n{wave1_peak[CASE_COUNT]} cases/day",
         ha="center",
         va="bottom",
-        size=6,
+        size=8,
         color=INK,
         fontweight="bold",
     )
     + annotate(
         "text",
-        x=wave2_peak[ONSET_DATE],
-        y=wave2_peak[CASE_COUNT] + 3,
+        x=wave2_peak[ONSET_DATE] + pd.Timedelta(days=18),
+        y=wave2_peak[CASE_COUNT] + 2,
         label=f"Wave 2 peak\n{wave2_peak[CASE_COUNT]} cases/day",
         ha="center",
         va="bottom",
-        size=6,
+        size=8,
         color=INK,
         fontweight="bold",
     )
