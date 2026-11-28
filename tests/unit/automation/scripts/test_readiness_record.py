@@ -352,33 +352,47 @@ def test_the_adapt_regression_comes_first_when_both_hold():
 # --- the gate: the readiness path ------------------------------------------------------------------
 
 GAIN = Readiness(status="none", new="clean", prev="blocked", removed=("security:banned-statement", "security:dunder"))
+# A pygal subclass and the same chart drawn without one: the class removal the readiness path exists for.
+CLASS_SOURCE = "import pygal\n\n\nclass Waffle(pygal.graph.graph.Graph):\n    def _plot(self):\n        pass\n"
+PLAIN_SOURCE = "import pygal\n\nchart = pygal.XY()\nchart.render_to_png('plot.png')\n"
 
 
-def test_a_file_the_chat_now_accepts_merges_without_a_visible_improvement():
+def _ready_regen(**overrides) -> dict:
+    """No improvement; the re-score deducts CQ-01 for the class (0 of 3), the new review gives it full marks."""
+    return _regen(**{"improvements": [], "prev_checklist": {**_regen()["prev_checklist"], "CQ-01": 0}, **overrides})
+
+
+def _ready_inp(score: int = 85, **overrides):
+    fields = {"regen": _ready_regen(), "readiness": GAIN, "prev_source": CLASS_SOURCE, "new_source": PLAIN_SOURCE}
+    fields.update(overrides)
+    return _inp(score, **fields)
+
+
+def test_a_class_the_chat_refused_removed_merges_without_a_visible_improvement():
     """A pygal subclass removed with the drawing unchanged: the adaptability check sees nothing, the validator does."""
-    assert decide(_inp(regen=_regen(improvements=[]))).code == "no_visible_improvement"
-    result = decide(_inp(regen=_regen(improvements=[]), readiness=GAIN))
+    assert decide(_ready_inp(readiness=Readiness())).code == "no_visible_improvement"
+    result = decide(_ready_inp())
     assert (result.verdict, result.code) == (MERGE, "merge")
     assert result.reason == (
         "readiness path: the agent chat's validator refused the predecessor (security:banned-statement, "
-        "security:dunder) and accepts the new source (clean), no carrier, no regressions, "
-        "new score 85 >= re-scored predecessor 85 - 1"
+        "security:dunder) and accepts the new source (clean), a class removed and CQ-01 up, no carrier, "
+        "no regressions, new score 85 >= re-scored predecessor 85 - 1"
     )
 
 
 def test_a_coupled_file_counts_and_a_visible_suggestion_rides_along():
     """The chat serves a coupled file too; an improvement that carries nothing on its own does not stop the path."""
-    regen = _regen(
+    regen = _ready_regen(
         improvements=[{"ref": "P1", "rule": "DE-02", "what": "fonts aligned", "where_visible": "both renders"}]
     )
-    assert decide(_inp(regen=regen)).code == "no_defect_improvement"
-    result = decide(_inp(regen=regen, readiness=Readiness(status="none", new="coupled", prev="blocked")))
+    assert decide(_ready_inp(regen=regen, readiness=Readiness())).code == "no_defect_improvement"
+    result = decide(_ready_inp(regen=regen, readiness=Readiness(status="none", new="coupled", prev="blocked")))
     assert (result.verdict, result.code) == (MERGE, "merge")
     assert result.reason.startswith("readiness path: the agent chat's validator refused the predecessor (no key named)")
 
 
 def test_a_carrier_and_the_code_path_keep_their_own_reasons():
-    result = decide(_inp(readiness=GAIN))
+    result = decide(_inp(readiness=GAIN, prev_source=CLASS_SOURCE, new_source=PLAIN_SOURCE))
     assert result.verdict == MERGE and result.reason.startswith("1 visible improvement(s), 1 carrying (W2)")
     result = decide(_code_inp(readiness=GAIN))
     assert result.verdict == MERGE and result.reason.startswith("code path: W1 (CQ-04, fix) fixed")
@@ -400,8 +414,29 @@ def test_a_carrier_and_the_code_path_keep_their_own_reasons():
     ids=lambda readiness: f"{readiness.status}:{readiness.prev}>{readiness.new}",
 )
 def test_only_a_judged_step_from_blocked_to_served_counts(readiness):
-    result = decide(_inp(regen=_regen(improvements=[]), readiness=readiness))
+    result = decide(_ready_inp(readiness=readiness))
     assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+    assert "readiness path" not in result.reason
+
+
+@pytest.mark.parametrize(
+    ("overrides", "why"),
+    [
+        ({"prev_source": PLAIN_SOURCE}, "the two sources show no class removed"),
+        ({"new_source": CLASS_SOURCE}, "the two sources show no class removed"),
+        ({"prev_source": None}, "the two sources show no class removed"),
+        ({"new_source": "chart = (\n"}, "the two sources show no class removed"),
+        ({"regen": _ready_regen(prev_checklist=_regen()["prev_checklist"])}, "CQ-01 does not score higher"),
+        ({"regen": _ready_regen(scenario_changed=True)}, "the data scenario changed or encodings were added"),
+        ({"regen": _ready_regen(encodings_added=["size by revenue"])}, "the data scenario changed or encodings"),
+    ],
+    ids=["no-class-before", "class-after", "no-source", "unparsable", "cq01-flat", "scenario", "encodings"],
+)
+def test_the_gate_confirms_the_claim_on_what_it_read(overrides, why):
+    """The verdict's sides come from the runner a model had a shell on, so the claim alone never merges."""
+    result = decide(_ready_inp(**overrides))
+    assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+    assert f"(readiness path: not counted — {why}" in result.reason
 
 
 @pytest.mark.parametrize(
@@ -409,27 +444,15 @@ def test_only_a_judged_step_from_blocked_to_served_counts(readiness):
     [
         ({"score": 83}, "below_tolerance"),
         ({"new_checklist": {**NEW_CHECKLIST, "LM-02": 1}}, "criterion_below"),
-        ({"regen": _regen(improvements=[], scenario_changed=True)}, "no_visible_improvement"),
-        ({"regen": _regen(improvements=[], encodings_added=["size by revenue"])}, "no_visible_improvement"),
-        (
-            {"regen": _regen(improvements=[], regressions=[{"what": "legend lost", "where_visible": "both renders"}])},
-            "regression",
-        ),
+        ({"regen": _ready_regen(regressions=[{"what": "legend lost", "where_visible": "both renders"}])}, "regression"),
     ],
-    ids=["tolerance", "floor", "scenario", "encodings", "regression"],
+    ids=["tolerance", "floor", "regression"],
 )
 def test_the_tolerance_the_floor_and_the_regression_rule_still_apply(overrides, code):
-    fields = {"regen": _regen(improvements=[]), "readiness": GAIN, **overrides}
+    fields = dict(overrides)
     score = fields.pop("score", 85)
-    result = decide(_inp(score, **fields))
+    result = decide(_ready_inp(score, **fields))
     assert (result.verdict, result.code) == (KEEP, code)
-
-
-def test_a_gain_the_path_cannot_count_says_so_in_the_reason():
-    """A changed scenario takes the path away; the weekly review should still see that a gain was there."""
-    result = decide(_inp(regen=_regen(improvements=[], scenario_changed=True), readiness=GAIN))
-    assert result.reason.endswith("(readiness path: not counted — the data scenario changed or encodings were added)")
-    assert "readiness path" not in decide(_inp(regen=_regen(improvements=[], scenario_changed=True))).reason
 
 
 def test_the_keep_returns_within_a_window_like_a_regression():

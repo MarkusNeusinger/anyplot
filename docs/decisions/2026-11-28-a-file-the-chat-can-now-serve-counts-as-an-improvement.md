@@ -14,5 +14,7 @@
   validator accepts where it refused the predecessor counts as an improvement even when the
   picture stays the same, and the score tolerance, the criterion floor and the regression rule
   still apply to it. A Python class earns no library-mastery credit, in the re-score of the live
-  file as in the review of the new one.
+  file as in the review of the new one. Because the validator's verdict comes from a runner the
+  generating model could write to, the gate counts it only where it confirms the removal of a
+  class in the code itself; that limit is the agents' reading of the pull request review.
 - Where: #15152
