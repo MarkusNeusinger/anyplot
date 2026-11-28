@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-02
@@ -7,6 +7,7 @@ Quality: 90/100 | Updated: 2026-06-02
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -19,53 +20,62 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Imprint categorical palette — positions 1 and 2
-C1 = "#009E73"  # green  — 8th roots of unity
-C2 = "#C475FD"  # purple — inward geometric spiral
+# Imprint palette — positions 1 and 2 of the categorical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+C1, C2 = IMPRINT_PALETTE[0], IMPRINT_PALETTE[1]
 
-# Data: 8th roots of unity  ω = e^(2πi/8)
-n_roots = 8
-roots = [np.exp(2j * np.pi * k / n_roots) for k in range(n_roots)]
-root_labels_display = ["1", "ω", "i", "ω³", "−1", "ω⁵", "−i", "ω⁷"]
-root_labels_hover = [f"ω^{k}" for k in range(n_roots)]
+# Constants
+# Label placement per 45° sector around the unit circle: (xanchor, xshift, yshift)
+SECTOR_ANCHORS = [
+    ("left", 16, 0),
+    ("left", 10, 14),
+    ("center", 0, 18),
+    ("right", -10, 14),
+    ("right", -16, 0),
+    ("right", -10, -14),
+    ("center", 0, -18),
+    ("left", 10, -14),
+]
 
-# Data: geometric spiral — repeated multiplication by z₀ = 0.88·e^(iπ/6)
-# Each step rotates 30° and contracts by factor 0.88; after 12 steps |z₀|¹² ≈ 0.20
+# Column constants
+REAL = "Re(z)"  # role: real
+IMAGINARY = "Im(z)"  # role: imaginary
+LABEL = "Point"  # role: label
+SERIES = "Series"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("points.csv")
+# 8th roots of unity ω = e^(2πi/8), and a geometric spiral: repeated multiplication by
+# z₀ = 0.88·e^(iπ/6), a 30° turn and a contraction by 0.88 per step
+roots = np.exp(2j * np.pi * np.arange(8) / 8)
 z0 = 0.88 * np.exp(1j * np.pi / 6)
-n_spiral = 12
-spiral_pts = [z0**k for k in range(n_spiral)]
-
-
-# Helper: text anchor relative to angle on unit circle
-def root_anchor(k, n):
-    deg = 360 * k / n
-    if deg < 22.5 or deg >= 337.5:
-        return "left", 16, 0
-    elif deg < 67.5:
-        return "left", 10, 14
-    elif deg < 112.5:
-        return "center", 0, 18
-    elif deg < 157.5:
-        return "right", -10, 14
-    elif deg < 202.5:
-        return "right", -16, 0
-    elif deg < 247.5:
-        return "right", -10, -14
-    elif deg < 292.5:
-        return "center", 0, -18
-    else:
-        return "left", 10, -14
-
+spiral = z0 ** np.arange(12)
+df = pd.DataFrame(
+    {
+        REAL: np.concatenate([roots.real, spiral.real]),
+        IMAGINARY: np.concatenate([roots.imag, spiral.imag]),
+        LABEL: ["1", "ω", "i", "ω³", "−1", "ω⁵", "−i", "ω⁷"] + [f"z₀^{k}" for k in range(12)],
+        SERIES: ["8th roots of unity"] * 8 + ["z₀ᵏ, z₀ = 0.88·e^(iπ/6)"] * 12,
+    }
+)
 
 # Plot
+df["modulus"] = np.hypot(df[REAL], df[IMAGINARY])
+df["angle"] = np.degrees(np.arctan2(df[IMAGINARY], df[REAL]))
+series_names = list(df[SERIES].unique())
+ROOTS_NAME = series_names[0]
+SPIRAL_NAME = ", ".join(series_names[1:])
+roots_df = df[df[SERIES] == ROOTS_NAME].reset_index(drop=True)
+spiral_df = df[df[SERIES].isin(series_names[1:])].reset_index(drop=True)
+axis_limit = max(1.0, df["modulus"].max()) * 1.45
+
 fig = go.Figure()
 
 # Unit circle reference (dashed)
 theta_c = np.linspace(0, 2 * np.pi, 300)
 fig.add_trace(
     go.Scatter(
-        x=np.cos(theta_c).tolist(),
-        y=np.sin(theta_c).tolist(),
+        x=np.cos(theta_c),
+        y=np.sin(theta_c),
         mode="lines",
         line={"color": INK_MUTED, "width": 2, "dash": "dash"},
         name="Unit circle |z| = 1",
@@ -77,8 +87,8 @@ fig.add_trace(
 # Spiral connecting path (dotted)
 fig.add_trace(
     go.Scatter(
-        x=[z.real for z in spiral_pts],
-        y=[z.imag for z in spiral_pts],
+        x=spiral_df[REAL],
+        y=spiral_df[IMAGINARY],
         mode="lines",
         line={"color": C2, "width": 1.5, "dash": "dot"},
         hoverinfo="skip",
@@ -87,10 +97,10 @@ fig.add_trace(
 )
 
 # Vector arrows from origin to each 8th root
-for pt in roots:
+for x_end, y_end in zip(roots_df[REAL], roots_df[IMAGINARY], strict=True):
     fig.add_annotation(
-        x=pt.real,
-        y=pt.imag,
+        x=x_end,
+        y=y_end,
         ax=0,
         ay=0,
         xref="x",
@@ -106,17 +116,18 @@ for pt in roots:
     )
 
 # Root label annotations
-for k, (pt, label) in enumerate(zip(roots, root_labels_display, strict=True)):
-    xa, xs, ys = root_anchor(k, n_roots)
+for _, row in roots_df.iterrows():
+    sector = int(((row["angle"] % 360) + 22.5) // 45) % len(SECTOR_ANCHORS)
+    xa, xs, ys = SECTOR_ANCHORS[sector]
     ya = "middle"
     if ys > 0:
         ya = "bottom"
     elif ys < 0:
         ya = "top"
     fig.add_annotation(
-        x=pt.real,
-        y=pt.imag,
-        text=f"<b>{label}</b>",
+        x=row[REAL],
+        y=row[IMAGINARY],
+        text=f"<b>{row[LABEL]}</b>",
         showarrow=False,
         font={"size": 14, "color": C1},
         xanchor=xa,
@@ -128,12 +139,12 @@ for k, (pt, label) in enumerate(zip(roots, root_labels_display, strict=True)):
 # Scatter trace: 8th roots of unity
 fig.add_trace(
     go.Scatter(
-        x=[z.real for z in roots],
-        y=[z.imag for z in roots],
+        x=roots_df[REAL],
+        y=roots_df[IMAGINARY],
         mode="markers",
         marker={"size": 16, "color": C1, "line": {"color": PAGE_BG, "width": 2.5}, "symbol": "circle"},
-        name="8th roots of unity",
-        customdata=[[root_labels_hover[k], abs(roots[k]), np.degrees(np.angle(roots[k]))] for k in range(n_roots)],
+        name=ROOTS_NAME,
+        customdata=np.column_stack([[f"ω^{k}" for k in roots_df.index], roots_df["modulus"], roots_df["angle"]]),
         hovertemplate=(
             "<b>%{customdata[0]}</b><br>"
             "Re: %{x:.4f}<br>Im: %{y:.4f}<br>"
@@ -145,15 +156,15 @@ fig.add_trace(
 )
 
 # Scatter trace: geometric spiral (marker size decreases to show convergence)
-spiral_sizes = [max(7, round(16 - k * 0.75)) for k in range(n_spiral)]
+spiral_sizes = [max(7, round(16 - k * 0.75)) for k in spiral_df.index]
 fig.add_trace(
     go.Scatter(
-        x=[z.real for z in spiral_pts],
-        y=[z.imag for z in spiral_pts],
+        x=spiral_df[REAL],
+        y=spiral_df[IMAGINARY],
         mode="markers",
         marker={"size": spiral_sizes, "color": C2, "line": {"color": PAGE_BG, "width": 2}, "symbol": "diamond"},
-        name="z₀ᵏ, z₀ = 0.88·e^(iπ/6)",
-        customdata=[[k, abs(spiral_pts[k]), np.degrees(np.angle(spiral_pts[k]))] for k in range(n_spiral)],
+        name=SPIRAL_NAME,
+        customdata=np.column_stack([spiral_df.index, spiral_df["modulus"], spiral_df["angle"]]),
         hovertemplate=(
             "<b>z₀^%{customdata[0]}</b><br>"
             "Re: %{x:.4f}<br>Im: %{y:.4f}<br>"
@@ -175,11 +186,9 @@ fig.add_annotation(
     yshift=12,
 )
 
-# Title — compute font size from character count
+# Title — 52 characters fit at the 16 px base size
 title_str = "scatter-complex-plane · python · plotly · anyplot.ai"
-n_chars = len(title_str)
-default_fs = 16
-title_fs = max(11, round(default_fs * 67 / n_chars)) if n_chars > 67 else default_fs
+title_fs = 16
 
 fig.update_layout(
     autosize=False,
@@ -195,7 +204,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Re(z)", "font": {"size": 12, "color": INK}},
+        "title": {"text": REAL, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 2,
@@ -204,10 +213,10 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "showgrid": True,
         "dtick": 0.5,
-        "range": [-1.45, 1.45],
+        "range": [-axis_limit, axis_limit],
     },
     yaxis={
-        "title": {"text": "Im(z)", "font": {"size": 12, "color": INK}},
+        "title": {"text": IMAGINARY, "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "zeroline": True,
         "zerolinewidth": 2,
@@ -218,7 +227,7 @@ fig.update_layout(
         "scaleanchor": "x",
         "scaleratio": 1,
         "dtick": 0.5,
-        "range": [-1.45, 1.45],
+        "range": [-axis_limit, axis_limit],
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
