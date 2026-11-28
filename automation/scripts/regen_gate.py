@@ -2365,6 +2365,8 @@ def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> 
     # with the data scenario and the encodings unchanged on any spec. The
     # tolerance and the floor below apply to it as to any merge.
     ready = readiness_gain(inp.readiness) and not result.scenario_changed and not result.encodings_added
+    if readiness_gain(inp.readiness) and not ready:
+        code_note += " (readiness path: not counted — the data scenario changed or encodings were added)"
 
     if not visible and not code_counted and not ready:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""

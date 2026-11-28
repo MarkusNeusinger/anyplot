@@ -38,6 +38,7 @@ from tests.unit.automation.scripts.test_regen_gate import (
     _adapt,
     _adapt_inp,
     _checklist_json,
+    _code_inp,
     _inp,
     _outputs,
     _regen,
@@ -376,9 +377,11 @@ def test_a_coupled_file_counts_and_a_visible_suggestion_rides_along():
     assert result.reason.startswith("readiness path: the agent chat's validator refused the predecessor (no key named)")
 
 
-def test_a_carrier_keeps_its_own_reason():
+def test_a_carrier_and_the_code_path_keep_their_own_reasons():
     result = decide(_inp(readiness=GAIN))
     assert result.verdict == MERGE and result.reason.startswith("1 visible improvement(s), 1 carrying (W2)")
+    result = decide(_code_inp(readiness=GAIN))
+    assert result.verdict == MERGE and result.reason.startswith("code path: W1 (CQ-04, fix) fixed")
 
 
 @pytest.mark.parametrize(
@@ -386,6 +389,8 @@ def test_a_carrier_keeps_its_own_reason():
     [
         Readiness(),
         Readiness(status="stale", new="clean", prev="blocked"),
+        Readiness(status="excluded", new="clean", prev="blocked"),
+        Readiness(status="first_generation", new="clean", prev="n/a"),
         Readiness(status="invalid"),
         Readiness(status="none", new="blocked", prev="blocked"),
         Readiness(status="none", new="error", prev="blocked"),
@@ -418,6 +423,13 @@ def test_the_tolerance_the_floor_and_the_regression_rule_still_apply(overrides, 
     score = fields.pop("score", 85)
     result = decide(_inp(score, **fields))
     assert (result.verdict, result.code) == (KEEP, code)
+
+
+def test_a_gain_the_path_cannot_count_says_so_in_the_reason():
+    """A changed scenario takes the path away; the weekly review should still see that a gain was there."""
+    result = decide(_inp(regen=_regen(improvements=[], scenario_changed=True), readiness=GAIN))
+    assert result.reason.endswith("(readiness path: not counted — the data scenario changed or encodings were added)")
+    assert "readiness path" not in decide(_inp(regen=_regen(improvements=[], scenario_changed=True))).reason
 
 
 def test_the_keep_returns_within_a_window_like_a_regression():
