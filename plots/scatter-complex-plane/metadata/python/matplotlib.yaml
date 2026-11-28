@@ -2,133 +2,122 @@ library: matplotlib
 language: python
 specification_id: scatter-complex-plane
 created: '2026-06-02T01:01:26Z'
-updated: '2026-06-02T01:20:52Z'
+updated: '2026-11-28T01:42:40Z'
 generated_by: claude-sonnet
-workflow_run: 26791447724
+workflow_run: 46093980864
 issue: 4427
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Correct Argand diagram with all required spec features: origin axes, dashed unit
-    circle, equal-aspect ratio, vector arrows, angle arcs, and per-point rectangular+polar
-    annotations'
-  - 'Perfect palette compliance: 5th roots of unity in brand green (#009E73), arbitrary
-    points in lavender (#C475FD); both Imprint positions 1 and 2 in canonical order'
-  - Theme-adaptive chrome is fully correct — backgrounds, text, legend frames, annotation
-    boxes all flip cleanly; data colors identical between light and dark renders
-  - 'Complete code quality: no functions/classes, deterministic mathematical data,
-    all imports used, correct plot-{THEME}.png output naming'
-  - 'Sophisticated library mastery: Arc patches for angle arcs, annotate with arrowprops
-    for vector arrows, Line2D for custom legend handles — all idiomatic matplotlib'
+  - Labels placed with textcoords='offset points' along each point's radial direction
+    and ha/va picked per direction, so every three-line a+bi / polar box hangs clear
+    of its marker
+  - Vectors drawn with annotate arrowprops (shrinkA=0, shrinkB=7) so each arrow starts
+    at the origin and stops at its marker
+  - Roots of unity and arbitrary numbers separated by both color and marker shape,
+    keyed in a legend whose glyphs match the marks in both themes
+  - Polar values computed with abs() and np.angle rather than typed, and limits derived
+    from the data
   weaknesses:
-  - 3-line annotation boxes (label + rectangular + polar form) at fontsize=9 are readable
-    at full size but may be tight at mobile scale (~400 px wide); consider fontsize=10
-    for the annotation text
-  - Upper-left region (ω² at (-0.81+0.59i) and z₂ at (-0.40+1.50i)) has slight visual
-    crowding between annotation boxes — boxes are not overlapping but breathing room
-    is minimal; increase xlim/ylim slightly or reduce annotation offset from 0.45
-    to 0.38 for those quadrants
+  - 'Suggestion: typeset the legend entry ''e^(2πi/5)'' with mathtext ($e^{2\pi i/5}$)
+    instead of caret notation.'
+  - 'Suggestion: the dotted argument arcs (radius 0.19, alpha 0.45) overlap into one
+    faint ring at the origin; either give a single arc presence or drop them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "scatter-complex-plane · python · matplotlib · anyplot.ai" in dark ink, clearly readable. "Real axis" (x) and "Imaginary axis" (y) labels visible at fontsize=10 in dark ink. Tick labels (-2,-1,0,1,2) readable at fontsize=8 in INK_SOFT (#4A4A44). Legend in lower-left with elevated-background frame, text readable.
-      Data: Five green circles (#009E73) for 5th roots of unity; two lavender diamonds (#C475FD) for arbitrary complex numbers z₁ and z₂. Vector arrows in matching colors radiate from origin. Dashed gray unit circle present. Angle arcs visible near origin in matching colors (alpha=0.45). Seven annotation boxes (fontsize=9) show label + rectangular form + polar form for each point; all boxes use semi-transparent #FFFDF6 fill and are readable.
-      Legibility verdict: PASS — all text readable; annotation boxes slightly small at mobile scale.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: title 'scatter-complex-plane · python · matplotlib · anyplot.ai' in dark ink, 'Real axis' / 'Imaginary axis' titles, ticks -2..2 on both axes, axes lines through the origin, subtle grid, legend lower left on an elevated box; all readable.
+      Data: five #009E73 circles on the dashed grey unit circle (1, ω..ω⁴) and two #C475FD diamonds (z₁, z₂) with matching arrows from the origin; each point has a three-line label box (name, a+bi, |z|∠θ°) offset outward and clear of the marker; faint dotted argument arcs at the origin.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light ink (#F0EFE8) clearly readable against near-black background. Axis labels in same light ink, tick labels in INK_SOFT (#B8B7B0) clearly visible — no dark-on-dark failures. Legend frame uses elevated dark fill (#242420). Annotation boxes use #242420 fill with light text — readable.
-      Data: Data colors are identical to light render — green circles (#009E73) and lavender diamonds (#C475FD) unchanged, confirming only chrome flipped. Vector arrows and angle arcs maintain same colors. Unit circle dashed line in INK_MUTED (#A8A79F) visible against dark background.
-      Legibility verdict: PASS — all elements readable in dark theme; no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend text in light ink; label boxes on the #242420 elevated surface with light text; no dark-on-dark text.
+      Data: same #009E73 and #C475FD marks as the light render; legend glyphs match the marks (no stray white lines).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all clearly readable in both themes.
-          Annotation text at fontsize=9 with 3 lines readable at full size; marginally
-          tight at mobile scale (~400px).
+        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt, labels 9 pt;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No actual overlaps. Upper-left area (omega2 and z2 annotations) has
-          minimal breathing room but boxes are distinct.
+        comment: Every label box sits outward of its point, clear of markers and of
+          each other's text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers (s=130), arrows, angle arcs, unit circle clearly visible
-          against both backgrounds.
+        comment: 130-size markers with page-colored edges; legend glyphs match the
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1 (#009E73) and 2 (#C475FD) used; both CVD-safe
-          as per palette design.
+        comment: 'Green circles vs purple diamonds: hue plus marker shape, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) correct for equal-aspect Argand diagram.
-          Canvas gate passed. No clipping detected.
+        comment: Square 2400x2400 canvas for the equal-aspect plane; plane, labels
+          and legend fit with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Real axis'' and ''Imaginary axis'' are descriptive and correct.
-          Title matches required format exactly.'
+        comment: Real axis / Imaginary axis, the standard Argand axis names (dimensionless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73, second lavender #C475FD. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Chrome flips correctly.'
+        comment: 'First category #009E73, second #C475FD; chrome on #FAF8F1 / #1A1A17;
+          colors identical in both themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Above default: custom Arc patches for angle arcs, multi-form annotations
-          (label+rect+polar), elevated annotation boxes, intentional visual hierarchy
-          from vectors to labels.'
+        passed: false
+        comment: Annotation boxes on the elevated surface token with a three-line
+          name / a+bi / polar hierarchy, INK_SOFT legend text against INK labels
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Top/right spines removed. Grid subtle at alpha=0.12. Legend styled
-          with ELEVATED_BG and INK_SOFT border. Annotation boxes semi-transparent
-          with theme-adaptive fill.
+        passed: false
+        comment: Labels offset radially in points with ha/va chosen per direction,
+          so each box hangs outward from its point; subtle both-axis grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear mathematical narrative: vectors show complex number as vector,
-          angle arcs show argument, annotations show both coordinate forms simultaneously.
-          Good visual flow from origin outward.'
+        passed: false
+        comment: Data displayed; the category split is the one the Notes ask for,
+          no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -138,30 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex plane scatter with all required
-          geometric elements.
+        comment: 'Argand diagram: points, vectors from the origin, unit circle'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: origin axes (axhline/axvline), dashed
-          unit circle, vector arrows, equal aspect ratio, rectangular+polar annotations,
-          distinct colors and marker shapes per category.'
+        comment: Axes through origin with ticks, dashed unit circle, arrows, a+bi
+          and polar labels, equal aspect, distinct colors and markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary part on y-axis. All 7 points visible
-          within [-2.4, 2.4] bounds.
+        comment: Points at their computed complex values; symmetric limits ±1.5x the
+          largest part show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-complex-plane · python · matplotlib · anyplot.ai'
-          matches required format. Legend accurately labels categories and unit circle.
+        comment: Title in the mandated format; legend keys both categories and the
+          unit circle
     data_quality:
       score: 15
       max: 15
@@ -171,23 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5th roots of unity demonstrate symmetry on unit circle; arbitrary
-          complex numbers show general case; both rectangular and polar representations
-          shown simultaneously.
+        comment: Roots on the circle plus points off it, several quadrants, magnitude
+          and phase shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 5th roots of unity are a canonical mathematical object; arbitrary
-          values z1=1.6+0.7j and z2=-0.4+1.5j are realistic. Neutral educational context.
+        comment: 'Canonical math content: 5th roots of unity and two arbitrary complex
+          numbers'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axes [-2.4, 2.4] comfortably contain all points. Unit circle at |z|=1
-          provides natural reference scale.
+        comment: 'Checked: ω = 0.31+0.95i ∠72°, ω³ = -0.81-0.59i ∠216°, z₁ |1.6+0.7i|
+          = 1.75 ∠23.6°, z₂ 1.55 ∠104.9°; all computed via abs()/np.angle, not typed'
     code_quality:
       score: 10
       max: 10
@@ -197,56 +183,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential code, no functions or classes defined.
+        comment: 'Flat top-to-bottom: imports, tokens, column constants, Data block,
+          plot, save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical data — np.exp of fixed angles, fixed arbitrary
-          complex numbers.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: sys (path fix), os (theme env), matplotlib.pyplot,
-          numpy, Line2D, Arc.'
+        comment: All imports used (sys, os, plt, np, pd, Line2D, Arc)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Code is well-organized with clear sections. zip(strict=False)
-          appropriate.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches='tight', current
-          matplotlib 3.10 API.
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Uses Axes methods throughout (ax.scatter, ax.plot, ax.annotate).
-          Arc from matplotlib.patches, Line2D from matplotlib.lines, arrowprops dict
-          — all idiomatic.
+        passed: false
+        comment: Axes API throughout; annotate with arrowprops shrinkA/shrinkB for
+          vectors, textcoords='offset points' labels, Line2D proxy handles
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'matplotlib-specific: Arc patches for angle arcs, annotate+arrowprops
-          for vector arrows, Line2D custom legend handles, set_aspect(''equal'').
-          Competent but standard for this plot type.'
+        passed: false
+        comment: matplotlib.patches.Arc for the argument arcs; otherwise generic
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-9e27273498
+  rendered_at: '2026-11-28T01:39:30Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -255,7 +239,6 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
