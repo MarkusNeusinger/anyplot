@@ -1,7 +1,7 @@
 # anyplot.ai
 # energy-level-atomic: Atomic Energy Level Diagram
-# Library: makie 0.24 | Julia 1.11
-# Quality: pending | Created: 2026-05-30
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 86/100 | Updated: 2026-11-28
 
 using CairoMakie
 using Colors
