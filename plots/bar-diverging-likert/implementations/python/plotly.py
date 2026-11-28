@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-28
@@ -38,7 +38,7 @@ LIKERT_COLORS = [
     IMPRINT_PALETTE[4],
     "#CC807D" if THEME == "light" else "#B06060",
     "#6B6A63" if THEME == "light" else "#686762",
-    "#8DA1C2" if THEME == "light" else "#4A6898",
+    "#8DA1C2" if THEME == "light" else "#56677F",
     IMPRINT_PALETTE[2],
 ]
 # Text color inside each level's segments, chosen for contrast against its fill
