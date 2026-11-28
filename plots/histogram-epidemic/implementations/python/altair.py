@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-06-02
@@ -20,26 +20,30 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — case classification + cumulative line
-CONFIRMED_COLOR = "#009E73"  # Imprint position 1 — brand green
-PROBABLE_COLOR = "#C475FD"  # Imprint position 2 — lavender
-SUSPECT_COLOR = "#4467A3"  # Imprint position 3 — blue
-CUMULATIVE_COLOR = "#BD8233"  # Imprint position 4 — ochre (cumulative line)
+# Imprint palette: full eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+CUMULATIVE_COLOR = IMPRINT_PALETTE[3]  # position 4, ochre: cumulative line
 
-# Data
+# Constants
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+
+# Columns: set these to your table's column names
+ONSET_DATE = "Date of symptom onset"  # role: onset_date
+CASE_COUNT = "New cases"  # role: case_count
+CASE_TYPE = "Classification"  # role: case_type
+EVENTS = "Intervention"  # role: events
+CUMULATIVE = "Cumulative cases"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("cases.csv")
 np.random.seed(42)
-
 dates = pd.date_range("2024-01-15", periods=120, freq="D")
-
 days = np.arange(120)
 wave1 = 80 * np.exp(-0.5 * ((days - 25) / 6) ** 2)
 wave2 = 45 * np.exp(-0.5 * ((days - 55) / 8) ** 2)
 wave3 = 25 * np.exp(-0.5 * ((days - 85) / 10) ** 2)
 base_rate = wave1 + wave2 + wave3 + 2
-
 confirmed_frac = np.clip(0.6 + 0.2 * np.sin(days / 15), 0.4, 0.85)
 probable_frac = np.clip(0.25 - 0.05 * np.sin(days / 15), 0.1, 0.35)
-
 total_cases = np.round(base_rate + np.random.poisson(2, 120)).astype(int)
 confirmed = np.round(total_cases * confirmed_frac).astype(int)
 probable = np.round(total_cases * probable_frac).astype(int)
@@ -47,49 +51,57 @@ suspect = np.clip(total_cases - confirmed - probable, 0, None).astype(int)
 
 df = pd.DataFrame(
     {
-        "onset_date": np.tile(dates, 3),
-        "case_count": np.concatenate([confirmed, probable, suspect]),
-        "case_type": ["Confirmed"] * 120 + ["Probable"] * 120 + ["Suspect"] * 120,
+        ONSET_DATE: np.tile(dates, 3),
+        CASE_COUNT: np.concatenate([confirmed, probable, suspect]),
+        CASE_TYPE: ["Confirmed"] * 120 + ["Probable"] * 120 + ["Suspect"] * 120,
     }
 )
+# An intervention is labelled on one row of its onset date (the first classification)
+interventions = {
+    "2024-02-10": "Source identified",
+    "2024-03-01": "Containment measures",
+    "2024-03-20": "Vaccination campaign",
+}
+df[EVENTS] = df[ONSET_DATE].dt.strftime("%Y-%m-%d").map(interventions).where(df[CASE_TYPE] == "Confirmed")
 
-# Cumulative totals
-daily_total = pd.DataFrame({"onset_date": dates, "daily_total": total_cases})
-daily_total["cumulative"] = daily_total["daily_total"].cumsum()
-max_daily = int(total_cases.max()) + 15
+# Plot: reads only df and the constants above
+events = df.dropna(subset=[EVENTS])[[ONSET_DATE, EVENTS]].copy()
+type_order = list(df[CASE_TYPE].dropna().unique())
+daily_total = df.groupby(ONSET_DATE, as_index=False, sort=True)[CASE_COUNT].sum()
+daily_total[CUMULATIVE] = daily_total[CASE_COUNT].cumsum()
+max_daily = int(daily_total[CASE_COUNT].max()) + 15
+# Staggered label heights so the event labels clear the bars
+label_levels = np.array([0.90, 0.73, 0.41])
+events["y_pos"] = max_daily * label_levels[np.arange(len(events)) % len(label_levels)]
+events["order"] = range(len(events))
 
-# Intervention events — staggered y positions to avoid bar interference
-events = pd.DataFrame(
-    {
-        "date": pd.to_datetime(["2024-02-10", "2024-03-01", "2024-03-20"]),
-        "event": ["Source identified", "Containment measures", "Vaccination campaign"],
-        "y_pos": [max_daily * 0.90, max_daily * 0.73, max_daily * 0.56],
-    }
-)
-
-# Stacked bars with Imprint palette
-type_order = ["Confirmed", "Probable", "Suspect"]
-color_scale = alt.Scale(domain=type_order, range=[CONFIRMED_COLOR, PROBABLE_COLOR, SUSPECT_COLOR])
+color_scale = alt.Scale(domain=type_order, range=IMPRINT_PALETTE)
+order_expr = "{" + ", ".join(f"'{t}': {i}" for i, t in enumerate(type_order)) + "}[datum['" + CASE_TYPE + "']]"
 
 bars = (
     alt.Chart(df)
     .mark_bar(stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
         x=alt.X(
-            "onset_date:T",
-            title="Date of Symptom Onset",
+            ONSET_DATE.translate(ESCAPE),
+            type="temporal",
+            title=ONSET_DATE,
             axis=alt.Axis(format="%b %d", labelAngle=-45, tickCount="week"),
         ),
-        y=alt.Y("case_count:Q", title="New Cases", scale=alt.Scale(domain=[0, max_daily])),
-        color=alt.Color("case_type:N", scale=color_scale, sort=type_order, title="Classification"),
+        y=alt.Y(
+            CASE_COUNT.translate(ESCAPE), type="quantitative", title=CASE_COUNT, scale=alt.Scale(domain=[0, max_daily])
+        ),
+        color=alt.Color(
+            CASE_TYPE.translate(ESCAPE), type="nominal", scale=color_scale, sort=type_order, title=CASE_TYPE
+        ),
         order=alt.Order("order:Q"),
         tooltip=[
-            alt.Tooltip("onset_date:T", title="Date", format="%b %d, %Y"),
-            alt.Tooltip("case_type:N", title="Type"),
-            alt.Tooltip("case_count:Q", title="Cases"),
+            alt.Tooltip(ONSET_DATE.translate(ESCAPE), type="temporal", title=ONSET_DATE, format="%b %d, %Y"),
+            alt.Tooltip(CASE_TYPE.translate(ESCAPE), type="nominal", title=CASE_TYPE),
+            alt.Tooltip(CASE_COUNT.translate(ESCAPE), type="quantitative", title=CASE_COUNT),
         ],
     )
-    .transform_calculate(order="{'Confirmed': 0, 'Probable': 1, 'Suspect': 2}[datum.case_type]")
+    .transform_calculate(order=order_expr)
 )
 
 # Cumulative line with independent right y-axis
@@ -97,46 +109,53 @@ cumulative_line = (
     alt.Chart(daily_total)
     .mark_line(strokeWidth=2.5, interpolate="monotone", color=CUMULATIVE_COLOR)
     .encode(
-        x="onset_date:T",
+        x=alt.X(ONSET_DATE.translate(ESCAPE), type="temporal", title=ONSET_DATE),
         y=alt.Y(
-            "cumulative:Q",
-            title="Cumulative Cases",
+            CUMULATIVE.translate(ESCAPE),
+            type="quantitative",
+            title=CUMULATIVE,
+            scale=alt.Scale(domain=[0, daily_total[CUMULATIVE].max() * 1.55]),
             axis=alt.Axis(titleColor=CUMULATIVE_COLOR, labelColor=CUMULATIVE_COLOR, format=",.0f"),
         ),
         tooltip=[
-            alt.Tooltip("onset_date:T", title="Date", format="%b %d, %Y"),
-            alt.Tooltip("cumulative:Q", title="Cumulative Cases", format=","),
+            alt.Tooltip(ONSET_DATE.translate(ESCAPE), type="temporal", title=ONSET_DATE, format="%b %d, %Y"),
+            alt.Tooltip(CUMULATIVE.translate(ESCAPE), type="quantitative", title=CUMULATIVE, format=","),
         ],
     )
 )
 
 # Vertical intervention rules
-rules = alt.Chart(events).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=INK_SOFT).encode(x="date:T")
+rules = (
+    alt.Chart(events)
+    .mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color=INK_SOFT)
+    .encode(x=alt.X(ONSET_DATE.translate(ESCAPE), type="temporal"))
+)
 
-# Event labels — horizontal at staggered heights, avoiding bar interference
+# Event labels: horizontal at staggered heights, clear of the bars
 rule_labels = (
     alt.Chart(events)
-    .mark_text(align="left", dx=4, fontSize=11, fontStyle="italic", color=INK_MUTED)
-    .encode(x="date:T", y="y_pos:Q", text="event:N")
+    .mark_text(align="left", dx=4, fontSize=12, fontStyle="italic", color=INK_MUTED)
+    .encode(
+        x=alt.X(ONSET_DATE.translate(ESCAPE), type="temporal"),
+        y=alt.Y("y_pos:Q"),
+        text=alt.Text(EVENTS.translate(ESCAPE), type="nominal"),
+    )
 )
 
-# Peak annotation
-peak_day = int(np.argmax(total_cases))
-peak_data = pd.DataFrame(
-    {
-        "onset_date": [dates[peak_day]],
-        "peak_val": [int(total_cases[peak_day])],
-        "label": [f"Peak: {int(total_cases[peak_day])} cases"],
-    }
-)
-
+# Peak annotation: the day with the most new cases
+peak_row = daily_total.loc[[daily_total[CASE_COUNT].idxmax()]].copy()
+peak_row["label"] = peak_row[CASE_COUNT].map(lambda n: f"Peak: {n} cases")
 peak_label = (
-    alt.Chart(peak_data)
-    .mark_text(fontSize=11, fontWeight="bold", color=CUMULATIVE_COLOR, dy=-10, dx=30)
-    .encode(x="onset_date:T", y="peak_val:Q", text="label:N")
+    alt.Chart(peak_row)
+    .mark_text(fontSize=12, fontWeight="bold", color=CUMULATIVE_COLOR, align="right", dy=-10, dx=-14)
+    .encode(
+        x=alt.X(ONSET_DATE.translate(ESCAPE), type="temporal"),
+        y=alt.Y(CASE_COUNT.translate(ESCAPE), type="quantitative"),
+        text="label:N",
+    )
 )
 
-# Title scaling (67-char baseline)
+# Title size scaled to the mandated title length (67-char baseline)
 title_str = "histogram-epidemic · python · altair · anyplot.ai"
 title_fontsize = round(16 * min(1.0, 67 / len(title_str)))
 
@@ -147,8 +166,10 @@ chart = (
     alt.layer(bar_layer, cumulative_line)
     .resolve_scale(y="independent")
     .properties(
-        width=620,
-        height=320,
+        width=800,
+        height=450,
+        padding=10,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
         background=PAGE_BG,
         title=alt.Title(
             title_str,
@@ -156,7 +177,7 @@ chart = (
             anchor="start",
             color=INK,
             subtitle="Daily new cases by classification with cumulative total",
-            subtitleFontSize=10,
+            subtitleFontSize=11,
             subtitleColor=INK_SOFT,
         ),
     )
@@ -184,24 +205,19 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK, anchor="start")
 )
 
 # Save PNG
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Pad PNG to exact target 3200 × 1800 (altair.md canvas contract)
+# Fit-to-canvas safeguard (altair.md): scale down, never crop; centre on PAGE_BG
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
-_w, _h = _img.size
-if _w > TW or _h > TH:
-    raise SystemExit(
-        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
-        f"Shrink chart .properties(width=, height=) values and re-render."
-    )
-if _w < TW or _h < TH:
+if _img.size != (TW, TH):
+    _scale = min(1.0, TW / _img.width, TH / _img.height)
+    _img = _img.resize((round(_img.width * _scale), round(_img.height * _scale)), Image.LANCZOS)
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
-    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.paste(_img, ((TW - _img.width) // 2, (TH - _img.height) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")
