@@ -1619,10 +1619,11 @@ READY_SIDES = ("clean", "coupled")
 def readiness_gain(readiness: Readiness) -> bool:
     """The readiness verdict says the chat's validator refused the predecessor and accepts the new source.
 
-    The verdict's sides come from the generate or repair runner, where a model
-    session had a shell (``readiness_record.py``), so this claim alone never
-    merges: ``readiness_path_problem`` confirms it on the two sources and the
-    review before the readiness path counts it.
+    impl-review scans both sources itself before any model session of its job,
+    and a ``none`` verdict never comes from the runner's staged record
+    (``readiness_record.py``). Even so this claim alone never merges:
+    ``readiness_path_problem`` confirms a class removal on the two sources and
+    the review before the readiness path counts it.
     """
     return readiness.status == READINESS_NONE and readiness.prev == "blocked" and readiness.new in READY_SIDES
 
