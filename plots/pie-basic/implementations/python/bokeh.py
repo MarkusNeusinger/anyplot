@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pie-basic: Basic Pie Chart
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: pending | Updated: 2026-11-28
+Quality: 87/100 | Updated: 2026-11-28
 """
 
 import math
