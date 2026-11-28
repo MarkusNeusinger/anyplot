@@ -392,6 +392,7 @@ jobs:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
         run: |
           # Keep the regen helpers from THIS workflow's ref before switching to
           # the PR head: the gate's parser must match the workflow that calls
@@ -418,7 +419,7 @@ jobs:
           # anything else would sit in the workspace for every later step.
           # Checked from this ref's copy before the checkout; fail closed.
           python3 -I automation/scripts/pr_tree_check.py --base origin/main --head "$HEAD_SHA" \
-            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY"
+            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" --ext "$EXT"
           git checkout "$HEAD_SHA"
 
       # Pre-merge test hook (impl-generate.yml dispatches the review on its own

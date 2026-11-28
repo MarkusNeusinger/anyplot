@@ -70,7 +70,7 @@ def _workflow_script() -> str:
     steps = [s for job in workflow["jobs"].values() for s in job.get("steps", []) if s.get("name") == GATE_STEP]
     assert len(steps) == 1, f"expected exactly one {GATE_STEP!r} step"
     run = steps[0]["run"]
-    start = run.index("python3 <<'PY'\n") + len("python3 <<'PY'\n")
+    start = run.index("python3 -P - <<'PY'\n") + len("python3 -P - <<'PY'\n")
     return run[start : run.index("\nPY", start)]
 
 

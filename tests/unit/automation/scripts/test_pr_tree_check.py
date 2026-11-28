@@ -57,7 +57,7 @@ def _commit(repo: Path) -> str:
 
 
 def _check(repo: Path, head: str, **overrides: str) -> subprocess.CompletedProcess[str]:
-    args = {"--base": "main", "--head": head, "--spec-id": SPEC, "--language": LANG, "--library": LIB}
+    args = {"--base": "main", "--head": head, "--spec-id": SPEC, "--language": LANG, "--library": LIB, "--ext": ".py"}
     args.update({f"--{k.replace('_', '-')}": v for k, v in overrides.items()})
     argv = [sys.executable, "-I", str(SCRIPT), *(item for pair in args.items() for item in pair)]
     return subprocess.run(argv, cwd=repo, capture_output=True, text=True)
@@ -75,8 +75,24 @@ def test_a_first_generation_adds_the_two_files_and_passes(repo):
     other = f"plots/{SPEC}/implementations/javascript/muix.tsx"
     _write(repo, other, "export default () => null;\n")
     _write(repo, f"plots/{SPEC}/metadata/javascript/muix.yaml", "library: muix\n")
-    result = _check(repo, _commit(repo), language="javascript", library="muix")
+    result = _check(repo, _commit(repo), language="javascript", library="muix", ext=".tsx")
     assert result.returncode == 0, result.stdout
+
+
+@pytest.mark.parametrize("path", [IMPL, META])
+def test_one_of_the_two_alone_passes(repo, path):
+    """A repair or the review's own metadata commit changes one file."""
+    _write(repo, path, "changed = True\n")
+    assert _check(repo, _commit(repo)).returncode == 0
+
+
+@pytest.mark.parametrize("sibling", [".sh", ".pyc", ".R", ".tsx"])
+def test_a_sibling_with_another_extension_refuses(repo, sibling):
+    """Only the extension impl-review derives from the library is the pair's file."""
+    _write(repo, IMPL, "x = 2\n")
+    _write(repo, IMPL.removesuffix(".py") + sibling, "echo\n")
+    result = _check(repo, _commit(repo))
+    assert result.returncode == 1 and f"{LIB}{sibling} (not this pair's implementation or metadata)" in result.stdout
 
 
 def test_main_moving_on_does_not_count_against_the_head(repo):
@@ -137,7 +153,16 @@ def test_a_path_with_a_newline_cannot_hide(repo):
 
 @pytest.mark.parametrize(
     "overrides",
-    [{"spec_id": "Heatmap"}, {"spec_id": "a/../b"}, {"language": "py thon"}, {"library": "pyg.al"}, {"library": ".*"}],
+    [
+        {"spec_id": "Heatmap"},
+        {"spec_id": "a/../b"},
+        {"language": "py thon"},
+        {"library": "pyg.al"},
+        {"library": ".*"},
+        {"ext": "py"},
+        {"ext": ".p*"},
+        {"ext": "./x"},
+    ],
 )
 def test_malformed_names_are_a_usage_error(repo, overrides):
     result = _check(repo, _commit(repo), **overrides)
@@ -160,3 +185,5 @@ def test_impl_review_runs_it_from_its_own_ref_before_the_checkout():
     assert step["env"]["SPEC_ID"] == "${{ steps.pr.outputs.specification_id }}"
     assert step["env"]["LIBRARY"] == "${{ steps.pr.outputs.library }}"
     assert step["env"]["LANGUAGE"] == "${{ steps.lang.outputs.language }}"
+    assert step["env"]["EXT"] == "${{ steps.lang.outputs.ext }}"
+    assert '--library "$LIBRARY" --ext "$EXT"' in script

@@ -11,7 +11,8 @@ stops on anything else.
 The head passes when every path ``git diff --no-renames --raw BASE...HEAD``
 lists is one of
 
-- ``plots/<spec-id>/implementations/<language>/<library>.<ext>``,
+- ``plots/<spec-id>/implementations/<language>/<library><ext>``, with the
+  extension impl-review derives from the library,
 - ``plots/<spec-id>/metadata/<language>/<library>.yaml``,
 
 added or modified as a regular file (mode ``100644``). A deletion, a symlink,
@@ -19,7 +20,7 @@ an executable file, a submodule or any other path refuses.
 
 Usage::
 
-    pr_tree_check.py --base origin/main --head SHA --spec-id S --language L --library B
+    pr_tree_check.py --base origin/main --head SHA --spec-id S --language L --library B --ext .py
 
 Exit 0 when the head passes, 1 with one ``::error::`` line naming what refuses
 it, 2 on a usage error or when git cannot compare the two (fail closed: the
@@ -36,13 +37,17 @@ import sys
 
 SPEC_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 NAME_RE = re.compile(r"[a-z0-9]+")
+EXT_RE = re.compile(r"\.[A-Za-z]+")
 REGULAR = "100644"
 
 
-def allowed(path: str, spec_id: str, language: str, library: str) -> bool:
-    """Whether ``path`` is the pair's implementation or metadata file."""
-    return path == f"plots/{spec_id}/metadata/{language}/{library}.yaml" or bool(
-        re.fullmatch(rf"plots/{spec_id}/implementations/{language}/{library}\.[A-Za-z]+", path)
+def pair_files(spec_id: str, language: str, library: str, ext: str) -> frozenset[str]:
+    """The pair's implementation and metadata file, the only paths its pull request may change."""
+    return frozenset(
+        {
+            f"plots/{spec_id}/implementations/{language}/{library}{ext}",
+            f"plots/{spec_id}/metadata/{language}/{library}.yaml",
+        }
     )
 
 
@@ -62,11 +67,11 @@ def changes(base: str, head: str) -> list[tuple[str, str, str]]:
     return entries
 
 
-def problems(entries: list[tuple[str, str, str]], spec_id: str, language: str, library: str) -> list[str]:
+def problems(entries: list[tuple[str, str, str]], allowed: frozenset[str]) -> list[str]:
     """What refuses the head, one item per path; empty when it passes."""
     found = []
     for mode, status, path in entries:
-        if not allowed(path, spec_id, language, library):
+        if path not in allowed:
             found.append(f"{path} (not this pair's implementation or metadata)")
         elif status not in ("A", "M") or mode != REGULAR:
             found.append(f"{path} (status {status}, mode {mode})")
@@ -80,19 +85,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--spec-id", required=True)
     parser.add_argument("--language", required=True)
     parser.add_argument("--library", required=True)
+    parser.add_argument("--ext", required=True, help="the implementation's extension, with its dot")
     args = parser.parse_args(argv)
     if not SPEC_ID_RE.fullmatch(args.spec_id) or not NAME_RE.fullmatch(args.language):
         print(f"::error::pr_tree_check: malformed spec id or language ({args.spec_id!r}, {args.language!r})")
         return 2
-    if not NAME_RE.fullmatch(args.library):
-        print(f"::error::pr_tree_check: malformed library ({args.library!r})")
+    if not NAME_RE.fullmatch(args.library) or not EXT_RE.fullmatch(args.ext):
+        print(f"::error::pr_tree_check: malformed library or extension ({args.library!r}, {args.ext!r})")
         return 2
     try:
         entries = changes(args.base, args.head)
     except (subprocess.CalledProcessError, OSError, IndexError) as error:
         print(f"::error::pr_tree_check: git could not compare {args.base} and {args.head} ({type(error).__name__})")
         return 2
-    found = problems(entries, args.spec_id, args.language, args.library)
+    found = problems(entries, pair_files(args.spec_id, args.language, args.library, args.ext))
     if found:
         listed = "; ".join(found[:10]) + (f"; and {len(found) - 10} more" if len(found) > 10 else "")
         print(f"::error::the pull request head changes more than its pair's two files: {listed}")
