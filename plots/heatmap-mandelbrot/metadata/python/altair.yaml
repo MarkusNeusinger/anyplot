@@ -12,134 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 80
 review:
   strengths:
-  - Correct Mandelbrot computation with smooth escape-time coloring — no discrete
-    banding in the math
-  - 'Imprint palette correctly applied: imprint_seq (green to blue) for single-polarity
-    continuous data'
-  - 'Full theme support: both renders pass legibility checks; all chrome tokens properly
-    threaded through to all elements'
-  - 'Excellent code quality: KISS structure, clean imports, deterministic computation,
-    post-render canvas padding present'
-  - Canvas gate passed (2400x2400 exactly); square format appropriate for symmetric
-    fractal
-  - Altair layer composition (interior + exterior) and .interactive() for HTML zoom/pan
-    used effectively
+  - Correct smooth normalized-iteration computation with a black interior layer
+  - Theme tokens threaded through title, axes and legend; readable in both themes
+  - Layered interior/exterior rects with tooltips and zoom/pan in the HTML
   weaknesses:
-  - 'Vertical striping artifacts throughout the exterior: vl-convert renders 480000
-    sub-pixel rect marks with slight inter-column gaps visible at scale_factor=4;
-    both renders show clear vertical lines that make the exterior look like a rendering/compression
-    error'
-  - 'Color gradient compressed into boundary zone only: most exterior maps to near-zero
-    smooth_iter values (green), with blue only in the thin boundary band; the escape-time
-    dynamics of the full exterior are not effectively communicated'
-  - 'Aspect ratio distortion: square inner view (395x395) applied to a 3.5x2.5-unit
-    domain stretches the Mandelbrot set ~40% vertically, violating the spec requirement
-    to preserve mathematical proportions; fix by using proportional dimensions e.g.
-    width=500 height=357'
+  - 'VQ-07 (both): the exterior uses a two-stop #009E73→#4467A3 ramp, the same in
+    both themes → the imprint_seq field stops of each theme. Likely cause: alt.Scale(range=[''#009E73'',
+    ''#4467A3'']).'
+  - 'SC-02 (light): the interior shows gray-black vertical stripes instead of one
+    solid black (C2) → uniform black cells. Likely cause: rects exactly one step wide
+    leave anti-aliasing gaps.'
+  - 'SC-02 (both): the set is stretched vertically, the cardioid taller than wide,
+    because a 3.5x2.5 domain sits in a square 395x395 view (C4) → equal units per
+    axis, e.g. a view of about 1.4:1. Likely cause: width=395, height=395.'
+  - 'SC-02 (both): regular vertical seams stripe the whole exterior (C5) → a continuous
+    pixel field. Likely cause: rect cells exactly one grid step wide rendered by vl-convert
+    with sub-pixel gaps.'
+  - 'VQ-05 (both): empty bands of about 10 % of the canvas above the title and below
+    the x-axis title → let the chart fill the canvas (autosize fit). Likely cause:
+    fixed 395x395 view padded onto the 2400x2400 canvas.'
+  - 'Suggestion: a horizontal legend under the plot would leave more width for the
+    field.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "heatmap-mandelbrot · python · altair · anyplot.ai" top-left in dark ink, subtitle below in softer ink showing iteration formula. Axis labels "Real (Re)" and "Imaginary (Im)" in dark ink. Tick labels in secondary ink. All text clearly readable against light background.
-      Data: Mandelbrot set interior is solid black. Exterior colored with imprint_seq gradient (green #009E73 to blue #4467A3). However, prominent vertical striping artifacts run through the entire exterior — thin vertical lines from sub-pixel rect mark rendering. The gradient is heavily compressed: ~95% of exterior is uniform green, with blue only near the fractal boundary. Legend "Escape Iterations" gradient colorbar is correctly rendered with ELEVATED_BG fill.
-      Legibility verdict: PASS (all text readable; data visible despite striping artifacts)
+      Background: warm off-white #FAF8F1; legend box on elevated #FFFDF6; wide empty bands above the title and below the x-axis title.
+      Chrome: mandated title and formula subtitle, axis titles 'Real (Re)' / 'Imaginary (Im)', ticks every 0.5 / 0.2; all readable.
+      Data: exterior on a two-stop green→blue ramp, almost entirely green; regular vertical stripes run across the whole field; the interior shows as gray-black vertical stripes rather than solid black; the set is stretched vertically (cardioid taller than wide) by the square view. Vertical gradient legend 'Escape Iterations' at the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light colors (#F0EFE8 / #B8B7B0 tokens). No dark-on-dark failures. Legend text is light-colored. All chrome correctly flipped for dark theme.
-      Data: Data colors are IDENTICAL to light render — green exterior, blue boundary zone, black interior. Only chrome flipped. Same vertical striping artifacts present in exterior.
-      Legibility verdict: PASS (all text readable in dark theme; no dark-on-dark issues detected)
+      Background: warm near-black #1A1A17; legend box #242420.
+      Chrome: all text in light ink tokens; no dark-on-dark.
+      Data: same green→blue ramp as the light render (no dark stops), same faint vertical striping in the exterior, interior black, same vertical stretch.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title 16px, subtitle 12px, axis 12/10px,
-          legend 10px). All text readable in both themes. Title ~55% of plot width.
-          Minor: subtitle same size as axis label creates slightly flat hierarchy.'
+        comment: Meets the criterion
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render.
+        comment: Meets the criterion
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 'Mandelbrot interior clearly visible. Exterior degraded by: (1) prominent
-          vertical striping artifacts from sub-pixel rect marks at scale_factor=4;
-          (2) color gradient compressed into thin boundary zone, ~95% of exterior
-          appears uniformly green.'
+        passed: true
+        comment: Meets the criterion
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong contrast between black interior and colored exterior. Imprint_seq
-          green-to-blue gradient is CVD-safe.
+        comment: Meets the criterion
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate for symmetric fractal. Canvas
-          gate passed exactly. Inner chart (395x395 at scale 4) fills ~55-60% of canvas
-          width.
+        comment: Empty bands above the title and below the axis on the square canvas
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Real (Re)'' and ''Imaginary (Im)'' with standard
-          mathematical notation.'
+        comment: Meets the criterion
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Correct imprint_seq colormap (range=[''#009E73'', ''#4467A3''])
-          for single-polarity continuous data. Light bg #FAF8F1, dark bg #1A1A17.
-          All chrome tokens correct in both themes. Data colors identical across themes.'
+        comment: 'Two-stop #009E73→#4467A3 ramp, identical in both themes, not the
+          imprint_seq field stops (defect line)'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Professionally configured: Imprint palette applied, subtitle adds
-          mathematical context, clean minimal chrome. Striping artifacts and near-uniform
-          exterior color reduce aesthetic impact. At well-configured library default
-          level.'
+        comment: Formula subtitle adds a second typographic level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed (strokeWidth=0), no grid lines (appropriate for fractal),
-          generous padding, properly styled legend box with ELEVATED_BG fill and INK_SOFT
-          stroke. Clearly above library defaults.
+        passed: false
+        comment: Baseline only; column seams undo the field
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Interior/exterior contrast creates visual hierarchy. Subtitle provides
-          formula context. However, near-uniform green exterior means the escape-time
-          story is only visible in the thin boundary zone.
+        passed: false
+        comment: Data displayed, no hierarchy beyond the Notes
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -147,57 +128,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap-style fractal visualization using mark_rect for pixel-level
-          coloring.
+        comment: Meets the criterion
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: 'Smooth escape-time coloring implemented, cardioid and period-2 bulb
-          visible, interior black, axes labeled. Missing: square inner view (395x395)
-          applied to 3.5x2.5-unit domain distorts aspect ratio ~40% vertically, violating
-          spec requirement to preserve mathematical proportions.'
+        passed: false
+        comment: Misses C2 (interior striped gray in light), C4 (set stretched vertically),
+          C5 (vertical seams) (defect lines)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real axis on X (-2.5 to 1.0), imaginary on Y (-1.25 to 1.25). Full
-          standard range visible. 800x600 data grid meets resolution requirement.
+        comment: Meets the criterion
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'heatmap-mandelbrot · python · altair · anyplot.ai'.
-          Legend 'Escape Iterations' with gradient colorbar correctly labeled.
+        comment: Meets the criterion
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows Mandelbrot set with smooth coloring, black interior, colored
-          exterior, main cardioid, period-2 bulb. Color gradient is visually compressed
-          into boundary zone, limiting coverage of full exterior dynamics.
+        comment: Meets the criterion
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic neutral mathematical/educational visualization of the Mandelbrot
-          set.
+        comment: Meets the criterion
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Standard parameters: real -2.5 to 1.0, imaginary -1.25 to 1.25,
-          max_iterations=100. All correct.'
+        comment: Meets the criterion
     code_quality:
       score: 10
       max: 10
@@ -207,35 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data computation, plot, save.'
+        comment: Meets the criterion
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mandelbrot computation is fully deterministic.
+        comment: Meets the criterion
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, PIL. No unused imports.'
+        comment: Meets the criterion
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Interior/exterior DataFrames logically separated.
-          Canvas padding logic correct.
+        comment: Meets the criterion
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
-          API.
+        comment: Meets the criterion
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -243,19 +213,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of mark_rect with x/x2/y/y2 encoding, alt.Scale domain
-          clamping, alt.Title with subtitle, configure_* methods, layer composition.
-          Mostly idiomatic; rect-per-pixel has vl-convert rendering limitations.
+        comment: Layered rects with x/x2/y/y2, scale domains
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'Uses Altair-distinctive features: layer composition (interior +
-          exterior), .interactive() for zoom/pan in HTML, x2/y2 rect encoding, alt.Legend
-          with gradient specifications, alt.data_transformers.disable_max_rows() for
-          large datasets.'
+        passed: false
+        comment: .interactive() zoom/pan and tooltips in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
+  last_kept:
+    pr: 15082
+    code: criterion_below
+    note: '#15082 was kept because it scored below the live version''s re-score on
+      these criteria: CQ-04 1 < 2: IMPRINT_PALETTE defined and never used (defect
+      line). Do not score lower than the live version on them.'
 impl_tags:
   dependencies:
   - pillow
