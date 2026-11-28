@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-28
@@ -98,6 +98,8 @@ custom_style = Style(
     major_label_font_size=48,
     legend_font_size=44,
     value_font_size=36,
+    value_label_font_size=40,
+    value_colors=(INK,) * len(custom_colors),
     tooltip_font_size=30,
     stroke_width=2.5,
     opacity=0.95,
@@ -124,7 +126,19 @@ chart = pygal.XY(
     xrange=(x_min, x_max),
     x_value_formatter=lambda x: f"{x:.0f}",
     y_value_formatter=lambda y: f"{y:.0f} MPa",
-    print_values=False,
+    print_values=True,
+    print_labels=True,
+    formatter=lambda v: "",
+    # pygal's base rule `.reactive{stroke-width}` sits on each path and overrides the per-series width inherited from
+    # its group, so the circle and arc widths are restated on the path itself
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        "inline:.series.serie-1 .line{stroke-width:5 !important}"
+        ".series.serie-5 .line{stroke-width:12 !important}"
+        ".series.serie-0 .line{stroke-width:2 !important}"
+        ".series.serie-2 .line{stroke-width:3 !important}",
+    ],
     js=[],
 )
 
@@ -146,38 +160,45 @@ chart.add("Mohr's Circle", circle_pts, stroke=True, dots_size=0, stroke_style={"
 chart.add(
     f"A({sigma_x}, {tau_xy})  B({sigma_y}, {int(-tau_xy)})",
     [
-        {"value": point_a, "label": f"A: σx = {sigma_x} MPa, τxy = {tau_xy} MPa"},
-        {"value": point_b, "label": f"B: σy = {sigma_y} MPa, τxy = {int(-tau_xy)} MPa"},
+        {"value": point_a, "label": f"A ({sigma_x}, {tau_xy})"},
+        {"value": point_b, "label": f"B ({sigma_y}, {int(-tau_xy)})"},
     ],
     stroke=True,
     dots_size=14,
     stroke_style={"width": 3, "dasharray": "8, 5"},
+    print_labels=True,
 )
 
 # Principal stresses on horizontal axis
 chart.add(
     f"σ₁ = {sigma_1:.1f}, σ₂ = {sigma_2:.1f} MPa",
     [
-        {"value": (float(sigma_1), 0.0), "label": f"σ₁ = {sigma_1:.1f} MPa (max principal)"},
-        {"value": (float(sigma_2), 0.0), "label": f"σ₂ = {sigma_2:.1f} MPa (min principal)"},
+        {"value": (float(sigma_1), 0.0), "label": f"σ₁ = {sigma_1:.1f}"},
+        {"value": (float(sigma_2), 0.0), "label": f"σ₂ = {sigma_2:.1f}"},
     ],
     stroke=False,
     dots_size=16,
+    print_labels=True,
 )
 
 # Max shear stress at top and bottom of circle
 chart.add(
     f"τ_max = ±{tau_max:.1f} MPa",
     [
-        {"value": (float(center), float(tau_max)), "label": f"τ_max = +{tau_max:.1f} MPa"},
-        {"value": (float(center), float(-tau_max)), "label": f"τ_max = −{tau_max:.1f} MPa"},
+        {"value": (float(center), float(tau_max)), "label": f"τmax = +{tau_max:.1f}"},
+        {"value": (float(center), float(-tau_max)), "label": f"τmax = −{tau_max:.1f}"},
     ],
     stroke=False,
     dots_size=16,
+    print_labels=True,
 )
 
 # 2θp angle arc — bold stroke, higher width for dark-theme contrast
-chart.add(f"2θp = {theta_p2:.1f}°", arc_pts, stroke=True, dots_size=0, stroke_style={"width": 12})
+arc_label_at = len(arc_pts) // 2
+arc_series = [
+    {"value": pt, "label": f"2θp = {theta_p2:.1f}°"} if i == arc_label_at else pt for i, pt in enumerate(arc_pts)
+]
+chart.add(f"2θp = {theta_p2:.1f}°", arc_series, stroke=True, dots_size=0, stroke_style={"width": 12}, print_labels=True)
 
 # Save — theme-suffixed filenames required by pipeline
 chart.render_to_png(f"plot-{THEME}.png")
