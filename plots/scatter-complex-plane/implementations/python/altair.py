@@ -1,7 +1,7 @@
 """anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-28
+Quality: pending | Updated: 2026-11-28
 """
 
 import importlib
