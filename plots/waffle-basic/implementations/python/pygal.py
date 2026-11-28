@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-27
@@ -10,6 +10,16 @@ import sys
 import pandas as pd
 
 
+_cwd = sys.path[0] if sys.path[0] else "."
+if _cwd in sys.path:
+    sys.path.remove(_cwd)
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+sys.path.insert(0, _cwd)
+
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
@@ -18,94 +28,27 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+CATEGORY = "category"  # role: category
+VALUE = "value"  # role: value
 
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
+# Data
+df = pd.DataFrame({CATEGORY: ["Operations", "Marketing", "R&D", "Admin"], VALUE: [42, 28, 18, 12]})
 
+# Plot
+ROWS, COLS = 10, 10
+WIDTH, HEIGHT = 3200, 1800
+PLOT_W, PLOT_H = 2570, 1747  # drawing area measured from a render; equal pixels per unit on both axes
+units_h = ROWS + 0.4
+units_w = units_h * PLOT_W / PLOT_H
+SQUARE_PX = round(0.82 * PLOT_H / units_h)  # square side in canvas pixels
 
-sys.path.insert(0, _cwd)
+# Whole squares per category by cumulative rounding, so the blocks together fill the grid
+total = df[VALUE].sum()
+cumulative = df[VALUE].cumsum() / total * ROWS * COLS
+squares = cumulative.round().astype(int).diff().fillna(cumulative.round()).astype(int)
+square_colors = tuple(IMPRINT[i % len(IMPRINT)] for i, count in enumerate(squares) for _ in range(count))
 
-
-class Waffle(Graph):
-    _serie_margin = 0
-
-    def __init__(self, *args, **kwargs):
-        self.rows = kwargs.pop("rows", 10)
-        self.cols = kwargs.pop("cols", 10)
-        super().__init__(*args, **kwargs)
-
-    def _plot(self):
-        total = sum(sum(v for v in serie.values if v is not None) for serie in self.series)
-        if total == 0:
-            return
-
-        total_squares = self.rows * self.cols
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        square_size = min(plot_width / self.cols, plot_height / self.rows) * 0.85
-        gap = square_size * 0.12
-
-        grid_width = self.cols * (square_size + gap) - gap
-        grid_height = self.rows * (square_size + gap) - gap
-
-        x_start = self.view.x(0)
-        y_start = self.view.y(self.rows)
-
-        x_offset = x_start + (plot_width - grid_width) / 2
-        y_offset = y_start + (plot_height - grid_height) / 2
-
-        plot_node = self.nodes["plot"]
-        waffle_group = self.svg.node(plot_node, class_="waffle-chart")
-
-        square_index = 0
-        cumulative = 0
-        for serie_index, serie in enumerate(self.series):
-            cumulative += sum(v for v in serie.values if v is not None)
-            # Cumulative rounding: blocks stay whole squares and together fill the grid
-            num_squares = round(cumulative / total * total_squares) - square_index
-
-            color = self.style.colors[serie_index % len(self.style.colors)]
-
-            serie_group = self.svg.node(waffle_group, class_="series serie-%d color-%d" % (serie_index, serie_index))
-
-            for _ in range(num_squares):
-                if square_index >= total_squares:
-                    break
-
-                row = square_index // self.cols
-                col = square_index % self.cols
-
-                x = x_offset + col * (square_size + gap)
-                y = y_offset + row * (square_size + gap)
-
-                self.svg.node(
-                    serie_group,
-                    "rect",
-                    x=x,
-                    y=y,
-                    width=square_size,
-                    height=square_size,
-                    fill=color,
-                    rx=square_size * 0.1,
-                    ry=square_size * 0.1,
-                    class_="waffle-square reactive",
-                )
-
-                square_index += 1
-
-    def _compute(self):
-        self._box.xmin = 0
-        self._box.xmax = self.cols
-        self._box.ymin = 0
-        self._box.ymax = self.rows
-
-
-custom_style = Style(
+style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
@@ -113,7 +56,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     major_guide_stroke_color=INK_MUTED,
-    colors=IMPRINT,
+    colors=square_colors,
     opacity="1",
     opacity_hover="1",
     title_font_size=66,
@@ -124,31 +67,40 @@ custom_style = Style(
     stroke_width=2.5,
 )
 
-CATEGORY = "category"  # role: category
-VALUE = "value"  # role: value
-
-# Data
-df = pd.DataFrame({CATEGORY: ["Operations", "Marketing", "R&D", "Admin"], VALUE: [42, 28, 18, 12]})
-
-# Plot
-chart = Waffle(
-    width=3200,
-    height=1800,
-    rows=10,
-    cols=10,
-    style=custom_style,
+chart = pygal.XY(
+    width=WIDTH,
+    height=HEIGHT,
+    style=style,
     title="Budget Allocation · waffle-basic · python · pygal · anyplot.ai",
     show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    margin=50,
-    margin_bottom=170,
+    legend_box_size=40,
+    truncate_legend=40,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_minor_x_labels=False,
+    show_minor_y_labels=False,
+    show_dots=False,
+    xrange=((COLS - 1) / 2 - units_w / 2, (COLS - 1) / 2 + units_w / 2),
+    range=(-0.2, ROWS - 0.8),
+    margin=40,
+    spacing=10,
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        f"inline:.series .line{{stroke-width:{SQUARE_PX}px !important;stroke-linecap:square !important;stroke-opacity:1 !important;opacity:1 !important}}",
+    ],
 )
 
-for category, value in zip(df[CATEGORY], df[VALUE], strict=True):
-    chart.add(f"{category} ({value / df[VALUE].sum() * 100:.0f}%)", [value])
+# One series per square (pygal cannot break a line), colored by category; only the first
+# square of a category carries a legend title
+labels = [f"{c} ({v / total * 100:.0f}%)" for c, v in zip(df[CATEGORY], df[VALUE], strict=True)]
+square_labels = [label if k == 0 else None for label, count in zip(labels, squares, strict=True) for k in range(count)]
+for index, label in enumerate(square_labels):
+    row, col = divmod(index, COLS)
+    # A square is a very short segment drawn with a thick, square-capped stroke
+    chart.add(label, [(col - 0.001, ROWS - 1 - row), (col + 0.001, ROWS - 1 - row)])
 
 chart.render_to_png(f"plot-{THEME}.png")
 
