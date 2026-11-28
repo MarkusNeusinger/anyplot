@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-28
@@ -64,6 +64,10 @@ linear_norm = (smooth - s_min) / (s_max - s_min)
 gamma_norm = np.power(np.maximum(linear_norm, 0.0), 0.3)
 z_data = np.where(escaped, gamma_norm * 0.98 + 0.02, 0.0)
 
+# Colorbar ticks: round escape counts placed at their gamma-normalized colour positions
+count_ticks = [n for n in (2, 5, 10, 25, 50, 100, 200) if s_min <= n <= s_max]
+tick_pos = [0.02 + 0.98 * ((n - s_min) / (s_max - s_min)) ** 0.3 for n in count_ticks]
+
 # Plot
 # Colorscale: inside set = near-black; escaped = Imprint sequential ramp squeezed into [0.02, 1]
 colorscale = [[0.0, INSIDE_COLOR], [0.019, INSIDE_COLOR]] + [[0.02 + 0.98 * p, c] for p, c in SEQ_FIELDS]
@@ -89,8 +93,8 @@ fig = go.Figure(
             bgcolor=PAGE_BG,
             outlinecolor=INK_SOFT,
             outlinewidth=1,
-            tickvals=[0.0, 0.5, 1.0],
-            ticktext=["Interior", "Mid", "Boundary"],
+            tickvals=tick_pos,
+            ticktext=[str(n) for n in count_ticks],
         ),
     )
 )
@@ -116,6 +120,9 @@ fig.update_layout(
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
         zerolinewidth=1,
+        scaleanchor="x",
+        scaleratio=1,
+        constrain="domain",
     ),
     annotations=[
         dict(
