@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-28
+Quality: 85/100 | Updated: 2026-11-28
 """
 
 import importlib
@@ -32,6 +32,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Constants
 ROTATION_ROWS = 2  # a rotation is drawn when the last category holds a point and its image
 ARC_STEPS = 40  # segments of the rotation arc
+VIEW_PX = 600  # logical width and height of the plot view
+BACK_PX = 17  # arrowhead centre to point centre: marker radius (9.4) + head half-size (7)
+LABEL_HALF_HEIGHT = 0.06  # half the height of a 10 px label, in data units
 
 # Columns: set these to your table's column names
 REAL = "Real axis"  # role: real
@@ -61,26 +64,13 @@ categories = list(df[CATEGORY].unique())
 color_scale = alt.Scale(domain=categories, range=IMPRINT_PALETTE)
 
 # Axis range: symmetric, a quarter unit beyond the farthest coordinate
-axis_limit = float(np.ceil(df[[REAL, IMAGINARY]].abs().to_numpy().max() * 4) / 4 + 0.25)
+axis_limit = float(np.ceil(df[[REAL, IMAGINARY]].abs().max().max() * 4) / 4 + 0.25)
 
 # Annotation text: label and rectangular form a+bi
 rect = [f"{round(x, 2)}{'+' if y >= 0 else ''}{round(y, 2)}i" for x, y in zip(df[REAL], df[IMAGINARY], strict=True)]
 notes = pd.DataFrame({"text": df[LABEL] + " = " + pd.Series(rect), "category": df[CATEGORY]})
 
-# Label positions: pushed away from the origin by quadrant; points hugging the real axis go
-# below it. Text is centred on its anchor, so a label beside its point is shifted by half its width.
 half_width = 0.026 * notes["text"].str.len()
-near_axis = (df[IMAGINARY].abs() < 0.6).to_numpy()
-side_y = np.where(df[IMAGINARY] >= 0, 1.0, -1.0)
-side_y[near_axis] = -1.0
-side_x = np.where(df[REAL] >= 0, 1.0, -1.0)
-unit_x = df[REAL] / np.hypot(df[REAL], df[IMAGINARY])
-unit_y = df[IMAGINARY] / np.hypot(df[REAL], df[IMAGINARY])
-# Away from the origin along each vector, so a label never sits on its own arrow
-radial_x = df[REAL] + unit_x * (0.12 + half_width * unit_x.abs())
-radial_y = df[IMAGINARY] + unit_y * 0.3
-notes["x"] = np.clip(np.where(near_axis, df[REAL], radial_x), -axis_limit + half_width, axis_limit - half_width)
-notes["y"] = np.where(near_axis, df[IMAGINARY] + side_y * 0.38, radial_y)
 
 # Unit circle (reference geometry)
 theta = np.linspace(0, 2 * np.pi, 200)
@@ -94,9 +84,10 @@ arrow_df = pd.concat(
     ]
 )
 
-# Arrowheads: pulled slightly back toward the origin so each tip ends at its point
+# Arrowheads: pulled back by the marker radius plus the head's own half-size (in screen pixels, converted
+# to data units), so the whole triangle shows and its tip touches the edge of the point marker
 magnitude = np.hypot(df[REAL], df[IMAGINARY])
-back = 0.08 / magnitude
+back = BACK_PX * 2 * axis_limit / VIEW_PX / magnitude
 arrowhead_df = pd.DataFrame(
     {
         "x": df[REAL] * (1 - back),
@@ -109,6 +100,8 @@ arrowhead_df = pd.DataFrame(
 # Rotation arc: from the next-to-last point to the last one when they share a category, at 55% of its length
 last_group = df[df[CATEGORY] == df[CATEGORY].iloc[-1]]
 layers_extra = []
+arc_xy = np.empty((0, 2))
+arc_label_xy = np.empty((0, 2))
 if len(last_group) == ROTATION_ROWS:
     z_from = complex(last_group[REAL].iloc[0], last_group[IMAGINARY].iloc[0])
     z_to = complex(last_group[REAL].iloc[1], last_group[IMAGINARY].iloc[1])
@@ -120,9 +113,10 @@ if len(last_group) == ROTATION_ROWS:
     turn = Fraction(arc_turn / np.pi).limit_denominator(12)
     turn_text = f"{'' if turn.numerator == 1 else turn.numerator}π/{turn.denominator}"
     mid = arc_start + arc_turn / 2
-    arc_label_df = pd.DataFrame(
-        {"x": [arc_r * np.cos(mid) - 0.15], "y": [arc_r * np.sin(mid) + 0.16], "text": [turn_text]}
-    )
+    arc_xy = arc_df[["x", "y"]].to_numpy()
+    # Label just outside the arc, along the bisector between the two vectors
+    arc_label_xy = np.array([[(arc_r + 0.3) * np.cos(mid), (arc_r + 0.3) * np.sin(mid)]])
+    arc_label_df = pd.DataFrame({"x": arc_label_xy[:, 0], "y": arc_label_xy[:, 1], "text": [turn_text]})
     layers_extra = [
         alt.Chart(arc_df)
         .mark_line(color=IMPRINT_PALETTE[2], strokeWidth=2.5, strokeDash=[5, 3], opacity=0.75)
@@ -141,6 +135,63 @@ axis_line_data = pd.DataFrame(
         "order": [0, 1, 0, 1],
     }
 )
+
+# Tick marks (every 0.5) and whole-number labels on the axes through the origin
+tick_step = 10 ** np.floor(np.log10(axis_limit)) / 2
+tick_count = int(axis_limit // tick_step)
+tick_values = np.arange(-tick_count, tick_count + 1) * tick_step
+tick_values = tick_values[np.abs(tick_values) > 1e-9]
+TICK_HALF = 0.05
+real_ticks = pd.DataFrame({"x": tick_values, "y0": -TICK_HALF, "y1": TICK_HALF})
+imag_ticks = pd.DataFrame({"y": tick_values, "x0": -TICK_HALF, "x1": TICK_HALF})
+whole = tick_values[np.abs(tick_values / tick_step % 2) < 1e-9]
+tick_labels = pd.DataFrame(
+    {
+        "x": np.concatenate([whole, np.full(len(whole), -0.17)]),
+        "y": np.concatenate([np.full(len(whole), -0.17), whole]),
+        "text": [f"{v:g}" for v in np.concatenate([whole, whole])],
+    }
+)
+
+# Label placement: each label goes to the free spot around its point (8 directions, 2 distances) that
+# crosses the fewest vectors, circle, arc, axis ticks and other labels, preferring the side away from the origin
+sample_t = np.linspace(0, 1, 150)[:, None]
+axis_run = np.linspace(-axis_limit, axis_limit, 200)
+points_xy = df[[REAL, IMAGINARY]].to_numpy()
+lines_xy = np.vstack(
+    [(sample_t * p).reshape(-1, 2) for p in points_xy]
+    + [circle_df[["x", "y"]].to_numpy(), arc_xy]
+    + [np.column_stack([axis_run, axis_run * 0]), np.column_stack([axis_run * 0, axis_run])]
+    + [
+        np.column_stack([tick_labels["x"], tick_labels["y"]]) + [dx, dy]
+        for dx in (-0.04, 0, 0.04)
+        for dy in (-0.06, 0, 0.06)
+    ]
+)
+placed = []
+note_x, note_y = [], []
+for point, hw in zip(points_xy, half_width, strict=True):
+    hh = LABEL_HALF_HEIGHT
+    radial = np.arctan2(point[1], point[0])
+    best_cost, best_xy = np.inf, point
+    for ring in (0.13, 0.26):
+        for angle in np.radians(np.arange(0, 360, 45)):
+            cx = point[0] + np.cos(angle) * (hw + ring)
+            cy = point[1] + np.sin(angle) * (hh + ring)
+            near = (np.abs(lines_xy[:, 0] - cx) < hw + 0.05) & (np.abs(lines_xy[:, 1] - cy) < hh + 0.05)
+            on_mark = (np.abs(points_xy[:, 0] - cx) < hw + 0.1) & (np.abs(points_xy[:, 1] - cy) < hh + 0.1)
+            on_arc_label = (np.abs(arc_label_xy[:, 0] - cx) < hw + 0.12) & (np.abs(arc_label_xy[:, 1] - cy) < hh + 0.1)
+            on_label = sum(abs(cx - qx) < hw + qw + 0.02 and abs(cy - qy) < 2 * hh + 0.02 for qx, qy, qw in placed)
+            outside = abs(cx) + hw > axis_limit - 0.05 or abs(cy) + hh > axis_limit - 0.05
+            away = abs(np.angle(np.exp(1j * (angle - radial)))) / np.pi
+            cost = near.sum() + 60 * (on_mark.sum() + on_arc_label.sum() + on_label) + 1000 * outside + away + ring
+            if cost < best_cost:
+                best_cost, best_xy = cost, np.array([cx, cy])
+    placed.append((best_xy[0], best_xy[1], hw))
+    note_x.append(best_xy[0])
+    note_y.append(best_xy[1])
+notes["x"] = note_x
+notes["y"] = note_y
 
 # Interactive legend selection — click to highlight by category
 highlight = alt.selection_point(fields=["category"], bind="legend")
@@ -170,6 +221,12 @@ axes = (
     )
 )
 
+axis_ticks = [
+    alt.Chart(real_ticks).mark_rule(color=INK_MUTED, strokeWidth=1.5).encode(x="x:Q", y="y0:Q", y2="y1:Q"),
+    alt.Chart(imag_ticks).mark_rule(color=INK_MUTED, strokeWidth=1.5).encode(y="y:Q", x="x0:Q", x2="x1:Q"),
+    alt.Chart(tick_labels).mark_text(fontSize=10, color=INK_MUTED).encode(x="x:Q", y="y:Q", text="text:N"),
+]
+
 unit_circle = (
     alt.Chart(circle_df)
     .mark_line(color=INK_SOFT, strokeWidth=2.0, strokeDash=[8, 6], opacity=0.5)
@@ -185,7 +242,7 @@ vectors = (
 
 arrowheads = (
     alt.Chart(arrowhead_df)
-    .mark_point(shape="triangle-up", filled=True, size=300)
+    .mark_point(shape="triangle-up", filled=True, size=200)
     .encode(x="x:Q", y="y:Q", angle=alt.Angle("angle:Q"), color=color_enc, opacity=opacity_cond)
     .add_params(highlight)
 )
@@ -261,7 +318,7 @@ axis_labels = (
 
 title_text = "scatter-complex-plane · python · altair · anyplot.ai"
 chart = (
-    alt.layer(axes, unit_circle, *layers_extra, vectors, arrowheads, points, annotations, axis_labels)
+    alt.layer(axes, *axis_ticks, unit_circle, *layers_extra, vectors, arrowheads, points, annotations, axis_labels)
     .properties(
         width=600,
         height=600,

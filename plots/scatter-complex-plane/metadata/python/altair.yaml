@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:22:49Z'
-updated: '2026-11-28T01:59:53Z'
+updated: '2026-11-28T02:11:30Z'
 generated_by: claude-sonnet
-workflow_run: 46095068413
+workflow_run: 46095945198
 issue: 4427
 language_version: 3.14.10
 library_version: 6.3.0
@@ -12,53 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
   - 'Complete Argand diagram: dashed unit circle with the three roots of unity exactly
-    on it, vectors from the origin, equal ±3 domain on a square view'
-  - Labeled 0.5-step ticks on both axes plus italic Re/Im axis-end labels make every
-    coordinate readable
+    on it, arrows from the origin ending at each point, equal ±3 domain on a square
+    view'
+  - Axes through the origin carry tick marks and whole-number labels, plus italic
+    Re/Im axis-end labels
+  - Full triangle arrowheads pulled back by the marker radius in screen pixels, so
+    each head is visible and ends at its point
   - Rotation arc with a computed π/4 label (Fraction.limit_denominator) shows multiplication
     by e^(iπ/4) geometrically
-  - Legend placed inside the empty lower-left quadrant on an elevated panel, keeping
-    the view square and the canvas filled
   - 'Altair-native interactivity: legend-bound selection_point highlights a category,
     tooltips with real/imaginary values, .interactive() zoom/pan'
   - Theme tokens threaded through every chrome element; both renders fully legible
   weaknesses:
-  - 'VQ-02 (both): five annotations are crossed by lines — the z₂ vector runs through
-    ''ω1'', the z₁ vector through the ''z'' of ''z = 1.5+0.8i'', the z₄ vector through
-    ''ω2 = -0.5-0.87i'', the dashed unit circle through ''ω0 = 1.0+0.0i'', and the
-    z·e^(iπ/4) vector touches ''π/4'' → every label clear of all vectors and the circle
-    by a few px. Likely cause: the radial/near-axis label offsets (lines 70-83) only
-    avoid the point''s own vector, not neighbouring vectors or the unit circle.'
-  - 'VQ-03 (both): the arrowheads (size 300, pulled back only 0.08 units) sit mostly
-    underneath the 220-size point markers, so each head shows as a lopsided sliver
-    beside the point instead of a clear triangle ending at it → pull the head back
-    by about the marker radius so the full triangle is visible just before the point.
-    Likely cause: back = 0.08 / magnitude at line 99.'
-  - 'SC-02 (both): the real and imaginary axes drawn through the origin carry no tick
-    marks; the labeled ticks sit only on the left/bottom frame → tick marks (and labels)
-    on the axes through the origin, as the Notes ask. Likely cause: the axis_line_data
-    mark_line layer has no tick layer; ticks come only from the frame axes in axis_cfg.'
-  - 'Suggestion: the polar form (r∠θ), which the Notes offer as optional, could be
-    added beside the rectangular labels or in the tooltip.'
+  - 'VQ-02 (both): the dashed unit circle runs through the origin-axis tick labels
+    ''1'' and ''-1'' on both axes (it passes through (±1, 0) and (0, ±1), and the
+    labels sit only 0.17 units off the axis), and the real-axis ''1'' sits half under
+    the ω0 marker → tick labels clear of the circle and the markers by a few px. Likely
+    cause: the fixed -0.17 offset of tick_labels, which ignores the unit circle and
+    any point on an axis.'
+  - 'VQ-02 (both): the z₁ vector grazes the tail ''0.8i'' of the ''z = 1.5+0.8i''
+    label → the label clear of the vector by a few px. Likely cause: the placement
+    cost counts sampled line points inside the label box with a small margin, so a
+    box edge on a vector still wins at low cost.'
+  - 'Suggestion: the polar form (r∠θ), which the Notes offer as optional, could go
+    beside the rectangular labels or in the tooltip.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400.
-      Chrome: title 'scatter-complex-plane · python · altair · anyplot.ai' bold dark ink, centered, ~63 % width; subtitle in INK_SOFT; axis titles 'Real axis' / 'Imaginary axis'; tick labels -3.0..3.0 at 0.5 steps on the left/bottom frame; italic 'Re'/'Im' labels at the origin-axis ends; very faint dashed grid; legend 'Category' on an elevated panel in the lower-left corner. All readable.
-      Data: Roots of Unity #009E73 (ω0, ω1, ω2 on the dashed grey unit circle), Arbitrary #C475FD (z₁-z₅ in all quadrants), Transformation #4467A3 (z and its rotation, linked by a dashed blue π/4 arc). Vectors from the origin with triangle heads mostly hidden under the points; bold a+bi labels per point, several crossed by neighbouring vectors or the circle.
+      Chrome: bold dark title 'scatter-complex-plane · python · altair · anyplot.ai' centred (~63 % width), INK_SOFT subtitle; axis titles 'Real axis' / 'Imaginary axis'; frame ticks -3.0..3.0 at 0.5 steps; axes through the origin with tick marks every 0.5 and whole-number labels (-2, -1, 1, 2); italic 'Re'/'Im' at the axis ends; very faint dashed grid; 'Category' legend on an elevated panel in the lower-left corner. All readable.
+      Data: Roots of Unity #009E73 (ω0, ω1, ω2 on the dashed grey unit circle), Arbitrary #C475FD (z₁-z₅ in all quadrants), Transformation #4467A3 (z and z·e^(iπ/4), joined by a dashed blue π/4 arc). Vectors from the origin with full triangle heads ending just before each page-outlined point; bold a+bi labels beside each point. The unit circle crosses the origin-axis '1'/'-1' tick labels, the real-axis '1' sits partly under ω0, and the z₁ vector grazes '0.8i'.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and annotations in light ink, ticks and subtitle in light grey; dashed grid more visible; legend on #242420 panel with light border. No dark-on-dark text.
-      Data: categorical colors identical to the light render (#009E73, #C475FD, #4467A3); points outlined in the page color.
+      Chrome: title, axis titles and annotations in light ink, ticks and subtitle in light grey, dashed grid more visible, legend on a #242420 panel with a light border. No dark-on-dark text.
+      Data: categorical colors identical to the light render (#009E73, #C475FD, #4467A3); points outlined in the page color; same label positions and the same small collisions.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -70,40 +66,39 @@ review:
           10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: 'Five annotations are crossed by vectors or the unit circle: ω1 (z₂
-          vector), z (z₁ vector), ω2 (z₄ vector), ω0 (unit circle), π/4 (z·e^(iπ/4)
-          vector) — defect line'
+        passed: false
+        comment: The dashed unit circle runs through the origin-axis tick labels '1'/'-1'
+          on both axes, the real-axis '1' sits under the ω0 marker, and the z₁ vector
+          grazes the tail '0.8i' of the 'z = 1.5+0.8i' label (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points and vectors clear; the arrowheads sit mostly under the point
-          markers and read as lopsided slivers — defect line
+        comment: Full triangle arrowheads end just before each point; 11 sparse points
+          at a prominent size; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green / lavender / blue Imprint positions 1-3 are CVD-distinct, plus
-          direct labels
+        comment: Imprint positions 1-3 (green, lavender, blue) are CVD-distinct, backed
+          by direct labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400, plot area fills the canvas, legend in the empty
+        comment: Square 2400x2400, the view fills the canvas, legend in the empty
           lower-left corner, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Real axis'' / ''Imaginary axis'' titles plus italic Re/Im axis-end
-          labels'
+        comment: '''Real axis'' / ''Imaginary axis'' plus italic Re/Im axis-end labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -120,24 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above baseline: italic Re/Im axis-end labels, elevated legend panel
-          inside the view, title/subtitle hierarchy'
+        comment: 'Beyond baseline: italic Re/Im axis-end labels, title/subtitle hierarchy,
+          elevated legend panel inside the view'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
         comment: Legend tucked into the empty lower-left quadrant to keep the view
-          square; subtle dashed grid
+          square; labels placed in free space around their points
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Rotation arc with the π/4 label illustrates z·e^(iπ/4) as a rotation
-          — a focal point the Notes do not prescribe
+        comment: Rotation arc with a computed π/4 label shows z·e^(iπ/4) as a rotation,
+          a focal point the Notes do not prescribe
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Argand diagram with vectors, unit circle and points
+        comment: 'Argand diagram: points, vectors from the origin, dashed unit circle'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Unit circle dashed, vectors, equal aspect, a+bi labels, category
-          colors all present; the axes through the origin carry no tick marks (ticks
-          sit on the frame) — defect line
+        comment: Axes through the origin with tick marks and whole-number labels,
+          dashed unit circle, arrows ending at each point, a+bi labels, category colors,
+          equal aspect
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their exact coordinates, symmetric ±3 domain on both axes,
-          readable 0.5 ticks; labels only (not marks) are offset
+        comment: Points at their exact coordinates on a symmetric ±3 domain; only
+          labels are placed, marks are never moved
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend 'Category' with readable entries
+        comment: Mandated title format; legend 'Category' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -177,22 +172,20 @@ review:
         max: 6
         passed: true
         comment: Roots of unity on the circle, points in all four quadrants, a rotation
-          pair — shows every aspect
+          pair
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Textbook complex-analysis example (roots of unity, rotation by e^(iπ/4))
-          — plausible and neutral
+        comment: Textbook complex-analysis example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: ω1 = -0.5+0.87i, ω2 = -0.5-0.87i lie on the unit circle;
-          1.5+0.8i · e^(iπ/4) = 0.49+1.63i computed, matches the label and the point
-          position'
+        comment: 'Checked: ω1 = -0.5+0.87i and ω2 = -0.5-0.87i lie on the unit circle;
+          (1.5+0.8i)·e^(iπ/4) = 0.49+1.63i computed in code, matching label and position'
     code_quality:
       score: 10
       max: 10
@@ -202,7 +195,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Reads top to bottom, no functions or classes
+        comment: Reads top to bottom, no functions or classes; the label-placement
+          loop is inline
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,14 +208,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (Fraction for the π/4 label)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized label positions and arrowheads; no hand-rolled replaceable
-          algorithm
+        comment: Vectorized geometry; the label placement has no available Altair
+          call to replace it
       - id: CQ-05
         name: Output & API
         score: 1
@@ -238,24 +232,26 @@ review:
         max: 5
         passed: true
         comment: Layered alt.layer composition, alt.Angle encoding for rotated arrowheads,
-          fit autosize, escaped field constants
+          mark_rule with y2/x2 for tick marks, fit autosize
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
+        passed: true
         comment: selection_point bound to the legend for click-to-highlight in the
           HTML
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-afd6306355.aqr-24218df306.sg-461c4c05fa.lib-27200aa4e8
-  rendered_at: '2026-11-28T01:55:27Z'
+  rendered_at: '2026-11-28T02:07:56Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - manual-ticks
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
@@ -264,4 +260,5 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
+  - alpha-blending
   - grid-styling
