@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-27
@@ -8,9 +8,10 @@ import math
 import os
 from itertools import pairwise
 
+import cairosvg
 import numpy as np
 import pandas as pd
-from pygal.graph.graph import Graph
+import pygal
 from pygal.style import Style
 
 
@@ -67,132 +68,14 @@ def ramp_color(stops, t):
     )
 
 
-class AnnotatedHeatmap(Graph):
-    """pygal has no heatmap type: a Graph subclass that draws cells, labels and a colorbar as SVG nodes."""
-
-    def __init__(self, *args, **kwargs):
-        self.matrix_data = kwargs.pop("matrix_data")
-        self.row_labels = kwargs.pop("row_labels")
-        self.col_labels = kwargs.pop("col_labels")
-        self.bar_title = kwargs.pop("bar_title")
-        super().__init__(*args, **kwargs)
-
-    def _compute(self):
-        self._box.xmin = 0
-        self._box.xmax = len(self.col_labels)
-        self._box.ymin = 0
-        self._box.ymax = len(self.row_labels)
-
-    def _text(self, group, x, y, text, size, fill, weight="normal", anchor="start"):
-        node = self.svg.node(group, "text", x=x, y=y)
-        node.set("text-anchor", anchor)
-        node.set("fill", fill)
-        node.set("style", f"font-size:{size}px;font-weight:{weight};font-family:sans-serif")
-        node.text = text
-        return node
-
-    def _plot(self):
-        n_rows, n_cols = self.matrix_data.shape
-        min_val = float(np.nanmin(self.matrix_data))
-        max_val = float(np.nanmax(self.matrix_data))
-        # Diverging scale centered on zero, at least the full -1..1 correlation domain
-        span = max(1.0, float(np.nanmax(np.abs(self.matrix_data))))
-
-        # Room for the labels around the grid
-        margin_left, margin_bottom, margin_top, margin_right = 400, 230, 0, 280
-        available_width = self.view.width - margin_left - margin_right
-        available_height = self.view.height - margin_bottom - margin_top
-        cell_width = available_width / n_cols * 0.95
-        cell_height = available_height / n_rows * 0.95
-        gap = min(cell_width, cell_height) * 0.03
-        grid_width = n_cols * (cell_width + gap) - gap
-        grid_height = n_rows * (cell_height + gap) - gap
-        x_offset = self.view.x(0) + margin_left + (available_width - grid_width) / 2
-        y_offset = self.view.y(n_rows) + margin_top + (available_height - grid_height) / 2
-
-        group = self.svg.node(self.nodes["plot"], class_="annotated-heatmap")
-
-        # Row labels on the left
-        label_size = min(52, int(cell_height * 0.4))
-        for i, label in enumerate(self.row_labels):
-            y = y_offset + i * (cell_height + gap) + cell_height / 2
-            self._text(group, x_offset - 25, y + label_size * 0.35, label, label_size, INK, "600", "end")
-
-        # Column labels below the grid, rotated to fit
-        for j, label in enumerate(self.col_labels):
-            x = x_offset + j * (cell_width + gap) + cell_width / 2
-            y = y_offset + n_rows * (cell_height + gap) + 25
-            node = self._text(group, x, y, label, label_size, INK, "600")
-            node.set("transform", f"rotate(45, {x}, {y})")
-
-        # Cells with the value printed inside, the text switching with the cell's darkness
-        value_size = min(52, int(min(cell_width, cell_height) * 0.4))
-        for i in range(n_rows):
-            for j in range(n_cols):
-                value = float(self.matrix_data[i, j])
-                color = ramp_color(DIV_FIELDS, (value / span + 1) / 2)
-                x = x_offset + j * (cell_width + gap)
-                y = y_offset + i * (cell_height + gap)
-                rect = self.svg.node(group, "rect", x=x, y=y, width=cell_width, height=cell_height, rx=4, ry=4)
-                rect.set("fill", color)
-                rect.set("stroke", PAGE_BG)
-                rect.set("stroke-width", "2")
-                if color == "none":
-                    continue
-                red, green, blue = (int(color[k : k + 2], 16) for k in (1, 3, 5))
-                dark_cell = (red * 299 + green * 587 + blue * 114) / 1000 < 140
-                self._text(
-                    group,
-                    x + cell_width / 2,
-                    y + cell_height / 2 + value_size * 0.35,
-                    f"{value:.2f}",
-                    value_size,
-                    LIGHT_TEXT if dark_cell else DARK_TEXT,
-                    "bold",
-                    "middle",
-                )
-
-        # Colorbar on the right, spanning the data range on the same scale
-        bar_width = 55
-        bar_height = grid_height * 0.8
-        bar_x = x_offset + grid_width + 120
-        bar_y = y_offset + (grid_height - bar_height) / 2
-        n_segments = 50
-        seg_height = bar_height / n_segments
-        for k in range(n_segments):
-            seg_value = max_val - (max_val - min_val) * k / (n_segments - 1)
-            self.svg.node(
-                group,
-                "rect",
-                x=bar_x,
-                y=bar_y + k * seg_height,
-                width=bar_width,
-                height=seg_height + 1,
-                fill=ramp_color(DIV_FIELDS, (seg_value / span + 1) / 2),
-            )
-        self.svg.node(
-            group,
-            "rect",
-            x=bar_x,
-            y=bar_y,
-            width=bar_width,
-            height=bar_height,
-            fill="none",
-            stroke=INK,
-            stroke_width="2",
-        )
-        tick_size = 40
-        for frac, tick_value in ((0.0, max_val), (0.5, (min_val + max_val) / 2), (1.0, min_val)):
-            self._text(
-                group,
-                bar_x + bar_width + 15,
-                bar_y + bar_height * frac + tick_size * 0.35,
-                f"{tick_value:.2f}",
-                tick_size,
-                INK,
-            )
-        self._text(group, bar_x + bar_width / 2, bar_y - 35, self.bar_title, 40, INK, "bold", "middle")
-
+# pygal has no heatmap type: render an empty pygal chart (title, page, canvas) and splice the cells,
+# labels and colorbar into its SVG as a group, so the HTML output stays native SVG
+matrix = df.to_numpy(dtype=float)
+n_rows, n_cols = matrix.shape
+min_val = float(np.nanmin(matrix))
+max_val = float(np.nanmax(matrix))
+# Diverging scale centered on zero, at least the full -1..1 correlation domain
+span = max(1.0, float(np.nanmax(np.abs(matrix))))
 
 # Style
 title = "heatmap-annotated · python · pygal · anyplot.ai"
@@ -213,28 +96,108 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-chart = AnnotatedHeatmap(
-    width=2400,
-    height=2400,
+CANVAS = 2400
+chart = pygal.Bar(
+    width=CANVAS,
+    height=CANVAS,
     style=custom_style,
     title=title,
-    matrix_data=df.to_numpy(dtype=float),
-    row_labels=[str(label) for label in df.index],
-    col_labels=[str(label) for label in df.columns],
-    bar_title=VALUE,
     show_legend=False,
-    margin=120,
-    margin_top=130,
-    margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
 )
-# pygal needs one series to reach _plot
-chart.add("", [0])
+chart.add("", [0])  # pygal needs one series to render
+
+# Grid geometry: room for the labels left of and below the grid, and for the colorbar on the right
+margin_left, margin_right, margin_top, margin_bottom = 520, 400, 130, 330
+available_width = CANVAS - margin_left - margin_right
+available_height = CANVAS - margin_top - margin_bottom
+cell_width = available_width / n_cols * 0.95
+cell_height = available_height / n_rows * 0.95
+gap = min(cell_width, cell_height) * 0.03
+grid_width = n_cols * (cell_width + gap) - gap
+grid_height = n_rows * (cell_height + gap) - gap
+x_offset = margin_left + (available_width - grid_width) / 2
+y_offset = margin_top + (available_height - grid_height) / 2
+label_size = min(52, int(cell_height * 0.4))
+value_size = min(52, int(min(cell_width, cell_height) * 0.4))
+FONT = "font-family:sans-serif"
+
+# Row labels on the left, column labels below the grid, rotated to fit
+nodes = []
+for i, label in enumerate(df.index):
+    y = y_offset + i * (cell_height + gap) + cell_height / 2 + label_size * 0.35
+    text = str(label).replace("&", "&amp;")
+    nodes.append(
+        f'<text x="{x_offset - 25}" y="{y}" text-anchor="end" fill="{INK}" '
+        f'style="font-size:{label_size}px;font-weight:600;{FONT}">{text}</text>'
+    )
+for j, label in enumerate(df.columns):
+    x = x_offset + j * (cell_width + gap) + cell_width / 2
+    y = y_offset + grid_height + 25
+    text = str(label).replace("&", "&amp;")
+    nodes.append(
+        f'<text x="{x}" y="{y}" fill="{INK}" transform="rotate(45, {x}, {y})" '
+        f'style="font-size:{label_size}px;font-weight:600;{FONT}">{text}</text>'
+    )
+
+# Cells with the value printed inside, the text switching with the cell's darkness
+for i in range(n_rows):
+    for j in range(n_cols):
+        value = matrix[i, j]
+        color = ramp_color(DIV_FIELDS, (value / span + 1) / 2)
+        x = x_offset + j * (cell_width + gap)
+        y = y_offset + i * (cell_height + gap)
+        nodes.append(
+            f'<rect x="{x}" y="{y}" width="{cell_width}" height="{cell_height}" rx="4" ry="4" '
+            f'fill="{color}" stroke="{PAGE_BG}" stroke-width="2"/>'
+        )
+        if not math.isfinite(value):
+            continue
+        red, green, blue = (int(color[k : k + 2], 16) for k in (1, 3, 5))
+        dark_cell = (red * 299 + green * 587 + blue * 114) / 1000 < 140
+        nodes.append(
+            f'<text x="{x + cell_width / 2}" y="{y + cell_height / 2 + value_size * 0.35}" text-anchor="middle" '
+            f'fill="{LIGHT_TEXT if dark_cell else DARK_TEXT}" '
+            f'style="font-size:{value_size}px;font-weight:bold;{FONT}">{value:.2f}</text>'
+        )
+
+# Colorbar on the right, spanning the data range on the same scale
+bar_width = 55
+bar_height = grid_height * 0.8
+bar_x = x_offset + grid_width + 120
+bar_y = y_offset + (grid_height - bar_height) / 2
+n_segments = 50
+seg_height = bar_height / n_segments
+for k in range(n_segments):
+    seg_value = max_val - (max_val - min_val) * k / (n_segments - 1)
+    seg_color = ramp_color(DIV_FIELDS, (seg_value / span + 1) / 2)
+    nodes.append(
+        f'<rect x="{bar_x}" y="{bar_y + k * seg_height}" width="{bar_width}" height="{seg_height + 1}" '
+        f'fill="{seg_color}"/>'
+    )
+nodes.append(
+    f'<rect x="{bar_x}" y="{bar_y}" width="{bar_width}" height="{bar_height}" fill="none" '
+    f'stroke="{INK}" stroke-width="2"/>'
+)
+tick_size = 40
+for frac, tick_value in ((0.0, max_val), (0.5, (min_val + max_val) / 2), (1.0, min_val)):
+    nodes.append(
+        f'<text x="{bar_x + bar_width + 15}" y="{bar_y + bar_height * frac + tick_size * 0.35}" fill="{INK}" '
+        f'style="font-size:{tick_size}px;{FONT}">{tick_value:.2f}</text>'
+    )
+nodes.append(
+    f'<text x="{bar_x + bar_width / 2}" y="{bar_y - 35}" text-anchor="middle" fill="{INK}" '
+    f'style="font-size:40px;font-weight:bold;{FONT}">{VALUE}</text>'
+)
+
+layer = '<g class="annotated-heatmap">' + "".join(nodes) + "</g>"
+chart_svg = chart.render(is_unicode=True).replace("</svg>", layer + "</svg>")
 
 # Save
-chart.render_to_png(f"plot-{THEME}.png")
-chart_svg = chart.render(is_unicode=True)
+cairosvg.svg2png(bytestring=chart_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
