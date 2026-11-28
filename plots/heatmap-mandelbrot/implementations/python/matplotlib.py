@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-30
@@ -19,11 +19,18 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint sequential colormap (single-polarity: green→blue)
-cmap = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
-cmap.set_bad(color="#1A1A17")  # interior of the set stays dark on both themes
+# Imprint sequential colormap, fields stops (colored cells fill the plot)
+IMPRINT_SEQ_STOPS = (
+    [(0, "#66E2B2"), (0.369, "#009E73"), (0.803, "#024582"), (1, "#351E45")]
+    if THEME == "light"
+    else [(0, "#404C02"), (0.487, "#009E73"), (1, "#CDD9FF")]
+)
+SET_INTERIOR = "#000000"  # one solid black interior in both themes, apart from the ramp's pale and violet ends
 
-# Data — compute Mandelbrot escape iterations on the complex plane
+# Constants
+CONTOUR_SHARES = [0.025, 0.075, 0.175, 0.35, 0.6]  # contour levels as shares of the maximum iteration count
+
+# Data: Mandelbrot escape iterations on the complex plane (replace the parameters to explore another window)
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 width_px, height_px = 1200, 860
@@ -45,13 +52,16 @@ for i in range(max_iterations):
     iterations[escaped] = i + 1 - np.log2(np.log2(np.abs(z[escaped])))
     mask[escaped] = False
 
-# Points inside the set get NaN so cmap.set_bad() renders them dark
+# Points inside the set get NaN so cmap.set_bad() renders them in one solid color
 iterations[mask] = np.nan
+
+# Plot — square canvas (heatmap genre)
+cmap = LinearSegmentedColormap.from_list("imprint_seq", IMPRINT_SEQ_STOPS)
+cmap.set_bad(color=SET_INTERIOR)
 
 # PowerNorm(gamma=0.4) compresses the high end, revealing more boundary detail
 norm = PowerNorm(gamma=0.4, vmin=np.nanmin(iterations), vmax=np.nanmax(iterations))
 
-# Plot — square canvas (heatmap genre)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
@@ -69,7 +79,7 @@ img = ax.imshow(
 iterations_clean = np.where(np.isnan(iterations), 0, iterations)
 ax.contour(
     iterations_clean,
-    levels=[5, 15, 35, 70, 120],
+    levels=np.array(CONTOUR_SHARES) * np.nanmax(iterations),
     extent=[x_min, x_max, y_min, y_max],
     colors=INK_SOFT,
     linewidths=0.3,
@@ -93,5 +103,5 @@ ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-fig.subplots_adjust(left=0.11, right=0.88, top=0.93, bottom=0.09)
+fig.subplots_adjust(left=0.08, right=0.93, top=0.93, bottom=0.09)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
