@@ -1,7 +1,7 @@
 """ anyplot.ai
 map-route-path: Route Path Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-27
+Quality: 85/100 | Updated: 2026-11-28
 """
 
 import os
@@ -51,9 +51,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Imprint sequential ramp for marks (a colored line on the page), as (position, hex) stops
 SEQ_MARKS = (
-    [(0.0, "#009E73"), (0.338, "#4467A3"), (1.0, "#002850")]
+    [(0.0, "#009E73"), (0.687, "#024582"), (1.0, "#351E45")]
     if THEME == "light"
-    else [(0.0, "#007755"), (0.32, "#009E73"), (1.0, "#CDD9FF")]
+    else [(0.0, "#6F7E20"), (0.21, "#009E73"), (1.0, "#CDD9FF")]
 )
 
 
@@ -139,7 +139,6 @@ plot = (
         aes(x=LON, y=LAT, color=PROGRESS),
         data=df,
         size=1.5,
-        alpha=0.9,
         tooltips=layer_tooltips()
         .line(f"{PROGRESS}|@{{{PROGRESS}}}")
         .line(f"Lat|@{{{LAT}}}")
