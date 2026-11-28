@@ -1,7 +1,7 @@
 """ anyplot.ai
 pie-basic: Basic Pie Chart
 Library: bokeh 3.10.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-28
+Quality: 87/100 | Updated: 2026-11-28
 """
 
 import math
@@ -29,8 +29,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Constants
 OTHERS = "Others"  # semantic: the rest of the market takes the muted anchor
-SLICE_LABEL = "#F0EFE8"  # near-white on every palette color
-SLICE_LABEL_ON_MUTED = SLICE_LABEL if THEME == "light" else "#1A1A17"  # the dark muted anchor is light
+SLICE_LABEL = "#F0EFE8"  # near-white on dark fills
+SLICE_LABEL_DARK = "#1A1A17"  # dark ink on light fills (lavender, the dark-theme muted anchor)
 EXPLODE_R = 0.06  # offset of the emphasized slice
 
 # Columns: set these to your table's column names
@@ -47,7 +47,18 @@ values = list(df[SHARE])
 colors = [
     INK_MUTED if str(c) == OTHERS else IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, c in enumerate(categories)
 ]
-label_colors = [SLICE_LABEL_ON_MUTED if str(c) == OTHERS else SLICE_LABEL for c in categories]
+
+
+def label_ink(fill):
+    """Dark ink on light fills, near-white on dark fills (relative luminance)."""
+    r, g, b = (
+        (c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+        for c in (int(fill[k : k + 2], 16) / 255 for k in (1, 3, 5))
+    )
+    return SLICE_LABEL_DARK if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18 else SLICE_LABEL
+
+
+label_colors = [label_ink(c) for c in colors]
 
 total = sum(values)
 percentages = [v / total * 100 for v in values]
@@ -77,7 +88,7 @@ title_pt = round(50 * (67 / len(title))) if len(title) > 67 else 50
 
 # Figure — 2400×2400 square (canonical for symmetric plots like pie charts)
 W, H = 2400, 2400
-radius = 0.82
+radius = 0.95
 
 p = figure(
     width=W,
