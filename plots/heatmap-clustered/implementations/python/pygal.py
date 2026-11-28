@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-28
@@ -10,7 +10,7 @@ from itertools import pairwise
 
 import numpy as np
 import pandas as pd
-from pygal.graph.graph import Graph
+import pygal
 from pygal.style import Style
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
@@ -22,9 +22,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-
-# Imprint palette: all eight positions in canonical order
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
 # Imprint diverging ramp for filled cells: the midpoint is the page color
@@ -93,116 +90,72 @@ df = pd.DataFrame(sensitivity, index=pd.Index(drugs, name=DRUG), columns=pd.Inde
 row_dend = dendrogram(linkage(pdist(df.to_numpy()), method="ward"), no_plot=True)
 col_dend = dendrogram(linkage(pdist(df.to_numpy().T), method="ward"), no_plot=True)
 clustered = df.iloc[row_dend["leaves"], col_dend["leaves"]]
-abs_max = float(np.nanmax(np.abs(clustered.to_numpy())))
+values = clustered.to_numpy()
+n_rows, n_cols = values.shape
+abs_max = float(np.nanmax(np.abs(values)))
+
+# Layout in data units: one unit is about one pixel of the plot area
+cw, ch, gap = 175, 93, 4
+mat_w, mat_h = n_cols * cw, n_rows * ch
+dend_gap, row_dend_w, col_dend_h = 30, 330, 230
+bar_x, bar_w, n_seg = mat_w + dend_gap + row_dend_w + 230, 56, 40
+bar_h = mat_h * 0.8
+bar_y = (mat_h - bar_h) / 2
+x_max, y_max = bar_x + bar_w + 190, mat_h + dend_gap + col_dend_h
 
 
-class ClusteredHeatmap(Graph):
-    """Clustered heatmap drawn straight into pygal's SVG tree, so PNG and HTML share one drawing."""
+def rect(x0, y0, x1, y1):
+    """A closed outline: pygal fills it down to the baseline along the shared edge, so it draws a solid box."""
+    return [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
 
-    def __init__(self, *args, **kwargs):
-        self.table = kwargs.pop("table")
-        self.row_dend = kwargs.pop("row_dend")
-        self.col_dend = kwargs.pop("col_dend")
-        self.limit = kwargs.pop("limit")
-        self.row_title = kwargs.pop("row_title")
-        self.col_title = kwargs.pop("col_title")
-        self.bar_title = kwargs.pop("bar_title")
-        super().__init__(*args, **kwargs)
 
-    def _text(self, group, x, y, text, size, anchor="start", weight="normal", fill=INK, rotate=False):
-        node = self.svg.node(group, "text", x=x, y=y)
-        node.set("text-anchor", anchor)
-        node.set("style", f"fill:{fill};font-size:{size}px;font-weight:{weight};font-family:sans-serif")
-        if rotate:
-            node.set("transform", f"rotate(-90, {x}, {y})")
-        node.text = text
+chart_series, colors = [], []
 
-    def _branches(self, group, dend, x0, y0, width, height, along):
-        """Draw dendrogram links; leaves sit at the cell centres, the root at the far side."""
-        n_leaves = len(dend["leaves"])
-        top = max(max(d) for d in dend["dcoord"])
-        for ic, dc in zip(dend["icoord"], dend["dcoord"], strict=True):
-            pos = [c / (n_leaves * 10) for c in ic]
-            dep = [d / top for d in dc]
-            if along == "rows":  # leaves at the right edge, root on the left
-                pts = [(x0 + width * (1 - d), y0 + height * p) for p, d in zip(pos, dep, strict=True)]
-            else:  # leaves at the bottom edge, root on top
-                pts = [(x0 + width * p, y0 + height * (1 - d)) for p, d in zip(pos, dep, strict=True)]
-            path = self.svg.node(group, "path")
-            path.set("d", "M " + " L ".join(f"{px:.1f} {py:.1f}" for px, py in pts))
-            path.set("style", f"fill:none;stroke:{INK_SOFT};stroke-width:4;stroke-linecap:round;stroke-linejoin:round")
-
-    def _plot(self):
-        values = self.table.to_numpy()
-        n_rows, n_cols = values.shape
-        group = self.svg.node(self.nodes["plot"], class_="clustered-heatmap")
-
-        full_w, full_h = self.view.width, self.view.height
-        left_title, row_dend_w, gap = 70, 260, 14
-        col_dend_h = 190
-        bottom = 190
-        right = 640
-        mx = left_title + row_dend_w + gap
-        my = col_dend_h + gap
-        mw = full_w - mx - right
-        mh = full_h - my - bottom
-        cw, ch = mw / n_cols, mh / n_rows
-
-        self._branches(group, self.row_dend, left_title, my, row_dend_w, mh, "rows")
-        self._branches(group, self.col_dend, mx, 0, mw, col_dend_h, "cols")
-
-        for i in range(n_rows):
-            for j in range(n_cols):
-                t = (values[i, j] + self.limit) / (2 * self.limit)
-                self.svg.node(
-                    group,
-                    "rect",
-                    x=mx + j * cw,
-                    y=my + i * ch,
-                    width=cw - 2,
-                    height=ch - 2,
-                    style=f"fill:{ramp_color(DIV_FIELDS, t)};stroke:{PAGE_BG};stroke-width:1",
-                )
-
-        for i, label in enumerate(self.table.index):
-            self._text(group, mx + mw + 24, my + (i + 0.5) * ch + 15, str(label), 44, weight="600")
-        for j, label in enumerate(self.table.columns):
-            self._text(group, mx + (j + 0.5) * cw, my + mh + 58, str(label), 40, anchor="middle", weight="600")
-
-        self._text(group, left_title - 20, my + mh / 2, self.row_title, 48, anchor="middle", weight="bold", rotate=True)
-        self._text(group, mx + mw / 2, my + mh + 142, self.col_title, 48, anchor="middle", weight="bold")
-
-        bar_x, bar_w, bar_h = mx + mw + 470, 52, mh * 0.8
-        bar_y = my + (mh - bar_h) / 2
-        n_seg = 80
-        for k in range(n_seg):
-            self.svg.node(
-                group,
-                "rect",
-                x=bar_x,
-                y=bar_y + k * bar_h / n_seg,
-                width=bar_w,
-                height=bar_h / n_seg + 1,
-                style=f"fill:{ramp_color(DIV_FIELDS, 1 - (k + 0.5) / n_seg)}",
+# Cells: one filled box per value, page-colored gap between neighbours through the inset
+for i in range(n_rows):
+    for j in range(n_cols):
+        t = (values[i, j] + abs_max) / (2 * abs_max)
+        top = mat_h - i * ch
+        chart_series.append(
+            (
+                f"{clustered.index[i]} / {clustered.columns[j]}",
+                rect(j * cw + gap / 2, top - ch + gap / 2, (j + 1) * cw - gap / 2, top - gap / 2),
+                True,
             )
-        self.svg.node(
-            group,
-            "rect",
-            x=bar_x,
-            y=bar_y,
-            width=bar_w,
-            height=bar_h,
-            style=f"fill:none;stroke:{INK_MUTED};stroke-width:2",
         )
-        for tick, y in [(self.limit, bar_y), (0.0, bar_y + bar_h / 2), (-self.limit, bar_y + bar_h)]:
-            self._text(group, bar_x + bar_w + 14, y + 14, f"{tick:+.1f}", 40)
-        self._text(group, bar_x - 130, bar_y - 90, self.bar_title[0], 40, weight="bold")
-        self._text(group, bar_x - 130, bar_y - 40, self.bar_title[1], 40, weight="bold")
+        colors.append(ramp_color(DIV_FIELDS, t))
 
-    def _compute(self):
-        self._box.xmin, self._box.xmax = 0, len(self.table.columns)
-        self._box.ymin, self._box.ymax = 0, len(self.table.index)
+# Dendrogram links: leaves at the cell centres, merge height as distance from the matrix
+row_top, col_top = max(max(d) for d in row_dend["dcoord"]), max(max(d) for d in col_dend["dcoord"])
+for ic, dc in zip(row_dend["icoord"], row_dend["dcoord"], strict=True):
+    pts = [
+        (mat_w + dend_gap + row_dend_w * d / row_top, mat_h * (1 - c / (n_rows * 10)))
+        for c, d in zip(ic, dc, strict=True)
+    ]
+    chart_series.append(("row merge", pts, False))
+    colors.append(INK_SOFT)
+for ic, dc in zip(col_dend["icoord"], col_dend["dcoord"], strict=True):
+    pts = [
+        (mat_w * c / (n_cols * 10), mat_h + dend_gap + col_dend_h * d / col_top) for c, d in zip(ic, dc, strict=True)
+    ]
+    chart_series.append(("column merge", pts, False))
+    colors.append(INK_SOFT)
 
+# Colorbar: stacked boxes along the same ramp, high values on top
+for k in range(n_seg):
+    y_lo = bar_y + k * bar_h / n_seg
+    chart_series.append((f"colorbar {k}", rect(bar_x, y_lo, bar_x + bar_w, y_lo + bar_h / n_seg + 1), True))
+    colors.append(ramp_color(DIV_FIELDS, (k + 0.5) / n_seg))
+
+# Texts on the colorbar: ticks beside it, two-line title above it
+tick_labels = [
+    {"value": (bar_x + bar_w + 20, bar_y + bar_h - dy + 28), "label": f"{tick:+.1f}"}
+    for tick, dy in ((abs_max, 0), (0.0, bar_h / 2), (-abs_max, bar_h))
+]
+bar_titles = [
+    {"value": (bar_x - 10, bar_y + bar_h + 150), "label": "Sensitivity"},
+    {"value": (bar_x - 10, bar_y + bar_h + 100), "label": "(log IC50)"},
+]
 
 title = "heatmap-clustered · python · pygal · anyplot.ai"
 custom_style = Style(
@@ -213,33 +166,48 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
     major_guide_stroke_color=INK_MUTED,
-    colors=IMPRINT_PALETTE,
+    colors=tuple(colors + [INK] * 3),
     title_font_size=66,
     label_font_size=44,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=36,
+    value_font_size=40,
+    value_label_font_size=40,
+    value_colors=(INK,) * (len(colors) + 3),
+    opacity="1",
+    opacity_hover="1",
     stroke_width=2.5,
 )
 
-chart = ClusteredHeatmap(
+chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
-    table=clustered,
-    row_dend=row_dend,
-    col_dend=col_dend,
-    limit=abs_max,
-    row_title=DRUG,
-    col_title=CELL_LINE,
-    bar_title=("Sensitivity", "(log IC50)"),
+    x_title=CELL_LINE,
+    y_title=DRUG,
     show_legend=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    show_dots=False,
+    print_labels=True,
+    truncate_label=-1,
+    stroke_style={"width": 0.1},
+    xrange=(0, x_max),
+    range=(0, y_max),
+    include_x_axis=False,
+    zero=bar_y,
+    x_labels=[{"value": (j + 0.5) * cw, "label": str(name)} for j, name in enumerate(clustered.columns)],
+    y_labels=[{"value": mat_h - (i + 0.5) * ch, "label": str(name)} for i, name in enumerate(clustered.index)],
     margin=40,
-    show_x_labels=False,
-    show_y_labels=False,
 )
-chart.add("", [0])
+for name, points, filled in chart_series:
+    if filled:
+        chart.add(name, points, fill=True, stroke_style={"width": 0.1})
+    else:
+        chart.add(name, points, stroke_style={"width": 4, "linecap": "round", "linejoin": "round"})
+chart.add("colorbar ticks", tick_labels, stroke=False, show_dots=True, dots_size=0.1)
+chart.add("colorbar title", bar_titles, stroke=False, show_dots=True, dots_size=0.1)
 
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
