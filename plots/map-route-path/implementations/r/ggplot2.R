@@ -13,15 +13,19 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID        <- alpha(INK, 0.15)
+# Quiet basemap tones: blue tint for sea, page-near tint for land
+SEA_FILL    <- if (THEME == "light") "#DCE3EC" else "#222B38"
+LAND_FILL   <- if (THEME == "light") "#F1EEE2" else "#201F1B"
+COAST_LINE  <- if (THEME == "light") "#9FB0C6" else "#46566E"
 
 # Imprint palette: start marker = position 1, end marker = matte red (position 5)
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 # Imprint sequential ramp for marks (a colored line sits on the page)
 SEQ_MARKS <- if (THEME == "light") {
-  list(colours = c("#009E73", "#4467A3", "#002850"), values = c(0, 0.338, 1))
+  list(colours = c("#009E73", "#024582", "#351E45"), values = c(0, 0.687, 1))
 } else {
-  list(colours = c("#007755", "#009E73", "#CDD9FF"), values = c(0, 0.32, 1))
+  list(colours = c("#6F7E20", "#009E73", "#CDD9FF"), values = c(0, 0.21, 1))
 }
 
 # Columns: set these to your table's column names
@@ -48,14 +52,36 @@ df <- tibble::tibble(
 ends <- df[c(1, n_points), ]
 ends$role <- factor(c("Start", "End"), levels = c("Start", "End"))
 
-# Sparse direction arrows: short segments along the path, pointing in travel direction
-arrow_i <- seq(20, n_points - 20, by = 40)
+# Basemap: the coast runs just south of the route; land lies north of it, sea south
+by_lon <- df[order(df[[LON]]), ]
+coast_lon <- seq(min(df[[LON]]), max(df[[LON]]), length.out = 120)
+coast_lat <- approx(by_lon[[LON]], by_lon[[LAT]], xout = coast_lon)$y
+coast_lat <- as.numeric(stats::filter(coast_lat, rep(1 / 15, 15), sides = 2))
+coast_lat[is.na(coast_lat)] <- approx(which(!is.na(coast_lat)), coast_lat[!is.na(coast_lat)],
+                                       xout = which(is.na(coast_lat)), rule = 2)$y
+coast_lat <- coast_lat - 0.0045
+lon_pad <- 0.04 * diff(range(df[[LON]]))
+lat_pad <- 0.06 * diff(range(df[[LAT]]))
+x_lim <- range(df[[LON]]) + c(-1, 1) * lon_pad
+y_lim <- range(df[[LAT]]) + c(-1, 1) * lat_pad
+coast_x <- c(x_lim[1], coast_lon, x_lim[2])
+coast_y <- c(coast_lat[1], coast_lat, coast_lat[length(coast_lat)])
+land_df <- data.frame(x = c(coast_x, x_lim[2], x_lim[1]), y = c(coast_y, y_lim[2] + 1, y_lim[2] + 1))
+sea_df  <- data.frame(x = c(coast_x, x_lim[2], x_lim[1]), y = c(coast_y, y_lim[1] - 1, y_lim[1] - 1))
+coast_df <- data.frame(x = coast_x, y = coast_y)
+
+# Sparse direction arrows: each spans several waypoints, so it follows the route's heading
+arrow_i <- seq(30, n_points - 30, by = 40)
 arrows_df <- data.frame(
-  x = df[[LON]][arrow_i],     y = df[[LAT]][arrow_i],
-  xend = df[[LON]][arrow_i + 1], yend = df[[LAT]][arrow_i + 1]
+  x = df[[LON]][arrow_i - 3],  y = df[[LAT]][arrow_i - 3],
+  xend = df[[LON]][arrow_i + 3], yend = df[[LAT]][arrow_i + 3]
 )
 
 p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
+  geom_polygon(data = land_df, aes(x = x, y = y), inherit.aes = FALSE, fill = LAND_FILL) +
+  geom_polygon(data = sea_df, aes(x = x, y = y), inherit.aes = FALSE, fill = SEA_FILL) +
+  geom_path(data = coast_df, aes(x = x, y = y), inherit.aes = FALSE,
+            color = COAST_LINE, linewidth = 0.6) +
   geom_path(aes(color = .data[[ELEVATION]]), linewidth = 2.2,
             lineend = "round", linejoin = "round") +
   geom_segment(
@@ -73,9 +99,10 @@ p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
   ) +
   scale_fill_manual(values = c(Start = IMPRINT_PALETTE[1], End = IMPRINT_PALETTE[5])) +
   scale_shape_manual(values = c(Start = 21, End = 22)) +
-  scale_x_continuous(expand = expansion(mult = 0.04), n.breaks = 6) +
-  scale_y_continuous(expand = expansion(mult = 0.06)) +
-  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180)) +
+  scale_x_continuous(n.breaks = 6) +
+  scale_y_continuous(n.breaks = 6) +
+  coord_fixed(ratio = 1 / cos(mean(df[[LAT]]) * pi / 180),
+              xlim = x_lim, ylim = y_lim, expand = FALSE) +
   guides(fill = guide_legend(order = 1, title = NULL),
          shape = guide_legend(order = 1, title = NULL)) +
   labs(
@@ -87,7 +114,7 @@ p <- ggplot(df, aes(x = .data[[LON]], y = .data[[LAT]])) +
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.border      = element_blank(),
-    panel.grid.major  = element_line(color = GRID, linewidth = 0.3),
+    panel.grid.major  = element_blank(),
     panel.grid.minor  = element_blank(),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.title        = element_text(color = INK, size = 10),
