@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Created: 2026-06-02
@@ -13,6 +13,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Arc
 
@@ -26,23 +27,38 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — 8 hues, canonical order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-COLOR_ROOTS = IMPRINT_PALETTE[0]  # brand green — 5th roots of unity
-COLOR_ARBIT = IMPRINT_PALETTE[1]  # lavender — arbitrary complex numbers
 
-# Data — 5th roots of unity (z^5 = 1) plus two arbitrary complex numbers
+# Columns: set these to your table's column names
+REAL = "Real axis"  # role: real
+IMAGINARY = "Imaginary axis"  # role: imaginary
+LABEL = "Point"  # role: label
+CATEGORY = "Category"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("complex_numbers.csv")
 n_roots = 5
-roots = [np.exp(2j * np.pi * k / n_roots) for k in range(n_roots)]
-arbitrary = [1.6 + 0.7j, -0.4 + 1.5j]
-
-labels_roots = ["1", "ω", "ω²", "ω³", "ω⁴"]
-labels_arbit = ["z₁", "z₂"]
-
-all_points = roots + arbitrary
-all_labels = labels_roots + labels_arbit
-all_colors = [COLOR_ROOTS] * n_roots + [COLOR_ARBIT] * len(arbitrary)
-all_markers = ["o"] * n_roots + ["D"] * len(arbitrary)
+roots = np.exp(2j * np.pi * np.arange(n_roots) / n_roots)
+arbitrary = np.array([1.6 + 0.7j, -0.4 + 1.5j])
+z_all = np.concatenate([roots, arbitrary])
+df = pd.DataFrame(
+    {
+        REAL: z_all.real,
+        IMAGINARY: z_all.imag,
+        LABEL: ["1", "ω", "ω²", "ω³", "ω⁴", "z₁", "z₂"],
+        CATEGORY: ["5th roots of unity (ω = e^(2πi/5))"] * n_roots + ["Arbitrary complex numbers"] * len(arbitrary),
+    }
+)
 
 # Plot — square canvas required so the unit circle appears circular
+groups = list(dict.fromkeys(df[CATEGORY]))
+marker_cycle = ["o", "D", "s", "^", "v", "P", "X", "*"]
+group_color = {g: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, g in enumerate(groups)}
+group_marker = {g: marker_cycle[i % len(marker_cycle)] for i, g in enumerate(groups)}
+all_points = df[REAL].to_numpy() + 1j * df[IMAGINARY].to_numpy()
+all_colors = [group_color[g] for g in df[CATEGORY]]
+all_markers = [group_marker[g] for g in df[CATEGORY]]
+all_labels = df[LABEL].tolist()
+extent = max(df[REAL].abs().max(), df[IMAGINARY].abs().max(), 1.0) * 1.5
+
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
@@ -129,8 +145,8 @@ ratio = 67 / n_chars if n_chars > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
-ax.set_xlabel("Real axis", fontsize=10, color=INK)
-ax.set_ylabel("Imaginary axis", fontsize=10, color=INK)
+ax.set_xlabel(REAL, fontsize=10, color=INK)
+ax.set_ylabel(IMAGINARY, fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 ax.spines["top"].set_visible(False)
@@ -138,25 +154,14 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-ax.set_xlim(-2.4, 2.4)
-ax.set_ylim(-2.4, 2.4)
+ax.set_xlim(-extent, extent)
+ax.set_ylim(-extent, extent)
 
 # Legend
 legend_elements = [
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        markerfacecolor=COLOR_ROOTS,
-        markersize=9,
-        label="5th roots of unity (ω = e^(2πi/5))",
-    ),
-    Line2D(
-        [0], [0], marker="D", color="w", markerfacecolor=COLOR_ARBIT, markersize=9, label="Arbitrary complex numbers"
-    ),
-    Line2D([0], [0], color=INK_MUTED, linewidth=1.5, linestyle="--", label="Unit circle  |z| = 1"),
-]
+    Line2D([0], [0], marker=group_marker[g], color="w", markerfacecolor=group_color[g], markersize=9, label=g)
+    for g in groups
+] + [Line2D([0], [0], color=INK_MUTED, linewidth=1.5, linestyle="--", label="Unit circle  |z| = 1")]
 leg = ax.legend(handles=legend_elements, fontsize=8, loc="lower left", framealpha=0.9)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
