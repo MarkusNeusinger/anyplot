@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-diverging-likert: Likert Scale Diverging Bar Chart
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-06-01
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 84/100 | Updated: 2026-11-28
 
 using CairoMakie
 using Colors
@@ -17,11 +17,15 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
-# Imprint palette — semantic mapping: positive→green, negative→red
-const COL_SA = colorant"#009E73"  # Strongly Agree: Imprint brand green (positive)
-const COL_A  = colorant"#4467A3"  # Agree: Imprint blue
-const COL_D  = colorant"#BD8233"  # Disagree: Imprint ochre
-const COL_SD = colorant"#AE3030"  # Strongly Disagree: Imprint matte red (negative)
+# Imprint ordered categories — Likert steps of one diverging ramp (marks stops):
+# matte red pole (disagree) -> grey midpoint (neutral) -> brand green pole (agree)
+const LIKERT_MID  = THEME == "light" ? colorant"#6B6A63" : colorant"#686762"
+const LIKERT_RAMP = cgrad([colorant"#AE3030", LIKERT_MID, colorant"#009E73"])
+const COL_SD = LIKERT_RAMP[0.0]   # Strongly Disagree: red pole
+const COL_D  = LIKERT_RAMP[0.25]  # Disagree
+const COL_N  = LIKERT_RAMP[0.5]   # Neutral: grey midpoint
+const COL_A  = LIKERT_RAMP[0.75]  # Agree
+const COL_SA = LIKERT_RAMP[1.0]   # Strongly Agree: green pole
 
 # Data — employee engagement survey (10 items, 5-point Likert scale)
 const questions_raw = [
@@ -120,7 +124,7 @@ barplot!(ax,
     vcat(-n_half, -d, -sd);
     direction   = :x,
     stack       = vcat(fill(1, n_q), fill(2, n_q), fill(3, n_q)),
-    color       = vcat(fill(INK_MUTED, n_q), fill(COL_D, n_q), fill(COL_SD, n_q)),
+    color       = vcat(fill(COL_N, n_q), fill(COL_D, n_q), fill(COL_SD, n_q)),
     gap         = 0.26,
     strokewidth = 0,
 )
@@ -131,7 +135,7 @@ barplot!(ax,
     vcat(n_half, a, sa);
     direction   = :x,
     stack       = vcat(fill(1, n_q), fill(2, n_q), fill(3, n_q)),
-    color       = vcat(fill(INK_MUTED, n_q), fill(COL_A, n_q), fill(COL_SA, n_q)),
+    color       = vcat(fill(COL_N, n_q), fill(COL_A, n_q), fill(COL_SA, n_q)),
     gap         = 0.26,
     strokewidth = 0,
 )
@@ -171,7 +175,7 @@ Legend(
     [
         PolyElement(color = COL_SD,    strokecolor = :transparent),
         PolyElement(color = COL_D,     strokecolor = :transparent),
-        PolyElement(color = INK_MUTED, strokecolor = :transparent),
+        PolyElement(color = COL_N,     strokecolor = :transparent),
         PolyElement(color = COL_A,     strokecolor = :transparent),
         PolyElement(color = COL_SA,    strokecolor = :transparent),
     ],
