@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:56:19Z'
-updated: '2026-11-26T02:44:08Z'
+updated: '2026-11-28T11:50:56Z'
 generated_by: claude-sonnet
-workflow_run: 45743812722
+workflow_run: 46141233348
 issue: 3811
 language_version: 3.14.10
 library_version: 3.1.3
@@ -12,55 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.html
-quality_score: 77
+quality_score: 80
 review:
   strengths:
-  - Complete ECC 200 codeword pipeline written out (ASCII encoding, padding, GF(256)
-    Reed-Solomon) since no barcode package is installed
+  - 'Complete ECC 200 pipeline at module level: ASCII codewords, ISO pseudo-random
+    padding, GF(256) Reed-Solomon with roots alpha^1..alpha^n, and the ISO/IEC 16022
+    Annex F placement with its corner cases'
+  - 'Finder and clock exactly as the symbology defines them: solid left column and
+    bottom row meeting in the lower-left, top row and right column alternating with
+    the top-right white and bottom-right black'
+  - 'Seamless crisp modules: whole-pixel cell size, all dark modules in one SVG path,
+    shape-rendering crispEdges'
   - 'Theme handling correct in both renders: page and text tokens flip, the symbol
     stays black on a light tile for scan contrast'
-  - 'Real, neutral context: an NDC drug code with a human-readable caption and symbol
-    size line'
-  - Clean quiet zone of two modules on all sides, free of text
+  - Caption derived from the symbol itself (matrix size and EC codeword count), outside
+    the quiet zone
   weaknesses:
-  - 'SC-02 (both): the L finder''s bottom row stops one module short of the bottom-right
-    corner, and the top clock row ends in two adjacent black modules at the top-right,
-    so C1 and C2 break at the right edge → solid bottom row through the corner and
-    a right clock column phased so the bottom-right module is black and the top-right
-    white. Likely cause: matrix[:, cols-1] = np.arange(rows) % 2 == 0 overwrites the
-    corner modules with the wrong phase after the finder row is set.'
-  - 'SC-03 (code): codeword bits are written row by row into the interior (module_num
-    // data_cols, module_num % data_cols) although the comment says ''column-major
-    diagonal''; the ECC 200 placement (diagonal 8-module ''utah'' shapes with the
-    corner cases) is not applied, so module positions do not follow the symbology
-    and the symbol does not decode → implement the ISO/IEC 16022 placement algorithm.
-    Likely cause: the placement loop in generate_datamatrix.'
-  - 'VQ-03 (both): faint lighter seams are visible between adjacent black modules
-    (finder column, bottom row, dense blocks), so the finder does not read as one
-    solid edge → seamless modules, e.g. draw runs of modules as one rect or snap cell_size
-    and offsets to whole pixels / set shape-rendering=crispEdges. Likely cause: fractional
-    cell_size with anti-aliased per-module rects.'
-  - 'CQ-01 (code): three helper functions (gf_mul, rs_encode, generate_datamatrix)
-    and a Graph subclass break the Imports → Data → Plot → Save structure → inline
-    the encoding steps at module level and keep only the minimal subclass pygal needs
-    for custom drawing. Likely cause: helper-function decomposition.'
-  - 'Suggestion: the gap between title and tile (~350 px) is larger than the space
-    below the captions; nudging the tile up would balance the column.'
+  - 'CQ-01 (code): line 206 `class DataMatrixChart(Graph)` holds the whole drawing
+    (tile, module path, captions) in `_plot()` and `_compute()` → draw at the top
+    level without a class, e.g. render a plain pygal chart for title and background,
+    then append the tile, the module path and the captions to `chart.render_tree()`
+    (or the SVG string) and convert with cairosvg. Likely cause: Graph subclass used
+    as the drawing hook.'
+  - 'Suggestion: the gap between the title and the tile (~370 px) is larger than the
+    space below the captions; moving the tile up would balance the column.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; symbol on a slightly lighter cream tile (#FFFDF6) with a thin soft-ink border
-      Chrome: title 'datamatrix-basic · python · pygal · anyplot.ai' in dark ink at top; below the tile 'Encoded: NDC:0069-0069-20' (bold) and 'Matrix: 18 × 18 | ECC 200 | 30% error recovery' (soft ink) — all readable
-      Data: 18x18 module Data Matrix in near-black #1A1A17; solid left finder column, bottom finder row stopping one module short of the bottom-right corner; top row alternating but ending in two black modules at the top-right; right column alternating; faint seams between adjacent black modules; 2-module quiet zone
+      Background: warm off-white #FAF8F1 page; symbol on a cream tile (#FFFDF6) with a thin soft-ink frame
+      Chrome: title 'datamatrix-basic · python · pygal · anyplot.ai' in dark ink at the top; below the tile 'Encoded: NDC:0069-0069-20' (bold) and 'Matrix: 18 × 18 | ECC 200 | 14 of 32 codewords for error correction' (soft ink) — all readable
+      Data: 18x18 Data Matrix in near-black #1A1A17; solid left finder column and solid bottom row meeting in the lower-left and running through the bottom-right corner; top row alternating with the top-right module white; right column alternating with the bottom-right black; diagonal-placement data region; no seams between modules; 2-module quiet zone
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17 page; the same cream tile behind the symbol (permitted by the spec)
-      Chrome: title and captions in light ink (#F0EFE8 / #B8B7B0), clearly readable; no dark-on-dark text
+      Chrome: title and captions in light ink (#F0EFE8 / #B8B7B0), clearly readable; no dark-on-dark text; tile frame in light soft ink
       Data: module pattern identical to the light render; only page and text chrome flip
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,22 +58,21 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (title 66, captions 44/36 px); title, captions
-          and the code read clearly in both themes
+        comment: Font sizes set explicitly (title 66 px, captions 44/36 px); title
+          and captions read clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No collisions: captions sit well below the tile, title clear of
-          everything'
+        comment: 'No collisions: captions sit below the tile, title clear of everything'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Modules large and high-contrast, but faint lighter seams show between
-          adjacent black modules (defect line)
+        passed: true
+        comment: 'Whole-pixel module size, one path and crispEdges: modules merge
+          into solid edges with no seams'
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,7 +91,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (barcode has no data axes); title in the mandated format
+        comment: N/A for axes (a barcode has no data axes); title in the mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -111,7 +101,7 @@ review:
         comment: 'Page #FAF8F1 / #1A1A17 correct; symbol black on a light tile in
           both themes, which the spec permits; no categorical series'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -119,14 +109,15 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: 'Style-guide baseline: theme tokens, clean caption hierarchy (bold
-          content, soft spec line) — nothing beyond it'
+        comment: Style-guide baseline with a bold content caption over a soft-ink
+          detail line; nothing further
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Spine/grid rules met (none drawn), nothing beyond
+        passed: true
+        comment: Thin soft-ink tile frame and captions centred on the symbol axis,
+          a little beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -134,7 +125,7 @@ review:
         passed: false
         comment: The code is shown; no hierarchy chosen beyond the spec
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,24 +133,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single Data Matrix symbol with human-readable caption; no layers
-          beyond it
+        comment: Single Data Matrix symbol with a human-readable caption outside the
+          quiet zone; no layers beyond it
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Finder and clock present, quiet zone present, but C1 and C2 are
-          broken at the right-hand corners: the bottom finder row stops one module
-          short and the top row ends with two adjacent black modules (defect line)'
+        passed: true
+        comment: C1 solid left/bottom finder meeting in the lower-left corner; C2
+          clock on top and right in step with the grid (top-right white, bottom-right
+          black); C3 square crisp modules; C4 2-module quiet zone free of text; C5
+          single symbol
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Codewords + Reed-Solomon computed, but the bits are filled row by
-          row instead of the ECC 200 placement the code comment claims, so module
-          positions do not follow the symbology (defect line)
+        passed: true
+        comment: 'Checked in code: ASCII codewords, ISO pad codewords, RS with roots
+          alpha^1..alpha^14 over GF(256)/0x12D, and the Annex F utah placement with
+          all four corner cases'
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -182,25 +174,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: NDC drug code — real, neutral pharmaceutical serialization use case
+        comment: NDC drug-package code — neutral pharmaceutical serialization use
+          case named in the spec
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 16 ASCII codewords fit the 18x18 symbol (18 data codewords)
-          and the render is 18x18 modules; 2-module quiet zone ≥ 1 required'
+        comment: 'Checked: 16 ASCII codewords fit the 18x18 symbol (18 data + 14 EC
+          = 32 codewords), render is 18x18 modules, caption states 14 of 32; quiet
+          zone 2 ≥ 1'
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 0
         max: 3
         passed: false
-        comment: Defines gf_mul, rs_encode, generate_datamatrix and a DataMatrixChart
-          class (defect line)
+        comment: The DataMatrixChart Graph subclass (line 206) holds the whole drawing
+          in _plot() (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,20 +206,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path guard is the mandated self-shadowing workaround
+        comment: All imports used; sys.path guard is the self-shadowing workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No barcode package is installed, so the hand-rolled RS encoder is
-          allowed; the dummy series is required to trigger _plot
+        comment: No barcode package is installed, so the written-out RS encoder and
+          placement are allowed; dummy series required for _plot
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg/.png/.html
+        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html
     library_mastery:
       score: 4
       max: 10
@@ -235,7 +229,8 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Subclasses pygal Graph and draws SVG nodes — correct but low-level
+        comment: Style object, render_to_png and render(); the Graph subclass earns
+          no credit
       - id: LM-02
         name: Distinctive Features
         score: 1
@@ -244,12 +239,11 @@ review:
         comment: Nothing pygal-distinctive beyond SVG output
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-05363de124.aqr-9b09b6afa2.sg-e1c896f739.lib-ef876c8336
-  rendered_at: '2026-11-26T02:40:40Z'
+  criteria_version: qc-1af27e5100.aqr-24218df306.sg-461c4c05fa.lib-1bbe539cd1
+  rendered_at: '2026-11-28T11:46:57Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - annotations
   - html-export
   patterns:
