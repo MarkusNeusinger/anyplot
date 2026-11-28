@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' mohr-circle: Mohr's Circle for Stress Analysis
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 80/100 | Updated: 2026-11-28
+#' Quality: 83/100 | Updated: 2026-11-28
 
 library(ggplot2)
 library(ragg)
@@ -117,8 +117,8 @@ p <- ggplot() +
   annotate("point", x = sigma_y, y = -tau_xy,
            color = "white", fill = IMPRINT_PALETTE[5], size = 5.0, shape = 21,
            stroke = 0.5) +
-  # Label A: inside the circle, clear of the arc
-  annotate("text", x = center_x + 4, y = tau_xy + 7,
+  # Label A: right of the marker, outside the circle
+  annotate("text", x = sigma_x + 6, y = tau_xy + 5,
            label = label_A,
            color = IMPRINT_PALETTE[3], hjust = 0, vjust = 0, size = 3.8) +
   # Label B: positioned to the right+below to stay within panel
@@ -126,13 +126,13 @@ p <- ggplot() +
            label = label_B,
            color = IMPRINT_PALETTE[5], hjust = 0, vjust = 1, size = 3.8) +
   # Label sigma1: centered below intersection (outside lower arc)
-  annotate("text", x = sigma_1, y = -9,
+  annotate("text", x = sigma_1 + 5, y = 3,
            label = label_s1,
-           color = INK, hjust = 0.5, vjust = 1, size = 3.8) +
+           color = INK, hjust = 0, vjust = 0, size = 3.8) +
   # Label sigma2: centered below intersection (outside lower arc)
-  annotate("text", x = sigma_2, y = -9,
+  annotate("text", x = sigma_2 - 5, y = 3,
            label = label_s2,
-           color = INK, hjust = 0.5, vjust = 1, size = 3.8) +
+           color = INK, hjust = 1, vjust = 0, size = 3.8) +
   # Label tmax: to the left of top point (toward center)
   annotate("text", x = center_x - 3, y = tau_max + 4,
            label = label_tmax,
@@ -141,7 +141,11 @@ p <- ggplot() +
   annotate("text", x = arc_label_x, y = arc_label_y,
            label = label_2tp,
            color = INK_SOFT, hjust = 0, vjust = 0.5, size = 3.8) +
-  coord_fixed(ratio = 1, clip = "off") +
+  # Label tmin: to the left of bottom point
+  annotate("text", x = center_x - 3, y = -tau_max - 4,
+           label = paste0(tau_sym, "min=\u2212", round(tau_max, 1)),
+           color = IMPRINT_PALETTE[4], hjust = 1, vjust = 1, size = 3.8) +
+  coord_fixed(ratio = 1, clip = "off", xlim = c(-62, 136), ylim = c(-76, 76), expand = FALSE) +
   labs(
     x     = paste0("Normal Stress ", sigma_sym, " (MPa)"),
     y     = paste0("Shear Stress ", tau_sym, " (MPa)"),
@@ -153,11 +157,12 @@ p <- ggplot() +
     panel.background = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major = element_line(color = grid_color,       linewidth = 0.3),
     panel.grid.minor = element_line(color = grid_color_minor, linewidth = 0.15),
-    panel.border     = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.25),
+    panel.border     = element_blank(),
+    axis.line        = element_line(color = INK_SOFT, linewidth = 0.3),
     axis.title       = element_text(color = INK,      size = 10),
     axis.text        = element_text(color = INK_SOFT, size = 8),
     plot.title       = element_text(color = INK,      size = 12, face = "plain"),
-    plot.margin      = margin(40, 50, 20, 30, "pt")
+    plot.margin      = margin(20, 15, 15, 15, "pt")
   )
 
 ggsave(
